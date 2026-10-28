@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Introduction to Acid–Base Reactions Study Lab</title>
+<meta name="description" content="Pick any Brønsted–Lowry acid and base, watch the proton move, and identify the conjugate acid–base pairs, including water acting as an acid, a base, or both.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pickers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pickers label { font-size: .86rem; font-weight: 500; display: block; margin-bottom: 4px; }
+.pickers select { font: inherit; font-size: .95rem; width: 100%; padding: 7px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.pickers select:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.pickers .hint { font-size: .76rem; color: var(--muted); }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v.f { font-family: var(--body); font-size: 1.15rem; }
+.legend .l-acid { color: var(--c1); } .legend .l-base { color: var(--c2); }
+.legend .l-dash::before { background: none; border-top: 2px dashed currentColor; height: 0; }
+.msg { font-size: .86rem; color: var(--bad); }
+@media (max-width: 520px) { .pickers { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 4 · Topic 4.8</span>
+  <h1>Introduction to Acid–Base Reactions Study Lab</h1>
+  <p class="lede">In the Brønsted–Lowry model, an acid is a proton (H<sup>+</sup>) donor and a base is a proton acceptor, so every acid–base reaction is a proton transfer. Removing an H<sup>+</sup> from an acid gives its conjugate base; adding an H<sup>+</sup> to a base gives its conjugate acid. Choose an acid and a base, watch the proton move, and name the conjugate pairs.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The proton-transfer builder</h2>
+    <p>Pick a classic case or build your own pair. The diagram shows the proton leaving the acid and bonding to a lone pair on the base, then brackets each conjugate pair: two species that differ by exactly one H<sup>+</sup>. Use <b>Run it in reverse</b> to see that the conjugate acid and conjugate base are an acid and a base too.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Proton transfer <small id="eq-sub"></small></h3>
+      <svg class="chart" id="pt" role="img" aria-label="Diagram of a proton moving from the acid to the base, with conjugate pairs bracketed"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Classic cases</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Build your own</div>
+        <div class="pickers">
+          <div><label for="sel-a">Acid (proton donor)</label><select id="sel-a"></select><span class="hint">Species that can give up an H<sup>+</sup></span></div>
+          <div><label for="sel-b">Base (proton acceptor)</label><select id="sel-b"></select><span class="hint">Species with a lone pair that can accept an H<sup>+</sup></span></div>
+        </div>
+        <div class="msg" id="msg" aria-live="polite"></div>
+      </div>
+      <div class="btnrow">
+        <button type="button" class="primary" id="b-play">Play the transfer</button>
+        <button type="button" id="b-rev">Run it in reverse</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-acid">Acid and its conjugate base (pair 1)</span><span class="l-base">Base and its conjugate acid (pair 2)</span><span style="color:var(--c4)">Path of the H⁺</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Brønsted–Lowry acid</div><div class="v f" id="r-a"></div><div class="sub" id="r-a2"></div></div>
+    <div class="stat"><div class="k">Brønsted–Lowry base</div><div class="v f" id="r-b"></div><div class="sub" id="r-b2"></div></div>
+    <div class="stat"><div class="k">Conjugate pairs</div><div class="v f" id="r-p"></div><div class="sub">each pair differs by one H⁺</div></div>
+    <div class="stat"><div class="k">Charge check</div><div class="v" id="r-c"></div><div class="sub" id="r-c2">total charge is conserved</div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Definitions</span><h3>Brønsted–Lowry acids and bases</h3><p>An acid donates a proton (H<sup>+</sup>); a base accepts one. A base needs a lone pair of electrons to form the new bond to H<sup>+</sup>. The acid and base are defined by what they do in a particular reaction, not by a label on the bottle.</p></div>
+    <div class="card"><span class="tag">One H⁺ apart</span><h3>Conjugate acid–base pairs</h3><p>Take one H<sup>+</sup> off an acid and you have its conjugate base (charge goes down by 1). Put one H<sup>+</sup> on a base and you have its conjugate acid (charge goes up by 1). Every acid–base reaction has two pairs.</p></div>
+    <div class="card"><span class="tag">Amphoteric</span><h3>Water can be either</h3><p>Water accepts a proton from HCl (acting as a base, becoming H<sub>3</sub>O<sup>+</sup>) and donates one to NH<sub>3</sub> (acting as an acid, becoming OH<sup>−</sup>). Species that can do both, like H<sub>2</sub>O, HCO<sub>3</sub><sup>−</sup>, and H<sub>2</sub>PO<sub>4</sub><sup>−</sup>, are amphoteric.</p></div>
+    <div class="card"><span class="tag">Autoionization</span><h3>Water reacts with itself</h3><p>In pure water a tiny fraction of molecules transfer a proton to each other: H<sub>2</sub>O + H<sub>2</sub>O ⇌ H<sub>3</sub>O<sup>+</sup> + OH<sup>−</sup>. One water molecule is the acid and the other is the base. Unit 8 puts a number on it (K<sub>w</sub>).</p></div>
+    <div class="card"><span class="tag">Water's role</span><h3>Why water matters in solution</h3><p>When an acid or a base dissolves in water, water is usually the partner in the proton transfer. A strong acid such as HCl gives up its proton to water completely, so the solution contains H<sub>3</sub>O<sup>+</sup> and Cl<sup>−</sup>, not HCl molecules.</p></div>
+    <div class="card"><span class="tag">Reversible</span><h3>Both directions are acid–base</h3><p>In the reverse reaction, the conjugate acid donates the proton back to the conjugate base. That is why a double arrow (⇌) is used for weak acids and bases. Which direction is favored is a Unit 8 question.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Conjugate pair cheat sheet</h2>
+    <p>Read across: remove one H<sup>+</sup> to move right, add one H<sup>+</sup> to move left. Species in the middle column of two rows are amphoteric.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Conjugate acid</th><th>Species</th><th>Conjugate base</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="chem">H<sub>3</sub>O<sup>+</sup></td><td class="chem"><b>H<sub>2</sub>O</b></td><td class="chem">OH<sup>−</sup></td><td>Amphoteric; acts as base with HCl, as acid with NH<sub>3</sub></td></tr>
+      <tr><td class="chem">NH<sub>4</sub><sup>+</sup></td><td class="chem"><b>NH<sub>3</sub></b></td><td>(not a Brønsted acid in water)</td><td>Base: lone pair on N accepts H<sup>+</sup></td></tr>
+      <tr><td class="chem">H<sub>2</sub>CO<sub>3</sub></td><td class="chem"><b>HCO<sub>3</sub><sup>−</sup></b></td><td class="chem">CO<sub>3</sub><sup>2−</sup></td><td>Amphoteric</td></tr>
+      <tr><td class="chem">H<sub>3</sub>PO<sub>4</sub></td><td class="chem"><b>H<sub>2</sub>PO<sub>4</sub><sup>−</sup></b></td><td class="chem">HPO<sub>4</sub><sup>2−</sup></td><td>Amphoteric</td></tr>
+      <tr><td>—</td><td class="chem"><b>HCl</b></td><td class="chem">Cl<sup>−</sup></td><td>Strong acid; Cl<sup>−</sup> is too weak a base to take the proton back</td></tr>
+      <tr><td>—</td><td class="chem"><b>CH<sub>3</sub>COOH</b></td><td class="chem">CH<sub>3</sub>COO<sup>−</sup></td><td>Weak acid; only the H on the O is acidic</td></tr>
+      <tr><td class="chem">HF</td><td class="chem"><b>F<sup>−</sup></b></td><td>—</td><td>Conjugate base of the weak acid HF</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Acid–base on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Identify the acid as "the proton (H<sup>+</sup>) donor" and the base as "the proton acceptor" in that specific reaction.</li>
+        <li>Write conjugate pairs as acid/base pairs that differ by one H<sup>+</sup>: NH<sub>4</sub><sup>+</sup>/NH<sub>3</sub>, H<sub>2</sub>O/OH<sup>−</sup>.</li>
+        <li>Check charges when writing a conjugate: removing H<sup>+</sup> lowers the charge by 1; adding H<sup>+</sup> raises it by 1.</li>
+        <li>When asked how water behaves, say what it does in that reaction: "H<sub>2</sub>O acts as a Brønsted–Lowry acid because it donates a proton to NH<sub>3</sub>."</li>
+        <li>For a strong acid in water, represent the solution as H<sub>3</sub>O<sup>+</sup> and the anion, with no intact acid molecules.</li>
+        <li>Balance both atoms and charge in every proton-transfer equation.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Pairing the two reactants (or the two products) as a conjugate pair. A pair has one species on each side.</li>
+        <li>Writing the conjugate base of H<sub>2</sub>PO<sub>4</sub><sup>−</sup> as PO<sub>4</sub><sup>3−</sup>. Only one H<sup>+</sup> comes off: HPO<sub>4</sub><sup>2−</sup>.</li>
+        <li>Calling OH<sup>−</sup> the acid in NH<sub>4</sub><sup>+</sup> + OH<sup>−</sup> because it "has an H." The acid is the species that loses H<sup>+</sup>.</li>
+        <li>Thinking every H in a formula is acidic. In CH<sub>3</sub>COOH only the H bonded to O is donated.</li>
+        <li>Saying water is "neutral, so it can't react." Water is amphoteric and takes part in most acid–base reactions in solution.</li>
+        <li>Mixing up the Brønsted–Lowry model with "acids contain H, bases contain OH." NH<sub>3</sub> and CO<sub>3</sub><sup>2−</sup> are bases with no OH.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 4.8. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-4.html">Unit 4 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Species ----------
+  // Keyed by formula (Lab.fmla syntax). cb: conjugate base (remove one H+). ca: conjugate acid (add one H+).
+  // strong: strong acid (gives up its proton to water completely). negl: conjugate base of a strong acid (negligible base).
+  var SP = {
+    "HCl": { cb: "Cl^-", strong: true, name: "hydrochloric acid" },
+    "HNO3": { cb: "NO3^-", strong: true, name: "nitric acid" },
+    "H3O^+": { cb: "H2O", strong: true, name: "hydronium ion" },
+    "HF": { cb: "F^-", name: "hydrofluoric acid" },
+    "CH3COOH": { cb: "CH3COO^-", name: "acetic acid" },
+    "H2CO3": { cb: "HCO3^-", name: "carbonic acid" },
+    "H3PO4": { cb: "H2PO4^-", name: "phosphoric acid" },
+    "NH4^+": { cb: "NH3", name: "ammonium ion" },
+    "H2O": { cb: "OH^-", ca: "H3O^+", name: "water" },
+    "HCO3^-": { cb: "CO3^2-", ca: "H2CO3", name: "hydrogen carbonate ion" },
+    "H2PO4^-": { cb: "HPO4^2-", ca: "H3PO4", name: "dihydrogen phosphate ion" },
+    "HPO4^2-": { cb: "PO4^3-", ca: "H2PO4^-", name: "hydrogen phosphate ion" },
+    "NH3": { ca: "NH4^+", name: "ammonia" },
+    "OH^-": { ca: "H2O", name: "hydroxide ion" },
+    "F^-": { ca: "HF", name: "fluoride ion" },
+    "CH3COO^-": { ca: "CH3COOH", name: "acetate ion" },
+    "CO3^2-": { ca: "HCO3^-", name: "carbonate ion" },
+    "PO4^3-": { ca: "HPO4^2-", name: "phosphate ion" },
+    "Cl^-": { ca: "HCl", negl: true, name: "chloride ion" },
+    "NO3^-": { ca: "HNO3", negl: true, name: "nitrate ion" }
+  };
+  var ACIDS = ["HCl", "HNO3", "H3O^+", "HF", "CH3COOH", "H2CO3", "H3PO4", "NH4^+", "H2O", "HCO3^-", "H2PO4^-", "HPO4^2-"];
+  var BASES = ["H2O", "NH3", "OH^-", "F^-", "CH3COO^-", "CO3^2-", "HCO3^-", "H2PO4^-", "HPO4^2-", "PO4^3-", "Cl^-", "NO3^-"];
+
+  function charge(f) { var m = String(f).match(/\^(\d*)([+\-])$/); return m ? (m[2] === "-" ? -1 : 1) * (m[1] ? +m[1] : 1) : 0; }
+  function amph(k) { return !!(SP[k].cb && SP[k].ca); }
+  // Self-check: every conjugate differs by exactly one H and one unit of charge.
+  Object.keys(SP).forEach(function (k) {
+    var a = Lab.parseFormula(k);
+    [["cb", -1], ["ca", 1]].forEach(function (d) {
+      var o = SP[k][d[0]]; if (!o) return;
+      if (!SP[o]) { console.error("Missing species " + o); return; }
+      var b = Lab.parseFormula(o), ok = charge(o) - charge(k) === d[1];
+      var els = {}; Object.keys(a).concat(Object.keys(b)).forEach(function (e) { els[e] = 1; });
+      Object.keys(els).forEach(function (e) { var diff = (b[e] || 0) - (a[e] || 0); if (e === "H" ? diff !== d[1] : diff !== 0) ok = false; });
+      if (!ok) console.error("Conjugate of " + k + " (" + d[0] + ") is wrong: " + o);
+      var back = SP[o][d[0] === "cb" ? "ca" : "cb"];
+      if (back !== k) console.error("Conjugate link is not two-way: " + k + " / " + o);
+    });
+  });
+
+  // ---------- Text helpers ----------
+  var F = Lab.fmla;
+  // Plain-text (Unicode) version of a formula for SVG and the quiz.
+  var SUB = "₀₁₂₃₄₅₆₇₈₉", SUP = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "+": "⁺", "-": "⁻" };
+  function uni(f) {
+    var s = String(f), ch = "", m = s.match(/\^(\d*[+\-])$/);
+    if (m) { ch = m[1].split("").map(function (c) { return SUP[c]; }).join(""); s = s.slice(0, m.index); }
+    return s.replace(/([A-Za-z\)])(\d+)/g, function (_, a, d) { return a + d.split("").map(function (c) { return SUB[+c]; }).join(""); }) + ch;
+  }
+  function chargeTxt(q) { return q === 0 ? "0" : (q > 0 ? "+" : "−") + Math.abs(q); }
+
+  // ---------- Scenarios ----------
+  var PRE = [
+    { a: "HCl", b: "H2O", name: "HCl in water" },
+    { a: "H2O", b: "NH3", name: "NH₃ in water" },
+    { a: "H2O", b: "H2O", name: "Water with water" },
+    { a: "CH3COOH", b: "H2O", name: "CH₃COOH in water" },
+    { a: "HCO3^-", b: "H2O", name: "HCO₃⁻ as an acid" },
+    { a: "H2O", b: "HCO3^-", name: "HCO₃⁻ as a base" },
+    { a: "HF", b: "NH3", name: "HF + NH₃" },
+    { a: "NH4^+", b: "OH^-", name: "NH₄⁺ + OH⁻" },
+    { a: "H3O^+", b: "OH^-", name: "H₃O⁺ + OH⁻" }
+  ];
+  var S = { a: "HCl", b: "H2O" };
+
+  function rxn(a, b) {
+    var cb = SP[a].cb, ca = SP[b].ca;
+    var arrow;
+    if (SP[b].negl) arrow = "⇌";
+    else if (SP[a].strong) arrow = "→";
+    else if (b === "OH^-" && a !== "HPO4^2-") arrow = "→";
+    else arrow = "⇌";
+    return { a: a, b: b, cb: cb, ca: ca, arrow: arrow };
+  }
+
+  // ---------- Diagram ----------
+  var svg = document.getElementById("pt");
+  var W = 480, H = 262, ROW = 108;
+  function estW(f) {
+    var u = uni(f), w = 0;
+    for (var i = 0; i < u.length; i++) w += /[₀-₉⁰-⁹⁺⁻]/.test(u[i]) ? 9 : 13.2;
+    return w;
+  }
+  function svgFormula(parent, x, y, f, style) {
+    var t = Lab.el("text", { x: x, y: y, "text-anchor": "middle", style: style }, parent);
+    var s = String(f), ch = "", m = s.match(/\^(\d*[+\-])$/);
+    if (m) { ch = m[1].replace("-", "−"); s = s.slice(0, m.index); }
+    var segs = [], re = /([A-Za-z\)\(]+)|(\d+)/g, mm, prevAlpha = false;
+    while ((mm = re.exec(s))) {
+      if (mm[1]) { segs.push({ t: mm[1], k: 0 }); prevAlpha = true; }
+      else segs.push({ t: mm[2], k: prevAlpha ? 1 : 0 });
+    }
+    if (ch) segs.push({ t: ch, k: -1 });
+    var off = 0;
+    segs.forEach(function (sg) {
+      var shift = sg.k === 1 ? 5 : sg.k === -1 ? -8 : 0;
+      Lab.el("tspan", { dy: shift - off, style: sg.k ? "font-size:72%" : null }, t, sg.t);
+      off = shift;
+    });
+    return t;
+  }
+  var stopAnim = function () {};
+  function draw(R, t) {
+    // t in [0, 1]: 0 = before transfer, 1 = finished. Products fade in after the proton lands.
+    var E = Lab.el;
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var defs = E("defs", {}, svg);
+    var mk = E("marker", { id: "pt-ah", viewBox: "0 0 10 10", refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto" }, defs);
+    E("path", { d: "M0 0 L10 5 L0 10 Z", fill: "var(--c4)" }, mk);
+    var items = [
+      { f: R.a, role: ["acid", "(H⁺ donor)"], col: "var(--c1)", sp: 1 }, { op: "+" },
+      { f: R.b, role: ["base", "(H⁺ acceptor)"], col: "var(--c2)", sp: 1 }, { op: R.arrow, arrow: 1 },
+      { f: R.cb, role: ["conjugate", "base"], col: "var(--c1)", sp: 1, prod: 1 }, { op: "+" },
+      { f: R.ca, role: ["conjugate", "acid"], col: "var(--c2)", sp: 1, prod: 1 }
+    ];
+    var total = 0;
+    items.forEach(function (it) { it.w = it.sp ? Math.max(76, estW(it.f) + 24) : it.arrow ? 40 : 22; total += it.w; });
+    var gap = 6;
+    W = Math.max(380, total + gap * (items.length - 1) + 16);
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    var x = (W - total - gap * (items.length - 1)) / 2;
+    items.forEach(function (it) { it.cx = x + it.w / 2; x += it.w + gap; });
+    var A = items[0], B = items[2], CB = items[4], CA = items[6];
+    var pf = Math.max(0, Math.min(1, (t - 0.65) / 0.35));   // product fade
+    // species boxes
+    items.forEach(function (it) {
+      if (!it.sp) {
+        E("text", { x: it.cx, y: ROW + 6, "text-anchor": "middle", style: "font-size:" + (it.arrow ? 22 : 18) + "px; fill:var(--ink)" }, svg, it.op);
+        return;
+      }
+      var g = E("g", { opacity: it.prod ? (0.15 + 0.85 * pf).toFixed(2) : 1 }, svg);
+      E("rect", { x: it.cx - it.w / 2, y: ROW - 23, width: it.w, height: 46, rx: 10, fill: "var(--surface)", stroke: it.col, "stroke-width": 2, "stroke-dasharray": it.prod ? "6 3" : null }, g);
+      svgFormula(g, it.cx, ROW + 7, it.f, "font-size:20px; font-weight:600; fill:var(--ink)");
+      E("text", { x: it.cx, y: ROW + 42, "text-anchor": "middle", style: "font-size:14px; font-weight:600; fill:" + it.col }, g, it.role[0]);
+      E("text", { x: it.cx, y: ROW + 58, "text-anchor": "middle", style: "font-size:13px; fill:" + it.col }, g, it.role[1]);
+    });
+    // lone pair on the base (top-left of its box), fades once bonded
+    var lpx = B.cx - B.w / 2 + 14, lpy = ROW - 29;
+    if (t < 0.95) { E("circle", { cx: lpx - 4, cy: lpy, r: 2.6, fill: "var(--c2)" }, svg); E("circle", { cx: lpx + 4, cy: lpy, r: 2.6, fill: "var(--c2)" }, svg); }
+    // proton path: arc from acid to base
+    var x0 = A.cx + A.w / 2 - 12, y0 = ROW - 34, x1 = lpx, y1 = ROW - 38, peak = 40;
+    var mx = (x0 + x1) / 2;
+    E("path", { d: "M" + x0 + " " + y0 + " Q" + mx + " " + (peak - 30) + " " + x1 + " " + y1, fill: "none", stroke: "var(--c4)", "stroke-width": 2, "stroke-dasharray": "5 4", "marker-end": "url(#pt-ah)" }, svg);
+    var k = Math.min(1, t / 0.65), qx = (1 - k) * (1 - k) * x0 + 2 * (1 - k) * k * mx + k * k * x1, qy = (1 - k) * (1 - k) * y0 + 2 * (1 - k) * k * (peak - 30) + k * k * y1;
+    E("circle", { cx: qx, cy: qy, r: 14, fill: "var(--c4)" }, svg);
+    E("text", { x: qx, y: qy + 5, "text-anchor": "middle", style: "font-size:13px; font-weight:600; fill:var(--surface)" }, svg, "H⁺");
+    // conjugate-pair brackets
+    function bracket(p, q, y, col, label, lx) {
+      var yb = ROW + 64;
+      E("path", { d: "M" + p.cx + " " + yb + " L" + p.cx + " " + y + " L" + q.cx + " " + y + " L" + q.cx + " " + yb, fill: "none", stroke: col, "stroke-width": 2 }, svg);
+      var lw = label.length * 7.4 + 12;
+      E("rect", { x: lx - lw / 2, y: y - 10, width: lw, height: 20, rx: 4, fill: "var(--surface)" }, svg);
+      E("text", { x: lx, y: y + 5, "text-anchor": "middle", style: "font-size:13px; font-weight:600; fill:" + col }, svg, label);
+    }
+    bracket(A, CB, ROW + 90, "var(--c1)", "pair 1", (A.cx + B.cx) / 2);
+    bracket(B, CA, ROW + 120, "var(--c2)", "pair 2", (CB.cx + CA.cx) / 2);
+    E("text", { x: 8, y: 20, style: "font-size:13px" }, svg, t < 1 ? "The proton is moving..." : "H⁺ moved from " + uni(R.a) + " to " + uni(R.b));
+  }
+
+  // ---------- Readouts and story ----------
+  function readouts(R) {
+    document.getElementById("eq-sub").textContent = R.arrow === "→" ? "goes essentially to completion" : "reversible (⇌)";
+    document.getElementById("r-a").innerHTML = F(R.a);
+    document.getElementById("r-a2").innerHTML = "loses H<sup>+</sup> → " + F(R.cb);
+    document.getElementById("r-b").innerHTML = F(R.b);
+    document.getElementById("r-b2").innerHTML = "gains H<sup>+</sup> → " + F(R.ca);
+    document.getElementById("r-p").innerHTML = F(R.a) + "/" + F(R.cb) + "<br>" + F(R.ca) + "/" + F(R.b);
+    var l = charge(R.a) + charge(R.b), r = charge(R.cb) + charge(R.ca);
+    document.getElementById("r-c").textContent = chargeTxt(l) + " → " + chargeTxt(r);
+  }
+  function role(k, as) {
+    if (!amph(k)) return "";
+    return " " + F(k) + " is <b>amphoteric</b>: here it acts as " + (as === "a" ? "an acid (donating H<sup>+</sup> to become " + F(SP[k].cb) + ")" : "a base (accepting H<sup>+</sup> to become " + F(SP[k].ca) + ")") +
+      ", but with a " + (as === "a" ? "stronger acid it would accept a proton and become " + F(SP[k].ca) : "stronger base it would donate a proton and become " + F(SP[k].cb)) + ".";
+  }
+  function story(R) {
+    var h = "", li = [];
+    var eq = F(R.a) + " + " + F(R.b) + " " + R.arrow + " " + F(R.cb) + " + " + F(R.ca);
+    if (R.a === "H3O^+" && R.b === "OH^-") eq = F("H3O^+") + " + " + F("OH^-") + " → 2" + F("H2O");
+    h += '<div class="eqn">' + eq + "</div>";
+    li.push("<b>" + F(R.a) + " is the acid</b>: it donates an H<sup>+</sup> and becomes its conjugate base, " + F(R.cb) + " (charge " + chargeTxt(charge(R.a)) + " → " + chargeTxt(charge(R.cb)) + ").");
+    li.push("<b>" + F(R.b) + " is the base</b>: a lone pair on it bonds to the H<sup>+</sup>, making its conjugate acid, " + F(R.ca) + " (charge " + chargeTxt(charge(R.b)) + " → " + chargeTxt(charge(R.ca)) + ").");
+    if (R.a === "H2O" && R.b === "H2O") li.push("This is the <b>autoionization of water</b>. One water molecule acts as the acid and the other as the base. It happens to only a tiny fraction of molecules, so pure water contains very small, equal amounts of H<sub>3</sub>O<sup>+</sup> and OH<sup>−</sup>.");
+    else {
+      var r1 = role(R.a, "a"), r2 = role(R.b, "b");
+      if (r1) li.push(r1); if (r2) li.push(r2);
+    }
+    if (SP[R.b].negl) li.push(F(R.b) + " is the conjugate base of a strong acid, so it is a <b>negligible base</b>: this proton transfer barely happens. The reaction that does happen is the reverse, " + F(R.ca) + " giving its proton away.");
+    else if (SP[R.a].strong && R.a !== "H3O^+") li.push(F(R.a) + " is a strong acid: in water it gives up its proton completely, so the solution holds H<sub>3</sub>O<sup>+</sup> and " + F(R.cb) + " and essentially no intact " + F(R.a) + ". That is why the arrow is single.");
+    else if (R.arrow === "→") li.push("This transfer goes essentially to completion, so a single arrow is used. " + (R.a === "H3O^+" ? "H<sub>3</sub>O<sup>+</sup> is the strongest acid that can exist in water." : "OH<sup>−</sup> is a strong base that pulls the proton off almost completely."));
+    else li.push("The double arrow means the reverse reaction also happens: " + F(R.ca) + " (an acid) can hand the proton back to " + F(R.cb) + " (a base). Which side is favored is a Unit 8 question.");
+    h += "<ul>" + li.map(function (s) { return "<li>" + s + "</li>"; }).join("") + "</ul>";
+    h += "<p><b>AP answer:</b> " + F(R.a) + " is the Brønsted–Lowry acid because it donates a proton to " + F(R.b) + ", the Brønsted–Lowry base. The conjugate pairs are " + F(R.a) + "/" + F(R.cb) + " and " + F(R.ca) + "/" + F(R.b) + ".</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  var selA = document.getElementById("sel-a"), selB = document.getElementById("sel-b"), msg = document.getElementById("msg");
+  ACIDS.forEach(function (k) { var o = document.createElement("option"); o.value = k; o.textContent = uni(k) + " (" + SP[k].name + ")"; selA.appendChild(o); });
+  BASES.forEach(function (k) { var o = document.createElement("option"); o.value = k; o.textContent = uni(k) + " (" + SP[k].name + ")"; selB.appendChild(o); });
+  var preBtns = [];
+  PRE.forEach(function (p) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = p.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { set(p.a, p.b, true); });
+    document.getElementById("sc").appendChild(b); preBtns.push({ b: b, p: p });
+  });
+  function render(t) {
+    var R = rxn(S.a, S.b);
+    draw(R, t == null ? 1 : t);
+    if (t == null || t >= 1) {
+      readouts(R);
+      document.getElementById("story").innerHTML = story(R);
+    }
+    selA.value = S.a; selB.value = S.b;
+    preBtns.forEach(function (x) { x.b.setAttribute("aria-pressed", x.p.a === S.a && x.p.b === S.b ? "true" : "false"); });
+    var canRev = ACIDS.indexOf(R.ca) >= 0 && BASES.indexOf(R.cb) >= 0;
+    document.getElementById("b-rev").disabled = !canRev;
+  }
+  function play() {
+    stopAnim();
+    stopAnim = Lab.animate(1400, function (t) { render(t); }, function () { render(1); });
+  }
+  function set(a, b, animate) {
+    if (SP[a].cb === b) {
+      msg.textContent = uni(a) + " and " + uni(b) + " are already a conjugate pair: passing the proton would give back " + uni(b) + " + " + uni(a) + ", so nothing changes. Pick a different partner.";
+      selA.value = S.a; selB.value = S.b;
+      return;
+    }
+    msg.textContent = "";
+    S.a = a; S.b = b;
+    if (animate) play(); else render();
+  }
+  selA.addEventListener("change", function () { set(selA.value, S.b, true); });
+  selB.addEventListener("change", function () { set(S.a, selB.value, true); });
+  document.getElementById("b-play").addEventListener("click", play);
+  document.getElementById("b-rev").addEventListener("click", function () { var R = rxn(S.a, S.b); set(R.ca, R.cb, true); });
+  render();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "HCO₃⁻(aq) + H₂O(l) ⇌ CO₃²⁻(aq) + H₃O⁺(aq). Which reactant acts as the Brønsted–Lowry base?",
+      o: ["HCO₃⁻", "H₂O", "CO₃²⁻", "H₃O⁺"], c: 1,
+      w: "H₂O accepts a proton from HCO₃⁻ and becomes H₃O⁺, so water is the base. HCO₃⁻ loses a proton, so it is the acid here. CO₃²⁻ is a base (the conjugate base of HCO₃⁻), but it is a product, not a reactant." },
+    { s: "NH₃(aq) + H₂O(l) ⇌ NH₄⁺(aq) + OH⁻(aq). Which of the following is a conjugate acid–base pair in this reaction?",
+      o: ["NH₃ and H₂O", "NH₄⁺ and OH⁻", "H₂O and OH⁻", "NH₃ and OH⁻"], c: 2,
+      w: "A conjugate pair differs by exactly one H⁺, with one member on each side of the equation. H₂O loses an H⁺ to become OH⁻, so H₂O/OH⁻ is a pair (NH₄⁺/NH₃ is the other). Choices A and B pair two reactants or two products, a common trap." },
+    { s: "What is the conjugate base of H₂PO₄⁻?",
+      o: ["H₃PO₄", "PO₄³⁻", "HPO₄⁻", "HPO₄²⁻"], c: 3,
+      w: "Remove one H⁺: one fewer H and the charge drops by 1, from −1 to −2, giving HPO₄²⁻. H₃PO₄ is the conjugate acid (one H⁺ added). PO₄³⁻ removes two protons, and HPO₄⁻ removes the hydrogen without lowering the charge." },
+    { s: "Which of the following species is amphoteric?",
+      o: ["Cl⁻", "NH₄⁺", "HCO₃⁻", "CO₃²⁻"], c: 2,
+      w: "HCO₃⁻ can donate a proton (becoming CO₃²⁻) or accept one (becoming H₂CO₃), so it can act as either an acid or a base. NH₄⁺ can only donate (it has no lone pair left to accept another H⁺), and CO₃²⁻ has no H to donate, so it can only accept." },
+    { s: "Consider HCl(aq) + H₂O(l) → H₃O⁺(aq) + Cl⁻(aq) and NH₃(aq) + H₂O(l) ⇌ NH₄⁺(aq) + OH⁻(aq). How does water behave in these two reactions?",
+      o: ["As a base in the first and as an acid in the second", "As an acid in the first and as a base in the second", "As a base in both", "As a spectator in both, because it is neutral"], c: 0,
+      w: "In the first reaction H₂O accepts H⁺ from HCl (base). In the second it donates H⁺ to NH₃ (acid). Being able to do both makes water amphoteric. Choice D is a trap: water takes part directly in both proton transfers." },
+    { s: "Which equation correctly represents the proton transfer that occurs when the weak acid HF dissolves in water?",
+      o: ["HF(aq) + H₂O(l) ⇌ H₂F⁺(aq) + OH⁻(aq)", "HF(aq) + H₂O(l) ⇌ F⁻(aq) + H₃O⁺(aq)", "HF(aq) ⇌ H⁻(aq) + F⁺(aq)", "HF(aq) + H₂O(l) ⇌ HF₂⁻(aq) + H₃O⁺(aq)"], c: 1,
+      w: "HF donates a proton to water: HF becomes F⁻ and H₂O becomes H₃O⁺. Choice A has water donating the proton to HF, the wrong direction for an acid dissolving. Choice C transfers a hydride (H⁻), not a proton." },
+    { s: "NH₄⁺(aq) + OH⁻(aq) → NH₃(aq) + H₂O(l). A student claims that OH⁻ is the acid because it contains a hydrogen atom. Which statement best evaluates the claim?",
+      o: ["Correct, because any species containing H can donate a proton", "Correct, because OH⁻ becomes H₂O", "Incorrect, because the reaction is redox, not acid–base", "Incorrect, because NH₄⁺ donates a proton to OH⁻, so NH₄⁺ is the acid and OH⁻ is the base"], c: 3,
+      w: "The acid is the species that loses H⁺. NH₄⁺ loses one (becoming NH₃) and OH⁻ gains one (becoming H₂O), so OH⁻ is the base. Choice B actually describes OH⁻ gaining a proton, which is what a base does. No oxidation numbers change, so choice C is wrong." },
+    { s: "Which feature of an NH₃ molecule allows it to act as a Brønsted–Lowry base?",
+      o: ["The lone pair of electrons on N, which can form a bond to an H⁺", "The three H atoms, which can be donated", "Its trigonal pyramidal shape, which makes it nonpolar", "The −3 oxidation number of N, which lets it gain electrons"], c: 0,
+      w: "A Brønsted–Lowry base accepts a proton, and it needs a lone pair to form the new N–H bond, making NH₄⁺. Choice B describes acting as an acid. NH₃ is polar, not nonpolar, and accepting H⁺ is not the same as gaining electrons in a redox sense (choice D)." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("4.8");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [4], topic: "4.8", compact: true, storageKey: "topic-4.8" });</script>
+</body>
+</html>

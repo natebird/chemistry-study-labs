@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spectroscopy and the Electromagnetic Spectrum Study Lab</title>
+<meta name="description" content="Sweep across the electromagnetic spectrum and watch a water molecule rotate, vibrate, or have an electron promoted, with the photon energy and the matching energy-level jump calculated at each wavelength.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v sup { font-size: .65em; }
+.side .controls { grid-template-columns: 1fr; }
+#spec text, #resp text { font-size: 11.5px; }
+#spec text.lbl, #resp text.lbl { font-size: 12.5px; }
+@media (max-width: 520px) { #spec text, #resp text { font-size: 14px; } #spec text.lbl, #resp text.lbl { font-size: 14.5px; } }
+.region-pill { display: inline-block; font-size: .95rem; font-weight: 600; color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 3 · Topic 3.11</span>
+  <h1>Spectroscopy and the Electromagnetic Spectrum Study Lab</h1>
+  <p class="lede">Each region of the electromagnetic spectrum carries photons of a different energy, and molecules respond to each region in a different way. Microwaves make molecules rotate, infrared makes bonds vibrate, and ultraviolet and visible light move electrons to higher energy levels. Sweep the spectrum and match each region to its transition.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Spectrum explorer</h2>
+    <p>Drag the wavelength slider or pick a real source. The top panel places the wavelength on the spectrum (log scale: each tick is a factor of 10). The bottom panel shows what a water molecule does when it absorbs a photon from that region, and where that transition sits on an energy-level diagram. Region boundaries are approximate; the energy-level spacings are not to scale.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Electromagnetic spectrum <small>wavelength, log scale</small></h3>
+      <svg class="chart" id="spec" role="img" aria-label="The electromagnetic spectrum with the chosen wavelength marked"></svg>
+      <h3 style="margin-top:6px">What the molecule does <small id="resp-sub"></small></h3>
+      <svg class="chart" id="resp" role="img" aria-label="Water molecule responding to the absorbed photon, with an energy-level diagram"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Real sources</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-l">Wavelength <output id="o-l"></output></label>
+          <input type="range" id="s-l" min="-12" max="1" step="0.01">
+          <span class="hint">Left: short wavelength, high energy. Right: long wavelength, low energy.</span>
+        </div>
+      </div>
+      <div class="group">
+        <div class="tag">The two equations</div>
+        <div class="eqn">c = λν &nbsp;&nbsp; E = hν</div>
+        <p style="font-size:.88rem; color:var(--muted)">h = 6.626 × 10<sup>−34</sup> J·s, c = 2.998 × 10<sup>8</sup> m/s. Shorter wavelength means higher frequency and more energy per photon.</p>
+      </div>
+      <div class="group">
+        <div class="tag">Jump to a region</div>
+        <div class="scenarios" id="sc-r"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Region</div><div class="v"><span class="region-pill" id="r-reg"></span></div><div class="sub" id="r-reg2"></div></div>
+    <div class="stat"><div class="k">Frequency ν = c / λ</div><div class="v" id="r-nu"></div><div class="sub" id="r-nu2"></div></div>
+    <div class="stat"><div class="k">Energy per photon E = hν</div><div class="v" id="r-e"></div><div class="sub" id="r-e2"></div></div>
+    <div class="stat"><div class="k">Energy per mole of photons</div><div class="v" id="r-em"></div><div class="sub">E × 6.022 × 10<sup>23</sup></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Microwave</span><h3>Rotational transitions</h3><p>Microwave photons have the least energy of the three regions the AP exam tests. Absorbing one makes a polar molecule rotate faster: a jump to a higher rotational energy level. A microwave oven heats food by setting water molecules spinning.</p></div>
+    <div class="card"><span class="tag">Infrared</span><h3>Vibrational transitions</h3><p>Infrared photons carry more energy, enough to make bonds stretch and bend more strongly. Each kind of bond (O–H, C=O, C–H) absorbs at characteristic IR wavelengths, which is why IR spectra identify functional groups.</p></div>
+    <div class="card"><span class="tag">UV and visible</span><h3>Electronic transitions</h3><p>Ultraviolet and visible photons have enough energy to promote a valence electron to a higher energy level. Colored substances absorb some visible wavelengths; the color you see is made of the wavelengths that are not absorbed.</p></div>
+    <div class="card"><span class="tag">Energy order</span><h3>Rotational &lt; vibrational &lt; electronic</h3><p>The spacing between rotational levels is smallest, between vibrational levels larger, and between electronic levels largest. That is why the order of the regions (microwave, infrared, UV-visible) matches the order of the transitions.</p></div>
+    <div class="card"><span class="tag">Quantized</span><h3>Only exact energies are absorbed</h3><p>A molecule absorbs a photon only if the photon's energy matches the difference between two of its energy levels. That is what makes a spectrum a fingerprint: each substance has its own set of levels.</p></div>
+    <div class="card"><span class="tag">Beyond the three</span><h3>X-rays and others</h3><p>X-rays carry enough energy to remove core electrons (as in photoelectron spectroscopy, topic 1.6). Radio waves and gamma rays involve nuclear effects that are beyond the AP course.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Spectrum cheat sheet</h2>
+    <p>Approximate ranges. The rows run from high energy (top) to low energy (bottom).</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Region</th><th>Wavelength range</th><th>Energy per photon</th><th>What absorbing it does</th><th>Used for</th></tr></thead>
+    <tbody>
+      <tr><td>X-ray</td><td>0.01–10 nm</td><td>~10<sup>−17</sup>–10<sup>−14</sup> J</td><td>Removes core (inner-shell) electrons</td><td>Photoelectron spectroscopy, medical imaging</td></tr>
+      <tr><td><b>Ultraviolet</b></td><td>10–400 nm</td><td>~5 × 10<sup>−19</sup>–2 × 10<sup>−17</sup> J</td><td><b>Electronic transitions</b> of valence electrons; can break bonds</td><td>UV-vis spectroscopy, sterilization</td></tr>
+      <tr><td><b>Visible</b></td><td>about 400 (violet)–700 nm (red)</td><td>~3 × 10<sup>−19</sup>–5 × 10<sup>−19</sup> J</td><td><b>Electronic transitions</b> of valence electrons</td><td>Color, Beer–Lambert spectrophotometry (3.13)</td></tr>
+      <tr><td><b>Infrared</b></td><td>700 nm–1 mm</td><td>~2 × 10<sup>−22</sup>–3 × 10<sup>−19</sup> J</td><td><b>Molecular vibrations</b> (bond stretching and bending)</td><td>IR spectroscopy, identifying functional groups; greenhouse effect</td></tr>
+      <tr><td><b>Microwave</b></td><td>1 mm–1 m</td><td>~2 × 10<sup>−25</sup>–2 × 10<sup>−22</sup> J</td><td><b>Molecular rotations</b></td><td>Microwave ovens, rotational spectroscopy</td></tr>
+      <tr><td>Radio</td><td>longer than 1 m</td><td>less than ~2 × 10<sup>−25</sup> J</td><td>Nuclear spin changes (beyond the course)</td><td>NMR and MRI</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Explaining it on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Name the region and the transition together: "infrared radiation causes transitions between vibrational energy levels."</li>
+        <li>Compare energies through wavelength or frequency: shorter λ, higher ν, higher E per photon.</li>
+        <li>Say that the photon's energy must <b>equal</b> the energy difference between the two levels.</li>
+        <li>Use E = hν and c = λν with SI units: wavelength in meters, frequency in s<sup>−1</sup>, energy in joules.</li>
+        <li>For color, say what is absorbed and what reaches your eye (the transmitted or reflected wavelengths).</li>
+        <li>Link IR absorption to specific bonds when a spectrum is given.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Swapping IR and microwave: IR is vibrational, microwave is rotational.</li>
+        <li>Thinking longer wavelength means more energy. It is the opposite.</li>
+        <li>Saying a microwave oven "excites electrons." Its photons have about 10<sup>5</sup> times too little energy.</li>
+        <li>Saying a colored solution "is" the color it absorbs. A blue solution absorbs orange-red light.</li>
+        <li>Forgetting to convert nm to m (1 nm = 10<sup>−9</sup> m) before using c = λν.</li>
+        <li>Treating "brighter light" as "higher-energy photons." Intensity is the number of photons, not the energy of each.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 3.11. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-3.html">Unit 3 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = Lab.el, h = Lab.CONST.h, c = Lab.CONST.c, NA = Lab.CONST.NA;
+
+  // Region boundaries (log10 of wavelength in meters). Approximate.
+  var REG = [
+    { k: "gamma", name: "Gamma ray", lo: -13, hi: -11, col: "var(--c4)", tr: "none", what: "nuclear transitions (beyond AP)" },
+    { k: "xray", name: "X-ray", lo: -11, hi: -8, col: "var(--c3)", tr: "core", what: "ejects core electrons" },
+    { k: "uv", name: "Ultraviolet", lo: -8, hi: Math.log10(4e-7), col: "var(--accent)", tr: "elec", what: "electronic transitions (valence electrons)" },
+    { k: "vis", name: "Visible", lo: Math.log10(4e-7), hi: Math.log10(7e-7), col: "var(--good)", tr: "elec", what: "electronic transitions (valence electrons)" },
+    { k: "ir", name: "Infrared", lo: Math.log10(7e-7), hi: -3, col: "var(--c1)", tr: "vib", what: "molecular vibrations" },
+    { k: "mw", name: "Microwave", lo: -3, hi: 0, col: "var(--c2)", tr: "rot", what: "molecular rotations" },
+    { k: "radio", name: "Radio", lo: 0, hi: 2, col: "var(--ghost)", tr: "none", what: "nuclear spin changes (beyond AP)" }
+  ];
+  function regionOf(L) { for (var i = 0; i < REG.length; i++) if (L < REG[i].hi) return REG[i]; return REG[REG.length - 1]; }
+
+  var SC = [
+    { name: "FM radio, 100 MHz", lam: 2.998, why: "FM radio at 100 MHz has λ = c/ν = 2.998 × 10<sup>8</sup> ÷ 1.00 × 10<sup>8</sup> = 3.00 m. Its photons are far too weak for any of the molecular transitions the AP course covers." },
+    { name: "Microwave oven, 2.45 GHz", lam: 2.998e8 / 2.45e9, why: "A microwave oven runs at 2.45 GHz (λ = 12.2 cm). Water molecules absorb this energy as faster rotation; collisions then spread it out as heat." },
+    { name: "CO₂ bending, 15.0 µm", lam: 15.0e-6, why: "Carbon dioxide absorbs infrared near 15.0 µm by bending. This is one way CO<sub>2</sub> absorbs the infrared radiation Earth gives off, which is the greenhouse effect." },
+    { name: "O–H stretch, 2.9 µm", lam: 2.9e-6, why: "O–H bonds absorb infrared near 2.7–3.1 µm (about 3200–3600 cm<sup>−1</sup>) by stretching. A broad absorption here in an IR spectrum signals an −OH group." },
+    { name: "Red laser, 650 nm", lam: 650e-9, why: "Visible light. A substance that absorbs at 650 nm takes in red light through an electronic transition and looks blue-green." },
+    { name: "Violet light, 410 nm", lam: 410e-9, why: "Near the high-energy end of the visible range. Shorter visible wavelengths carry more energy per photon than red light." },
+    { name: "Germicidal UV-C, 254 nm", lam: 254e-9, why: "UV-C lamps at 254 nm promote electrons in DNA bases. The photon energy, about 471 kJ per mole of photons, is in the range of many covalent bond energies, so UV can also break bonds." },
+    { name: "X-ray, 0.10 nm", lam: 1.0e-10, why: "X-ray photons carry thousands of times more energy than visible photons, enough to eject core electrons. Photoelectron spectroscopy uses X-rays to measure the binding energies of all of an atom's electrons." }
+  ];
+  var S = { L: Math.log10(2.9e-6), key: 3 };
+
+  // ---------- Formatting ----------
+  function lamText(lam) {
+    var u = [[1, "m"], [1e-2, "cm"], [1e-3, "mm"], [1e-6, "µm"], [1e-9, "nm"], [1e-12, "pm"]];
+    for (var i = 0; i < u.length; i++) if (lam >= u[i][0] * 0.9999) return Lab.sig(lam / u[i][0], 3) + " " + u[i][1];
+    return Lab.sig(lam / 1e-12, 3) + " pm";
+  }
+  function sciT(v) { return Lab.sci(v, 3, true); }
+  function visColor(nm) {   // approximate hue of a visible wavelength
+    var hue = nm < 440 ? 270 : nm < 490 ? 270 - (nm - 440) / 50 * 70 : nm < 510 ? 200 - (nm - 490) / 20 * 60 : nm < 580 ? 140 - (nm - 510) / 70 * 80 : nm < 645 ? 60 - (nm - 580) / 65 * 60 : 0;
+    return "hsl(" + hue.toFixed(0) + ", 85%, 50%)";
+  }
+
+  // ---------- Spectrum panel ----------
+  var spec = document.getElementById("spec");
+  var LMIN = -13, LMAX = 2, X0 = 20, X1 = 420;
+  function sx(L) { return X0 + (L - LMIN) / (LMAX - LMIN) * (X1 - X0); }
+  function drawSpec() {
+    var W = 440, H = 200, L = S.L, lam = Math.pow(10, L), reg = regionOf(L);
+    spec.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (spec.firstChild) spec.removeChild(spec.firstChild);
+    var defs = el("defs", {}, spec), gr = el("linearGradient", { id: "rainbow", x1: "0", x2: "1", y1: "0", y2: "0" }, defs);
+    [400, 450, 490, 520, 570, 600, 650, 700].forEach(function (nm, i, a) { el("stop", { offset: (i / (a.length - 1)).toFixed(3), "stop-color": visColor(nm) }, gr); });
+    // wave (not to scale): a longer wavelength draws a longer period
+    var per = 10 + (L - LMIN) / (LMAX - LMIN) * 150, wy = 46, amp = 18, pts = [];
+    for (var x = X0; x <= X1; x += 1.5) pts.push((x === X0 ? "M" : "L") + x.toFixed(1) + " " + (wy - amp * Math.sin(2 * Math.PI * (x - X0) / per)).toFixed(1));
+    var waveCol = reg.k === "vis" ? visColor(lam * 1e9) : reg.col;
+    el("path", { d: pts.join(" "), fill: "none", stroke: waveCol, "stroke-width": 2.2 }, spec);
+    el("text", { x: X1, y: 12, "text-anchor": "end" }, spec, "wave drawn to show the trend, not to scale");
+    // bar
+    var by = 92, bh = 30;
+    REG.forEach(function (r) {
+      var a = Math.max(LMIN, r.lo), b = Math.min(LMAX, r.hi);
+      if (r.k === "vis") el("rect", { x: sx(a), y: by, width: sx(b) - sx(a), height: bh, fill: "url(#rainbow)" }, spec);
+      else el("rect", { x: sx(a), y: by, width: sx(b) - sx(a), height: bh, fill: r.col, opacity: r.k === reg.k ? 0.55 : 0.22 }, spec);
+      if (r.k !== "vis") el("text", { x: (sx(a) + sx(b)) / 2, y: by + bh / 2 + 4, "text-anchor": "middle", style: "fill:var(--ink); font-weight:" + (r.k === reg.k ? 700 : 500) }, spec,
+        { gamma: "γ", xray: "X-ray", uv: "UV", ir: "IR", mw: "Microwave", radio: "Radio" }[r.k]);
+    });
+    el("rect", { x: X0, y: by, width: X1 - X0, height: bh, fill: "none", stroke: "var(--ink)" }, spec);
+    // visible callout
+    var vx = (sx(REG[3].lo) + sx(REG[3].hi)) / 2;
+    el("line", { x1: vx, x2: vx, y1: by, y2: by - 10, stroke: "var(--ink)" }, spec);
+    el("text", { x: vx, y: by - 13, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, spec, "visible 400–700 nm");
+    // ticks every power of 10 (labels every 3)
+    for (var k = -12; k <= 1; k++) {
+      el("line", { x1: sx(k), x2: sx(k), y1: by + bh, y2: by + bh + (k % 3 === 0 ? 7 : 4), stroke: "var(--ink)" }, spec);
+      if (k % 3 === 0) el("text", { x: sx(k), y: by + bh + 19, "text-anchor": "middle" }, spec, { "-12": "1 pm", "-9": "1 nm", "-6": "1 µm", "-3": "1 mm", "0": "1 m" }[k]);
+    }
+    el("text", { x: X0, y: by + bh + 38, "class": "lbl", style: "fill:var(--ink)" }, spec, "← higher energy, higher frequency");
+    el("text", { x: X1, y: by + bh + 38, "text-anchor": "end", "class": "lbl", style: "fill:var(--ink)" }, spec, "longer wavelength →");
+    // marker
+    var mx = sx(L);
+    el("path", { d: "M" + mx + " " + (by - 2) + " l-7 -11 h14 z", fill: "var(--ink)" }, spec);
+    el("line", { x1: mx, x2: mx, y1: by, y2: by + bh, stroke: "var(--ink)", "stroke-width": 2.5 }, spec);
+    var tx = Math.max(X0 + 40, Math.min(X1 - 40, mx));
+    el("text", { x: tx, y: by + bh + 56 > H ? H - 4 : by + bh + 56, "text-anchor": "middle", "class": "lbl", style: "fill:var(--accent)" }, spec, "λ = " + lamText(lam));
+  }
+
+  // ---------- Response panel ----------
+  var resp = document.getElementById("resp"), phase = 0, raf = null;
+  function drawResp(t) {
+    var W = 440, H = 225, reg = regionOf(S.L), tr = reg.tr;
+    resp.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (resp.firstChild) resp.removeChild(resp.firstChild);
+    // --- molecule (left half) ---
+    var cx = 110, cy = 112, L0 = 34, ang = 0, stretch = 0, glow = false;
+    if (tr === "rot") ang = t * 1.6;
+    if (tr === "vib") stretch = 0.22 * Math.sin(t * 9);
+    if (tr === "elec") glow = (Math.sin(t * 3) > 0);
+    var g = el("g", { transform: "rotate(" + (ang * 180 / Math.PI).toFixed(1) + " " + cx + " " + cy + ")" }, resp);
+    var half = 104.5 / 2 * Math.PI / 180, Lb = L0 * (1 + stretch);
+    var H1 = [cx - Lb * Math.sin(half), cy + Lb * Math.cos(half)], H2 = [cx + Lb * Math.sin(half), cy + Lb * Math.cos(half)];
+    if (glow) el("circle", { cx: cx, cy: cy + 10, r: 52, fill: "var(--accent)", opacity: 0.16 }, g);
+    [H1, H2].forEach(function (p) { el("line", { x1: cx, y1: cy, x2: p[0], y2: p[1], stroke: "var(--ink)", "stroke-width": 4 }, g); });
+    el("circle", { cx: cx, cy: cy, r: 18, fill: "var(--bad)" }, g);
+    el("text", { x: cx, y: cy + 4, "text-anchor": "middle", style: "fill:var(--surface); font-weight:700" }, g, "O");
+    [H1, H2].forEach(function (p) { el("circle", { cx: p[0], cy: p[1], r: 11, fill: "var(--surface)", style: "stroke:var(--ink); stroke-width:2" }, g); el("text", { x: p[0], y: p[1] + 4, "text-anchor": "middle", style: "fill:var(--ink); font-weight:700" }, g, "H"); });
+    if (tr === "rot") {
+      el("path", { d: "M" + (cx - 62) + " " + (cy - 30) + " A 66 66 0 0 1 " + (cx + 30) + " " + (cy - 62), fill: "none", stroke: "var(--c2)", "stroke-width": 2, "stroke-dasharray": "5 4" }, resp);
+      el("path", { d: "M" + (cx + 30) + " " + (cy - 62) + " l-10 -4 l3 9 z", fill: "var(--c2)" }, resp);
+    }
+    if (tr === "vib") {
+      [H1, H2].forEach(function (p) { var dx = p[0] - cx, dy = p[1] - cy, n = Math.hypot(dx, dy); el("text", { x: p[0] + dx / n * 22, y: p[1] + dy / n * 22 + 4, "text-anchor": "middle", style: "fill:var(--c1); font-weight:700" }, resp, "↔"); });
+    }
+    if (tr === "core") {
+      var d = 40 + 70 * ((t * 0.6) % 1);
+      el("circle", { cx: cx, cy: cy, r: 26, fill: "none", stroke: "var(--c3)", "stroke-dasharray": "3 3" }, resp);
+      el("circle", { cx: cx + d * 0.8, cy: cy - d * 0.6, r: 5, fill: "var(--c3)" }, resp);
+      el("text", { x: cx + 58, y: cy - 66, style: "fill:var(--c3); font-weight:600" }, resp, "e⁻ ejected");
+    }
+    var cap = { rot: "rotates faster", vib: "bonds stretch and bend", elec: "an electron is promoted", core: "a core electron is knocked out", none: "no molecular transition in this course" }[tr];
+    el("text", { x: cx, y: H - 12, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, resp, cap);
+    // --- energy ladder (right half) ---
+    var lx0 = 225;
+    function lvl(y, w, col, sw) { el("line", { x1: lx0, x2: lx0 + w, y1: y, y2: y, stroke: col, "stroke-width": sw }, resp); }
+    var e0 = 196, e1 = 92;
+    [e0, e1].forEach(function (y, i) {
+      lvl(y, 180, "var(--ink)", 2.2);
+      el("text", { x: lx0, y: y + 15 }, resp, i ? "excited electronic state" : "ground electronic state");
+      for (var v = 1; v <= 3; v++) lvl(y - v * 15, 100, "var(--muted)", 1);
+      for (var r = 1; r <= 3; r++) lvl(y - r * 3.4, 50, "var(--ghost)", 0.8);
+    });
+    el("text", { x: lx0 + 108, y: e0 - 15 * 2 + 4 }, resp, "vibrational");
+    el("text", { x: lx0 + 108, y: e0 - 3 }, resp, "rotational");
+    function up(x, y0, y1, col) {
+      el("line", { x1: x, x2: x, y1: y0, y2: y1 + 6, stroke: col, "stroke-width": 3 }, resp);
+      el("path", { d: "M" + x + " " + y1 + " l-6 9 h12 z", fill: col }, resp);
+    }
+    if (tr === "rot") up(lx0 + 20, e0, e0 - 3.4 * 2, "var(--c2)");
+    if (tr === "vib") up(lx0 + 80, e0, e0 - 15, "var(--c1)");
+    if (tr === "elec") up(lx0 + 165, e0, e1, reg.k === "vis" ? visColor(Math.pow(10, S.L) * 1e9) : "var(--accent)");
+    if (tr === "core") up(lx0 + 165, e0, 30, "var(--c3)");
+    el("text", { x: lx0, y: 18, "class": "lbl", style: "fill:var(--ink)" }, resp, tr === "core" ? "X-ray: electron removed entirely" : "energy levels (not to scale)");
+  }
+  function loop(ts) {
+    phase = ts / 1000;
+    drawResp(phase);
+    raf = requestAnimationFrame(loop);
+  }
+
+  // ---------- Readouts and story ----------
+  function render() {
+    var lam = Math.pow(10, S.L), nu = c / lam, E = h * nu, Em = E * NA / 1000, reg = regionOf(S.L);
+    document.getElementById("s-l").value = S.L;
+    document.getElementById("o-l").textContent = lamText(lam);
+    drawSpec();
+    if (Lab.reduceMotion || !raf) drawResp(0.35);
+    document.getElementById("resp-sub").textContent = reg.name + ": " + reg.what;
+    document.getElementById("r-reg").textContent = reg.name;
+    document.getElementById("r-reg2").textContent = reg.what;
+    document.getElementById("r-nu").innerHTML = sciT(nu) + " s<sup>−1</sup>";
+    document.getElementById("r-nu2").innerHTML = "(2.998 × 10<sup>8</sup> m/s) ÷ " + sciT(lam) + " m";
+    document.getElementById("r-e").innerHTML = sciT(E) + " J";
+    document.getElementById("r-e2").innerHTML = "(6.626 × 10<sup>−34</sup> J·s)(" + sciT(nu) + " s<sup>−1</sup>)";
+    document.getElementById("r-em").innerHTML = (Em >= 0.01 && Em < 1e5 ? Lab.sig(Em, 3) : sciT(Em)) + " kJ/mol";
+    scBtns.forEach(function (b, i) { b.setAttribute("aria-pressed", S.key === i ? "true" : "false"); });
+    var sc = S.key != null ? SC[S.key] : null, out = "";
+    out += "<p><b>" + (sc ? sc.name : reg.name + " at " + lamText(lam)) + ".</b> " + (sc ? sc.why : "") + "</p>";
+    out += '<ol class="steps"><li>Frequency: ν = c ÷ λ = (2.998 × 10<sup>8</sup> m/s) ÷ (' + sciT(lam) + " m) = " + sciT(nu) + " s<sup>−1</sup>.</li>";
+    out += "<li>Energy of one photon: E = hν = (6.626 × 10<sup>−34</sup> J·s)(" + sciT(nu) + " s<sup>−1</sup>) = " + sciT(E) + " J.</li>";
+    out += "<li>Per mole of photons: " + sciT(E) + " J × 6.022 × 10<sup>23</sup> mol<sup>−1</sup> = " + (Em >= 0.01 && Em < 1e5 ? Lab.sig(Em, 3) : sciT(Em)) + " kJ/mol.</li></ol>";
+    var tr = reg.tr, ans;
+    if (tr === "rot") { out += "<p>Microwave photons match the small gaps between <b>rotational</b> energy levels. A polar molecule such as water absorbs the photon and rotates faster. The energy is far too small to stretch bonds noticeably or to move electrons.</p>"; ans = "microwave radiation causes transitions between rotational energy levels."; }
+    else if (tr === "vib") { out += "<p>Infrared photons match the gaps between <b>vibrational</b> energy levels, so the molecule absorbs them by stretching or bending its bonds more vigorously. Rotational changes come along too, but the vibrational jump is what an IR spectrum measures.</p>"; ans = "infrared radiation causes transitions between vibrational energy levels (bonds stretch and bend)."; }
+    else if (tr === "elec") { out += "<p>" + (reg.k === "vis" ? "Visible" : "Ultraviolet") + " photons have enough energy to promote a <b>valence electron</b> to a higher electronic energy level. " + (reg.k === "vis" ? "Substances that absorb in this range are colored: the color you see is made of the wavelengths not absorbed." : "Water itself absorbs mainly at wavelengths shorter than about 190 nm, but many substances (DNA, dyes, ozone) absorb across the UV. High-energy UV can also break covalent bonds.") + "</p>"; ans = "ultraviolet and visible radiation cause electronic transitions: valence electrons move to higher energy levels."; }
+    else if (tr === "core") { out += "<p>X-ray photons carry so much energy that they remove electrons entirely, including core electrons close to the nucleus. This is the energy range used in photoelectron spectroscopy (topic 1.6).</p>"; ans = "X-rays have enough energy to eject core electrons, which is how PES measures their binding energies."; }
+    else { out += "<p>" + (reg.k === "radio" ? "Radio-wave photons are too low in energy for the molecular transitions in this course. (In NMR and MRI they flip nuclear spins inside a strong magnet, which is beyond the exam.)" : "Gamma-ray photons come from changes inside atomic nuclei, which is beyond the AP course.") + "</p>"; ans = "the AP course pairs microwave with rotations, infrared with vibrations, and UV-visible with electronic transitions."; }
+    out += "<p><b>AP answer:</b> " + ans + "</p>";
+    document.getElementById("story").innerHTML = out;
+  }
+
+  var scBtns = [];
+  SC.forEach(function (sc, i) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = sc.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () {
+      var L0 = S.L, L1 = Math.log10(sc.lam); S.key = i;
+      Lab.animate(500, function (t) { S.L = L0 + (L1 - L0) * t; drawSpec(); document.getElementById("o-l").textContent = lamText(Math.pow(10, S.L)); }, function () { S.L = L1; render(); });
+    });
+    document.getElementById("sc").appendChild(b); scBtns.push(b);
+  });
+  [["Microwave", Math.log10(0.01)], ["Infrared", Math.log10(10e-6)], ["Visible", Math.log10(550e-9)], ["Ultraviolet", Math.log10(200e-9)], ["X-ray", Math.log10(1e-10)]].forEach(function (r) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = r[0];
+    b.addEventListener("click", function () { S.L = r[1]; S.key = null; render(); });
+    document.getElementById("sc-r").appendChild(b);
+  });
+  document.getElementById("s-l").addEventListener("input", function (e) { S.L = parseFloat(e.target.value); S.key = null; render(); });
+  render();
+  if (!Lab.reduceMotion) raf = requestAnimationFrame(loop);
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Absorption of microwave radiation by a gas-phase molecule most often causes which change?",
+      o: ["An electron moves to a higher energy level", "The molecule rotates faster", "A covalent bond breaks", "The bonds vibrate more strongly"], c: 1,
+      w: "Microwave photons have the lowest energy of the three regions in the course, matching the small spacing of rotational levels. Vibrations (D) need infrared, electronic transitions (A) need UV or visible light, and breaking bonds (C) needs even more energy." },
+    { s: "Infrared spectroscopy is used to identify functional groups in organic molecules. This works because IR radiation causes:",
+      o: ["transitions between vibrational energy levels, at wavelengths characteristic of each type of bond", "transitions of core electrons to higher energy levels", "changes in nuclear spin", "transitions between rotational energy levels only"], c: 0,
+      w: "Each kind of bond (O–H, C=O, C–H) stretches and bends at characteristic frequencies, so its IR absorptions reveal which groups are present. Core electrons (B) need X-rays; nuclear spin (C) is radio-frequency NMR." },
+    { s: "Which statement about the absorption of ultraviolet or visible light by a molecule is correct?",
+      o: ["It increases the rotational speed of the molecule only", "It always breaks the molecule into ions", "It promotes a valence electron to a higher electronic energy level", "It decreases the energy of the molecule"], c: 2,
+      w: "UV and visible photons match the spacing between electronic energy levels, so absorbing one promotes a valence electron. Absorbing a photon always raises the molecule's energy, which rules out D." },
+    { s: "Which ranks the energy needed for these transitions in a molecule from least to greatest?",
+      o: ["Electronic < vibrational < rotational", "Vibrational < rotational < electronic", "Rotational < electronic < vibrational", "Rotational < vibrational < electronic"], c: 3,
+      w: "Rotational levels are closest together (microwave), vibrational levels are farther apart (infrared), and electronic levels are farthest apart (UV-visible). The order of energies matches the order of the regions." },
+    { s: "A photon has a wavelength of 3.00 µm. In which region is it, and what does it most likely do when absorbed by a molecule?",
+      o: ["Infrared; it causes a vibrational transition", "Visible; it causes an electronic transition", "Microwave; it causes a rotational transition", "Ultraviolet; it ejects a core electron"], c: 0,
+      w: "3.00 µm = 3.00 × 10⁻⁶ m = 3000 nm, longer than visible light (400–700 nm) and much shorter than microwaves (≥ 1 mm), so it is infrared. IR causes vibrational transitions; O–H stretches absorb near this wavelength." },
+    { s: "A microwave oven heats food but does not cause the chemical changes that ultraviolet light can. Which statement best explains this?",
+      o: ["Microwave photons have higher frequencies than UV photons", "Microwave photons have much less energy per photon than UV photons, enough only for rotational transitions", "Microwaves are not absorbed by food", "Microwaves cause electronic transitions, which do not affect bonds"], c: 1,
+      w: "A 12.2 cm microwave photon carries about 1.6 × 10⁻²⁴ J, while a 254 nm UV photon carries about 7.8 × 10⁻¹⁹ J, roughly 500,000 times more. Microwaves can make water rotate faster (heat) but cannot excite electrons or break bonds. A reverses the frequency comparison." },
+    { s: "Which type of radiation is used in photoelectron spectroscopy to remove core electrons from atoms?",
+      o: ["Microwave", "Infrared", "Visible", "X-ray"], c: 3,
+      w: "Removing a core electron requires a very large amount of energy, so PES uses X-ray photons (and UV for valence electrons only). Microwave, infrared and visible photons do not have enough energy." },
+    { s: "Earth's surface emits infrared radiation. Carbon dioxide in the atmosphere absorbs some of it. What happens to a CO₂ molecule when it absorbs one of these photons?",
+      o: ["An electron in CO₂ is promoted to an excited electronic state", "The C=O bonds break and CO₂ decomposes", "CO₂ moves to a higher vibrational energy level, bending or stretching more", "The CO₂ molecule is ionized"], c: 2,
+      w: "Infrared photons match vibrational transitions, so CO₂ absorbs them by bending (near 15 µm) or stretching. That energy is later passed to other molecules as heat, part of the greenhouse effect. Electronic transitions, bond breaking and ionization all need far more energy." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("3.11");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [3], topic: "3.11", compact: true, storageKey: "topic-3.11" });</script>
+</body>
+</html>

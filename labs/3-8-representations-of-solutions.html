@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Representations of Solutions Study Lab</title>
+<meta name="description" content="Build particle diagrams of dissolved ionic and molecular solutes with correctly oriented water molecules, then find the mistakes in eight flawed diagrams.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.legend .l-cat { color: var(--accent); } .legend .l-an { color: var(--c2); } .legend .l-mol { color: var(--c1); } .legend .l-o { color: var(--bad); } .legend .l-h { color: var(--muted); }
+.legend .l-cat::before, .legend .l-an::before, .legend .l-mol::before, .legend .l-o::before, .legend .l-h::before { width: 10px; height: 10px; border-radius: 50%; }
+.legend .l-h::before { background: var(--surface); border: 1.5px solid var(--muted); width: 7px; height: 7px; }
+.answers button { text-align: left; }
+.answers button.right { background: var(--good-soft); border-color: var(--good); color: var(--good); font-weight: 600; }
+.answers button.wrong { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+.answers button:disabled { cursor: default; }
+#dia text.ion { font-size: 11.5px; font-weight: 600; fill: var(--surface); }
+#dia text.atom { font-size: 10px; font-weight: 600; fill: var(--surface); }
+@media (max-width: 520px) { #dia text.ion { font-size: 13px; } }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 3 · Topic 3.8</span>
+  <h1>Representations of Solutions Study Lab</h1>
+  <p class="lede">The AP exam asks you to draw and judge particle diagrams of solutions. A correct diagram keeps the formula's ion ratio, keeps polyatomic ions and molecules in one piece, and turns each water molecule the right way: the partially negative oxygen toward a cation, a partially positive hydrogen toward an anion. Build diagrams, then hunt for the mistakes in flawed ones.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Particle diagram workbench</h2>
+    <p>In <b>Build</b> mode, choose a solute and how many formula units dissolve; the diagram draws every ion with its shell of water molecules. In <b>Spot the mistake</b> mode, each of eight diagrams claims to show a solute in water. Decide whether it is correct or name the error. Particle sizes are roughly to scale relative to each other (cations smaller than anions); the numbers of water molecules are simplified.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3><span id="g-title">Particle view</span> <small id="g-sub"></small></h3>
+      <svg class="chart" id="dia" role="img" aria-label="Particle diagram of a solute dissolved in water"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Mode</div>
+        <div class="seg" role="group" aria-label="Mode">
+          <button type="button" id="m-build" aria-pressed="true">Build</button>
+          <button type="button" id="m-spot" aria-pressed="false">Spot the mistake</button>
+        </div>
+      </div>
+      <div id="build-panel" class="side" style="padding:0">
+        <div class="group">
+          <div class="tag">Solute</div>
+          <div class="scenarios" id="sol-btns"></div>
+        </div>
+        <div class="controls" style="grid-template-columns:1fr">
+          <div class="ctl">
+            <label for="s-n">Formula units dissolved <output id="o-n"></output></label>
+            <input type="range" id="s-n" min="1" max="4" step="1">
+            <span class="hint" id="h-n">Each formula unit separates into its ions</span>
+          </div>
+        </div>
+        <div class="group">
+          <div class="tag">Water molecules</div>
+          <div class="seg" role="group" aria-label="Water display">
+            <button type="button" id="w-on" aria-pressed="true">Show hydration shells</button>
+            <button type="button" id="w-off" aria-pressed="false">Solute only</button>
+          </div>
+        </div>
+      </div>
+      <div id="spot-panel" class="side" style="padding:0" hidden>
+        <div class="group">
+          <div class="tag" id="round-lbl">Diagram 1 of 8</div>
+          <p id="claim" style="font-size:.95rem"></p>
+        </div>
+        <div class="group">
+          <div class="tag">What is wrong with it?</div>
+          <div class="scenarios answers" id="ans"></div>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap">
+          <button type="button" id="prev">← Previous</button>
+          <button type="button" id="next" class="primary">Next diagram →</button>
+          <button type="button" id="restart">Start over</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-cat">Cation</span><span class="l-an">Anion</span><span class="l-mol">Molecular solute</span><span class="l-o">O in water (δ−)</span><span class="l-h">H in water (δ+)</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k" id="k1">Cations</div><div class="v" id="r1">0</div><div class="sub" id="s1"></div></div>
+    <div class="stat"><div class="k" id="k2">Anions</div><div class="v" id="r2">0</div><div class="sub" id="s2"></div></div>
+    <div class="stat"><div class="k" id="k3">Solute particles</div><div class="v" id="r3">0</div><div class="sub" id="s3"></div></div>
+    <div class="stat"><div class="k" id="k4">If the solution is 0.10 M</div><div class="v" id="r4">0</div><div class="sub" id="s4"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Ion–dipole</span><h3>Water turns to face each ion</h3><p>Water is polar: the oxygen end carries a partial negative charge (δ−) and the hydrogen ends carry partial positive charges (δ+). Opposite charges attract, so oxygen points toward cations and hydrogen points toward anions.</p></div>
+    <div class="card"><span class="tag">Ratio</span><h3>Keep the formula's ratio</h3><p>CaCl<sub>2</sub> must show two Cl<sup>−</sup> for every Ca<sup>2+</sup>; Na<sub>2</sub>SO<sub>4</sub> must show two Na<sup>+</sup> for every SO<sub>4</sub><sup>2−</sup>. Count the ions in your drawing: the total positive charge must equal the total negative charge.</p></div>
+    <div class="card"><span class="tag">Separated</span><h3>Dissolved ions are apart</h3><p>A soluble ionic compound dissociates. In the diagram, cations and anions should be separate, each surrounded by water, not drawn touching as in the solid.</p></div>
+    <div class="card"><span class="tag">Intact</span><h3>Polyatomic ions stay whole</h3><p>SO<sub>4</sub><sup>2−</sup>, NO<sub>3</sub><sup>−</sup>, NH<sub>4</sub><sup>+</sup> and other polyatomic ions are held together by covalent bonds. Dissolving breaks the ionic attractions between ions, not the covalent bonds inside an ion.</p></div>
+    <div class="card"><span class="tag">Molecular</span><h3>Molecules stay molecules</h3><p>Glucose and methanol dissolve as whole molecules. Water forms hydrogen bonds to their −OH groups, but no ions form, which is why these solutions do not conduct electricity.</p></div>
+    <div class="card"><span class="tag">Charge size</span><h3>Bigger charge, tighter shell</h3><p>By Coulomb's law, a small ion with a large charge (Al<sup>3+</sup>, Mg<sup>2+</sup>) attracts water more strongly than a large ion with a small charge (K<sup>+</sup>). Use that when an FRQ asks which ion has the stronger ion–dipole attraction.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. What a correct diagram shows</h2>
+    <p>Use this as a checklist before you finish any drawing. The particle counts assume the diagram shows a whole number of formula units.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Solute</th><th>Particles per formula unit</th><th>Ratio in the drawing</th><th>Water orientation</th></tr></thead>
+    <tbody>
+      <tr><td>NaCl, KBr</td><td>2 ions</td><td>1 cation : 1 anion</td><td>O toward Na<sup>+</sup>; H toward Cl<sup>−</sup></td></tr>
+      <tr><td>CaCl<sub>2</sub>, MgCl<sub>2</sub></td><td>3 ions</td><td>1 M<sup>2+</sup> : 2 Cl<sup>−</sup></td><td>O toward M<sup>2+</sup>; H toward Cl<sup>−</sup></td></tr>
+      <tr><td>Na<sub>2</sub>SO<sub>4</sub>, K<sub>2</sub>SO<sub>4</sub></td><td>3 ions</td><td>2 M<sup>+</sup> : 1 SO<sub>4</sub><sup>2−</sup> (one particle)</td><td>O toward M<sup>+</sup>; H toward SO<sub>4</sub><sup>2−</sup></td></tr>
+      <tr><td>AlCl<sub>3</sub></td><td>4 ions</td><td>1 Al<sup>3+</sup> : 3 Cl<sup>−</sup></td><td>O toward Al<sup>3+</sup>; H toward Cl<sup>−</sup></td></tr>
+      <tr><td>(NH<sub>4</sub>)<sub>3</sub>PO<sub>4</sub></td><td>4 ions</td><td>3 NH<sub>4</sub><sup>+</sup> : 1 PO<sub>4</sub><sup>3−</sup></td><td>O toward NH<sub>4</sub><sup>+</sup>; H toward PO<sub>4</sub><sup>3−</sup></td></tr>
+      <tr><td>C<sub>6</sub>H<sub>12</sub>O<sub>6</sub> (glucose), CH<sub>3</sub>OH</td><td>1 molecule</td><td>Molecules only, no ions</td><td>Hydrogen bonds to the solute's O and H atoms</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Drawing it on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Draw at least one water molecule next to each kind of ion, with the correct end pointing at it. Graders look at orientation first.</li>
+        <li>Make the ion counts match the formula and any stated amounts (for example, 2 Na<sup>+</sup> and 1 SO<sub>4</sub><sup>2−</sup> per formula unit).</li>
+        <li>Label each particle with its formula and charge, and include a key if you use symbols.</li>
+        <li>If two solutions are compared, scale the number of solute particles to the concentration (twice the molarity, twice the particles in the same volume).</li>
+        <li>Explain orientation with charges: "the partially negative O end of water is attracted to the positive Na<sup>+</sup> ion."</li>
+        <li>Draw cations smaller than anions of the same period when sizes matter (Na<sup>+</sup> smaller than Cl<sup>−</sup>).</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Hydrogens pointing at a cation, or oxygen pointing at an anion.</li>
+        <li>Drawing ions paired up or touching, as they are in the solid.</li>
+        <li>Splitting SO<sub>4</sub><sup>2−</sup> into S and O atoms, or NO<sub>3</sub><sup>−</sup> into N and O.</li>
+        <li>Drawing a molecular solute (sugar, alcohol) as ions.</li>
+        <li>Using a 1 : 1 ratio for every compound; CaCl<sub>2</sub> and Na<sub>2</sub>SO<sub>4</sub> are 1 : 2 and 2 : 1.</li>
+        <li>Saying water's O is attracted to an anion "because O is electronegative". The O end is partially negative, so it is repelled by an anion.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 3.8. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-3.html">Unit 3 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = Lab.el, fm = Lab.fmla;
+  var SUB = "₀₁₂₃₄₅₆₇₈₉", SUP = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "+": "⁺", "-": "⁻" };
+  function uni(s) {
+    var out = "", charge = "", m = s.match(/\^([0-9]*[+\-])$/);
+    if (m) { charge = m[1].split("").map(function (c) { return SUP[c]; }).join(""); s = s.slice(0, m.index); }
+    for (var i = 0; i < s.length; i++) { var ch = s[i]; out += (/\d/.test(ch) && i > 0 && /[A-Za-z\)]/.test(s[i - 1])) ? SUB[+ch] : ch; }
+    return out + charge;
+  }
+
+  // ---------- Particles ----------
+  // kind: cat, an, mol. r = drawn radius (px). Relative sizes: cations smaller than anions.
+  var P = {
+    "Na^+": { kind: "cat", r: 12 }, "K^+": { kind: "cat", r: 14 }, "Ca^2+": { kind: "cat", r: 13 }, "Mg^2+": { kind: "cat", r: 12 }, "Al^3+": { kind: "cat", r: 12 },
+    "Cl^-": { kind: "an", r: 17 }, "Br^-": { kind: "an", r: 18.5 }, "SO4^2-": { kind: "an", r: 20 },
+    "CH3^+": { kind: "cat", r: 15 }, "OH^-": { kind: "an", r: 14 },
+    "C6H12O6": { kind: "mol", r: 23 }, "CH3OH": { kind: "mol", r: 17 }
+  };
+  var SOL = {
+    nacl: { f: "NaCl", parts: [["Na^+", 1], ["Cl^-", 1]] },
+    kbr: { f: "KBr", parts: [["K^+", 1], ["Br^-", 1]] },
+    cacl2: { f: "CaCl2", parts: [["Ca^2+", 1], ["Cl^-", 2]] },
+    na2so4: { f: "Na2SO4", parts: [["Na^+", 2], ["SO4^2-", 1]] },
+    k2so4: { f: "K2SO4", parts: [["K^+", 2], ["SO4^2-", 1]] },
+    alcl3: { f: "AlCl3", parts: [["Al^3+", 1], ["Cl^-", 3]] },
+    glu: { f: "C6H12O6", parts: [["C6H12O6", 1]], mol: true, name: "glucose" },
+    meoh: { f: "CH3OH", parts: [["CH3OH", 1]], mol: true, name: "methanol" }
+  };
+  var BUILD = ["nacl", "cacl2", "na2so4", "alcl3", "glu", "meoh"];
+  function perFU(x) { return x.parts.reduce(function (a, p) { return a + p[1]; }, 0); }
+  function chargeOf(f) { var m = f.match(/\^(\d*)([+\-])$/); if (!m) return 0; return (m[1] ? +m[1] : 1) * (m[2] === "+" ? 1 : -1); }
+
+  // 12 slots, 4 columns x 3 rows, with a little fixed jitter
+  var W = 440, H = 330, K = 1.3;
+  var SLOTS = (function () {
+    var j = [[6, -4], [-5, 7], [3, 5], [-7, -6], [5, 8], [-4, -3], [8, 2], [-6, 6], [2, -8], [-3, 4], [7, -5], [-8, 1]], out = [];
+    for (var r = 0; r < 3; r++) for (var c = 0; c < 4; c++) { var k = r * 4 + c; out.push([62 + c * 105 + j[k][0], 58 + r * 105 + j[k][1]]); }
+    return out;
+  })();
+  // an interleaving order so cations and anions are spread out
+  var ORDER = [0, 5, 2, 7, 9, 4, 11, 1, 6, 3, 8, 10];
+
+  function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+  var svg = document.getElementById("dia");
+  function water(gp, ox, oy, h1x, h1y, h2x, h2y) {
+    [[h1x, h1y], [h2x, h2y]].forEach(function (h) { el("line", { x1: ox, y1: oy, x2: h[0], y2: h[1], stroke: "var(--ink)", "stroke-width": 1.6 }, gp); });
+    el("circle", { cx: ox, cy: oy, r: 7.6, fill: "var(--bad)", style: "stroke:var(--surface); stroke-width:1" }, gp);
+    [[h1x, h1y], [h2x, h2y]].forEach(function (h) { el("circle", { cx: h[0], cy: h[1], r: 4.4, fill: "var(--surface)", style: "stroke:var(--ink); stroke-width:1.3" }, gp); });
+  }
+  var BOND = 11, HOH = 104.5 * Math.PI / 180;
+  // a water molecule at angle a around a particle of radius r centered (cx, cy).
+  // mode "O": oxygen toward the particle (cation). mode "H": one H toward the particle (anion).
+  function shellWater(gp, cx, cy, r, a, mode) {
+    var ux = Math.cos(a), uy = Math.sin(a);
+    if (mode === "O") {
+      var d = r + 10, ox = cx + ux * d, oy = cy + uy * d, s = 52.25 * Math.PI / 180;
+      water(gp, ox, oy, ox + BOND * Math.cos(a + s), oy + BOND * Math.sin(a + s), ox + BOND * Math.cos(a - s), oy + BOND * Math.sin(a - s));
+    } else {
+      var dh = r + 6.5, hx = cx + ux * dh, hy = cy + uy * dh, ox2 = hx + ux * BOND, oy2 = hy + uy * BOND;
+      var back = a + Math.PI, b2 = back + HOH * (Math.floor(a * 7) % 2 ? 1 : -1);
+      water(gp, ox2, oy2, hx, hy, ox2 + BOND * Math.cos(b2), oy2 + BOND * Math.sin(b2));
+    }
+  }
+  function particle(gp, f, cx, cy, labelOverride) {
+    var p = P[f], col = p.kind === "cat" ? "var(--accent)" : p.kind === "an" ? "var(--c2)" : "var(--c1)";
+    if (p.kind === "mol") el("ellipse", { cx: cx, cy: cy, rx: (p.r + 4) * K, ry: (p.r - 3) * K, fill: col, stroke: "var(--surface)", "stroke-width": 1 }, gp);
+    else el("circle", { cx: cx, cy: cy, r: p.r * K, fill: col, stroke: "var(--surface)", "stroke-width": 1 }, gp);
+    el("text", { x: cx, y: cy + 3.5, "text-anchor": "middle", "class": "ion" }, gp, labelOverride || uni(f));
+  }
+  function freeWater(gp, x, y, a) {
+    var s = HOH / 2;
+    water(gp, x, y, x + BOND * Math.cos(a + s), y + BOND * Math.sin(a + s), x + BOND * Math.cos(a - s), y + BOND * Math.sin(a - s));
+  }
+
+  // Build a list of drawn items from a solute, count and an error type.
+  // err: null | "flip" | "ratio" | "paired" | "split" | "ionized"
+  function layout(x, n, err) {
+    var items = [];
+    if (err === "ionized") {
+      for (var i = 0; i < n; i++) { items.push("CH3^+"); items.push("OH^-"); }
+    } else if (err === "ratio") {
+      // drawn 1 : 1 even though the formula is not
+      for (var q = 0; q < n; q++) { items.push(x.parts[0][0]); items.push(x.parts[1][0]); }
+    } else {
+      for (var u = 0; u < n; u++) x.parts.forEach(function (p) { for (var j = 0; j < p[1]; j++) items.push(p[0]); });
+    }
+    return items;
+  }
+
+  function draw(cfg) {
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    el("rect", { x: 1, y: 1, width: W - 2, height: H - 2, rx: 10, fill: "var(--accent-soft)", "fill-opacity": 0.35, stroke: "var(--rule)" }, svg);
+    var gp = el("g", {}, svg);
+    var x = SOL[cfg.sol], err = cfg.err, R = rng(cfg.seed || 11), used = {};
+    if (err === "paired") {
+      // ionic formula units drawn as touching clusters, with loose water around
+      for (var u = 0; u < cfg.n; u++) {
+        var s = SLOTS[ORDER[u * 2]], cat = x.parts[0][0], an = x.parts[1][0], rc = P[cat].r * K, ra = P[an].r * K;
+        used[ORDER[u * 2]] = 1;
+        particle(gp, cat, s[0] - ra * 0.55, s[1]); particle(gp, an, s[0] + rc * 0.55 + ra * 0.45, s[1]);
+      }
+      SLOTS.forEach(function (sl, i) { if (!used[i]) { freeWater(gp, sl[0] - 14, sl[1] + 10, R() * 6.28); freeWater(gp, sl[0] + 16, sl[1] - 12, R() * 6.28); } });
+      return;
+    }
+    var items = layout(x, cfg.n, err);
+    if (err === "split") {
+      // the sulfate ions drawn as separate S and O atoms
+      var keep = items.filter(function (f) { return f !== "SO4^2-"; }), nS = items.length - keep.length;
+      items = keep;
+      for (var k = 0; k < nS; k++) items.push("SPLIT");
+    }
+    items.forEach(function (f, i) {
+      var idx = ORDER[i], s = SLOTS[idx]; used[idx] = 1;
+      if (f === "SPLIT") {
+        el("circle", { cx: s[0], cy: s[1], r: 12, fill: "var(--c3)", stroke: "var(--surface)" }, gp);
+        el("text", { x: s[0], y: s[1] + 3, "text-anchor": "middle", "class": "atom" }, gp, "S");
+        [[-30, -18], [28, -22], [-24, 26], [30, 20]].forEach(function (o) {
+          el("circle", { cx: s[0] + o[0], cy: s[1] + o[1], r: 9.5, fill: "var(--c4)", stroke: "var(--surface)" }, gp);
+          el("text", { x: s[0] + o[0], y: s[1] + o[1] + 3, "text-anchor": "middle", "class": "atom" }, gp, "O");
+        });
+        return;
+      }
+      var p = P[f], a0 = (i * 0.9) % 1.6;
+      if (cfg.water) {
+        var nW = p.kind === "mol" ? 5 : f === "SO4^2-" ? 5 : 4;
+        for (var w = 0; w < nW; w++) {
+          var a = a0 + w * 2 * Math.PI / nW, mode;
+          if (p.kind === "mol") mode = w % 2 ? "O" : "H";
+          else {
+            mode = p.kind === "cat" ? "O" : "H";
+            if (err === "flip") mode = mode === "O" ? "H" : "O";
+            if (err === "flipAn" && p.kind === "an") mode = "O";
+          }
+          shellWater(gp, s[0], s[1], (p.kind === "mol" ? p.r + 1 : p.r) * K, a, mode);
+        }
+      }
+      particle(gp, f, s[0], s[1]);
+    });
+    if (cfg.water) SLOTS.forEach(function (sl, i) { if (!used[i]) { freeWater(gp, sl[0] - 15, sl[1] + 12, R() * 6.28); freeWater(gp, sl[0] + 17, sl[1] - 10, R() * 6.28); } });
+  }
+
+  // ---------- Spot-the-mistake rounds ----------
+  var ANS = [
+    { k: "ok", t: "Correct as drawn" },
+    { k: "flip", t: "Water molecules point the wrong way" },
+    { k: "ratio", t: "Wrong ratio of ions" },
+    { k: "paired", t: "Ions not separated" },
+    { k: "split", t: "Polyatomic ion broken apart" },
+    { k: "ionized", t: "Molecular solute drawn as ions" }
+  ];
+  var ROUNDS = [
+    { sol: "nacl", n: 4, err: "flip", ans: "flip", seed: 3,
+      why: "Every water molecule is turned around. Around Na<sup>+</sup> the hydrogens (δ+) face the ion, and around Cl<sup>−</sup> the oxygen (δ−) faces it. Like charges repel, so the real orientation is the reverse: O toward Na<sup>+</sup>, H toward Cl<sup>−</sup>." },
+    { sol: "cacl2", n: 3, err: null, ans: "ok", seed: 5,
+      why: "Three Ca<sup>2+</sup> and six Cl<sup>−</sup>: the 1 : 2 ratio matches CaCl<sub>2</sub>, and total charge is +6 and −6. Oxygen faces each Ca<sup>2+</sup>, a hydrogen faces each Cl<sup>−</sup>, and the ions are separated." },
+    { sol: "na2so4", n: 2, err: "split", ans: "split", seed: 7,
+      why: "The sulfate ions have been drawn as loose S and O atoms. SO<sub>4</sub><sup>2−</sup> is held together by covalent bonds; dissolving separates Na<sup>+</sup> from SO<sub>4</sub><sup>2−</sup> but leaves each sulfate ion whole." },
+    { sol: "cacl2", n: 3, err: "ratio", ans: "ratio", seed: 9,
+      why: "The diagram shows three Ca<sup>2+</sup> and only three Cl<sup>−</sup>, so the positive charge (+6) does not balance the negative charge (−3). CaCl<sub>2</sub> needs two Cl<sup>−</sup> for every Ca<sup>2+</sup>." },
+    { sol: "kbr", n: 4, err: "paired", ans: "paired", seed: 13,
+      why: "Each K<sup>+</sup> is still touching a Br<sup>−</sup>, as in the solid, with water only around the outside. KBr is a soluble ionic compound, so in solution the ions are separate, each with its own shell of water." },
+    { sol: "meoh", n: 4, err: "ionized", ans: "ionized", seed: 17,
+      why: "Methanol is a molecular compound. It dissolves as whole CH<sub>3</sub>OH molecules that hydrogen-bond to water; it does not break into CH<sub>3</sub><sup>+</sup> and OH<sup>−</sup>. Methanol solutions do not conduct electricity." },
+    { sol: "k2so4", n: 2, err: null, ans: "ok", seed: 19,
+      why: "Four K<sup>+</sup> and two SO<sub>4</sub><sup>2−</sup>: the 2 : 1 ratio matches K<sub>2</sub>SO<sub>4</sub> and the charges balance (+4, −4). Each sulfate is one particle, and every water molecule is oriented correctly." },
+    { sol: "alcl3", n: 2, err: "flipAn", ans: "flip", seed: 23,
+      why: "The water around Al<sup>3+</sup> is right, but around each Cl<sup>−</sup> the partially negative oxygen points at the anion. A hydrogen (δ+) should point toward Cl<sup>−</sup>. The 1 : 3 ratio is correct." }
+  ];
+
+  // ---------- State ----------
+  var S = { mode: "build", sol: "nacl", n: 3, water: true, round: 0, picks: {} };
+  var elN = document.getElementById("s-n");
+  function setReadouts(keys, vals, subs) {
+    for (var i = 0; i < 4; i++) {
+      document.getElementById("k" + (i + 1)).textContent = keys[i];
+      document.getElementById("r" + (i + 1)).innerHTML = vals[i];
+      document.getElementById("s" + (i + 1)).innerHTML = subs[i];
+    }
+  }
+
+  function renderBuild() {
+    var x = SOL[S.sol], per = perFU(x), maxN = Math.floor(12 / per);
+    if (S.n > maxN) S.n = maxN;
+    elN.max = maxN; elN.value = S.n;
+    document.getElementById("o-n").textContent = S.n;
+    document.getElementById("h-n").textContent = x.mol ? "Each molecule stays whole" : "Each formula unit separates into " + per + " ions";
+    draw({ sol: S.sol, n: S.n, err: null, water: S.water, seed: 31 });
+    document.getElementById("g-title").textContent = "Particle view";
+    document.getElementById("g-sub").innerHTML = S.n + " " + fm(x.f) + (x.mol ? " molecule" : " formula unit") + (S.n > 1 ? "s" : "") + " in water";
+    var h = "", ions = x.parts;
+    if (x.mol) {
+      setReadouts(["Cations", "Anions", "Solute particles", "If the solution is 0.10 M"],
+        ["0", "0", String(S.n), "0.10 M"], ["no ions form", "no ions form", x.name + " molecules", "molecules; [ions] = 0"]);
+      h += "<p><b>" + fm(x.f) + " (" + x.name + ") is a molecular compound.</b> It dissolves as " + S.n + " whole molecule" + (S.n > 1 ? "s" : "") + ". Its −OH group" + (x.f === "C6H12O6" ? "s form" : " forms") + " hydrogen bonds with water: water's O accepts a hydrogen bond from the solute's O–H, and water's H donates one to the solute's O. That is why the shell shows both orientations.</p>";
+      h += "<ul><li>No ions: the solution is a nonelectrolyte and does not conduct electricity.</li><li>The number of solute particles equals the number of molecules dissolved.</li></ul>";
+      h += "<p><b>AP answer:</b> draw " + fm(x.f) + " as intact molecules surrounded by water, with hydrogen bonds between water and the solute's O–H groups. Never draw a molecular solute as ions.</p>";
+    } else {
+      var cat = ions[0], an = ions[1], nc = cat[1] * S.n, na = an[1] * S.n, qc = chargeOf(cat[0]), qa = chargeOf(an[0]);
+      setReadouts(["Cations", "Anions", "Total charge", "If the solution is 0.10 M"],
+        [nc + " " + fm(cat[0]), na + " " + fm(an[0]), "+" + nc * qc + " / −" + na * -qa],
+        ["ratio " + cat[1] + " : " + an[1], "per formula unit: " + an[1], "positive / negative: balanced", ""]);
+      document.getElementById("r4").innerHTML = '<span style="font-size:.9rem">[' + fm(cat[0]) + "] " + (0.1 * cat[1]).toFixed(2) + " M<br>[" + fm(an[0]) + "] " + (0.1 * an[1]).toFixed(2) + " M</span>";
+      document.getElementById("s4").textContent = "subscript × 0.10 M";
+      h += "<p><b>" + S.n + " " + fm(x.f) + " → " + nc + " " + fm(cat[0]) + " + " + na + " " + fm(an[0]) + ".</b> Each formula unit releases " + cat[1] + " " + fm(cat[0]) + " and " + an[1] + " " + fm(an[0]) + ", so the drawing keeps a " + cat[1] + " : " + an[1] + " ratio and the charges balance (+" + nc * qc + " and −" + na * -qa + ").</p><ul>";
+      if (S.water) {
+        h += "<li>Around each " + fm(cat[0]) + ", water's <b>oxygen</b> end (δ−) points in: opposite charges attract (ion–dipole attraction).</li>";
+        h += "<li>Around each " + fm(an[0]) + ", a water <b>hydrogen</b> (δ+) points in.</li>";
+      } else h += "<li>Water is hidden. Switch the hydration shells back on: an AP diagram should show at least one correctly oriented water molecule next to each kind of ion.</li>";
+      if (/O4/.test(an[0])) h += "<li>" + fm(an[0]) + " is one particle. Its S–O bonds are covalent and do not break when the salt dissolves.</li>";
+      if (qc >= 2) h += "<li>" + fm(cat[0]) + " has a " + qc + "+ charge on a small ion, so its ion–dipole attraction to water is stronger than that of a 1+ ion such as Na<sup>+</sup>.</li>";
+      h += "</ul><p><b>AP answer:</b> show separated " + fm(cat[0]) + " and " + fm(an[0]) + " ions in a " + cat[1] + " : " + an[1] + " ratio, with water's O facing the cation and water's H facing the anion.</p>";
+    }
+    document.getElementById("story").innerHTML = h;
+  }
+
+  var ansBtns = [];
+  function renderSpot() {
+    var rd = ROUNDS[S.round], x = SOL[rd.sol], pick = S.picks[S.round];
+    draw({ sol: rd.sol, n: rd.n, err: rd.err, water: true, seed: rd.seed });
+    document.getElementById("g-title").textContent = "Diagram " + (S.round + 1) + " of " + ROUNDS.length;
+    document.getElementById("g-sub").innerHTML = "claims to show " + fm(x.f) + "(aq)";
+    document.getElementById("round-lbl").textContent = "Diagram " + (S.round + 1) + " of " + ROUNDS.length;
+    document.getElementById("claim").innerHTML = "This diagram is supposed to show " + rd.n + " " + (x.mol ? "molecules" : "formula units") + " of " + fm(x.f) + " dissolved in water.";
+    ansBtns.forEach(function (b) {
+      b.classList.remove("right", "wrong"); b.disabled = pick != null;
+      b.setAttribute("aria-pressed", "false");
+      if (pick != null) { if (b.dataset.k === rd.ans) b.classList.add("right"); else if (b.dataset.k === pick) b.classList.add("wrong"); }
+    });
+    var done = Object.keys(S.picks).length, right = Object.keys(S.picks).filter(function (k) { return S.picks[k] === ROUNDS[k].ans; }).length;
+    setReadouts(["Diagram", "Answered", "Correct", "Claimed solute"],
+      [(S.round + 1) + " / " + ROUNDS.length, done + " / " + ROUNDS.length, right + " / " + done, fm(x.f)],
+      ["use Next to move on", "pick one answer per diagram", done === ROUNDS.length ? (right === ROUNDS.length ? "perfect run" : "press Start over to try again") : "", rd.n + (x.mol ? " molecules" : " formula units")]);
+    var h;
+    if (pick == null) h = "<p><b>Check the diagram in order:</b></p><ol class=\"steps\"><li>Are " + (x.mol ? "the molecules intact, with no ions?" : "the ions separated, each with water around it?") + "</li><li>Does the ion count match the formula's ratio, with the charges balanced?</li><li>Are polyatomic ions in one piece?</li><li>Does water's O point toward cations and H toward anions?</li></ol><p>Then pick an answer.</p>";
+    else {
+      var ok = pick === rd.ans;
+      h = "<p><b style=\"color:var(--" + (ok ? "good" : "bad") + ")\">" + (ok ? "Correct." : "Not quite.") + "</b> " + (ok ? "" : "The answer is: " + ANS.filter(function (a) { return a.k === rd.ans; })[0].t.toLowerCase() + ". ") + rd.why + "</p>";
+      h += "<p><b>AP answer:</b> a correct diagram has separated ions in the formula's ratio, intact polyatomic ions and molecules, and water oriented O-toward-cation, H-toward-anion.</p>";
+    }
+    document.getElementById("story").innerHTML = h;
+    document.getElementById("prev").disabled = S.round === 0;
+    document.getElementById("next").disabled = S.round === ROUNDS.length - 1;
+  }
+
+  var solBtns = {};
+  function render() {
+    document.getElementById("m-build").setAttribute("aria-pressed", S.mode === "build" ? "true" : "false");
+    document.getElementById("m-spot").setAttribute("aria-pressed", S.mode === "spot" ? "true" : "false");
+    document.getElementById("build-panel").hidden = S.mode !== "build";
+    document.getElementById("spot-panel").hidden = S.mode !== "spot";
+    document.getElementById("w-on").setAttribute("aria-pressed", S.water ? "true" : "false");
+    document.getElementById("w-off").setAttribute("aria-pressed", S.water ? "false" : "true");
+    Object.keys(solBtns).forEach(function (k) { solBtns[k].setAttribute("aria-pressed", S.sol === k ? "true" : "false"); });
+    if (S.mode === "build") renderBuild(); else renderSpot();
+  }
+
+  document.getElementById("m-build").addEventListener("click", function () { S.mode = "build"; render(); });
+  document.getElementById("m-spot").addEventListener("click", function () { S.mode = "spot"; render(); });
+  document.getElementById("w-on").addEventListener("click", function () { S.water = true; render(); });
+  document.getElementById("w-off").addEventListener("click", function () { S.water = false; render(); });
+  elN.addEventListener("input", function () { S.n = parseInt(elN.value, 10); render(); });
+  BUILD.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.innerHTML = fm(SOL[k].f); b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S.sol = k; render(); });
+    document.getElementById("sol-btns").appendChild(b); solBtns[k] = b;
+  });
+  ANS.forEach(function (a) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = a.t; b.dataset.k = a.k;
+    b.addEventListener("click", function () { if (S.picks[S.round] != null) return; S.picks[S.round] = a.k; render(); });
+    document.getElementById("ans").appendChild(b); ansBtns.push(b);
+  });
+  document.getElementById("prev").addEventListener("click", function () { if (S.round > 0) { S.round--; render(); } });
+  document.getElementById("next").addEventListener("click", function () { if (S.round < ROUNDS.length - 1) { S.round++; render(); } });
+  document.getElementById("restart").addEventListener("click", function () { S.round = 0; S.picks = {}; render(); });
+  render();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "A particle diagram shows a single Mg²⁺ ion in water. Which description of the nearby water molecules is correct?",
+      o: ["The hydrogen atoms point toward Mg²⁺, because hydrogen is the positive end of water", "The oxygen atoms point toward Mg²⁺, because the oxygen end of water carries a partial negative charge", "The water molecules are randomly oriented, because Mg²⁺ has no dipole", "The oxygen atoms point toward Mg²⁺, because oxygen forms covalent bonds with Mg²⁺"], c: 1,
+      w: "The O end of water is partially negative and is attracted to the positive ion (ion–dipole attraction). Choice A puts the δ+ end next to a positive ion, which would repel. Choice D is wrong because the attraction is an intermolecular force, not a covalent bond." },
+    { s: "A diagram is meant to represent Na₂SO₄ dissolved in water and shows 6 sodium ions. How many sulfate particles should it show?",
+      o: ["2", "6", "12", "3"], c: 3,
+      w: "Na₂SO₄ releases 2 Na⁺ for every SO₄²⁻, so 6 Na⁺ go with 3 SO₄²⁻. The charges check: +6 and 3 × (−2) = −6. Choice C is the trap of counting 4 O atoms per sulfate as separate particles; sulfate stays intact." },
+    { s: "Which statement best explains why a correct particle diagram of KNO₃(aq) shows NO₃⁻ as one particle?",
+      o: ["The N–O bonds within nitrate are covalent and are not broken when the solid dissolves", "Nitrate ions are too large to be surrounded by water", "KNO₃ is a molecular compound, so it does not dissociate", "The attraction between K⁺ and NO₃⁻ is too strong to be overcome by water"], c: 0,
+      w: "Dissolving overcomes the ionic attractions between K⁺ and NO₃⁻ but leaves the covalent bonds inside the polyatomic ion intact. KNO₃ is ionic and soluble, so C and D are false." },
+    { s: "Which diagram description correctly represents an aqueous solution of glucose, C₆H₁₂O₆?",
+      o: ["C⁶⁺ and H⁺ ions surrounded by water oxygens", "Separate C, H and O atoms spread among water molecules", "Intact glucose molecules hydrogen-bonded to water molecules", "Glucose molecules clumped together with no water between them"], c: 2,
+      w: "Glucose is a molecular solute. It dissolves as whole molecules, held in solution by hydrogen bonds between its −OH groups and water. Choices A and B break covalent bonds, which does not happen on dissolving. Choice D describes the solid, not a solution." },
+    { s: "Two beakers have the same volume. Beaker 1 contains 0.20 M KCl and beaker 2 contains 0.10 M CaCl₂. A correct diagram of beaker 1 shows 4 K⁺. How many Cl⁻ should the diagram of beaker 2 show?",
+      o: ["2", "4", "6", "8"], c: 1,
+      w: "In the drawing scale, 0.20 M KCl corresponds to 4 K⁺ and 4 Cl⁻, so 1 formula unit drawn = 0.05 M. Beaker 2 has 0.10 M CaCl₂, which is 2 formula units: 2 Ca²⁺ and 4 Cl⁻. Choice A gives the number of Ca²⁺ ions instead of Cl⁻. Choice D shows 4 formula units of CaCl₂, as if the solution were 0.20 M." },
+    { s: "A student draws a Cl⁻ ion in water with the oxygen atoms of four water molecules pointing toward it. What should the student change?",
+      o: ["Nothing; oxygen is the most electronegative atom, so it is attracted to Cl⁻", "Turn the molecules so a hydrogen of each points toward Cl⁻, because the H end is partially positive", "Remove the water molecules, because anions are not hydrated", "Draw covalent bonds from O to Cl⁻"], c: 1,
+      w: "The O end of water is partially negative, so it is repelled by an anion. The partially positive H end is attracted to Cl⁻. Choice A confuses electronegativity with charge: high electronegativity is why O carries the δ− charge. Anions are hydrated, so C is wrong." },
+    { s: "Which ion has the strongest ion–dipole attraction to the water molecules around it?",
+      o: ["K⁺", "Na⁺", "Mg²⁺", "Al³⁺"], c: 3,
+      w: "By Coulomb's law, the attraction is greater for a larger charge and a smaller ion. Al³⁺ has the largest charge and the smallest radius of these four ions. Mg²⁺ is close but has a smaller charge; K⁺ is the weakest (largest ion, 1+ charge)." },
+    { s: "A diagram meant to show CaCl₂(aq) shows 3 Ca²⁺ and 3 Cl⁻ ions, each separated and correctly surrounded by water. Which is the error?",
+      o: ["The water molecules should be oriented with H toward Ca²⁺", "The ions should be shown touching in pairs", "Ca²⁺ should be drawn larger than Cl⁻", "The diagram should show 6 Cl⁻ ions, so the charges balance"], c: 3,
+      w: "CaCl₂ has two Cl⁻ for every Ca²⁺. Three Ca²⁺ (+6 total) need six Cl⁻ (−6 total). Choice C is backward: Ca²⁺ is smaller than Cl⁻. Choices A and B would introduce errors into a diagram that otherwise has the orientation and separation right." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("3.8");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [3], topic: "3.8", compact: true, storageKey: "topic-3.8" });</script>
+</body>
+</html>

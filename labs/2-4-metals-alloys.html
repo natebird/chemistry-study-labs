@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Structure of Metals and Alloys Study Lab</title>
+<meta name="description" content="Build pure metals, substitutional alloys like brass, and interstitial alloys like steel atom by atom, then push the layers, switch on a voltage, and see why metals bend and conduct and why steel is stiffer than iron.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.side .controls { grid-template-columns: 1fr; }
+.check { display: flex; gap: 8px; align-items: center; font-size: .88rem; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.legend .l-host { color: var(--accent); } .legend .l-guest { color: var(--c1); } .legend .l-e { color: var(--c2); } .legend .l-bad { color: var(--bad); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 2 · Topic 2.4</span>
+  <h1>Structure of Metals and Alloys Study Lab</h1>
+  <p class="lede">A metal is a lattice of positive metal cores in a sea of delocalized electrons. That model explains why metals conduct electricity and bend instead of shattering. Mixing in a second element makes an alloy, and whether the new atoms replace host atoms or squeeze between them depends on their size. Build the alloys, push on the layers, and turn on a voltage.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Build a metal or an alloy</h2>
+    <p>One layer of atoms is shown in a simple square arrangement so the gaps between atoms are easy to see. Atom sizes are drawn to scale from metallic radii (covalent radius for carbon). The size-ratio cutoffs used to classify custom alloys are rough guides, not AP rules.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Particle view <small id="pv-sub"></small></h3>
+      <svg class="chart" id="lat" role="img" aria-label="Particle view of a metal or alloy layer with a sea of electrons"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Metals and alloys</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-x">Amount of the added element <output id="o-x"></output></label>
+          <input type="range" id="s-x" min="0" max="40" step="5">
+          <span class="hint" id="x-hint"></span>
+        </div>
+        <div class="ctl">
+          <label for="s-r">Custom: radius of the added atom <output id="o-r"></output></label>
+          <input type="range" id="s-r" min="60" max="160" step="2">
+          <span class="hint">Moving this makes a custom alloy with the current host metal</span>
+        </div>
+        <div class="ctl">
+          <label for="s-push">Push the top layers sideways <output id="o-push"></output></label>
+          <input type="range" id="s-push" min="0" max="1" step="0.05">
+          <span class="hint">Like hammering or drawing the metal into a wire</span>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="volt"> Connect a battery (electrons drift toward +)</label>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-host">Host metal cation</span><span class="l-guest">Added atom</span><span class="l-e">Delocalized electrons</span><span class="l-bad">Layers blocked</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Atom sizes</div><div class="v" id="r-size"></div><div class="sub" id="r-size2"></div></div>
+    <div class="stat"><div class="k">Type</div><div class="v" id="r-type"></div><div class="sub" id="r-type2"></div></div>
+    <div class="stat"><div class="k">Malleable and ductile?</div><div class="v" id="r-mal"></div><div class="sub" id="r-mal2"></div></div>
+    <div class="stat"><div class="k">Density</div><div class="v" id="r-den"></div><div class="sub" id="r-den2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Model</span><h3>Electron-sea model</h3><p>Metal atoms have low ionization energies and give up their valence electrons to the whole sample. The positive metal cores sit in a lattice surrounded by a sea of delocalized electrons. The bonding is the attraction between the cores and that sea.</p></div>
+    <div class="card"><span class="tag">Conductivity</span><h3>Why metals conduct</h3><p>The delocalized electrons are free to move through the lattice. Apply a voltage and they drift toward the positive terminal, carrying current in the solid. Mobile electrons also make metals good conductors of heat.</p></div>
+    <div class="card"><span class="tag">Malleable, ductile</span><h3>Why metals bend</h3><p>When layers of metal cores slide past one another, the electron sea moves with them and keeps holding the cores together. No like charges are forced together, so the metal deforms instead of breaking (compare ionic solids in 2.3).</p></div>
+    <div class="card"><span class="tag">Similar sizes</span><h3>Substitutional alloys</h3><p>When the added atoms are about the same size as the host atoms, they take the place of host atoms in the lattice. Brass is zinc substituted into copper. Density and other properties are typically between those of the component metals, and the alloy stays malleable and ductile.</p></div>
+    <div class="card"><span class="tag">Much smaller atoms</span><h3>Interstitial alloys</h3><p>When the added atoms are much smaller, they fit into the holes (interstices) between host atoms. Steel is carbon in the spaces of an iron lattice. The small atoms pin the layers in place, making the lattice more rigid: stronger and harder, less malleable and ductile.</p></div>
+    <div class="card"><span class="tag">Still metallic</span><h3>Alloys keep the electron sea</h3><p>Alloys still have mobile valence electrons, so they still conduct electricity and heat and still look metallic. Atoms of a second element disrupt the regular lattice, so conductivity is usually somewhat lower than the pure metal's.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Alloy cheat sheet</h2>
+    <p>Radii are metallic radii in pm (covalent radius for carbon). Densities are at room temperature in g/cm³.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Material</th><th>Made of</th><th>Atom sizes</th><th>Type</th><th>What changes</th></tr></thead>
+    <tbody>
+      <tr><td><b>Pure copper</b></td><td>Cu</td><td>Cu 128</td><td>Pure metal</td><td>Very malleable and ductile, excellent conductor (density 8.96)</td></tr>
+      <tr><td><b>Brass</b></td><td>Cu with Zn</td><td>Cu 128, Zn 134 (ratio 1.05)</td><td>Substitutional</td><td>Harder than copper, still malleable; density between Cu (8.96) and Zn (7.13), about 8.5 for common brass</td></tr>
+      <tr><td><b>Cupronickel</b></td><td>Cu with Ni</td><td>Cu 128, Ni 124 (ratio 0.97)</td><td>Substitutional</td><td>Used for coins; tough, corrosion resistant, still malleable</td></tr>
+      <tr><td><b>Electrum (gold–silver)</b></td><td>Au with Ag</td><td>Au 144, Ag 144 (ratio 1.00)</td><td>Substitutional</td><td>Mixes in any proportion; density between Ag (10.5) and Au (19.3)</td></tr>
+      <tr><td><b>Steel</b></td><td>Fe with C (up to about 2% by mass)</td><td>Fe 126, C 77 (ratio 0.61)</td><td>Interstitial</td><td>C atoms in the holes make the lattice rigid: much stronger and harder, less malleable and ductile than iron</td></tr>
+      <tr><td>Rough size guide</td><td>Any pair</td><td>ratio within about 0.85–1.15</td><td>Substitutional</td><td>Ratio below about 0.65: interstitial. In between: the atoms do not mix well (beyond AP).</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Writing it on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Describe metallic bonding as positive metal cores (cations) in a sea of delocalized valence electrons.</li>
+        <li>Explain conductivity with mobile electrons: "the delocalized electrons can move through the solid."</li>
+        <li>Explain malleability: layers of cations can slide past each other while the electron sea keeps holding them together.</li>
+        <li>Classify an alloy by comparing atomic radii: similar radii → substitutional; much smaller added atom → interstitial.</li>
+        <li>For an interstitial alloy, say that the small atoms in the holes interfere with layers sliding, making the alloy less malleable and ductile.</li>
+        <li>In particle diagrams, keep the host lattice regular: replace host atoms (substitutional) or put smaller atoms in the gaps (interstitial).</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying metals conduct because of mobile ions. In a solid metal the cores stay in place; the electrons move.</li>
+        <li>Calling steel substitutional or brass interstitial. Check the sizes: Zn is about the size of Cu; C is much smaller than Fe.</li>
+        <li>Saying an alloy is a compound with a fixed formula. Alloys are mixtures with variable composition.</li>
+        <li>Saying alloys stop conducting. They keep the electron sea; conductivity is just usually lower.</li>
+        <li>Predicting a substitutional alloy's density outside the range of its components. It typically lies between them.</li>
+        <li>Drawing interstitial atoms larger than the host atoms, or drawing them replacing host atoms.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 2.4. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-2.html">Unit 2 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = Lab.el;
+  // Metallic radii (pm), covalent radius for C; densities (g/cm³); molar masses from Lab.
+  var ATOM = {
+    Cu: { r: 128, rho: 8.96 }, Zn: { r: 134, rho: 7.13 }, Ni: { r: 124, rho: 8.91 },
+    Au: { r: 144, rho: 19.3 }, Ag: { r: 144, rho: 10.49 }, Fe: { r: 126, rho: 7.87 }, C: { r: 77, rho: null }
+  };
+  var PRESETS = [
+    { key: "cu", name: "Pure copper", host: "Cu", guest: null, x: 0 },
+    { key: "brass", name: "Brass (Cu + Zn)", host: "Cu", guest: "Zn", x: 30 },
+    { key: "cuni", name: "Cupronickel (Cu + Ni)", host: "Cu", guest: "Ni", x: 25 },
+    { key: "electrum", name: "Gold + silver", host: "Au", guest: "Ag", x: 40 },
+    { key: "fe", name: "Pure iron", host: "Fe", guest: null, x: 0 },
+    { key: "steel", name: "Steel (Fe + C)", host: "Fe", guest: "C", x: 20 }
+  ];
+  var S = { key: "cu", host: "Cu", guest: null, gr: 128, x: 0, push: 0, volt: false };
+
+  function ratio() { return S.guest ? S.gr / ATOM[S.host].r : 1; }
+  function type() {
+    if (!S.guest || S.x === 0) return "pure";
+    var q = ratio();
+    if (q >= 0.85 && q <= 1.15) return "sub";
+    if (q < 0.65) return "inter";
+    return "poor";
+  }
+  var TYPE = { pure: "Pure metal", sub: "Substitutional", inter: "Interstitial", poor: "Poor fit" };
+
+  // ---------- Lattice ----------
+  var svg = document.getElementById("lat"), W = 440, H = 330;
+  var ROWS = 5, COLS = 9, R = 19, SP = 2.3 * R, OX = (W - (COLS - 1) * SP) / 2, OY = 96;
+  var SLIP = 2;   // rows 0..SLIP-1 are the top layers that get pushed
+  var seed = 3;
+  function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+  var sites = [], holes = [], electrons = [];
+  function layout() {
+    seed = 3;
+    sites = []; holes = [];
+    for (var r = 0; r < ROWS; r++) for (var c = -1; c <= COLS; c++) sites.push({ r: r, c: c, u: rnd() });
+    for (var r2 = 0; r2 < ROWS - 1; r2++) for (var c2 = -1; c2 < COLS; c2++) holes.push({ r: r2, c: c2, u: rnd() });
+    electrons = [];
+    for (var i = 0; i < 46; i++) electrons.push({ x: OX - SP / 2 + rnd() * COLS * SP, y: OY - SP / 2 + rnd() * ROWS * SP, ph: rnd() * 6.28 });
+  }
+  layout();
+  function blocked() {
+    if (type() !== "inter") return false;
+    // a filled hole between the pushed rows and the fixed rows pins the layers
+    return holes.some(function (h) { return h.r === SLIP - 1 && h.u < S.x / 100 && h.c >= 0 && h.c < COLS - 1; });
+  }
+  function maxShift() { return blocked() ? 0.12 : 1; }
+  var raf = null, lastT = 0;
+  function draw(t) {
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var defs = el("defs", {}, svg);
+    var cp = el("clipPath", { id: "lat-clip" }, defs);
+    var L = OX - SP / 2, Rr = OX + (COLS - 0.5) * SP;
+    el("rect", { x: L, y: 20, width: Rr - L, height: H - 40 }, cp);
+    var tp = type(), shift = Math.min(S.push, maxShift()) * SP;
+    el("rect", { x: L, y: OY - SP / 2 - 4, width: Rr - L, height: ROWS * SP + 8, rx: 10, fill: "var(--c2)", opacity: 0.08 }, svg);
+    var g = el("g", { "clip-path": "url(#lat-clip)" }, svg);
+    var hr = ATOM[S.host].r, sc = R / hr;
+    function atom(x, y, rad, col, label) {
+      el("circle", { cx: x, cy: y, r: rad, fill: col, "fill-opacity": 0.28, stroke: col, "stroke-width": 1.6 }, g);
+      if (label && rad > 9) el("text", { x: x, y: y + 4, "text-anchor": "middle", style: "fill:var(--ink); font-size:" + (rad > 15 ? 11 : 9) + "px; font-weight:600" }, g, label);
+    }
+    sites.forEach(function (s) {
+      var top = s.r < SLIP, x = OX + s.c * SP + (top ? shift : 0), y = OY + s.r * SP;
+      var isGuest = tp === "sub" || tp === "poor" ? s.u < S.x / 100 : false;
+      if (isGuest) atom(x, y, S.gr * sc, "var(--c1)", S.guest);
+      else atom(x, y, R, "var(--accent)", S.host);
+    });
+    if (tp === "inter") {
+      holes.forEach(function (h) {
+        if (h.u >= S.x / 100) return;
+        var top = h.r < SLIP - 1, onSlip = h.r === SLIP - 1;
+        var x = OX + (h.c + 0.5) * SP + (top ? shift : 0), y = OY + (h.r + 0.5) * SP;
+        atom(x, y, S.gr * sc, "var(--c1)", S.guest);
+        if (onSlip && S.push > 0.12 && h.c >= 0 && h.c < COLS - 1) el("circle", { cx: x, cy: y, r: S.gr * sc + 4, fill: "none", stroke: "var(--bad)", "stroke-width": 2.5 }, g);
+      });
+    }
+    // electron sea
+    electrons.forEach(function (e, i) {
+      var x = e.x + (Lab.reduceMotion ? 0 : Math.sin(t / 300 + e.ph) * 4);
+      var y = e.y + (Lab.reduceMotion ? 0 : Math.cos(t / 260 + e.ph * 1.7) * 4);
+      if (e.y < OY + (SLIP - 0.5) * SP) x += shift;
+      el("circle", { cx: x, cy: y, r: 2.8, fill: "var(--c2)" }, g);
+    });
+    // slip plane
+    var sy = OY + (SLIP - 0.5) * SP;
+    if (S.push > 0) el("line", { x1: L, x2: Rr, y1: sy, y2: sy, stroke: "var(--muted)", "stroke-dasharray": "4 4" }, svg);
+    if (S.push > 0) {
+      var bl = blocked() && S.push > 0.12;
+      el("text", { x: W / 2, y: 30, "text-anchor": "middle", style: "font-size:13px; font-weight:700; fill:" + (bl ? "var(--bad)" : "var(--good)") }, svg,
+        bl ? "Blocked: atoms in the holes pin the layers" : (S.push >= 0.999 ? "Layers slid one full position; still bonded" : "Layers sliding; electron sea moves with them"));
+      // force arrow
+      el("line", { x1: L + 4, x2: L + 4 + 30 + 40 * S.push, y1: 50, y2: 50, stroke: "var(--ink)", "stroke-width": 2.5 }, svg);
+      el("path", { d: "M" + (L + 4 + 38 + 40 * S.push) + " 50 l-9 -5 v10 z", fill: "var(--ink)" }, svg);
+      el("text", { x: L + 4 + 40 + 40 * S.push + 6, y: 54, style: "font-size:11px" }, svg, "force");
+    } else {
+      el("text", { x: W / 2, y: 30, "text-anchor": "middle", style: "font-size:12px; fill:var(--ink)" }, svg, TYPE[tp] + (tp === "pure" ? ": " + S.host : ": " + S.host + " with " + S.guest));
+    }
+    // battery
+    var by = H - 20;
+    el("text", { x: L, y: by + 4, style: "font-size:13px; font-weight:700; fill:var(--ink)" }, svg, "−");
+    el("text", { x: Rr, y: by + 4, "text-anchor": "end", style: "font-size:13px; font-weight:700; fill:var(--ink)" }, svg, "+");
+    el("text", { x: W / 2, y: by + 4, "text-anchor": "middle", style: "font-size:11px; fill:" + (S.volt ? "var(--c2)" : "var(--muted)") }, svg, S.volt ? "battery on: electrons drift toward + (current flows)" : "no battery: electrons move randomly, no net current");
+  }
+  function step(dt) {
+    var L = OX - SP / 2, Rr = OX + (COLS - 0.5) * SP;
+    electrons.forEach(function (e) {
+      e.x += (S.volt ? 0.9 : 0) * dt / 16 + (Math.random() - 0.5) * 0.6;
+      e.y += (Math.random() - 0.5) * 0.6;
+      if (e.x > Rr) e.x = L; if (e.x < L) e.x = Rr;
+      e.y = Math.max(OY - SP / 2, Math.min(OY + (ROWS - 0.5) * SP, e.y));
+    });
+  }
+  function loop(t) { var dt = lastT ? Math.min(50, t - lastT) : 16; lastT = t; step(dt); draw(t); raf = requestAnimationFrame(loop); }
+  function start() { if (raf) cancelAnimationFrame(raf); raf = null; lastT = 0; if (Lab.reduceMotion) draw(0); else raf = requestAnimationFrame(loop); }
+  document.addEventListener("visibilitychange", function () { if (document.hidden) { if (raf) cancelAnimationFrame(raf); raf = null; } else start(); });
+
+  // ---------- Readouts and story ----------
+  function density() {
+    var tp = type();
+    var h = ATOM[S.host];
+    if (tp === "pure") return { v: h.rho.toFixed(2) + " g/cm³", s: "pure " + S.host };
+    if (tp === "inter") return { v: "≈ " + h.rho.toFixed(2) + " g/cm³", s: "close to pure " + S.host + " (few small atoms added)" };
+    var gst = ATOM[S.guest];
+    if (!gst || gst.rho == null || !Lab.BY_SYMBOL[S.guest] || S.key === null && !PRESETS.some(function (p) { return p.guest === S.guest && p.host === S.host; })) return { v: "between", s: "the two metals' densities" };
+    var xg = S.x / 100, mh = (1 - xg) * Lab.BY_SYMBOL[S.host].m, mg = xg * Lab.BY_SYMBOL[S.guest].m;
+    var rho = (mh + mg) / (mh / h.rho + mg / gst.rho);
+    return { v: rho.toFixed(2) + " g/cm³", s: "estimate, between " + S.host + " " + h.rho + " and " + S.guest + " " + gst.rho };
+  }
+  function story() {
+    var tp = type(), q = ratio(), li = [], end;
+    var html = "";
+    if (tp === "pure") {
+      html = "<p><b>Pure " + Lab.BY_SYMBOL[S.host].n.toLowerCase() + ".</b> Every lattice site holds a " + S.host + " cation, and the valence electrons are delocalized over the whole sample.</p>";
+      li.push("The bonding is the attraction between the positive cores and the shared electron sea. It is not directional, so it does not care which neighbor a core has.");
+      end = "<b>AP answer:</b> a metal is a lattice of cations in a sea of delocalized electrons; the mobile electrons conduct electricity and let layers slide, making the metal malleable and ductile.";
+    } else if (tp === "sub") {
+      html = "<p><b>" + S.host + " with " + S.x + "% " + S.guest + ": a substitutional alloy.</b> The " + S.guest + " atoms (" + S.gr + " pm) are close in size to the " + S.host + " atoms (" + ATOM[S.host].r + " pm), a radius ratio of " + q.toFixed(2) + ", so they take the place of " + S.host + " atoms on lattice sites.</p>";
+      li.push("The lattice keeps its pattern and its electron sea, so the alloy still conducts and is still malleable and ductile.");
+      li.push("The slightly different-sized atoms make sliding a bit harder, so the alloy is typically <b>harder and stronger</b> than the pure metal. Properties such as density lie <b>between</b> those of the two metals.");
+      end = "<b>AP answer:</b> the atoms have comparable radii, so " + S.guest + " atoms substitute for " + S.host + " atoms in the lattice, forming a substitutional alloy whose density is between those of the component metals.";
+    } else if (tp === "inter") {
+      html = "<p><b>" + S.host + " with " + S.guest + " in " + S.x + "% of the holes: an interstitial alloy.</b> The " + S.guest + " atoms (" + S.gr + " pm) are much smaller than the " + S.host + " atoms (" + ATOM[S.host].r + " pm), a ratio of " + q.toFixed(2) + ". They do not replace host atoms; they fit into the spaces (interstices) between them.</p>";
+      li.push("The host lattice is unchanged, and the electron sea is still there, so the alloy still conducts.");
+      li.push("The small atoms sit between layers and act like pins. Pushing the top layers jams them against the interstitial atoms" + (S.push > 0.12 && blocked() ? " (circled in red)" : "") + ", so the lattice is more <b>rigid</b>: stronger and harder, but <b>less malleable and ductile</b>. This is why steel is much stronger than pure iron.");
+      end = "<b>AP answer:</b> the much smaller " + S.guest + " atoms occupy the interstitial spaces in the " + S.host + " lattice; they interfere with layers sliding past each other, making the interstitial alloy more rigid and less malleable and ductile.";
+    } else {
+      html = "<p><b>Radius ratio " + q.toFixed(2) + ": neither model fits well.</b> The added atom is too different in size to replace host atoms easily, but too big to fit in the holes.</p>";
+      li.push("Real pairs like this usually mix only a little, forming separate regions instead (beyond the AP exam). Move the radius slider toward " + ATOM[S.host].r + " pm for a substitutional alloy, or below about " + Math.round(0.65 * ATOM[S.host].r) + " pm for an interstitial one.");
+      end = "<b>AP answer:</b> AP questions use the two clear cases: similar radii → substitutional; much smaller atoms → interstitial.";
+    }
+    if (S.push > 0) {
+      if (blocked()) li.push("<b>Pushing:</b> the layers move only slightly before the interstitial atoms block them.");
+      else li.push("<b>Pushing:</b> the top layers slide " + (S.push >= 0.999 ? "a full atom position" : "along the dashed plane") + ". The cores never line up with like charges in a way that breaks the solid, because the electron sea moves with them and keeps holding every core. Compare an ionic crystal, which shatters (topic 2.3).");
+    }
+    li.push(S.volt ? "<b>Battery on:</b> the delocalized electrons drift toward the positive terminal while the cores stay in place. That flow of electrons is the electric current." : "Turn on the battery to see the electrons, not the cores, carry the current.");
+    return html + "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul><p>" + end + "</p>";
+  }
+  var elX = document.getElementById("s-x"), elR = document.getElementById("s-r"), elP = document.getElementById("s-push"), btns = {};
+  function render() {
+    var tp = type(), q = ratio();
+    if (S.push > maxShift()) S.push = Math.max(S.push, 0);
+    elX.value = S.x; elR.value = S.gr; elP.value = S.push;
+    elX.max = tp === "inter" || (S.guest && ratio() < 0.65) ? 40 : 50;
+    document.getElementById("o-x").textContent = S.guest ? S.x + "%" : "none";
+    document.getElementById("x-hint").textContent = !S.guest ? "Pick an alloy or move the radius slider to add a second element" : (tp === "inter" || ratio() < 0.65) ? "Percent of holes filled (steel has few C atoms per Fe atom)" : "Percent of lattice sites taken by the added atom";
+    elX.disabled = !S.guest;
+    document.getElementById("o-r").textContent = S.guest ? S.gr + " pm" : "—";
+    document.getElementById("o-push").textContent = S.push.toFixed(2) + " positions";
+    document.getElementById("pv-sub").textContent = TYPE[tp];
+    document.getElementById("r-size").textContent = S.guest ? S.host + " " + ATOM[S.host].r + " · " + S.guest + " " + S.gr : S.host + " " + ATOM[S.host].r + " pm";
+    document.getElementById("r-size2").textContent = S.guest ? "ratio " + q.toFixed(2) + " (pm)" : "one kind of atom";
+    document.getElementById("r-type").innerHTML = '<span class="pill ' + (tp === "inter" ? "infl" : tp === "sub" ? "rec" : "lr") + '">' + TYPE[tp] + "</span>";
+    document.getElementById("r-type2").textContent = tp === "sub" ? "replaces host atoms" : tp === "inter" ? "fills holes between atoms" : tp === "poor" ? "sizes too different to substitute" : "one element";
+    document.getElementById("r-mal").innerHTML = tp === "inter" ? '<span class="pill infl">Less</span>' : '<span class="pill lr">Yes</span>';
+    document.getElementById("r-mal2").textContent = tp === "inter" ? "rigid lattice, layers pinned" : tp === "sub" ? "harder than the pure metal" : tp === "poor" ? "not modeled" : "layers slide easily";
+    var d = density();
+    document.getElementById("r-den").textContent = d.v; document.getElementById("r-den2").textContent = d.s;
+    document.getElementById("story").innerHTML = story();
+    Object.keys(btns).forEach(function (k) { btns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    if (Lab.reduceMotion) draw(0);
+  }
+  PRESETS.forEach(function (p) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = p.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S.key = p.key; S.host = p.host; S.guest = p.guest; S.gr = p.guest ? ATOM[p.guest].r : ATOM[p.host].r; S.x = p.x; S.push = 0; render(); });
+    document.getElementById("sc").appendChild(b); btns[p.key] = b;
+  });
+  elX.addEventListener("input", function () { S.x = +elX.value; S.key = null; render(); });
+  elR.addEventListener("input", function () { S.gr = +elR.value; if (!S.guest || ATOM[S.guest] && ATOM[S.guest].r !== S.gr) { S.guest = "X"; if (!S.x) S.x = 20; } S.key = null; render(); });
+  var stopP = function () {};
+  elP.addEventListener("input", function () {
+    stopP();
+    var target = +elP.value, lim = maxShift();
+    S.push = target;
+    if (target > lim) { S.push = target; }
+    render();
+  });
+  document.getElementById("volt").addEventListener("change", function (e) { S.volt = e.target.checked; render(); });
+  ATOM.X = { r: 0, rho: null };
+  render(); start();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Steel is made by adding a small amount of carbon to iron. Which statement best describes the structure of steel?",
+      o: ["It is a substitutional alloy, because C atoms replace Fe atoms in the lattice.", "It is an interstitial alloy, because C atoms are much smaller than Fe atoms and occupy spaces between them.", "It is an ionic compound, because Fe is a metal and C is a nonmetal.", "It is a substitutional alloy, because C atoms are larger than Fe atoms."], c: 1,
+      w: "The radius of C (about 77 pm) is much smaller than that of Fe (about 126 pm), so carbon atoms fit into the holes of the iron lattice: an interstitial alloy. Choice C is the trap for students who apply the metal + nonmetal rule from 2.1; steel keeps metallic bonding and its electron sea." },
+    { s: "In brass, zinc atoms take the place of some copper atoms in the copper lattice. This is possible mainly because",
+      o: ["Zn is more electronegative than Cu", "Zn atoms are much smaller than Cu atoms", "Zn and Cu atoms have similar atomic radii", "Zn forms ionic bonds with Cu"], c: 2,
+      w: "A substitutional alloy forms when the atoms are about the same size (Cu 128 pm, Zn 134 pm), so a Zn atom fits on a Cu lattice site. Much smaller atoms (choice B) would form an interstitial alloy instead." },
+    { s: "Which of the following best explains why metals are malleable?",
+      o: ["Layers of metal cations can slide past each other while the delocalized electrons continue to hold them together.", "Metal atoms are held together by weak intermolecular forces.", "The ions in a metal have alternating positive and negative charges.", "Metals have low melting points, so they soften easily."], c: 0,
+      w: "Metallic bonding is the attraction between cations and a sea of electrons that moves with them, so shifting layers does not break the solid apart. Choice C describes an ionic solid, which shatters when layers shift." },
+    { s: "Why is an interstitial alloy such as steel typically less malleable and ductile than the pure host metal?",
+      o: ["The added atoms remove the delocalized electrons.", "The added atoms form ionic bonds that make the metal brittle.", "The added atoms are larger than the host atoms and push the layers apart.", "Small atoms in the spaces between host atoms interfere with the layers sliding past each other."], c: 3,
+      w: "The interstitial atoms sit between the layers and pin them, so the lattice is more rigid. The electron sea remains (choice A), and the added atoms are smaller, not larger (choice C)." },
+    { s: "The density of copper is 8.96 g/cm³ and the density of zinc is 7.13 g/cm³. Which is the most reasonable density for a brass that is mostly copper with some zinc?",
+      o: ["6.5 g/cm³", "16.1 g/cm³", "8.5 g/cm³", "9.6 g/cm³"], c: 2,
+      w: "Brass is a substitutional alloy, so its density lies between those of its component metals (7.13 to 8.96 g/cm³). Mostly copper puts it closer to copper. Choice B adds the two densities, and choices A and D fall outside the range." },
+    { s: "Solid copper conducts electricity well. Which particles carry the electric current in a copper wire?",
+      o: ["Cu²⁺ ions moving through the lattice", "Delocalized valence electrons moving through the lattice", "Cu atoms vibrating in place", "Anions moving toward the positive terminal"], c: 1,
+      w: "In a metal the cations stay at their lattice sites; the delocalized valence electrons are the mobile charged particles that carry current. Ions move only in molten or dissolved ionic compounds (choice A), and a metal has no anions (choice D)." },
+    { s: "A particle diagram shows large atoms of one element in a regular array, with smaller atoms of a second element located in the spaces between the large atoms. The large atoms are all still in their original lattice positions. What does the diagram represent?",
+      o: ["An interstitial alloy", "A substitutional alloy", "An ionic solid", "A pure metal"], c: 0,
+      w: "Smaller atoms in the gaps of an unchanged host lattice is the definition of an interstitial alloy. In a substitutional alloy (choice B) the second element's atoms would occupy lattice sites in place of host atoms." },
+    { s: "Iron has an atomic radius of about 126 pm. Which element, with its approximate atomic radius given, is most likely to form an interstitial alloy with iron?",
+      o: ["Cr, 128 pm", "Ni, 124 pm", "Mn, 127 pm", "N, 71 pm"], c: 3,
+      w: "Only N is much smaller than Fe (71/126 ≈ 0.56), small enough to fit in the holes of the iron lattice; nitrogen is in fact used to harden steel surfaces. Cr, Ni, and Mn are all nearly the same size as Fe, so they form substitutional alloys (as in stainless steel, which contains Cr and Ni)." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("2.4");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [2], topic: "2.4", compact: true, storageKey: "topic-2.4" });</script>
+</body>
+</html>

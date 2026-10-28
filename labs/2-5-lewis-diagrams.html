@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lewis Diagrams Study Lab</title>
+<meta name="description" content="Draw Lewis diagrams for 22 molecules and ions by clicking bonds and atoms, get instant feedback on electron count and octets, or step through the counting procedure one move at a time, including incomplete and expanded octets.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.scenarios button { font-family: var(--body); }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.check { display: flex; gap: 8px; align-items: center; font-size: .88rem; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.how { font-size: .86rem; color: var(--muted); background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 12px; }
+svg .hit { cursor: pointer; outline: none; }
+svg .hit-b { stroke: var(--accent); stroke-opacity: 0; }
+svg .hit-a { fill: var(--accent); fill-opacity: 0; }
+svg .hit-b:hover, svg .hit-b:focus-visible { stroke-opacity: .18; }
+svg .hit-a:hover, svg .hit-a:focus-visible { fill-opacity: .14; }
+.stepno { font-family: var(--mono); font-size: .82rem; color: var(--accent); }
+.legend .l-bad { color: var(--bad); } .legend .l-pos { color: var(--accent); } .legend .l-neg { color: var(--c4); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 2 · Topic 2.5</span>
+  <h1>Lewis Diagrams Study Lab</h1>
+  <p class="lede">A Lewis diagram shows every valence electron in a molecule or ion as a bond or a lone pair. A short, reliable procedure produces the diagram every time: count the electrons, connect the atoms, fill octets, then make multiple bonds if needed. Draw them yourself and get instant feedback, or watch the procedure one step at a time.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Lewis diagram builder</h2>
+    <p>Pick a molecule or ion. The atoms start connected by single bonds, with no lone pairs. <b>Click a bond</b> to change it from single to double to triple. <b>Click an atom</b> to add a lone pair (it cycles back to zero). The checker counts your electrons and checks every atom's octet as you go.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3><span id="mol-title">Molecule</span> <small id="mol-sub"></small></h3>
+      <svg class="chart" id="lewis" role="group" aria-label="Editable Lewis diagram. Bonds and atoms are buttons."></svg>
+      <div class="how" id="how">Tip: use Tab to move between bonds and atoms, and Enter to change one.</div>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Octet basics</div>
+        <div class="scenarios" id="g-basic"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Multiple bonds</div>
+        <div class="scenarios" id="g-multi"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Polyatomic ions</div>
+        <div class="scenarios" id="g-ion"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Octet exceptions</div>
+        <div class="scenarios" id="g-exc"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Walk me through it</div>
+        <div class="btnrow">
+          <button type="button" id="st-prev">← Back</button>
+          <button type="button" id="st-next" class="primary">Next step →</button>
+          <span class="stepno" id="st-no"></span>
+        </div>
+        <div class="btnrow">
+          <button type="button" id="b-reset">Start over</button>
+          <button type="button" id="b-answer">Show the answer</button>
+        </div>
+        <label class="check"><input type="checkbox" id="show-fc"> Show formal charges (topic 2.6)</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-bad">Atom without a correct electron count</span><span class="l-pos">Positive formal charge</span><span class="l-neg">Negative formal charge</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Valence electrons available</div><div class="v" id="r-tot"></div><div class="sub" id="r-tot2"></div></div>
+    <div class="stat"><div class="k">Electrons in your diagram</div><div class="v" id="r-used"></div><div class="sub" id="r-used2"></div></div>
+    <div class="stat"><div class="k">Atoms with the right count</div><div class="v" id="r-ok"></div><div class="sub" id="r-ok2"></div></div>
+    <div class="stat"><div class="k">Status</div><div class="v" id="r-st"></div><div class="sub" id="r-st2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Step 1</span><h3>Count valence electrons</h3><p>Add the valence electrons of every atom (the group number for main-group elements: C 4, N 5, O 6, halogens 7). Add one electron for each negative charge on an ion; subtract one for each positive charge. Every one of these electrons must appear in the diagram, no more and no fewer.</p></div>
+    <div class="card"><span class="tag">Step 2</span><h3>Connect the skeleton</h3><p>The least electronegative atom (never H) usually goes in the center. H and F are always terminal, bonded to one atom. Connect each terminal atom to the center with a single bond (2 electrons each).</p></div>
+    <div class="card"><span class="tag">Steps 3 and 4</span><h3>Fill octets, outside first</h3><p>Give each terminal atom lone pairs until it has 8 electrons (H needs only 2). Put any electrons that are left on the central atom as lone pairs.</p></div>
+    <div class="card"><span class="tag">Step 5</span><h3>Make multiple bonds if needed</h3><p>If the central atom still has fewer than 8 electrons, move a lone pair from a neighboring atom into the bond to make a double bond (or two pairs for a triple). The electron total does not change; the pair is just shared now.</p></div>
+    <div class="card"><span class="tag">Fewer than 8</span><h3>Incomplete octets</h3><p>Boron (and beryllium) are stable with fewer than 8 electrons: B in BF<sub>3</sub> has 6. Making a B=F double bond would give B an octet but put a positive formal charge on F, so the AP-preferred diagram keeps three single bonds.</p></div>
+    <div class="card"><span class="tag">More than 8</span><h3>Expanded octets</h3><p>Atoms in period 3 and below (P, S, Cl, Xe, I) can hold more than 8 electrons around the central atom, as in PCl<sub>5</sub> (10), SF<sub>6</sub> (12), and XeF<sub>4</sub> (12). Period 2 atoms (C, N, O, F) never exceed 8.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Electron bookkeeping cheat sheet</h2>
+    <p>Use these counts to check a diagram fast. "Electrons around" means bonding electrons plus lone-pair electrons on that atom (each bond counts fully for both atoms).</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Atom</th><th>Valence electrons</th><th>Usual bonds + lone pairs (neutral)</th><th>Electrons around it</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><b>H</b></td><td>1</td><td>1 bond, 0 lone pairs</td><td>2</td><td>Always terminal. Never a double bond.</td></tr>
+      <tr><td><b>B</b></td><td>3</td><td>3 bonds, 0 lone pairs</td><td>6</td><td>Incomplete octet (BF<sub>3</sub>, BH<sub>3</sub>).</td></tr>
+      <tr><td><b>C</b></td><td>4</td><td>4 bonds, 0 lone pairs</td><td>8</td><td>Any mix: 4 single; 2 single + 1 double; 2 double; 1 single + 1 triple.</td></tr>
+      <tr><td><b>N</b></td><td>5</td><td>3 bonds, 1 lone pair</td><td>8</td><td>4 bonds and no lone pair in NH<sub>4</sub><sup>+</sup> (formal charge +1).</td></tr>
+      <tr><td><b>O</b></td><td>6</td><td>2 bonds, 2 lone pairs</td><td>8</td><td>1 bond and 3 lone pairs in OH<sup>−</sup> (formal charge −1).</td></tr>
+      <tr><td><b>F, Cl, Br, I</b></td><td>7</td><td>1 bond, 3 lone pairs</td><td>8</td><td>F is always terminal. Cl, Br, I can be central with an expanded octet (ClF<sub>3</sub>, I<sub>3</sub><sup>−</sup>).</td></tr>
+      <tr><td><b>P, S, Xe</b></td><td>5, 6, 8</td><td>Varies</td><td>8, 10, or 12</td><td>Expanded octets when central: PCl<sub>5</sub>, SF<sub>4</sub>, SF<sub>6</sub>, XeF<sub>4</sub>.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Writing it on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Show every valence electron: every bond as a line and every lone pair as two dots. Missing lone pairs on terminal atoms is the most common lost point.</li>
+        <li>Check the total: bonds × 2 + lone pairs × 2 must equal the valence electron count.</li>
+        <li>Check every atom: 2 electrons for H, 8 for C, N, O, F; B may have 6; period 3 and beyond may have more than 8.</li>
+        <li>For an ion, draw square brackets around the whole diagram and write the charge outside the top-right bracket.</li>
+        <li>Put the least electronegative atom in the center (other than H), with H and F on the outside.</li>
+        <li>When asked to "justify," cite the counts: "C has four bonds (8 electrons) and each O has two bonds and two lone pairs (8 electrons)."</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Forgetting to add electrons for a negative charge (or subtract for a positive charge) on an ion.</li>
+        <li>Satisfying every octet but using too many electrons. Always compare to the total from step 1.</li>
+        <li>Giving H a lone pair or a double bond.</li>
+        <li>Giving C, N, O, or F more than 8 electrons. Only period 3 and later atoms can expand their octet.</li>
+        <li>Putting H or F in the center of the skeleton.</li>
+        <li>Making a multiple bond to an atom that already has an octet, or to boron in BF<sub>3</sub>.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 2.5. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-2.html">Unit 2 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = Lab.el;
+
+  // ================= Lewis engine (inline; same engine as the 2.6 lab) =================
+  var VAL = { H: 1, Be: 2, B: 3, C: 4, N: 5, O: 6, F: 7, Si: 4, P: 5, S: 6, Cl: 7, Br: 7, I: 7, Xe: 8 };
+  var PER = { H: 1, Be: 2, B: 2, C: 2, N: 2, O: 2, F: 2, Si: 3, P: 3, S: 3, Cl: 3, Br: 4, I: 5, Xe: 5 };
+  var EN = { H: 2.20, Be: 1.57, B: 2.04, C: 2.55, N: 3.04, O: 3.44, F: 3.98, Si: 1.90, P: 2.19, S: 2.58, Cl: 3.16, Br: 2.96, I: 2.66, Xe: 2.60 };
+  function totalE(m) { return m.atoms.reduce(function (t, a) { return t + VAL[a.s]; }, 0) - (m.charge || 0); }
+  function bondSum(m, st, i) { var t = 0; m.bonds.forEach(function (b, k) { if (b[0] === i || b[1] === i) t += st.o[k]; }); return t; }
+  function degree(m, i) { return m.bonds.filter(function (b) { return b[0] === i || b[1] === i; }).length; }
+  function nbrs(m, i) { var r = []; m.bonds.forEach(function (b, k) { if (b[0] === i) r.push({ j: b[1], k: k }); else if (b[1] === i) r.push({ j: b[0], k: k }); }); return r; }
+  function countE(m, st, i) { return 2 * bondSum(m, st, i) + 2 * st.lp[i]; }
+  function fc(m, st, i) { return VAL[m.atoms[i].s] - 2 * st.lp[i] - bondSum(m, st, i); }
+  function maxLP(m, i) { var s = m.atoms[i].s; return s === "H" ? 0 : PER[s] >= 3 ? 4 : 3; }
+  function analyze(m, st) {
+    var tot = totalE(m), used = 0, info = [], nOk = 0, sumAbs = 0, sumFc = 0;
+    st.o.forEach(function (o) { used += 2 * o; });
+    st.lp.forEach(function (l) { used += 2 * l; });
+    m.atoms.forEach(function (a, i) {
+      var c = countE(m, st, i), f = fc(m, st, i), ok = true, note = "";
+      if (a.s === "H") { ok = c === 2; if (!ok) note = "H must have exactly 2 electrons (one single bond, no lone pairs)"; }
+      else if (a.s === "B" || a.s === "Be") { ok = c <= 8 && c >= (a.s === "B" ? 6 : 4); note = !ok ? a.s + " has " + c + " electrons" : c < 8 ? "incomplete octet (" + c + " electrons), allowed for " + a.s : ""; }
+      else if (PER[a.s] === 2) { ok = c === 8; if (c < 8) note = a.s + " has only " + c + " electrons; it needs 8"; if (c > 8) note = a.s + " has " + c + " electrons; period 2 atoms cannot exceed 8"; }
+      else { ok = c >= 8 && c <= 12; note = c < 8 ? a.s + " has only " + c + " electrons; it needs at least 8" : c > 12 ? a.s + " has " + c + " electrons, too many" : c > 8 ? "expanded octet (" + c + " electrons), allowed for period " + PER[a.s] : ""; }
+      if (ok) nOk++;
+      sumAbs += Math.abs(f); sumFc += f;
+      info.push({ c: c, fc: f, ok: ok, note: note });
+    });
+    return { tot: tot, used: used, info: info, nOk: nOk, sumAbs: sumAbs, sumFc: sumFc, valid: used === tot && nOk === m.atoms.length };
+  }
+  function cloneSt(st) { return { o: st.o.slice(), lp: st.lp.slice() }; }
+  /* The textbook procedure, recorded one step at a time. */
+  function solve(m) {
+    var n = m.atoms.length, steps = [], tot = totalE(m);
+    var st = { o: m.bonds.map(function () { return 0; }), lp: m.atoms.map(function () { return 0; }) };
+    var parts = m.atoms.map(function (a) { return a.s + " " + VAL[a.s]; });
+    var sumV = m.atoms.reduce(function (t, a) { return t + VAL[a.s]; }, 0);
+    steps.push({ st: cloneSt(st), t: "Count the valence electrons", d: "Add up the valence electrons: " + groupCounts(m) + " = " + sumV + (m.charge ? (m.charge < 0 ? ", plus " + (-m.charge) + " for the " + m.charge + " charge" : ", minus " + m.charge + " for the +" + m.charge + " charge") + " = " + tot : "") + ". The finished diagram must contain exactly <b>" + tot + "</b> electrons." });
+    st.o = st.o.map(function () { return 1; });
+    var left = tot - 2 * m.bonds.length;
+    steps.push({ st: cloneSt(st), t: "Connect the atoms with single bonds", d: "Draw " + m.bonds.length + " single bond" + (m.bonds.length > 1 ? "s" : "") + " (" + 2 * m.bonds.length + " electrons). " + left + " electrons are left to place." + (m.center != null ? " " + m.atoms[m.center].s + " goes in the center because " + centerWhy(m) + "." : "") });
+    var term = [], cen = [];
+    for (var i = 0; i < n; i++) { if (m.atoms[i].s === "H") continue; if (degree(m, i) === 1) term.push(i); else cen.push(i); }
+    term.sort(function (a, b) { return EN[m.atoms[b].s] - EN[m.atoms[a].s]; });
+    if (term.length) {
+      var placed = 0;
+      term.forEach(function (i) { while (countE(m, st, i) < 8 && left >= 2) { st.lp[i]++; left -= 2; placed += 2; } });
+      if (placed) steps.push({ st: cloneSt(st), t: "Complete the octets of the outer atoms", d: "Add lone pairs to the terminal atoms until each has 8 electrons (H already has its 2). That uses " + placed + " electrons; " + left + " remain." });
+    }
+    if (left > 0) {
+      var placed2 = 0, pool = cen.length ? cen : m.atoms.map(function (a, k) { return k; }).filter(function (k) { return m.atoms[k].s !== "H"; });
+      while (left >= 2) {
+        var best = null;
+        pool.forEach(function (i) { var c = countE(m, st, i); if (c < 8 && (best == null || c < countE(m, st, best))) best = i; });
+        if (best == null) pool.forEach(function (i) { if (best == null && PER[m.atoms[i].s] >= 3) best = i; });
+        if (best == null) best = pool[0];
+        st.lp[best]++; left -= 2; placed2 += 2;
+      }
+      var who = {}; pool.forEach(function (i) { if (st.lp[i]) who[m.atoms[i].s] = 1; });
+      steps.push({ st: cloneSt(st), t: "Put the leftover electrons on the central atom", d: "The remaining " + placed2 + " electrons go on " + (cen.length > 1 ? "the inner atoms" : "the central atom") + " as lone pairs." + (cen.some(function (i) { return countE(m, st, i) > 8; }) ? " That gives the central atom <b>more than 8</b> electrons, which is allowed because it is in period 3 or below (expanded octet)." : "") });
+    } else steps.push({ st: cloneSt(st), t: "Check the central atom", d: "No electrons are left over for the central atom." });
+    var guard = 0, made = 0;
+    while (guard++ < 12) {
+      var needy = null;
+      for (var a = 0; a < n; a++) { var s = m.atoms[a].s; if (s === "H" || s === "B" || s === "Be") continue; if (countE(m, st, a) < 8) { needy = a; break; } }
+      if (needy == null) break;
+      var cand = nbrs(m, needy).filter(function (x) { return m.atoms[x.j].s !== "H" && st.lp[x.j] > 0; });
+      if (!cand.length) break;
+      cand.sort(function (p, q) { return (st.lp[q.j] - st.lp[p.j]) || (EN[m.atoms[p.j].s] - EN[m.atoms[q.j].s]); });
+      var c0 = cand[0];
+      st.lp[c0.j]--; st.o[c0.k]++; made++;
+      var oname = ["", "single", "double", "triple"][st.o[c0.k]];
+      steps.push({ st: cloneSt(st), t: "Make a multiple bond", d: m.atoms[needy].s + " has only " + (countE(m, st, needy) - 2) + " electrons, so move one lone pair from " + m.atoms[c0.j].s + " into the bond between them. It becomes a <b>" + oname + " bond</b>. The total number of electrons does not change." });
+    }
+    var hasB = m.atoms.some(function (a, k) { return (a.s === "B" || a.s === "Be") && countE(m, st, k) < 8; });
+    var fin = analyze(m, st);
+    steps.push({ st: cloneSt(st), t: "Check the finished diagram", d: "Electrons used: " + fin.used + " of " + fin.tot + ". " + (hasB ? "Boron keeps an incomplete octet of 6: forming a double bond to B would put a + formal charge on the more electronegative F. " : "") + "Every atom has the right count" + (made === 0 && !hasB ? ", with no multiple bonds needed" : "") + "." });
+    return steps;
+  }
+  function groupCounts(m) {
+    var c = {}, order = [];
+    m.atoms.forEach(function (a) { if (!c[a.s]) { c[a.s] = 0; order.push(a.s); } c[a.s]++; });
+    return order.map(function (s) { return (c[s] > 1 ? c[s] + " " + s + " × " + VAL[s] : s + " " + VAL[s]); }).join(" + ");
+  }
+  function centerWhy(m) {
+    var s = m.atoms[m.center].s;
+    var others = m.atoms.filter(function (a, k) { return k !== m.center && a.s !== "H"; }).map(function (a) { return a.s; });
+    if (!others.length) return "H can form only one bond and must be on the outside";
+    if (others.every(function (o) { return o === s; })) return "it is the atom bonded to both of the others";
+    var lower = others.every(function (o) { return EN[s] <= EN[o]; });
+    return lower ? "it is the least electronegative atom other than H" : "it can form the most bonds";
+  }
+  /* Drawing. Lone pairs go in the directions farthest from bonds and other lone pairs. */
+  var CH = { "-": "−" };
+  function drawLewis(svg, m, st, opts) {
+    var W = 440, H = 300;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var A = m.atoms, info = opts.info;
+    // bonds
+    m.bonds.forEach(function (b, k) {
+      var p = A[b[0]], q = A[b[1]], dx = q.x - p.x, dy = q.y - p.y, L = Math.sqrt(dx * dx + dy * dy), ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
+      var o = st.o[k], offs = o === 1 ? [0] : o === 2 ? [-4, 4] : o === 3 ? [-6.5, 0, 6.5] : [];
+      var x1 = p.x + ux * 15, y1 = p.y + uy * 15, x2 = q.x - ux * 15, y2 = q.y - uy * 15;
+      if (o === 0) el("line", { x1: x1, y1: y1, x2: x2, y2: y2, stroke: "var(--ghost)", "stroke-width": 1.5, "stroke-dasharray": "3 4" }, svg);
+      offs.forEach(function (d) { el("line", { x1: x1 + nx * d, y1: y1 + ny * d, x2: x2 + nx * d, y2: y2 + ny * d, stroke: "var(--ink)", "stroke-width": 2.4, "stroke-linecap": "round" }, svg); });
+      if (opts.hybridPartial && opts.hybridPartial[k]) {
+        var d2 = 4;
+        el("line", { x1: x1 + nx * d2, y1: y1 + ny * d2, x2: x2 + nx * d2, y2: y2 + ny * d2, stroke: "var(--ink)", "stroke-width": 2.2, "stroke-dasharray": "4 4" }, svg);
+      }
+      if (opts.editable && !(p.s === "H" || q.s === "H")) {
+        var h = el("line", { x1: x1, y1: y1, x2: x2, y2: y2, "class": "hit hit-b", "stroke-width": 20, "pointer-events": "stroke", tabindex: 0, role: "button", "aria-label": p.s + "–" + q.s + " bond, " + ["no", "single", "double", "triple"][o] + " bond. Activate to change." }, svg);
+        h.addEventListener("click", function () { opts.onBond(k); });
+        h.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); opts.onBond(k); } });
+      }
+    });
+    // atoms, lone pairs, formal charges
+    A.forEach(function (a, i) {
+      var dirs = nbrs(m, i).map(function (x) { return Math.atan2(A[x.j].y - a.y, A[x.j].x - a.x); });
+      var taken = dirs.slice(), lpDirs = [];
+      var nl = opts.hideLP ? 0 : st.lp[i];
+      for (var l = 0; l < nl; l++) {
+        var best = null, bestD = -1;
+        for (var c = 0; c < 16; c++) {
+          var ang = -Math.PI / 2 + c * Math.PI / 8, dmin = 9;
+          taken.forEach(function (t) { var d = Math.abs(Math.atan2(Math.sin(ang - t), Math.cos(ang - t))); if (d < dmin) dmin = d; });
+          if (dmin > bestD + 1e-6) { bestD = dmin; best = ang; }
+        }
+        taken.push(best); lpDirs.push(best);
+      }
+      var bad = info && !info[i].ok;
+      if (bad) el("circle", { cx: a.x, cy: a.y, r: 17, fill: "var(--bad)", "fill-opacity": 0.12, stroke: "var(--bad)", "stroke-width": 1.5 }, svg);
+      el("text", { x: a.x, y: a.y + 8, "text-anchor": "middle", style: "fill:var(--ink); font-size:23px; font-weight:600; font-family:var(--body)" }, svg, a.s);
+      lpDirs.forEach(function (ang) {
+        var cx = a.x + Math.cos(ang) * 19, cy = a.y + Math.sin(ang) * 19, px = -Math.sin(ang) * 4.6, py = Math.cos(ang) * 4.6;
+        el("circle", { cx: cx + px, cy: cy + py, r: 2.6, fill: "var(--ink)" }, svg);
+        el("circle", { cx: cx - px, cy: cy - py, r: 2.6, fill: "var(--ink)" }, svg);
+      });
+      var f = opts.fcText ? opts.fcText[i] : opts.showFC ? fc(m, st, i) : 0;
+      if (f && f !== "0") {
+        var txt = typeof f === "string" ? f : (f > 0 ? "+" + f : "−" + (-f));
+        var neg = typeof f === "string" ? f.charAt(0) === "−" : f < 0;
+        // place the charge label in the open direction nearest the upper right
+        var ang2 = -Math.PI / 4, bestD2 = -1;
+        for (var c2 = 0; c2 < 16; c2++) {
+          var an = -Math.PI / 2 + c2 * Math.PI / 8, dm = 9;
+          taken.forEach(function (t) { var d = Math.abs(Math.atan2(Math.sin(an - t), Math.cos(an - t))); if (d < dm) dm = d; });
+          var score = dm - 0.15 * Math.abs(Math.atan2(Math.sin(an + Math.PI / 4), Math.cos(an + Math.PI / 4)));
+          if (score > bestD2) { bestD2 = score; ang2 = an; }
+        }
+        var fx = a.x + Math.cos(ang2) * 27, fy = a.y + Math.sin(ang2) * 27;
+        el("circle", { cx: fx, cy: fy, r: txt.length > 2 ? 13 : 10, fill: "var(--surface)", stroke: neg ? "var(--c4)" : "var(--accent)", "stroke-width": 1.5 }, svg);
+        el("text", { x: fx, y: fy + 4, "text-anchor": "middle", style: "font-size:11px; font-weight:700; fill:" + (neg ? "var(--c4)" : "var(--accent)") }, svg, txt);
+      }
+      if (opts.editable && a.s !== "H") {
+        var hc = el("circle", { cx: a.x, cy: a.y, r: 17, "class": "hit hit-a", "pointer-events": "all", tabindex: 0, role: "button", "aria-label": a.s + " atom with " + st.lp[i] + " lone pairs. Activate to add a lone pair." }, svg);
+        hc.addEventListener("click", function () { opts.onAtom(i); });
+        hc.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); opts.onAtom(i); } });
+      }
+    });
+    if (m.charge) {
+      var xs = A.map(function (a) { return a.x; }), ys = A.map(function (a) { return a.y; });
+      var x0 = Math.min.apply(null, xs) - 42, x1b = Math.max.apply(null, xs) + 42, y0 = Math.min.apply(null, ys) - 40, y1b = Math.max.apply(null, ys) + 40;
+      el("path", { d: "M" + (x0 + 9) + " " + y0 + " H" + x0 + " V" + y1b + " H" + (x0 + 9) + " M" + (x1b - 9) + " " + y0 + " H" + x1b + " V" + y1b + " H" + (x1b - 9), fill: "none", stroke: "var(--ink)", "stroke-width": 2 }, svg);
+      var q = Math.abs(m.charge);
+      el("text", { x: x1b + 4, y: y0 + 8, style: "fill:var(--ink); font-size:16px; font-weight:600" }, svg, (q > 1 ? q : "") + (m.charge > 0 ? "+" : "−"));
+    }
+  }
+  function polygon(cx, cy, r, n, start) { var p = []; for (var i = 0; i < n; i++) { var a = (start + i * 360 / n) * Math.PI / 180; p.push([Math.round(cx + r * Math.cos(a)), Math.round(cy - r * Math.sin(a))]); } return p; }
+  function star(center, outer, r, angles, charge, extra) {
+    var atoms = [{ s: center, x: 220, y: 150 }], bonds = [];
+    outer.forEach(function (s, i) { var a = angles[i] * Math.PI / 180; atoms.push({ s: s, x: Math.round(220 + r * Math.cos(a)), y: Math.round(150 - r * Math.sin(a)) }); bonds.push([0, i + 1]); });
+    var m = { atoms: atoms, bonds: bonds, charge: charge || 0, center: 0 };
+    for (var k in extra) m[k] = extra[k];
+    return m;
+  }
+  // ================= end engine =================
+
+  // ---------- Molecules ----------
+  var M = {
+    CH4: star("C", ["H", "H", "H", "H"], 70, [90, 0, 270, 180], 0, { name: "Methane", f: "CH4", g: "basic" }),
+    NH3: star("N", ["H", "H", "H"], 70, [180, 0, 270], 0, { name: "Ammonia", f: "NH3", g: "basic" }),
+    H2O: star("O", ["H", "H"], 70, [215, 325], 0, { name: "Water", f: "H2O", g: "basic" }),
+    CCl4: star("C", ["Cl", "Cl", "Cl", "Cl"], 80, [90, 0, 270, 180], 0, { name: "Carbon tetrachloride", f: "CCl4", g: "basic" }),
+    PCl3: star("P", ["Cl", "Cl", "Cl"], 80, [180, 0, 270], 0, { name: "Phosphorus trichloride", f: "PCl3", g: "basic" }),
+    CH3OH: { name: "Methanol", f: "CH3OH", g: "basic", charge: 0, center: 0, atoms: [{ s: "C", x: 180, y: 150 }, { s: "O", x: 260, y: 150 }, { s: "H", x: 180, y: 80 }, { s: "H", x: 180, y: 220 }, { s: "H", x: 110, y: 150 }, { s: "H", x: 320, y: 195 }], bonds: [[0, 1], [0, 2], [0, 3], [0, 4], [1, 5]] },
+    H2O2: { name: "Hydrogen peroxide", f: "H2O2", g: "basic", charge: 0, center: null, atoms: [{ s: "O", x: 185, y: 140 }, { s: "O", x: 260, y: 140 }, { s: "H", x: 130, y: 190 }, { s: "H", x: 315, y: 190 }], bonds: [[0, 1], [0, 2], [1, 3]] },
+    CO2: { name: "Carbon dioxide", f: "CO2", g: "multi", charge: 0, center: 1, atoms: [{ s: "O", x: 135, y: 150 }, { s: "C", x: 220, y: 150 }, { s: "O", x: 305, y: 150 }], bonds: [[1, 0], [1, 2]] },
+    HCN: { name: "Hydrogen cyanide", f: "HCN", g: "multi", charge: 0, center: 1, atoms: [{ s: "H", x: 145, y: 150 }, { s: "C", x: 215, y: 150 }, { s: "N", x: 295, y: 150 }], bonds: [[1, 0], [1, 2]] },
+    N2: { name: "Nitrogen", f: "N2", g: "multi", charge: 0, center: null, atoms: [{ s: "N", x: 180, y: 150 }, { s: "N", x: 260, y: 150 }], bonds: [[0, 1]] },
+    CH2O: star("C", ["O", "H", "H"], 75, [90, 215, 325], 0, { name: "Formaldehyde", f: "CH2O", g: "multi" }),
+    C2H4: { name: "Ethene (ethylene)", f: "C2H4", g: "multi", charge: 0, center: null, atoms: [{ s: "C", x: 185, y: 150 }, { s: "C", x: 260, y: 150 }, { s: "H", x: 135, y: 95 }, { s: "H", x: 135, y: 205 }, { s: "H", x: 310, y: 95 }, { s: "H", x: 310, y: 205 }], bonds: [[0, 1], [0, 2], [0, 3], [1, 4], [1, 5]] },
+    C2H2: { name: "Ethyne (acetylene)", f: "C2H2", g: "multi", charge: 0, center: null, atoms: [{ s: "H", x: 105, y: 150 }, { s: "C", x: 180, y: 150 }, { s: "C", x: 260, y: 150 }, { s: "H", x: 335, y: 150 }], bonds: [[1, 2], [1, 0], [2, 3]] },
+    NH4: star("N", ["H", "H", "H", "H"], 70, [90, 0, 270, 180], 1, { name: "Ammonium ion", f: "NH4^+", g: "ion" }),
+    OH: { name: "Hydroxide ion", f: "OH^-", g: "ion", charge: -1, center: null, atoms: [{ s: "O", x: 195, y: 150 }, { s: "H", x: 265, y: 150 }], bonds: [[0, 1]] },
+    CN: { name: "Cyanide ion", f: "CN^-", g: "ion", charge: -1, center: null, atoms: [{ s: "C", x: 185, y: 150 }, { s: "N", x: 265, y: 150 }], bonds: [[0, 1]] },
+    H3O: star("O", ["H", "H", "H"], 70, [180, 0, 270], 1, { name: "Hydronium ion", f: "H3O^+", g: "ion" }),
+    BF3: star("B", ["F", "F", "F"], 78, [90, 210, 330], 0, { name: "Boron trifluoride", f: "BF3", g: "exc" }),
+    PCl5: star("P", ["Cl", "Cl", "Cl", "Cl", "Cl"], 82, [90, 162, 234, 306, 18], 0, { name: "Phosphorus pentachloride", f: "PCl5", g: "exc" }),
+    SF4: star("S", ["F", "F", "F", "F"], 78, [90, 0, 270, 180], 0, { name: "Sulfur tetrafluoride", f: "SF4", g: "exc" }),
+    SF6: star("S", ["F", "F", "F", "F", "F", "F"], 82, [90, 30, 330, 270, 210, 150], 0, { name: "Sulfur hexafluoride", f: "SF6", g: "exc" }),
+    XeF4: star("Xe", ["F", "F", "F", "F"], 80, [90, 0, 270, 180], 0, { name: "Xenon tetrafluoride", f: "XeF4", g: "exc" }),
+    I3: { name: "Triiodide ion", f: "I3^-", g: "exc", charge: -1, center: 1, atoms: [{ s: "I", x: 130, y: 150 }, { s: "I", x: 220, y: 150 }, { s: "I", x: 310, y: 150 }], bonds: [[1, 0], [1, 2]] }
+  };
+  Object.keys(M).forEach(function (k) {
+    var m = M[k]; m.steps = solve(m); m.answer = m.steps[m.steps.length - 1].st; m.best = analyze(m, m.answer).sumAbs;
+  });
+  // A few notes the story adds for a finished, correct diagram.
+  var NOTE = {
+    H2O2: "Neither O is the single center here: each O is bonded to the other O and to one H.",
+    CH3OH: "Both C and O are inner atoms. Each H is terminal.",
+    NH4: "N has four bonds and no lone pair. Its formal charge is +1, which is the charge of the ion.",
+    OH: "O has one bond and three lone pairs; its formal charge is −1, the charge of the ion.",
+    CN: "Each atom has a triple bond and one lone pair. The −1 formal charge sits on C.",
+    BF3: "B has only 6 electrons: an incomplete octet. This is the AP-preferred diagram because every formal charge is zero.",
+    H3O: "O has three bonds and one lone pair. Its formal charge is +1, the charge of the ion.",
+    I3: "The central I has 2 bonds and 3 lone pairs: 10 electrons, an expanded octet.",
+    SF4: "S has 4 bonds and 1 lone pair: 10 electrons.",
+    XeF4: "Xe has 4 bonds and 2 lone pairs: 12 electrons.",
+    PCl5: "P has 5 bonds: 10 electrons.",
+    SF6: "S has 6 bonds: 12 electrons.",
+    C2H2: "The C≡C triple bond lets each carbon reach 8 electrons with only two atoms attached."
+  };
+
+  // ---------- State ----------
+  var S = { key: "CH4", st: null, mode: "edit", step: 0, showFC: false };
+  function fresh(m) { return { o: m.bonds.map(function () { return 1; }), lp: m.atoms.map(function () { return 0; }) }; }
+  S.st = fresh(M[S.key]);
+  var svg = document.getElementById("lewis");
+
+  function render() {
+    var m = M[S.key], st = S.mode === "walk" ? m.steps[S.step].st : S.st, an = analyze(m, st);
+    drawLewis(svg, m, st, { editable: S.mode === "edit", info: S.mode === "edit" && an.used > 0 ? an.info : null, showFC: S.showFC, onBond: onBond, onAtom: onAtom });
+    document.getElementById("mol-title").innerHTML = Lab.fmla(m.f);
+    document.getElementById("mol-sub").textContent = m.name;
+    document.getElementById("r-tot").textContent = an.tot;
+    document.getElementById("r-tot2").textContent = groupCounts(m) + (m.charge ? (m.charge < 0 ? " + " + (-m.charge) : " − " + m.charge) + " (charge)" : "");
+    document.getElementById("r-used").textContent = an.used;
+    document.getElementById("r-used2").textContent = an.used === an.tot ? "matches" : an.used < an.tot ? (an.tot - an.used) + " still to place" : (an.used - an.tot) + " too many";
+    document.getElementById("r-ok").textContent = an.nOk + " / " + m.atoms.length;
+    document.getElementById("r-ok2").textContent = "H: 2, period 2: 8";
+    var stat, sub;
+    if (an.valid && an.sumAbs === m.best) { stat = '<span class="pill lr">Correct</span>'; sub = "valid Lewis diagram"; }
+    else if (an.valid) { stat = '<span class="pill rec">Valid, not best</span>'; sub = "formal charges not minimized"; }
+    else if (an.used > an.tot) { stat = '<span class="pill infl">Too many e⁻</span>'; sub = "remove lone pairs or multiple bonds"; }
+    else { stat = '<span class="pill rec">In progress</span>'; sub = "keep going"; }
+    document.getElementById("r-st").innerHTML = stat; document.getElementById("r-st2").textContent = sub;
+    document.getElementById("st-no").textContent = S.mode === "walk" ? "Step " + (S.step + 1) + " of " + m.steps.length : "";
+    document.getElementById("st-prev").disabled = S.mode !== "walk" || S.step === 0;
+    document.getElementById("st-next").disabled = S.mode === "walk" && S.step === m.steps.length - 1;
+    document.getElementById("st-next").textContent = S.mode === "walk" ? "Next step →" : "Start the walkthrough →";
+    document.getElementById("how").textContent = S.mode === "walk" ? "Walkthrough mode: the diagram is read-only. Press Start over to draw it yourself." : "Tip: use Tab to move between bonds and atoms, and Enter to change one.";
+    Object.keys(btns).forEach(function (k) { btns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    document.getElementById("story").innerHTML = S.mode === "walk" ? walkStory(m) : editStory(m, an);
+  }
+  function walkStory(m) {
+    var s = m.steps[S.step];
+    var html = "<p><b>Step " + (S.step + 1) + ": " + s.t + ".</b> " + s.d + "</p>";
+    if (S.step === m.steps.length - 1) {
+      if (NOTE[S.key]) html += "<ul><li>" + NOTE[S.key] + "</li></ul>";
+      html += "<p><b>AP answer:</b> count valence electrons, connect the atoms with single bonds, complete the outer atoms' octets, put leftover electrons on the central atom, and form multiple bonds only if the central atom is still short of an octet.</p>";
+    }
+    return html;
+  }
+  function editStory(m, an) {
+    var li = [], html;
+    var probs = an.info.map(function (x, i) { return x.ok ? null : m.atoms[i].s + ": " + x.note; }).filter(Boolean);
+    var notes = an.info.map(function (x) { return x.ok && x.note ? x.note : null; }).filter(Boolean);
+    if (an.valid && an.sumAbs === m.best) {
+      html = "<p><b>Correct.</b> All " + an.tot + " valence electrons are placed and every atom has the right number of electrons.</p>";
+      notes.forEach(function (n) { li.push(n.charAt(0).toUpperCase() + n.slice(1) + "."); });
+      if (NOTE[S.key]) li.push(NOTE[S.key]);
+    } else if (an.valid) {
+      html = "<p><b>A valid diagram, but not the best one.</b> The electron count and every octet check out, but the formal charges add up to " + an.sumAbs + " (absolute values) when a diagram with " + m.best + " is possible.</p>";
+      li.push(S.key === "BF3" ? "A B=F double bond gives B an octet but puts +1 on F and −1 on B. The more electronegative F should not carry a positive charge, so the AP-preferred diagram leaves B with 6 electrons." : "Turn on formal charges to see which atoms carry them, then move a pair to reduce them (topic 2.6).");
+    } else {
+      html = "<p><b>Keep going.</b> You have used " + an.used + " of " + an.tot + " electrons.</p>";
+      if (an.used > an.tot) li.push("You have <b>" + (an.used - an.tot) + " too many</b> electrons. Every octet can look right and the diagram still be wrong, so always check the total.");
+      else if (an.used < an.tot) li.push((an.tot - an.used) + " electrons (" + (an.tot - an.used) / 2 + " pairs) still need a place.");
+      probs.slice(0, 4).forEach(function (p) { li.push(p + "."); });
+      if (an.used === an.tot && probs.length) li.push("The total is right but an atom is short: try turning a lone pair on a neighbor into a multiple bond (remove the lone pair, then click the bond).");
+    }
+    html += li.length ? "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>" : "";
+    html += "<p><b>AP answer:</b> a correct Lewis diagram shows exactly " + an.tot + " valence electrons for " + Lab.fmla(m.f) + ", with 2 electrons around each H and 8 around each period 2 atom" + (m.g === "exc" ? " (B may have 6, and period 3+ central atoms may have more than 8)" : "") + ".</p>";
+    return html;
+  }
+  function onBond(k) {
+    var m = M[S.key]; S.st.o[k] = S.st.o[k] >= 3 ? 1 : S.st.o[k] + 1; render(); refocus("bond", k);
+  }
+  function onAtom(i) {
+    var m = M[S.key]; S.st.lp[i] = S.st.lp[i] >= maxLP(m, i) ? 0 : S.st.lp[i] + 1; render(); refocus("atom", i);
+  }
+  function refocus(kind, idx) {
+    var hits = svg.querySelectorAll(kind === "bond" ? ".hit-b" : ".hit-a"), m = M[S.key], n = -1, target = null;
+    // hit elements are created in order; map index to the editable ones
+    var list = [];
+    if (kind === "bond") m.bonds.forEach(function (b, k) { if (m.atoms[b[0]].s !== "H" && m.atoms[b[1]].s !== "H") list.push(k); });
+    else m.atoms.forEach(function (a, i) { if (a.s !== "H") list.push(i); });
+    n = list.indexOf(idx); target = hits[n];
+    if (target && document.activeElement && document.activeElement.tagName !== "BODY") target.focus();
+  }
+  var btns = {};
+  Object.keys(M).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.innerHTML = Lab.fmla(M[k].f); b.setAttribute("aria-pressed", "false"); b.title = M[k].name;
+    b.addEventListener("click", function () { S.key = k; S.mode = "edit"; S.step = 0; S.st = fresh(M[k]); render(); });
+    document.getElementById("g-" + M[k].g).appendChild(b); btns[k] = b;
+  });
+  document.getElementById("st-next").addEventListener("click", function () {
+    if (S.mode !== "walk") { S.mode = "walk"; S.step = 0; } else S.step = Math.min(S.step + 1, M[S.key].steps.length - 1);
+    render();
+  });
+  document.getElementById("st-prev").addEventListener("click", function () { if (S.mode === "walk") { S.step = Math.max(0, S.step - 1); render(); } });
+  document.getElementById("b-reset").addEventListener("click", function () { S.mode = "edit"; S.step = 0; S.st = fresh(M[S.key]); render(); });
+  document.getElementById("b-answer").addEventListener("click", function () { S.mode = "edit"; S.st = cloneSt(M[S.key].answer); render(); });
+  document.getElementById("show-fc").addEventListener("change", function (e) { S.showFC = e.target.checked; render(); });
+  render();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "How many valence electrons are shown in a correct Lewis diagram of the phosphate ion, PO₄³⁻?",
+      o: ["29", "32", "35", "26"], c: 1,
+      w: "P has 5 valence electrons and each O has 6: 5 + 4 × 6 = 29. The 3− charge means three extra electrons, so the total is 32. Choice A forgets the charge, and choice D subtracts it as if the ion were positive." },
+    { s: "In the Lewis diagram of HCN, how many lone pairs are there in the whole molecule?",
+      o: ["0", "2", "1", "4"], c: 2,
+      w: "HCN has 1 + 4 + 5 = 10 valence electrons. H–C≡N uses 8 of them in bonds (one single, one triple), and the last 2 form a lone pair on N. H never has a lone pair, and C already has 8 electrons from its four bonds." },
+    { s: "Which of the following molecules contains a double bond in its Lewis diagram?",
+      o: ["CH₄", "CH₃OH", "H₂O₂", "CH₂O"], c: 3,
+      w: "CH₂O has 12 valence electrons. With single bonds and three lone pairs on O, carbon has only 6 electrons, so one O lone pair becomes a C=O double bond. CH₄, CH₃OH, and H₂O₂ all reach complete octets with single bonds only." },
+    { s: "In which molecule does the central atom have fewer than 8 electrons in the best Lewis diagram?",
+      o: ["NF₃", "BF₃", "CF₄", "OF₂"], c: 1,
+      w: "B has 3 valence electrons and forms three single bonds to F, for 6 electrons around B: an incomplete octet. A B=F double bond would give B an octet but put a positive formal charge on F, so the AP-preferred diagram leaves B with 6. N, C, and O each reach 8." },
+    { s: "In which species does the central atom have more than 8 electrons around it?",
+      o: ["SF₄", "CF₄", "NF₃", "BF₄⁻"], c: 0,
+      w: "SF₄ has 6 + 4 × 7 = 34 valence electrons. Four S–F bonds and three lone pairs on each F use 32, so S also carries one lone pair: 4 bonds + 1 lone pair = 10 electrons, an expanded octet, possible because S is in period 3. C, N, and B are in period 2 and cannot exceed 8." },
+    { s: "Which statement correctly describes the Lewis diagram of N₂?",
+      o: ["A triple bond between the N atoms and one lone pair on each N", "A double bond between the N atoms and two lone pairs on each N", "A single bond between the N atoms and three lone pairs on each N", "A triple bond between the N atoms and no lone pairs"], c: 0,
+      w: "N₂ has 10 valence electrons. A triple bond uses 6, and one lone pair on each N uses the other 4, so each N has 6 + 2 = 8 electrons. Choice B uses 12 electrons and choice C uses 14; choice D uses only 6." },
+    { s: "A student draws CO₂ as O–C–O, with single bonds, three lone pairs on each O, and two lone pairs on C. Every atom has 8 electrons. What is wrong with the diagram?",
+      o: ["Carbon cannot have lone pairs in any molecule.", "Oxygen can have only two lone pairs.", "Nothing is wrong; every atom has an octet.", "It shows 20 electrons, but CO₂ has only 16 valence electrons."], c: 3,
+      w: "Count: 2 bonds (4) + 6 lone pairs on O (12) + 2 lone pairs on C (4) = 20 electrons, but 4 + 2 × 6 = 16 are available. Moving one lone pair from each O into its bond gives O=C=O with 16 electrons and full octets. Choice C is the trap: octets alone don't prove a diagram is right." },
+    { s: "What is the bond between the two carbon atoms in the Lewis diagram of C₂H₂ (acetylene)?",
+      o: ["A single bond", "A double bond", "A triple bond", "No bond; each C is bonded only to H"], c: 2,
+      w: "C₂H₂ has 2 × 4 + 2 × 1 = 10 valence electrons. H–C–C–H with single bonds uses 6, leaving 4. Each C can reach 8 electrons only if the carbons share three pairs: H–C≡C–H uses exactly 10 electrons, with no lone pairs." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("2.5");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [2], topic: "2.5", compact: true, storageKey: "topic-2.5" });</script>
+</body>
+</html>

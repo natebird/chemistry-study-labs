@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intramolecular Force and Potential Energy Study Lab</title>
+<meta name="description" content="Drag two atoms together along a potential energy curve to find the bond length and bond energy, compare curves for single, double, and triple bonds and for small and large atoms, then use Coulomb's law to rank the attraction between ion pairs.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.part { font-size: 1.25rem; margin-top: 6px; }
+.side .controls { grid-template-columns: 1fr; }
+.legend .l-att { color: var(--c2); } .legend .l-rep { color: var(--bad); } .legend .l-cur { color: var(--accent); }
+.atoms-box { border-top: 1px dashed var(--rule); padding-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 2 · Topic 2.2</span>
+  <h1>Intramolecular Force and Potential Energy Study Lab</h1>
+  <p class="lede">Two atoms form a bond because their potential energy is lower together than apart. The potential energy curve shows that balance between attraction and repulsion: its lowest point gives the bond length and the bond energy. Move two atoms together, compare curves for different bonds, then use Coulomb's law to compare ionic attractions.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Bringing two atoms together</h2>
+    <p>Bond lengths and bond energies are typical textbook values. The exact shape of each curve is a model (a Morse curve) chosen to look like real data; only the location and depth of each minimum are measured values.</p>
+  </div>
+
+  <h3 class="part">Part A: The potential energy curve</h3>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Potential energy vs. internuclear distance <small id="g-sub"></small></h3>
+      <svg class="chart" id="pe" role="img" aria-label="Potential energy versus internuclear distance curve with the current distance marked"></svg>
+      <div class="atoms-box">
+        <svg class="chart" id="atoms" role="img" aria-label="The two atoms drawn at the current internuclear distance with attractive and repulsive forces"></svg>
+      </div>
+    </div>
+    <div class="card side">
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-r">Internuclear distance <output id="o-r"></output></label>
+          <input type="range" id="s-r" min="20" max="400" step="1">
+          <span class="hint">Distance between the two nuclei, in picometers (1 pm = 10⁻¹² m)</span>
+        </div>
+      </div>
+      <div class="group">
+        <div class="tag">Move the atoms</div>
+        <div class="scenarios" id="sc-pos"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Pick a bond</div>
+        <div class="scenarios" id="sc-mol"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Compare a set of curves</div>
+        <div class="scenarios" id="sc-set"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-cur">Selected bond</span><span class="l-ghost">Comparison curves</span><span class="l-att">Attraction (nuclei to shared electrons)</span><span class="l-rep">Repulsion (nucleus to nucleus)</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Distance</div><div class="v" id="r-r"></div><div class="sub" id="r-r2"></div></div>
+    <div class="stat"><div class="k">Potential energy</div><div class="v" id="r-e"></div><div class="sub">per mole of bonds</div></div>
+    <div class="stat"><div class="k">Bond length (minimum)</div><div class="v" id="r-l"></div><div class="sub" id="r-l2"></div></div>
+    <div class="stat"><div class="k">Bond energy (well depth)</div><div class="v" id="r-be"></div><div class="sub">energy to break 1 mol of bonds</div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+
+  <h3 class="part">Part B: Coulomb's law for ions</h3>
+  <p style="color:var(--muted); max-width:70ch;">In an ionic bond the attraction is between whole charges. Coulomb's law says the potential energy of two charges is proportional to <span class="formula">q₁q₂ / r</span>, where r is the distance between the ion centers (here, the sum of the two ionic radii). Larger charges and smaller ions mean a stronger attraction. Values are relative to Na⁺ with Cl⁻; ionic radii are standard tabulated values for six-coordinate ions.</p>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Relative attraction <small>|q₁q₂| / r, Na⁺Cl⁻ = 1.00</small></h3>
+      <svg class="chart" id="cb" role="img" aria-label="Bar chart of relative Coulombic attraction for the chosen cation with six different anions"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Cation</div>
+        <div class="scenarios" id="sc-cat"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Anion</div>
+        <div class="scenarios" id="sc-an"></div>
+      </div>
+      <div class="calc" id="calc"></div>
+    </div>
+  </div>
+
+  <div class="story" id="story-b" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Zero point</span><h3>Separated atoms have zero potential energy</h3><p>When the atoms are far apart they do not interact, so the curve is flat at zero on the right side. Every point below zero means the pair is more stable than separate atoms.</p></div>
+    <div class="card"><span class="tag">Downhill</span><h3>Attraction lowers the energy</h3><p>As the atoms approach, each nucleus attracts the other atom's electrons. The energy drops. A bond forms because the bonded pair has lower potential energy than the separate atoms, so forming a bond releases energy.</p></div>
+    <div class="card"><span class="tag">Steep wall</span><h3>Repulsion takes over up close</h3><p>Pushed too close, the two positive nuclei (and the two electron clouds) repel strongly. The energy shoots up on the left side of the curve. The atoms cannot get closer than the bond length without a large energy cost.</p></div>
+    <div class="card"><span class="tag">The minimum</span><h3>Bond length and bond energy</h3><p>The bottom of the well is where attraction and repulsion balance. Its distance is the <b>bond length</b>. Its depth below zero is the <b>bond energy</b>, the energy needed to break the bond and separate the atoms.</p></div>
+    <div class="card"><span class="tag">Size and bond order</span><h3>What moves the minimum</h3><p>Larger atoms make longer, usually weaker bonds (H–F to H–I). A higher bond order between the same two atoms (single, double, triple) puts more shared electrons between the nuclei, so the bond is shorter and stronger.</p></div>
+    <div class="card"><span class="tag">Coulomb's law</span><h3>Ionic attraction</h3><p>For ions, potential energy is proportional to q₁q₂/r. Doubling both charges multiplies the attraction by four; smaller ions sit closer together. Charge usually matters more than size: MgO is far stronger than NaF.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Bond length and bond energy reference</h2>
+    <p>Typical textbook values. Bond energies are for breaking one mole of bonds in the gas phase. You will not need to memorize these; you need the patterns.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Bond</th><th>Bond order</th><th>Bond length (pm)</th><th>Bond energy (kJ/mol)</th><th>Pattern it shows</th></tr></thead>
+    <tbody>
+      <tr><td>C–C</td><td>1</td><td>154</td><td>348</td><td rowspan="3">Same atoms, higher bond order: <b>shorter and stronger</b>. A triple bond is not three times as strong as a single bond, because π bonds are weaker than σ bonds.</td></tr>
+      <tr><td>C=C</td><td>2</td><td>134</td><td>614</td></tr>
+      <tr><td>C≡C</td><td>3</td><td>120</td><td>839</td></tr>
+      <tr><td>N–N</td><td>1</td><td>147</td><td>163</td><td rowspan="3">The same pattern for nitrogen. N≡N is one of the strongest bonds known, which is why N₂ is so unreactive.</td></tr>
+      <tr><td>N=N</td><td>2</td><td>124</td><td>418</td></tr>
+      <tr><td>N≡N</td><td>3</td><td>110</td><td>941</td></tr>
+      <tr><td>H–F</td><td>1</td><td>92</td><td>567</td><td rowspan="4">Down a group, the halogen gets larger: <b>longer and weaker</b> bonds to H.</td></tr>
+      <tr><td>H–Cl</td><td>1</td><td>127</td><td>431</td></tr>
+      <tr><td>H–Br</td><td>1</td><td>141</td><td>366</td></tr>
+      <tr><td>H–I</td><td>1</td><td>161</td><td>299</td></tr>
+      <tr><td>H–H</td><td>1</td><td>74</td><td>436</td><td>The smallest atoms make the shortest bond.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Writing it on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Read the bond length from the x-coordinate of the minimum and the bond energy from how far the minimum is below zero.</li>
+        <li>Explain the left side of the curve with repulsion between the two nuclei (and between the electron clouds) when the atoms are too close.</li>
+        <li>Explain the well with attraction between each nucleus and the shared electrons, which lowers the potential energy.</li>
+        <li>When sketching a curve for a larger atom, move the minimum to the right <b>and</b> make it shallower; for a higher bond order, move it left and make it deeper.</li>
+        <li>For ions, cite Coulomb's law: attraction increases with the magnitude of the charges and decreases with the distance between ion centers.</li>
+        <li>When comparing ionic compounds, compare charges first, then ionic radii, and name the specific ions.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying energy is needed to <b>form</b> a bond. Forming a bond releases energy; breaking a bond requires energy.</li>
+        <li>Reading the bond length where the curve crosses zero on the left. That crossing is closer than the bond length; the bond length is at the minimum.</li>
+        <li>Saying the atoms stop at the bond length because there is no force. Both attraction and repulsion are present; they balance there.</li>
+        <li>Assuming a triple bond is three times as strong as a single bond. It is stronger, but not three times.</li>
+        <li>Using only size to compare ionic attractions when the charges differ. A 2+/2− pair beats a 1+/1− pair even with larger ions.</li>
+        <li>Writing Coulomb's law with r² for potential energy. Force goes as 1/r²; potential energy goes as 1/r. AP questions only need the direction of the trend.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 2.2. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-2.html">Unit 2 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = Lab.el;
+
+  // ---------- Bond data: typical textbook bond lengths (pm) and bond energies (kJ/mol) ----------
+  // a = Morse steepness (1/pm), chosen for a realistic-looking curve; display radii (pm) only size the drawn atoms.
+  var RAD = { H: 37, C: 77, N: 73, F: 71, Cl: 99, Br: 114, I: 133 };
+  var MOL = {
+    HH:  { name: "H–H", A: "H", B: "H", order: 1, re: 74, De: 436, a: 0.0194 },
+    HF:  { name: "H–F", A: "H", B: "F", order: 1, re: 92, De: 567, a: 0.0220 },
+    HCl: { name: "H–Cl", A: "H", B: "Cl", order: 1, re: 127, De: 431, a: 0.0187 },
+    HBr: { name: "H–Br", A: "H", B: "Br", order: 1, re: 141, De: 366, a: 0.0181 },
+    HI:  { name: "H–I", A: "H", B: "I", order: 1, re: 161, De: 299, a: 0.0175 },
+    CC1: { name: "C–C", A: "C", B: "C", order: 1, re: 154, De: 348, a: 0.0190 },
+    CC2: { name: "C=C", A: "C", B: "C", order: 2, re: 134, De: 614, a: 0.0215 },
+    CC3: { name: "C≡C", A: "C", B: "C", order: 3, re: 120, De: 839, a: 0.0240 },
+    NN1: { name: "N–N", A: "N", B: "N", order: 1, re: 147, De: 163, a: 0.0230 },
+    NN2: { name: "N=N", A: "N", B: "N", order: 2, re: 124, De: 418, a: 0.0240 },
+    NN3: { name: "N≡N", A: "N", B: "N", order: 3, re: 110, De: 941, a: 0.0268 }
+  };
+  var SETS = {
+    none: { name: "No comparison", keys: [] },
+    hx: { name: "H–F, H–Cl, H–Br, H–I (atom size)", keys: ["HF", "HCl", "HBr", "HI"] },
+    cc: { name: "C–C, C=C, C≡C (bond order)", keys: ["CC1", "CC2", "CC3"] },
+    nn: { name: "N–N, N=N, N≡N (bond order)", keys: ["NN1", "NN2", "NN3"] }
+  };
+  function V(m, r) { var x = 1 - Math.exp(-m.a * (r - m.re)); return m.De * (x * x - 1); }
+  function force(m, r) { var h = 0.5; return -(V(m, r + h) - V(m, r - h)) / (2 * h); }   // > 0 pushes apart
+
+  var S = { mol: "HH", set: "none", r: 300, pos: "far" };
+
+  // ---------- Graph ----------
+  var svg = document.getElementById("pe");
+  function yRange() {
+    var keys = [S.mol].concat(SETS[S.set].keys), mx = 0;
+    keys.forEach(function (k) { mx = Math.max(mx, MOL[k].De); });
+    var step = mx > 700 ? 400 : 200;
+    var lo = -Math.ceil(mx * 1.12 / step) * step;
+    return [lo, Math.max(2 * step, Math.ceil(-lo * 0.6 / step) * step), step];
+  }
+  function drawGraph() {
+    var yr = yRange(), m = MOL[S.mol];
+    var step = yr[2], yt = []; yr = [yr[0], yr[1]];
+    for (var v = yr[0]; v <= yr[1] + 1e-9; v += step) yt.push(v);
+    var F = Lab.frame(svg, { x: [0, 400], y: yr, xLabel: "Internuclear distance (pm)", yLabel: "Potential energy (kJ/mol)",
+      xTicks: [0, 100, 200, 300, 400], yTicks: yt, fmtX: String, fmtY: function (v) { return String(v).replace("-", "−"); }, width: 440, height: 320 });
+    Lab.hline(F, 0, "var(--ink)", 1.2, "4 3");
+    SETS[S.set].keys.forEach(function (k) {
+      if (k === S.mol) return;
+      var mm = MOL[k];
+      Lab.fn(F, function (r) { return V(mm, Math.max(r, 20)); }, "var(--ghost)", 2, "6 4", 200);
+      Lab.tag(F, mm.re + 6, -mm.De - (yr[1] - yr[0]) * 0.04, mm.name, "var(--muted)", "start");
+    });
+    Lab.fn(F, function (r) { return V(m, Math.max(r, 20)); }, "var(--accent)", 3, null, 240);
+    // well depth and bond length markers
+    Lab.line(F, [[m.re, 0], [m.re, -m.De]], "var(--c1)", 1.5, "3 3");
+    Lab.line(F, [[m.re, -m.De], [0, -m.De]], "var(--c1)", 1.2, "3 3");
+    Lab.tag(F, m.re + 8, -m.De / 2, "bond energy " + m.De, "var(--c1)", "start");
+    Lab.tag(F, m.re + 4, -m.De - (yr[1] - yr[0]) * 0.055, "bond length " + m.re + " pm", "var(--c1)", "start");
+    var e = V(m, S.r);
+    if (e <= yr[1]) Lab.dot(F, S.r, e, "var(--ink)", false);
+    else Lab.tag(F, S.r, yr[1] - (yr[1] - yr[0]) * 0.05, "↑ off the chart", "var(--bad)", "middle");
+    Lab.tag(F, 395, (yr[1] - yr[0]) * 0.03, "separate atoms: PE = 0", "var(--muted)", "end");
+    document.getElementById("g-sub").textContent = m.name + " bond";
+  }
+  // ---------- Atom pair ----------
+  var asvg = document.getElementById("atoms");
+  function drawAtoms() {
+    var m = MOL[S.mol], W = 440, H = 150, k = 0.55;   // px per pm
+    asvg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (asvg.firstChild) asvg.removeChild(asvg.firstChild);
+    var cx = W / 2, y = 78, d = S.r * k;
+    var x1 = cx - d / 2, x2 = cx + d / 2;
+    var rA = RAD[m.A] * k, rB = RAD[m.B] * k;
+    var tooClose = d < 34;
+    [[x1, rA, m.A, -1], [x2, rB, m.B, 1]].forEach(function (a) {
+      el("circle", { cx: a[0], cy: y, r: a[1], fill: "var(--accent)", "fill-opacity": 0.13, stroke: "var(--accent)", "stroke-width": 1.5 }, asvg);
+      el("circle", { cx: a[0], cy: y, r: 3, fill: "var(--ink)" }, asvg);
+      el("text", { x: a[0] + (tooClose ? a[3] * 9 : 0), y: tooClose ? y - Math.max(rA, rB) - 6 : y - 8, "text-anchor": "middle", style: "fill:var(--ink); font-size:13px; font-weight:600" }, asvg, a[2]);
+    });
+    // bond lines between nuclei when close enough to be bonded
+    var f = force(m, S.r), att = Math.max(0, -f), rep = Math.max(0, f);
+    function arr(xa, xb, yy, col) {
+      if (Math.abs(xb - xa) < 4) return;
+      var dir = xb > xa ? 1 : -1;
+      el("line", { x1: xa, x2: xb - dir * 7, y1: yy, y2: yy, stroke: col, "stroke-width": 3 }, asvg);
+      el("path", { d: "M" + xb + " " + yy + " l" + (-dir * 9) + " -5 v10 z", fill: col }, asvg);
+    }
+    var maxF = 25, L = function (v) { return Math.min(70, 8 + 62 * Math.min(1, v / maxF)); };
+    var txt = "";
+    if (S.r > m.re + 160 || Math.abs(f) < 0.15 && S.r > m.re + 20) {
+      txt = "Too far apart to interact: no net force";
+    } else if (Math.abs(S.r - m.re) <= 3) {
+      txt = "At the bond length: attraction and repulsion balance (net force zero)";
+      arr((x1 - rA - 2), (x1 - rA - 32), y + 38, "var(--bad)"); arr((x2 + rB + 2), (x2 + rB + 32), y + 38, "var(--bad)");
+      arr((x1 - rA - 32), (x1 - rA - 2), y + 50, "var(--c2)"); arr((x2 + rB + 32), (x2 + rB + 2), y + 50, "var(--c2)");
+    } else if (f < 0) {
+      txt = "Net force is attractive: the atoms pull together";
+      arr((x1 - rA - 2) - L(att), (x1 - rA - 2), y + 44, "var(--c2)"); arr((x2 + rB + 2) + L(att), (x2 + rB + 2), y + 44, "var(--c2)");
+    } else {
+      txt = "Net force is repulsive: the nuclei push apart";
+      arr((x1 - rA - 2), (x1 - rA - 2) - L(rep), y + 44, "var(--bad)"); arr((x2 + rB + 2), (x2 + rB + 2) + L(rep), y + 44, "var(--bad)");
+    }
+    el("text", { x: W / 2, y: 16, "text-anchor": "middle", style: "fill:var(--ink); font-size:12px; font-weight:600" }, asvg, txt);
+    el("text", { x: W / 2, y: H - 4, "text-anchor": "middle", style: "font-size:11px" }, asvg, "Atoms drawn to scale with the distance (r = " + Math.round(S.r) + " pm)");
+  }
+
+  // ---------- Readouts and story ----------
+  function region() {
+    var m = MOL[S.mol], r = S.r;
+    if (Math.abs(r - m.re) <= 3) return "min";
+    if (r < m.re) return V(m, r) > 0 ? "wall" : "close";
+    return V(m, r) > -0.02 * m.De ? "far" : "stretch";
+  }
+  var REG = { min: "at the bond length", wall: "pushed too close", close: "closer than the bond length", stretch: "stretched", far: "essentially separate" };
+  function story() {
+    var m = MOL[S.mol], r = S.r, e = V(m, r), reg = region();
+    var html = "<p><b>" + m.name + " at " + Math.round(r) + " pm.</b> ";
+    var li = [];
+    if (reg === "far") {
+      html += "The two atoms are far apart, so they barely interact and the potential energy is essentially zero.</p>";
+      li.push("Zero is the reference point: two separate, non-interacting atoms. Slide the atoms closer to see the energy drop.");
+    } else if (reg === "stretch") {
+      html += "The atoms are close enough that each nucleus attracts the other atom's electrons, so the energy has dropped to " + Math.round(e) + " kJ/mol.</p>";
+      li.push("Attraction is stronger than repulsion here, so the net force pulls the atoms together, downhill toward the minimum.");
+      li.push("The energy keeps falling until the atoms reach the bond length, " + m.re + " pm.");
+    } else if (reg === "min") {
+      html += "This is the bottom of the well: the most stable distance, where the potential energy is lowest (" + (-m.De) + " kJ/mol).</p>";
+      li.push("Attraction of each nucleus for the shared electrons is exactly balanced by nucleus–nucleus and electron–electron repulsion. The net force is zero.");
+      li.push("The distance here, <b>" + m.re + " pm</b>, is the <b>bond length</b>. The depth of the well, <b>" + m.De + " kJ/mol</b>, is the <b>bond energy</b>: the energy needed to break one mole of " + m.name + " bonds and pull the atoms back to zero.");
+      li.push("Forming the bond releases that same energy, which is why bond formation is exothermic.");
+    } else if (reg === "close") {
+      html += "The atoms are closer than the bond length, so the energy (" + Math.round(e) + " kJ/mol) is higher than at the minimum.</p>";
+      li.push("The two positive nuclei now repel each other more than the shared electrons can make up for. The net force pushes the atoms apart, back toward " + m.re + " pm.");
+    } else {
+      html += "The atoms have been pushed so close that the potential energy is positive (" + (e > 9999 ? "very large" : Math.round(e) + " kJ/mol") + "), higher than for separate atoms.</p>";
+      li.push("Repulsion between the two nuclei (and between the two inner electron clouds) dominates. This is the steep wall on the left of the curve.");
+      li.push("This is why atoms in a bond never get closer than about the bond length: it costs far too much energy.");
+    }
+    var cmp = SETS[S.set].keys;
+    if (cmp.length) {
+      if (S.set === "hx") li.push("<b>Comparison:</b> going from H–F to H–I, the halogen atom gets larger (more electron shells). The shared electrons are farther from the halogen nucleus, so the minimum moves <b>right</b> (longer bond: 92 → 161 pm) and gets <b>shallower</b> (weaker bond: 567 → 299 kJ/mol).");
+      else li.push("<b>Comparison:</b> going from single to double to triple bond between the same two atoms, more electrons are shared between the nuclei. The minimum moves <b>left</b> (shorter bond) and gets <b>deeper</b> (stronger bond). The triple bond is not three times as strong as the single bond.");
+    }
+    html += "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
+    var end = cmp.length
+      ? (S.set === "hx" ? "<b>AP answer:</b> larger atoms form longer, weaker bonds, so the curve's minimum is farther right and less deep." : "<b>AP answer:</b> higher bond order means shorter and stronger bonds, so the curve's minimum is farther left and deeper.")
+      : "<b>AP answer:</b> the bond length is the distance at the minimum of the curve (" + m.re + " pm), and the bond energy is the depth of the minimum below zero (" + m.De + " kJ/mol), where attraction and repulsion are balanced.";
+    return html + "<p>" + end + "</p>";
+  }
+
+  var elR = document.getElementById("s-r"), posBtns = {}, molBtns = {}, setBtns = {};
+  function render(full) {
+    var m = MOL[S.mol];
+    drawGraph(); drawAtoms();
+    elR.value = Math.round(S.r);
+    document.getElementById("o-r").textContent = Math.round(S.r) + " pm";
+    if (full === false) return;
+    var e = V(m, S.r);
+    document.getElementById("r-r").textContent = Math.round(S.r) + " pm";
+    document.getElementById("r-r2").textContent = REG[region()];
+    document.getElementById("r-e").textContent = (e > 9999 ? "> 9999" : Math.round(e)).toString().replace("-", "−") + " kJ/mol";
+    document.getElementById("r-l").textContent = m.re + " pm";
+    document.getElementById("r-l2").textContent = m.name + ", bond order " + m.order;
+    document.getElementById("r-be").textContent = m.De + " kJ/mol";
+    document.getElementById("story").innerHTML = story();
+    Object.keys(posBtns).forEach(function (k) { posBtns[k].setAttribute("aria-pressed", S.pos === k ? "true" : "false"); });
+    Object.keys(molBtns).forEach(function (k) { molBtns[k].setAttribute("aria-pressed", S.mol === k ? "true" : "false"); });
+    Object.keys(setBtns).forEach(function (k) { setBtns[k].setAttribute("aria-pressed", S.set === k ? "true" : "false"); });
+  }
+  var stop = function () {};
+  function moveTo(r, pos) {
+    stop(); var r0 = S.r; S.pos = pos;
+    stop = Lab.animate(700, function (t) { S.r = r0 + (r - r0) * t; render(false); }, function () { S.r = r; render(); });
+  }
+  elR.addEventListener("input", function () { stop(); S.r = +elR.value; S.pos = null; render(); });
+  var POS = [
+    { key: "far", name: "Far apart", r: function (m) { return Math.min(400, m.re + 220); } },
+    { key: "stretch", name: "Approaching", r: function (m) { return Math.round(m.re + 45); } },
+    { key: "min", name: "At the bond length", r: function (m) { return m.re; } },
+    { key: "wall", name: "Squeezed together", r: function (m) { return Math.round(m.re - 0.8 / m.a); } }
+  ];
+  POS.forEach(function (p) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = p.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { moveTo(p.r(MOL[S.mol]), p.key); });
+    document.getElementById("sc-pos").appendChild(b); posBtns[p.key] = b;
+  });
+  Object.keys(MOL).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = MOL[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () {
+      S.mol = k;
+      if (S.set !== "none" && SETS[S.set].keys.indexOf(k) < 0) S.set = "none";
+      var p = POS.filter(function (x) { return x.key === S.pos; })[0];
+      if (p) moveTo(p.r(MOL[k]), p.key); else render();
+    });
+    document.getElementById("sc-mol").appendChild(b); molBtns[k] = b;
+  });
+  Object.keys(SETS).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SETS[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () {
+      S.set = k;
+      if (k !== "none" && SETS[k].keys.indexOf(S.mol) < 0) S.mol = SETS[k].keys[0];
+      moveTo(MOL[S.mol].re, "min");
+    });
+    document.getElementById("sc-set").appendChild(b); setBtns[k] = b;
+  });
+  render();
+
+  // ---------- Part B: Coulomb's law ----------
+  // Ionic radii in pm (Shannon, six-coordinate).
+  var CAT = [["Li", 1, 76], ["Na", 1, 102], ["K", 1, 138], ["Mg", 2, 72], ["Ca", 2, 100], ["Al", 3, 54]];
+  var AN = [["F", 1, 133], ["Cl", 1, 181], ["Br", 1, 196], ["I", 1, 220], ["O", 2, 140], ["S", 2, 184]];
+  var REF = 1 / (102 + 181);
+  var B = { c: 1, a: 1 };
+  function ion(x, sign) { return x[0] + (x[1] > 1 ? x[1] : "") + sign; }
+  function ionU(x, sign) { var D = { 2: "²", 3: "³" }; return x[0] + (x[1] > 1 ? D[x[1]] : "") + (sign === "+" ? "⁺" : "⁻"); }
+  function ionH(x, sign) { return x[0] + "<sup>" + (x[1] > 1 ? x[1] : "") + sign + "</sup>"; }
+  function rel(c, a) { return (c[1] * a[1] / (c[2] + a[2])) / REF; }
+  var cbs = document.getElementById("cb"), catBtns = [], anBtns = [];
+  function drawB() {
+    var c = CAT[B.c], vals = AN.map(function (a) { return rel(c, a); });
+    var mx = Math.max.apply(null, vals), top = mx > 6 ? Math.ceil(mx / 2) * 2 : Math.ceil(mx);
+    var yt = []; for (var v = 0; v <= top; v += top > 6 ? 2 : 1) yt.push(v);
+    var F = Lab.bars(cbs, { x: [-0.6, 5.6], y: [0, top * 1.1], xLabel: "Anion paired with " + ionU(c, "+") + " (dashed line: Na⁺Cl⁻ = 1)", yLabel: "Relative attraction",
+      xTicks: [0, 1, 2, 3, 4, 5], yTicks: yt, fmtX: function (i) { return ionU(AN[i], "−"); }, fmtY: String, width: 440, height: 300,
+      bars: vals.map(function (v, i) { return { x: i, y: v, width: 0.62, color: i === B.a ? "var(--accent)" : "var(--ghost)", label: v.toFixed(2) }; }) });
+    Lab.hline(F, 1, "var(--c1)", 1.5, "5 4");
+  }
+  function renderB() {
+    var c = CAT[B.c], a = AN[B.a], r = c[2] + a[2], q = c[1] * a[1], v = rel(c, a);
+    drawB();
+    catBtns.forEach(function (b, i) { b.setAttribute("aria-pressed", i === B.c ? "true" : "false"); });
+    anBtns.forEach(function (b, i) { b.setAttribute("aria-pressed", i === B.a ? "true" : "false"); });
+    document.getElementById("calc").innerHTML =
+      '<div class="row"><span>Charges |q₁ × q₂|</span><span>' + c[1] + " × " + a[1] + " = " + q + "</span></div>" +
+      '<div class="row"><span>Distance r = r₊ + r₋</span><span>' + c[2] + " + " + a[2] + " = " + r + " pm</span></div>" +
+      '<div class="row"><span>|q₁q₂| / r</span><span>' + q + " / " + r + " = " + (q / r).toFixed(5) + "</span></div>" +
+      '<div class="row"><span>Relative to Na⁺Cl⁻ (1 / 283)</span><span>' + v.toFixed(2) + " ×</span></div>";
+    var li = [];
+    var cname = ionH(c, "+"), aname = ionH(a, "−");
+    li.push("Charges: " + cname + " and " + aname + " give |q₁q₂| = " + q + (q > 1 ? ", " + q + " times the 1 × 1 of Na<sup>+</sup>Cl<sup>−</sup>." : ", the same as Na<sup>+</sup>Cl<sup>−</sup>."));
+    li.push("Distance: the ion centers are " + r + " pm apart, " + (r < 283 ? "closer than" : r > 283 ? "farther than" : "the same as") + " in Na<sup>+</sup>Cl<sup>−</sup> (283 pm)" + (r !== 283 ? ", which " + (r < 283 ? "strengthens" : "weakens") + " the attraction." : "."));
+    var others = AN.map(function (x, i) { return { i: i, v: rel(c, x) }; }).sort(function (p, q2) { return q2.v - p.v; });
+    var rank = others.findIndex(function (o) { return o.i === B.a; }) + 1;
+    li.push("Among the six anions with " + cname + ", this pair ranks #" + rank + ". The 2− anions (O<sup>2−</sup>, S<sup>2−</sup>) always win over the 1− anions: charge matters more than the size differences here.");
+    document.getElementById("story-b").innerHTML = "<p><b>" + cname + " with " + aname + ": " + v.toFixed(2) + " times the Na<sup>+</sup>Cl<sup>−</sup> attraction.</b></p><ul>" +
+      li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul><p><b>AP answer:</b> by Coulomb's law the attraction is proportional to the product of the ion charges divided by the distance between their centers, so ions with larger charges and smaller radii attract more strongly.</p>";
+  }
+  CAT.forEach(function (x, i) {
+    var b = document.createElement("button"); b.type = "button"; b.innerHTML = ionH(x, "+");
+    b.addEventListener("click", function () { B.c = i; renderB(); });
+    document.getElementById("sc-cat").appendChild(b); catBtns.push(b);
+  });
+  AN.forEach(function (x, i) {
+    var b = document.createElement("button"); b.type = "button"; b.innerHTML = ionH(x, "−");
+    b.addEventListener("click", function () { B.a = i; renderB(); });
+    document.getElementById("sc-an").appendChild(b); anBtns.push(b);
+  });
+  renderB();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "The potential energy curve for H₂ has its minimum at an internuclear distance of 74 pm and a potential energy of −436 kJ/mol. Which statement is correct?",
+      o: ["The H–H bond length is 74 pm, and 436 kJ/mol is released when 1 mol of H–H bonds is broken.", "The H–H bond length is 74 pm, and 436 kJ/mol is required to break 1 mol of H–H bonds.", "The H–H bond length is 37 pm, half of 74 pm, because each atom contributes half the bond.", "At 74 pm the attractive and repulsive forces are both zero."], c: 1,
+      w: "The x-coordinate of the minimum is the bond length, and the depth of the well (436 kJ/mol) is the energy needed to separate the atoms. Breaking a bond requires energy, so choice A has the direction backward. Choice D is the trap: at the minimum the forces are not zero, they balance, so the net force is zero." },
+    { s: "Why does the potential energy rise steeply when two bonded atoms are pushed closer together than the bond length?",
+      o: ["The atoms begin to lose their valence electrons.", "Attraction between the nuclei and the shared electrons becomes weaker as the atoms get closer.", "Repulsion between the two positively charged nuclei becomes much larger than the attraction.", "The bond order increases, which requires energy."], c: 2,
+      w: "At very short distances the positive nuclei (and the inner electrons) repel strongly, and this repulsion grows faster than the attraction, so the potential energy climbs. Choice B is incorrect: the attractions actually get stronger at shorter distances, but repulsion grows even faster." },
+    { s: "The bonds C–C, C=C, and C≡C are compared. Which bond has the shortest bond length and the greatest bond energy?",
+      o: ["C≡C", "C=C", "C–C", "All three have the same bond length but different bond energies."], c: 0,
+      w: "A triple bond shares six electrons between the two nuclei, pulling them closer and holding them more tightly: C≡C is 120 pm and 839 kJ/mol, compared with 154 pm and 348 kJ/mol for C–C. Bond length depends on bond order, so choice D is wrong." },
+    { s: "A student sketches the potential energy curve for H–F and then for H–I on the same axes. Compared with the H–F curve, the minimum of the H–I curve should be",
+      o: ["farther left and deeper", "farther left and shallower", "farther right and deeper", "farther right and shallower"], c: 3,
+      w: "I is a much larger atom than F (more occupied electron shells), so the H–I bond is longer (161 pm vs. 92 pm): the minimum moves right. The shared electrons are farther from the I nucleus and held less tightly, so the bond is weaker (299 vs. 567 kJ/mol): the well is shallower. Choice C changes only one of the two features correctly." },
+    { s: "Based on Coulomb's law, which ion pair has the strongest attraction?",
+      o: ["Na⁺ and F⁻", "K⁺ and Cl⁻", "Mg²⁺ and O²⁻", "Na⁺ and Cl⁻"], c: 2,
+      w: "Attraction is proportional to q₁q₂/r. Mg²⁺ and O²⁻ have a charge product of 4, four times the product of 1 for each of the other pairs, and both ions are small. Choice A has the smallest distance among the 1+/1− pairs, but charge is the bigger factor." },
+    { s: "MgO and CaO have the same structure. Which statement correctly compares the attraction between their ions?",
+      o: ["CaO has the stronger attraction because Ca²⁺ has more electrons.", "MgO has the stronger attraction because Mg²⁺ is smaller than Ca²⁺, so the ion centers are closer together.", "They have the same attraction because the ions have the same charges.", "MgO has the stronger attraction because Mg is more electronegative than Ca."], c: 1,
+      w: "The charges are the same (2+ and 2−), so the difference comes from distance. Mg²⁺ has one fewer occupied electron shell than Ca²⁺, so it is smaller, the ion centers are closer, and by Coulomb's law the attraction is stronger. Choice C ignores the r in q₁q₂/r." },
+    { s: "On a potential energy vs. internuclear distance curve, what does a potential energy of zero represent?",
+      o: ["Two atoms that are so far apart that they do not interact", "Two atoms at their bond length", "Two atoms pushed so close that they repel", "A bond with a bond order of zero, such as in a noble gas molecule"], c: 0,
+      w: "Zero is the reference point for two isolated atoms with no interaction, the flat right-hand part of the curve. The curve also crosses zero on its steep left side, but that crossing is a result of strong repulsion, not the definition of zero. At the bond length (choice B) the energy is at its most negative." },
+    { s: "The bond energies of N–N, N=N, and N≡N are 163, 418, and 941 kJ/mol. Which claim is best supported by these data?",
+      o: ["Each additional bond between two N atoms adds the same amount of energy.", "The N≡N bond is longer than the N–N bond because it contains more electrons.", "A double bond is exactly twice as strong as a single bond.", "Increasing the bond order between two N atoms increases the bond energy."], c: 3,
+      w: "Bond energy rises with bond order (163 → 418 → 941 kJ/mol). The increases are not equal (+255, then +523), so choices A and C fail, and 418 is not 2 × 163 = 326. Choice B is backward: more shared electrons pull the nuclei closer, so N≡N (110 pm) is shorter than N–N (147 pm)." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("2.2");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [2], topic: "2.2", compact: true, storageKey: "topic-2.2" });</script>
+</body>
+</html>

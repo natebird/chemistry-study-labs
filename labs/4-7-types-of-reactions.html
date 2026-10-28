@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Types of Chemical Reactions Study Lab</title>
+<meta name="description" content="Classify sixteen reactions as acid–base, redox, or precipitation using three evidence tools: oxidation numbers, proton transfer, and insoluble products, then justify each call the way the AP exam asks.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 7px 12px; font-size: .88rem; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.tools button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.board { display: grid; gap: 12px; }
+.eqboard { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 4px; font-size: 1.3rem; line-height: 1.2; padding: 14px 10px 10px; background: var(--paper); border: 1px solid var(--rule); border-radius: 10px; min-height: 96px; }
+.eqboard .op { padding: 0 4px 6px; color: var(--muted); }
+.sp { display: inline-flex; align-items: flex-end; padding: 2px 6px 4px; border-radius: 8px; border: 2px solid transparent; }
+.sp .coef { margin-right: 2px; padding-bottom: 0; }
+.sp .st { font-size: .7em; color: var(--muted); margin-left: 1px; }
+.sp.donor { border-color: var(--c1); }
+.sp.acceptor { border-color: var(--c2); }
+.sp.solid { background: var(--accent-soft); border-color: var(--accent); }
+.tk { display: inline-grid; grid-template-rows: auto auto; justify-items: center; }
+.tk + .tk { margin-left: 3px; }
+.tk .ox { font-family: var(--mono); font-size: .56em; min-height: 1.3em; color: var(--muted); }
+.tk .ox.up { color: var(--c1); font-weight: 600; }
+.tk .ox.dn { color: var(--c2); font-weight: 600; }
+.tk .ox.mix { color: var(--c4); font-weight: 600; }
+.tk .ox.avg::after { content: "*"; }
+.tk sub { font-size: .65em; }
+.tk sup { font-size: .6em; }
+.ev { display: grid; gap: 6px; font-size: .92rem; }
+.ev p { padding: 6px 10px; border-left: 3px solid var(--rule); background: var(--surface); }
+.ev p b { color: var(--ink); }
+.ev .t-ox { border-left-color: var(--c4); } .ev .t-h { border-left-color: var(--c1); } .ev .t-s { border-left-color: var(--accent); }
+.verdict { font-weight: 600; }
+.verdict.ok { color: var(--good); } .verdict.no { color: var(--bad); }
+.legend .l-up { color: var(--c1); } .legend .l-dn { color: var(--c2); } .legend .l-mix { color: var(--c4); }
+.hint2 { font-size: .8rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 4 · Topic 4.7</span>
+  <h1>Types of Chemical Reactions Study Lab</h1>
+  <p class="lede">The AP exam sorts reactions into three types by what is transferred or formed: acid–base reactions move protons (H<sup>+</sup>), oxidation–reduction (redox) reactions move electrons, and precipitation reactions combine dissolved ions into a solid with low solubility. Use the three evidence tools to examine each reaction, classify it, and check your justification.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The reaction sorter</h2>
+    <p>For each reaction, turn on the evidence tools one at a time, then choose every type that applies (a few reactions are two types at once) and press <b>Check</b>. The colored boxes and numbers on the equation are the evidence the AP exam wants you to cite.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card board">
+      <h3>The reaction <small id="r-num"></small></h3>
+      <div class="eqboard" id="eq" aria-live="polite"></div>
+      <div class="ev" id="ev"></div>
+      <svg class="chart" id="tr" role="img" aria-label="Diagram of what is transferred or formed in the reaction"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">1 · Evidence tools</div>
+        <div class="scenarios tools" id="tools">
+          <button type="button" id="t-ox" aria-pressed="false">Oxidation numbers</button>
+          <button type="button" id="t-h" aria-pressed="false">Proton (H⁺) transfer?</button>
+          <button type="button" id="t-s" aria-pressed="false">Insoluble product?</button>
+        </div>
+        <span class="hint2">Each tool marks the equation and adds a note. A tool can find nothing; that is evidence too.</span>
+      </div>
+      <div class="group">
+        <div class="tag">2 · Your classification (choose all that apply)</div>
+        <div class="seg" role="group" aria-label="Reaction types">
+          <button type="button" id="c-ab" aria-pressed="false">Acid–base</button>
+          <button type="button" id="c-rx" aria-pressed="false">Redox</button>
+          <button type="button" id="c-pp" aria-pressed="false">Precipitation</button>
+        </div>
+      </div>
+      <div class="btnrow">
+        <button type="button" class="primary" id="b-check">Check</button>
+        <button type="button" id="b-prev">← Previous</button>
+        <button type="button" id="b-next">Next →</button>
+        <button type="button" id="b-shuffle">Shuffle</button>
+      </div>
+      <div class="hint2">Three questions settle every case. Does any oxidation number change? Does an H<sup>+</sup> pass from one species to another? Do two dissolved ions combine into a solid?</div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-up">Oxidation number rises (oxidized)</span><span class="l-dn">Oxidation number falls (reduced)</span><span class="l-mix">Both, same element</span><span style="color:var(--c1)">H⁺ donor box</span><span style="color:var(--c2)">H⁺ acceptor box</span><span class="l-ad">Insoluble product box</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Reaction</div><div class="v" id="r-n"></div><div class="sub" id="r-n2"></div></div>
+    <div class="stat"><div class="k">Your score</div><div class="v" id="r-sc">0 / 0</div><div class="sub" id="r-sc2">first tries only</div></div>
+    <div class="stat"><div class="k">Oxidation numbers change?</div><div class="v" id="r-ox">?</div><div class="sub" id="r-ox2">use the tool</div></div>
+    <div class="stat"><div class="k">Electrons transferred</div><div class="v" id="r-e">?</div><div class="sub" id="r-e2">per equation as written</div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Protons move</span><h3>Acid–base reactions</h3><p>An acid–base reaction transfers one or more protons (H<sup>+</sup>) from an acid to a base. Look for a species that loses an H<sup>+</sup> and another that gains one: HCl → Cl<sup>−</sup>, NH<sub>3</sub> → NH<sub>4</sub><sup>+</sup>. No oxidation numbers change.</p></div>
+    <div class="card"><span class="tag">Electrons move</span><h3>Redox reactions</h3><p>A redox reaction transfers one or more electrons. The proof is a change in oxidation number: the species that is oxidized goes up, the species that is reduced goes down, and the electrons lost equal the electrons gained.</p></div>
+    <div class="card"><span class="tag">A solid forms</span><h3>Precipitation reactions</h3><p>Two solutions are mixed and dissolved ions combine to form a product with low solubility, which comes out as a solid. The net ionic equation shows only the ions that form the solid, such as Ag<sup>+</sup>(aq) + Cl<sup>−</sup>(aq) → AgCl(s).</p></div>
+    <div class="card"><span class="tag">Combustion</span><h3>Burning is redox</h3><p>Combustion is a redox reaction in which a substance reacts with O<sub>2</sub> to form oxides, usually CO<sub>2</sub> and H<sub>2</sub>O for compounds of C and H. Oxygen goes from 0 to −2 (reduced) and carbon's oxidation number rises (oxidized).</p></div>
+    <div class="card"><span class="tag">Solubility you must know</span><h3>Na<sup>+</sup>, K<sup>+</sup>, NH<sub>4</sub><sup>+</sup>, NO<sub>3</sub><sup>−</sup></h3><p>The only solubility rule the AP exam expects you to know: all sodium, potassium, ammonium, and nitrate salts are soluble in water. For any other salt, the question will tell you or show (s) in the equation.</p></div>
+    <div class="card"><span class="tag">Traps</span><h3>Look at the evidence, not the names</h3><p>An acid in the equation does not make it acid–base (Mg + HCl is redox). A solid product does not make it precipitation (Zn + Cu<sup>2+</sup> deposits Cu metal by redox). Some reactions are two types: Ba(OH)<sub>2</sub> + H<sub>2</sub>SO<sub>4</sub> is acid–base and precipitation.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Classification cheat sheet</h2>
+    <p>Classify by what moves or forms, then cite that evidence. The last column is the sentence the exam wants.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Type</th><th>What is transferred or formed</th><th>How to spot it</th><th>Example (net ionic)</th><th>Justification that earns the point</th></tr></thead>
+    <tbody>
+      <tr><td><b>Acid–base</b></td><td>Proton (H<sup>+</sup>)</td><td>One species loses H<sup>+</sup>, another gains it; oxidation numbers unchanged</td><td class="chem">H<sub>3</sub>O<sup>+</sup> + OH<sup>−</sup> → 2H<sub>2</sub>O</td><td>"H<sub>3</sub>O<sup>+</sup> donates a proton to OH<sup>−</sup>."</td></tr>
+      <tr><td><b>Redox</b></td><td>Electrons</td><td>Some oxidation numbers change; often a free element on one side</td><td class="chem">Zn + Cu<sup>2+</sup> → Zn<sup>2+</sup> + Cu</td><td>"Zn goes from 0 to +2 (oxidized); Cu goes from +2 to 0 (reduced)."</td></tr>
+      <tr><td><b>Redox (combustion)</b></td><td>Electrons, to O<sub>2</sub></td><td>Fuel + O<sub>2</sub> → oxides (CO<sub>2</sub>, H<sub>2</sub>O)</td><td class="chem">CH<sub>4</sub> + 2O<sub>2</sub> → CO<sub>2</sub> + 2H<sub>2</sub>O</td><td>"C goes from −4 to +4; O goes from 0 to −2."</td></tr>
+      <tr><td><b>Precipitation</b></td><td>Ions combine into a solid</td><td>Two aqueous solutions mix; a low-solubility ionic product is (s)</td><td class="chem">Ag<sup>+</sup> + Cl<sup>−</sup> → AgCl(s)</td><td>"Aqueous Ag<sup>+</sup> and Cl<sup>−</sup> combine to form insoluble AgCl."</td></tr>
+      <tr><td><b>Acid–base and precipitation</b></td><td>H<sup>+</sup>, and ions form a solid</td><td>Both kinds of evidence present</td><td class="chem">Ba<sup>2+</sup> + 2OH<sup>−</sup> + 2H<sub>3</sub>O<sup>+</sup> + SO<sub>4</sub><sup>2−</sup> → BaSO<sub>4</sub>(s) + 4H<sub>2</sub>O</td><td>Cite both: the proton transfer and the insoluble BaSO<sub>4</sub>.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Classifying on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Name the type and give the evidence in the same sentence. "Redox" alone rarely earns the point; "redox, because the oxidation number of Mg increases from 0 to +2" does.</li>
+        <li>For redox, name both halves: what is oxidized (and its oxidation numbers before and after) and what is reduced.</li>
+        <li>For acid–base, name the proton donor and the proton acceptor.</li>
+        <li>For precipitation, name the solid and the two aqueous ions that formed it, and write the net ionic equation.</li>
+        <li>When asked about combustion, say it is redox and point to O<sub>2</sub> (0) becoming oxygen at −2 in CO<sub>2</sub> and H<sub>2</sub>O.</li>
+        <li>Check that your evidence is about particles (protons, electrons, ions), not observations alone like "bubbles formed."</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Calling Mg + HCl acid–base because HCl is an acid. H<sup>+</sup> gains electrons to become H<sub>2</sub>; that is reduction.</li>
+        <li>Calling a reaction precipitation because a metal forms. Cu(s) from Zn + Cu<sup>2+</sup> is made by electron transfer.</li>
+        <li>Calling CaCO<sub>3</sub> + HCl redox because a gas forms. No oxidation number changes; carbonate accepts protons.</li>
+        <li>Forgetting that a free element (Zn, O<sub>2</sub>, Cl<sub>2</sub>) on one side and in a compound on the other almost always means redox.</li>
+        <li>Assuming every ionic product is a precipitate. Sodium, potassium, ammonium, and nitrate salts always stay dissolved.</li>
+        <li>Stopping at one type. Check all three questions; some reactions fit two.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 4.7. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-4.html">Unit 4 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Reactions ----------
+  // Species: [coefficient, formula, state, oxidation numbers by element]. Formula charges use ^2+ style.
+  // ab / rx / pp: the correct types. hd / ha: index of the H+ donor and acceptor species (reactants), or null.
+  // ps: index (in products) of the insoluble product formed from aqueous ions, or null.
+  // tr: rows for the transfer diagram. e: electrons transferred per equation as written.
+  var R = [
+    { r: [[1, "HCl", "aq", { H: 1, Cl: -1 }], [1, "NaOH", "aq", { Na: 1, O: -2, H: 1 }]],
+      p: [[1, "NaCl", "aq", { Na: 1, Cl: -1 }], [1, "H2O", "l", { H: 1, O: -2 }]],
+      ab: 1, hd: 0, ha: 1,
+      net: "H<sub>3</sub>O<sup>+</sup>(aq) + OH<sup>−</sup>(aq) → 2H<sub>2</sub>O(l)",
+      hN: "HCl (present as H<sub>3</sub>O<sup>+</sup>) gives an H<sup>+</sup> to OH<sup>−</sup>, which becomes H<sub>2</sub>O.",
+      sN: "No solid forms. NaCl stays dissolved (all sodium salts are soluble).",
+      tr: [{ k: "ab", from: "HCl", to: "OH⁻" }],
+      ap: "Acid–base, because HCl (as H₃O⁺) transfers a proton to OH⁻. No oxidation numbers change." },
+    { r: [[1, "AgNO3", "aq", { Ag: 1, N: 5, O: -2 }], [1, "NaCl", "aq", { Na: 1, Cl: -1 }]],
+      p: [[1, "AgCl", "s", { Ag: 1, Cl: -1 }], [1, "NaNO3", "aq", { Na: 1, N: 5, O: -2 }]],
+      pp: 1, ps: 0,
+      net: "Ag<sup>+</sup>(aq) + Cl<sup>−</sup>(aq) → AgCl(s)",
+      hN: "No H<sup>+</sup> moves. Nothing in this reaction even contains hydrogen.",
+      sN: "AgCl(s) forms when Ag<sup>+</sup>(aq) and Cl<sup>−</sup>(aq) meet. Given: AgCl has very low solubility in water. NaNO<sub>3</sub> stays dissolved (sodium and nitrate salts are soluble).",
+      tr: [{ k: "pp", ions: ["Ag⁺", "Cl⁻"], solid: "AgCl(s)" }],
+      ap: "Precipitation, because aqueous Ag⁺ and Cl⁻ ions combine to form insoluble AgCl(s). Na⁺ and NO₃⁻ are spectators." },
+    { r: [[1, "Zn", "s", { Zn: 0 }], [1, "CuSO4", "aq", { Cu: 2, S: 6, O: -2 }]],
+      p: [[1, "ZnSO4", "aq", { Zn: 2, S: 6, O: -2 }], [1, "Cu", "s", { Cu: 0 }]],
+      rx: 1, e: 2,
+      net: "Zn(s) + Cu<sup>2+</sup>(aq) → Zn<sup>2+</sup>(aq) + Cu(s)",
+      hN: "No hydrogen in this reaction, so no proton transfer.",
+      sN: "Cu(s) appears, but it is a metal made when Cu<sup>2+</sup> gains electrons, not an ionic solid formed when two dissolved ions combine. Not precipitation.",
+      tr: [{ k: "rx", from: "Zn", fo: "0 → +2", to: "Cu²⁺", too: "+2 → 0", e: "2 e⁻" }],
+      ap: "Redox, because Zn is oxidized (0 → +2) and Cu²⁺ is reduced (+2 → 0); two electrons pass from Zn to Cu²⁺. SO₄²⁻ is a spectator." },
+    { r: [[1, "CH4", "g", { C: -4, H: 1 }], [2, "O2", "g", { O: 0 }]],
+      p: [[1, "CO2", "g", { C: 4, O: -2 }], [2, "H2O", "g", { H: 1, O: -2 }]],
+      rx: 1, e: 8,
+      net: "This is already the whole equation: CH<sub>4</sub>(g) + 2O<sub>2</sub>(g) → CO<sub>2</sub>(g) + 2H<sub>2</sub>O(g) (no ions)",
+      hN: "H atoms end up in H<sub>2</sub>O, but nothing donates H<sup>+</sup> to a base. Hydrogen stays at +1 the whole time.",
+      sN: "No solid. Everything is a gas.",
+      tr: [{ k: "rx", from: "C in CH₄", fo: "−4 → +4", to: "O in O₂", too: "0 → −2", e: "8 e⁻" }],
+      ap: "Redox (combustion), because C is oxidized from −4 to +4 and O is reduced from 0 to −2." },
+    { r: [[1, "Mg", "s", { Mg: 0 }], [2, "HCl", "aq", { H: 1, Cl: -1 }]],
+      p: [[1, "MgCl2", "aq", { Mg: 2, Cl: -1 }], [1, "H2", "g", { H: 0 }]],
+      rx: 1, e: 2,
+      net: "Mg(s) + 2H<sup>+</sup>(aq) → Mg<sup>2+</sup>(aq) + H<sub>2</sub>(g)",
+      hN: "HCl is an acid, but its H<sup>+</sup> is not passed to a base. H<sup>+</sup> gains electrons and becomes H<sub>2</sub> (+1 → 0). That is reduction, not proton transfer.",
+      sN: "No solid forms; MgCl<sub>2</sub> stays dissolved and H<sub>2</sub> bubbles off.",
+      tr: [{ k: "rx", from: "Mg", fo: "0 → +2", to: "H⁺ (in HCl)", too: "+1 → 0", e: "2 e⁻" }],
+      ap: "Redox, because Mg is oxidized (0 → +2) and H⁺ is reduced (+1 → 0). Even though HCl is an acid, no proton is transferred to a base.", trap: "An acid in the equation does not make it acid–base." },
+    { r: [[1, "NH3", "aq", { N: -3, H: 1 }], [1, "HCl", "aq", { H: 1, Cl: -1 }]],
+      p: [[1, "NH4Cl", "aq", { N: -3, H: 1, Cl: -1 }]],
+      ab: 1, hd: 1, ha: 0,
+      net: "NH<sub>3</sub>(aq) + H<sub>3</sub>O<sup>+</sup>(aq) → NH<sub>4</sub><sup>+</sup>(aq) + H<sub>2</sub>O(l)",
+      hN: "HCl (as H<sub>3</sub>O<sup>+</sup>) gives an H<sup>+</sup> to NH<sub>3</sub>, whose lone pair accepts it to form NH<sub>4</sub><sup>+</sup>.",
+      sN: "No solid; NH<sub>4</sub>Cl is soluble (all ammonium salts are).",
+      tr: [{ k: "ab", from: "HCl", to: "NH₃" }],
+      ap: "Acid–base, because HCl transfers a proton to NH₃, forming NH₄⁺. N stays at −3 and H at +1." },
+    { r: [[1, "Ba(OH)2", "aq", { Ba: 2, O: -2, H: 1 }], [1, "H2SO4", "aq", { H: 1, S: 6, O: -2 }]],
+      p: [[1, "BaSO4", "s", { Ba: 2, S: 6, O: -2 }], [2, "H2O", "l", { H: 1, O: -2 }]],
+      ab: 1, pp: 1, hd: 1, ha: 0, ps: 0,
+      net: "Ba<sup>2+</sup>(aq) + 2OH<sup>−</sup>(aq) + 2H<sub>3</sub>O<sup>+</sup>(aq) + SO<sub>4</sub><sup>2−</sup>(aq) → BaSO<sub>4</sub>(s) + 4H<sub>2</sub>O(l)",
+      hN: "H<sub>2</sub>SO<sub>4</sub> gives its protons to the OH<sup>−</sup> from Ba(OH)<sub>2</sub>, forming water.",
+      sN: "BaSO<sub>4</sub>(s) forms when Ba<sup>2+</sup>(aq) and SO<sub>4</sub><sup>2−</sup>(aq) meet. Given: BaSO<sub>4</sub> has very low solubility.",
+      tr: [{ k: "ab", from: "H₂SO₄", to: "OH⁻" }, { k: "pp", ions: ["Ba²⁺", "SO₄²⁻"], solid: "BaSO₄(s)" }],
+      ap: "Both acid–base and precipitation: H₂SO₄ transfers protons to OH⁻, and Ba²⁺ and SO₄²⁻ combine to form insoluble BaSO₄(s). This one has no spectator ions.", trap: "One reaction can be two types." },
+    { r: [[1, "Pb(NO3)2", "aq", { Pb: 2, N: 5, O: -2 }], [2, "KI", "aq", { K: 1, I: -1 }]],
+      p: [[1, "PbI2", "s", { Pb: 2, I: -1 }], [2, "KNO3", "aq", { K: 1, N: 5, O: -2 }]],
+      pp: 1, ps: 0,
+      net: "Pb<sup>2+</sup>(aq) + 2I<sup>−</sup>(aq) → PbI<sub>2</sub>(s)",
+      hN: "No hydrogen anywhere, so no proton transfer.",
+      sN: "Yellow PbI<sub>2</sub>(s) forms from Pb<sup>2+</sup>(aq) and I<sup>−</sup>(aq). Given: PbI<sub>2</sub> has low solubility. KNO<sub>3</sub> stays dissolved (potassium and nitrate salts are soluble).",
+      tr: [{ k: "pp", ions: ["Pb²⁺", "2 I⁻"], solid: "PbI₂(s)" }],
+      ap: "Precipitation, because aqueous Pb²⁺ and I⁻ combine to form insoluble PbI₂(s). K⁺ and NO₃⁻ are spectators." },
+    { r: [[2, "Na", "s", { Na: 0 }], [1, "Cl2", "g", { Cl: 0 }]],
+      p: [[2, "NaCl", "s", { Na: 1, Cl: -1 }]],
+      rx: 1, e: 2,
+      net: "No ions in solution; the full equation is the net equation.",
+      hN: "No hydrogen, so no proton transfer.",
+      sN: "NaCl(s) forms, but from two elements (sodium metal and chlorine gas), not from two dissolved ions. It is made by electron transfer.",
+      tr: [{ k: "rx", from: "Na", fo: "0 → +1", to: "Cl₂", too: "0 → −1", e: "2 e⁻" }],
+      ap: "Redox, because Na is oxidized (0 → +1) and Cl is reduced (0 → −1). Two Na atoms each lose one electron; the two Cl atoms in Cl₂ each gain one." },
+    { r: [[2, "H2O2", "aq", { H: 1, O: -1 }]],
+      p: [[2, "H2O", "l", { H: 1, O: -2 }], [1, "O2", "g", { O: 0 }]],
+      rx: 1, e: 2,
+      net: "2H<sub>2</sub>O<sub>2</sub>(aq) → 2H<sub>2</sub>O(l) + O<sub>2</sub>(g)",
+      hN: "Hydrogen stays at +1 and no H<sup>+</sup> passes from an acid to a base.",
+      sN: "No solid.",
+      tr: [{ k: "rx", from: "O in H₂O₂ (to O₂)", fo: "−1 → 0", to: "O in H₂O₂ (to H₂O)", too: "−1 → −2", e: "2 e⁻" }],
+      ap: "Redox, because oxygen in H₂O₂ (−1) is both oxidized to O₂ (0) and reduced to H₂O (−2). One element doing both is called disproportionation.", trap: "The same element can be oxidized and reduced." },
+    { r: [[1, "CaCO3", "s", { Ca: 2, C: 4, O: -2 }], [2, "HCl", "aq", { H: 1, Cl: -1 }]],
+      p: [[1, "CaCl2", "aq", { Ca: 2, Cl: -1 }], [1, "H2O", "l", { H: 1, O: -2 }], [1, "CO2", "g", { C: 4, O: -2 }]],
+      ab: 1, hd: 1, ha: 0,
+      net: "CaCO<sub>3</sub>(s) + 2H<sub>3</sub>O<sup>+</sup>(aq) → Ca<sup>2+</sup>(aq) + 3H<sub>2</sub>O(l) + CO<sub>2</sub>(g)",
+      hN: "HCl (as H<sub>3</sub>O<sup>+</sup>) gives protons to the carbonate ion in CaCO<sub>3</sub>. The H<sub>2</sub>CO<sub>3</sub> formed breaks down into H<sub>2</sub>O and CO<sub>2</sub>.",
+      sN: "The only solid, CaCO<sub>3</sub>, is a reactant that dissolves. No new solid forms.",
+      tr: [{ k: "ab", from: "HCl", to: "CO₃²⁻ (in CaCO₃)" }],
+      ap: "Acid–base, because H₃O⁺ from HCl transfers protons to CO₃²⁻. C stays at +4, so it is not redox even though a gas forms.", trap: "A gas forming does not make it redox." },
+    { r: [[1, "C2H5OH", "l", { C: -2, H: 1, O: -2 }], [3, "O2", "g", { O: 0 }]],
+      p: [[2, "CO2", "g", { C: 4, O: -2 }], [3, "H2O", "g", { H: 1, O: -2 }]],
+      rx: 1, e: 12, avg: "C",
+      net: "No ions; the full equation is the net equation.",
+      hN: "Hydrogen ends up in water but stays at +1. No H<sup>+</sup> passes from an acid to a base.",
+      sN: "No solid.",
+      tr: [{ k: "rx", from: "C in C₂H₅OH", fo: "−2 → +4", to: "O in O₂", too: "0 → −2", e: "12 e⁻" }],
+      ap: "Redox (combustion), because C is oxidized from an average of −2 to +4 and O is reduced from 0 to −2. Each C loses 6 electrons, 12 in all." },
+    { r: [[1, "Fe2O3", "s", { Fe: 3, O: -2 }], [3, "CO", "g", { C: 2, O: -2 }]],
+      p: [[2, "Fe", "s", { Fe: 0 }], [3, "CO2", "g", { C: 4, O: -2 }]],
+      rx: 1, e: 6,
+      net: "No ions; the full equation is the net equation.",
+      hN: "No hydrogen, so no proton transfer.",
+      sN: "Fe(s) forms, but from Fe<sup>3+</sup> in a solid oxide gaining electrons, not from two dissolved ions.",
+      tr: [{ k: "rx", from: "C in CO", fo: "+2 → +4", to: "Fe in Fe₂O₃", too: "+3 → 0", e: "6 e⁻" }],
+      ap: "Redox, because C is oxidized (+2 → +4) and Fe is reduced (+3 → 0). Oxygen stays at −2 throughout." },
+    { r: [[2, "KClO3", "s", { K: 1, Cl: 5, O: -2 }]],
+      p: [[2, "KCl", "s", { K: 1, Cl: -1 }], [3, "O2", "g", { O: 0 }]],
+      rx: 1, e: 12,
+      net: "No ions in solution; the full equation is the net equation.",
+      hN: "No hydrogen, so no proton transfer.",
+      sN: "KCl(s) forms, but by heating solid KClO<sub>3</sub>, not by mixing two solutions. No precipitation.",
+      tr: [{ k: "rx", from: "O in KClO₃", fo: "−2 → 0", to: "Cl in KClO₃", too: "+5 → −1", e: "12 e⁻" }],
+      ap: "Redox, because O is oxidized (−2 → 0) and Cl is reduced (+5 → −1). A decomposition can be redox; here both changes happen inside the same compound." },
+    { r: [[1, "Cu", "s", { Cu: 0 }], [2, "AgNO3", "aq", { Ag: 1, N: 5, O: -2 }]],
+      p: [[1, "Cu(NO3)2", "aq", { Cu: 2, N: 5, O: -2 }], [2, "Ag", "s", { Ag: 0 }]],
+      rx: 1, e: 2,
+      net: "Cu(s) + 2Ag<sup>+</sup>(aq) → Cu<sup>2+</sup>(aq) + 2Ag(s)",
+      hN: "No hydrogen, so no proton transfer.",
+      sN: "Ag(s) forms as Ag<sup>+</sup> gains electrons: metal deposited by redox, not a precipitate of two ions.",
+      tr: [{ k: "rx", from: "Cu", fo: "0 → +2", to: "Ag⁺", too: "+1 → 0", e: "2 e⁻" }],
+      ap: "Redox, because Cu is oxidized (0 → +2) and Ag⁺ is reduced (+1 → 0). One Cu loses 2 electrons, so 2 Ag⁺ are needed to take them." },
+    { r: [[1, "Na2CO3", "aq", { Na: 1, C: 4, O: -2 }], [1, "CaCl2", "aq", { Ca: 2, Cl: -1 }]],
+      p: [[1, "CaCO3", "s", { Ca: 2, C: 4, O: -2 }], [2, "NaCl", "aq", { Na: 1, Cl: -1 }]],
+      pp: 1, ps: 0,
+      net: "Ca<sup>2+</sup>(aq) + CO<sub>3</sub><sup>2−</sup>(aq) → CaCO<sub>3</sub>(s)",
+      hN: "No hydrogen, so no proton transfer.",
+      sN: "CaCO<sub>3</sub>(s) forms from Ca<sup>2+</sup>(aq) and CO<sub>3</sub><sup>2−</sup>(aq). Given: CaCO<sub>3</sub> has low solubility. NaCl stays dissolved (sodium salts are soluble).",
+      tr: [{ k: "pp", ions: ["Ca²⁺", "CO₃²⁻"], solid: "CaCO₃(s)" }],
+      ap: "Precipitation, because aqueous Ca²⁺ and CO₃²⁻ combine to form insoluble CaCO₃(s). Na⁺ and Cl⁻ are spectators." }
+  ];
+
+  // ---------- Self-check of the data (oxidation numbers must sum to the charge; equations must balance) ----------
+  function charge(f) { var m = String(f).match(/\^(\d*)([+\-])$/); return m ? (m[2] === "-" ? -1 : 1) * (m[1] ? +m[1] : 1) : 0; }
+  R.forEach(function (x, i) {
+    var tot = {};
+    [["r", 1], ["p", -1]].forEach(function (side) {
+      x[side[0]].forEach(function (sp) {
+        var c = Lab.parseFormula(sp[1]), sum = 0;
+        for (var el in c) {
+          if (!(el in sp[3])) console.error("Reaction " + (i + 1) + ": no oxidation number for " + el + " in " + sp[1]);
+          sum += c[el] * sp[3][el];
+          tot[el] = (tot[el] || 0) + side[1] * sp[0] * c[el];
+        }
+        if (Math.abs(sum - charge(sp[1])) > 1e-9) console.error("Reaction " + (i + 1) + ": oxidation numbers in " + sp[1] + " sum to " + sum);
+      });
+    });
+    for (var el in tot) if (tot[el] !== 0) console.error("Reaction " + (i + 1) + " is not balanced in " + el);
+    // electrons: sum of increases in oxidation number = sum of decreases
+    if (x.rx) {
+      var up = 0, dn = 0;
+      var rv = {}; x.r.forEach(function (sp) { var c = Lab.parseFormula(sp[1]); for (var el in c) rv[el] = (rv[el] || []).concat([[sp[3][el], sp[0] * c[el]]]); });
+      var multi = {};
+      x.p.forEach(function (sp) {
+        var c = Lab.parseFormula(sp[1]);
+        for (var el in c) {
+          if (rv[el].length > 1) { multi[el] = true; continue; }
+          var d = sp[3][el] - rv[el][0][0]; if (d > 0) up += d * sp[0] * c[el]; else dn -= d * sp[0] * c[el];
+        }
+      });
+      // elements found in more than one reactant: use the net change in total oxidation number
+      Object.keys(multi).forEach(function (el) {
+        var d = 0;
+        x.p.forEach(function (sp) { var c = Lab.parseFormula(sp[1]); if (c[el]) d += sp[0] * c[el] * sp[3][el]; });
+        rv[el].forEach(function (q) { d -= q[0] * q[1]; });
+        if (d > 0) up += d; else dn -= d;
+      });
+      if (up !== dn || up !== x.e) console.error("Reaction " + (i + 1) + ": electrons lost " + up + ", gained " + dn + ", listed " + x.e);
+    }
+  });
+
+  // ---------- Rendering helpers ----------
+  function tokens(f) {
+    var s = String(f).replace(/\^.*$/, ""), out = [], re = /([A-Z][a-z]?)(\d*)|(\()|(\))(\d*)/g, m;
+    while ((m = re.exec(s))) {
+      if (m[1]) out.push({ el: m[1], n: m[2] });
+      else if (m[3]) out.push({ txt: "(" });
+      else out.push({ txt: ")", n: m[5] });
+    }
+    return out;
+  }
+  function signed(v) { return v > 0 ? "+" + v : v < 0 ? "−" + Math.abs(v) : "0"; }
+  function oxClass(x, el, side, v) {
+    var rv = [], pv = [];
+    x.r.forEach(function (sp) { if (el in sp[3]) rv.push(sp[3][el]); });
+    x.p.forEach(function (sp) { if (el in sp[3]) pv.push(sp[3][el]); });
+    var changes = rv.some(function (a) { return pv.some(function (b) { return a !== b; }); });
+    if (!changes) return "";
+    if (side === "p") { var r0 = rv[0]; return v > r0 ? "up" : v < r0 ? "dn" : ""; }
+    var hi = pv.some(function (b) { return b > v; }), lo = pv.some(function (b) { return b < v; });
+    return hi && lo ? "mix" : hi ? "up" : lo ? "dn" : "";
+  }
+  function spHTML(x, sp, side, idx) {
+    var cls = "sp";
+    if (S.tH && x.ab && side === "r" && idx === x.hd) cls += " donor";
+    if (S.tH && x.ab && side === "r" && idx === x.ha) cls += " acceptor";
+    if (S.tS && x.pp && side === "p" && idx === x.ps) cls += " solid";
+    var h = '<span class="' + cls + '">' + (sp[0] > 1 ? '<span class="coef">' + sp[0] + "</span>" : "");
+    tokens(sp[1]).forEach(function (t) {
+      if (t.txt) { h += '<span class="tk"><span class="ox"></span><span>' + t.txt + (t.n ? "<sub>" + t.n + "</sub>" : "") + "</span></span>"; return; }
+      var v = sp[3][t.el], oc = S.tOx ? oxClass(x, t.el, side, v) : "";
+      var avg = x.avg === t.el ? " avg" : "";
+      h += '<span class="tk"><span class="ox ' + oc + (S.tOx ? avg : "") + '">' + (S.tOx ? signed(v) : "") + "</span><span>" + t.el + (t.n ? "<sub>" + t.n + "</sub>" : "") + "</span></span>";
+    });
+    return h + '<span class="st">(' + sp[2] + ")</span></span>";
+  }
+
+  // ---------- State ----------
+  var ORDER = R.map(function (_, i) { return i; });
+  var S = { pos: 0, tOx: false, tH: false, tS: false, pick: { ab: false, rx: false, pp: false }, checked: false };
+  var RESULT = {};   // first-try results by reaction index
+  function cur() { return R[ORDER[S.pos]]; }
+  function truth(x) { return { ab: !!x.ab, rx: !!x.rx, pp: !!x.pp }; }
+  function typeWords(t) {
+    var w = []; if (t.ab) w.push("acid–base"); if (t.rx) w.push("redox"); if (t.pp) w.push("precipitation");
+    return w.length ? w.join(" and ") : "nothing yet";
+  }
+
+  // ---------- Transfer diagram ----------
+  var svg = document.getElementById("tr");
+  function pillT(g, cx, cy, txt, fill, stroke, tcol) {
+    var w = 18 + txt.length * 7.4;
+    Lab.el("rect", { x: cx - w / 2, y: cy - 15, width: w, height: 30, rx: 15, fill: fill, stroke: stroke || "none", "stroke-width": 1.5 }, g);
+    Lab.el("text", { x: cx, y: cy + 5, "text-anchor": "middle", style: "font-size:14px; font-weight:600; fill:" + tcol }, g, txt);
+    return w;
+  }
+  function drawTransfer(x) {
+    var E = Lab.el;
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var rows = S.checked ? x.tr : [];
+    var H = rows.length ? rows.length * 104 + 6 : 70;
+    svg.setAttribute("viewBox", "0 0 440 " + H);
+    var defs = E("defs", {}, svg);
+    ["c1", "c2", "c4", "accent"].forEach(function (c) {
+      var mk = E("marker", { id: "ah-" + c, viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" }, defs);
+      E("path", { d: "M0 0 L10 5 L0 10 Z", fill: "var(--" + c + ")" }, mk);
+    });
+    if (!rows.length) {
+      E("rect", { x: 2, y: 2, width: 436, height: H - 4, rx: 10, fill: "none", stroke: "var(--rule)", "stroke-dasharray": "5 4" }, svg);
+      E("text", { x: 220, y: H / 2 + 5, "text-anchor": "middle", style: "font-size:14px" }, svg, "Check your answer to see what is transferred.");
+      return;
+    }
+    rows.forEach(function (t, i) {
+      var y0 = i * 104 + 4, g = E("g", {}, svg);
+      E("rect", { x: 2, y: y0, width: 436, height: 98, rx: 10, fill: "var(--paper)", stroke: "var(--rule)" }, g);
+      if (t.k === "rx" || t.k === "ab") {
+        var isR = t.k === "rx";
+        var cA = isR ? "var(--c1)" : "var(--c1)", cB = "var(--c2)";
+        E("text", { x: 14, y: y0 + 20, style: "font-size:12px; font-weight:600; fill:var(--ink)" }, g, isR ? "Redox: electrons move" : "Acid–base: a proton moves");
+        pillT(g, 104, y0 + 52, t.from, "var(--surface)", cA, "var(--ink)");
+        pillT(g, 336, y0 + 52, t.to, "var(--surface)", cB, "var(--ink)");
+        E("line", { x1: 186, y1: y0 + 52, x2: 252, y2: y0 + 52, stroke: isR ? "var(--c4)" : "var(--c1)", "stroke-width": 2.5, "marker-end": "url(#ah-" + (isR ? "c4" : "c1") + ")" }, g);
+        E("text", { x: 219, y: y0 + 44, "text-anchor": "middle", style: "font-size:14px; font-weight:600; fill:" + (isR ? "var(--c4)" : "var(--c1)") }, g, isR ? t.e : "H⁺");
+        E("text", { x: 104, y: y0 + 86, "text-anchor": "middle", style: "font-size:12px; fill:var(--c1)" }, g, isR ? "oxidized " + t.fo : "acid (H⁺ donor)");
+        E("text", { x: 336, y: y0 + 86, "text-anchor": "middle", style: "font-size:12px; fill:var(--c2)" }, g, isR ? "reduced " + t.too : "base (H⁺ acceptor)");
+      } else {
+        E("text", { x: 14, y: y0 + 20, style: "font-size:12px; font-weight:600; fill:var(--ink)" }, g, "Precipitation: dissolved ions form a solid");
+        pillT(g, 64, y0 + 52, t.ions[0] + "(aq)", "var(--surface)", "var(--muted)", "var(--ink)");
+        E("text", { x: 128, y: y0 + 57, "text-anchor": "middle", style: "font-size:16px" }, g, "+");
+        pillT(g, 192, y0 + 52, t.ions[1] + "(aq)", "var(--surface)", "var(--muted)", "var(--ink)");
+        E("line", { x1: 250, y1: y0 + 52, x2: 290, y2: y0 + 52, stroke: "var(--accent)", "stroke-width": 2.5, "marker-end": "url(#ah-accent)" }, g);
+        pillT(g, 360, y0 + 52, t.solid, "var(--accent)", null, "var(--surface)");
+        E("text", { x: 360, y: y0 + 88, "text-anchor": "middle", style: "font-size:12px; fill:var(--accent)" }, g, "low solubility: settles out");
+      }
+    });
+  }
+
+  // ---------- Render ----------
+  var pickBtns = { ab: document.getElementById("c-ab"), rx: document.getElementById("c-rx"), pp: document.getElementById("c-pp") };
+  var toolBtns = { tOx: document.getElementById("t-ox"), tH: document.getElementById("t-h"), tS: document.getElementById("t-s") };
+  function render() {
+    var x = cur(), t = truth(x);
+    var parts = x.r.map(function (sp, i) { return spHTML(x, sp, "r", i); }).join('<span class="op">+</span>') +
+      '<span class="op">→</span>' + x.p.map(function (sp, i) { return spHTML(x, sp, "p", i); }).join('<span class="op">+</span>');
+    document.getElementById("eq").innerHTML = parts;
+    document.getElementById("r-num").textContent = "reaction " + (S.pos + 1) + " of " + R.length;
+    // evidence notes
+    var ev = "";
+    if (S.tOx) {
+      var ch = !!x.rx;
+      ev += '<p class="t-ox"><b>Oxidation numbers:</b> ' + (ch ? "some change. Colored numbers mark the atoms whose oxidation number goes up (oxidized) or down (reduced)." + (x.avg ? " *Average oxidation number for C; the two carbons differ, but the average is what the AP exam uses." : "") : "none change. Every element has the same oxidation number on both sides, so no electrons are transferred.") + "</p>";
+    }
+    if (S.tH) ev += '<p class="t-h"><b>Proton transfer:</b> ' + x.hN + "</p>";
+    if (S.tS) ev += '<p class="t-s"><b>Insoluble product:</b> ' + x.sN + "</p>";
+    document.getElementById("ev").innerHTML = ev;
+    drawTransfer(x);
+    Object.keys(pickBtns).forEach(function (k) { pickBtns[k].setAttribute("aria-pressed", S.pick[k] ? "true" : "false"); });
+    Object.keys(toolBtns).forEach(function (k) { toolBtns[k].setAttribute("aria-pressed", S[k] ? "true" : "false"); });
+    // readouts
+    document.getElementById("r-n").textContent = (S.pos + 1) + " / " + R.length;
+    var done = Object.keys(RESULT).length, right = Object.keys(RESULT).filter(function (k) { return RESULT[k]; }).length;
+    document.getElementById("r-n2").textContent = done + " classified so far";
+    document.getElementById("r-sc").textContent = right + " / " + done;
+    var showOx = S.tOx || S.checked;
+    document.getElementById("r-ox").innerHTML = showOx ? (x.rx ? '<span class="pill infl">Yes</span>' : '<span class="pill lr">No</span>') : "?";
+    document.getElementById("r-ox2").textContent = showOx ? (x.rx ? "so electrons are transferred" : "so it is not redox") : "use the tool";
+    document.getElementById("r-e").textContent = S.checked || S.tOx ? (x.rx ? String(x.e) : "0") : "?";
+    document.getElementById("r-e2").textContent = S.checked || S.tOx ? (x.rx ? "lost = gained, per equation as written" : "no redox") : "per equation as written";
+    // story
+    var h = "";
+    if (!S.checked) {
+      var used = (S.tOx ? 1 : 0) + (S.tH ? 1 : 0) + (S.tS ? 1 : 0);
+      h += "<p><b>Your pick so far: " + typeWords(S.pick) + ".</b> " + (used < 3 ? "You have used " + used + " of the 3 evidence tools. Each type has its own evidence, so check all three before you decide." : "You have all three pieces of evidence. Choose every type that fits and press Check.") + "</p>";
+      h += "<ul><li><b>Redox</b> needs a change in oxidation number.</li><li><b>Acid–base</b> needs an H<sup>+</sup> passed from one species (the acid) to another (the base).</li><li><b>Precipitation</b> needs two dissolved ions combining into a low-solubility solid.</li></ul>";
+      h += "<p><b>AP answer:</b> name the type and cite the particle-level evidence: what is transferred (H<sup>+</sup> or electrons) or which ions form the solid.</p>";
+    } else {
+      var ok = S.pick.ab === t.ab && S.pick.rx === t.rx && S.pick.pp === t.pp;
+      h += '<p class="verdict ' + (ok ? "ok" : "no") + '">' + (ok ? "Correct: " : "Not quite. You chose " + typeWords(S.pick) + "; the answer is ") + typeWords(t) + ".</p>";
+      var li = [];
+      if (x.trap) li.push("<b>Watch for this:</b> " + x.trap);
+      li.push("Oxidation numbers: " + (x.rx ? "they change, so electrons are transferred (" + x.e + " e<sup>−</sup> per equation as written)." : "none change, so it is not redox."));
+      li.push("Proton transfer: " + x.hN);
+      li.push("Solid: " + x.sN);
+      li.push("Net ionic equation: <span class=\"chem\">" + x.net + "</span>");
+      h += "<ul>" + li.map(function (s) { return "<li>" + s + "</li>"; }).join("") + "</ul>";
+      h += "<p><b>AP answer:</b> " + x.ap + "</p>";
+    }
+    document.getElementById("story").innerHTML = h;
+  }
+  function go(pos) {
+    S.pos = (pos + R.length) % R.length;
+    S.tOx = S.tH = S.tS = false; S.pick = { ab: false, rx: false, pp: false }; S.checked = false;
+    render();
+  }
+  Object.keys(pickBtns).forEach(function (k) {
+    pickBtns[k].addEventListener("click", function () { if (S.checked) return; S.pick[k] = !S.pick[k]; render(); });
+  });
+  Object.keys(toolBtns).forEach(function (k) {
+    toolBtns[k].addEventListener("click", function () { S[k] = !S[k]; render(); });
+  });
+  document.getElementById("b-check").addEventListener("click", function () {
+    if (S.checked) return;
+    var x = cur(), t = truth(x);
+    S.checked = true; S.tOx = S.tH = S.tS = true;
+    if (!(ORDER[S.pos] in RESULT)) RESULT[ORDER[S.pos]] = S.pick.ab === t.ab && S.pick.rx === t.rx && S.pick.pp === t.pp;
+    render();
+  });
+  document.getElementById("b-next").addEventListener("click", function () { go(S.pos + 1); });
+  document.getElementById("b-prev").addEventListener("click", function () { go(S.pos - 1); });
+  document.getElementById("b-shuffle").addEventListener("click", function () {
+    for (var j = ORDER.length - 1; j > 0; j--) { var k = Math.floor(Math.random() * (j + 1)); var tmp = ORDER[j]; ORDER[j] = ORDER[k]; ORDER[k] = tmp; }
+    go(0);
+  });
+  go(0);
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Which of the following is best classified as a precipitation reaction?",
+      o: ["Zn(s) + 2Ag⁺(aq) → Zn²⁺(aq) + 2Ag(s)", "Ba²⁺(aq) + CO₃²⁻(aq) → BaCO₃(s)", "NH₃(aq) + H₃O⁺(aq) → NH₄⁺(aq) + H₂O(l)", "2Na(s) + Cl₂(g) → 2NaCl(s)"], c: 1,
+      w: "Two dissolved ions, Ba²⁺ and CO₃²⁻, combine to form a solid with low solubility. Choices A and D also make solids, but by electron transfer: Zn and Na are oxidized, so those are redox reactions. Choice C is a proton transfer." },
+    { s: "Mg(s) + 2HCl(aq) → MgCl₂(aq) + H₂(g). A student says this is an acid–base reaction because HCl is an acid. Which statement correctly evaluates the claim?",
+      o: ["The claim is correct, because HCl donates H⁺.", "The claim is incorrect; it is a precipitation reaction because Mg²⁺ and Cl⁻ combine.", "The claim is incorrect; it is a redox reaction because Mg goes from 0 to +2 and H goes from +1 to 0.", "The claim is correct, because H₂ gas is produced."], c: 2,
+      w: "Mg loses electrons (0 → +2) and H⁺ gains them (+1 → 0), so electrons are transferred: redox. The H⁺ is not passed to a base, so choice A's reasoning fails. MgCl₂ is soluble, so choice B is wrong too." },
+    { s: "C₃H₈(g) + 5O₂(g) → 3CO₂(g) + 4H₂O(g). Which statement about this combustion reaction is correct?",
+      o: ["It is an acid–base reaction because H₂O is produced.", "It is not a redox reaction because no ions are present.", "Oxygen is oxidized from 0 to −2 and carbon is reduced.", "It is a redox reaction: oxygen is reduced from 0 to −2 and carbon is oxidized."], c: 3,
+      w: "Combustion is redox. O goes from 0 in O₂ to −2 in CO₂ and H₂O (a decrease: reduced). C goes from an average of −8/3 in C₃H₈ to +4 (an increase: oxidized). Choice C swaps the terms: a drop in oxidation number is reduction. Choice B is a trap; redox does not require ions." },
+    { s: "Which reaction is both an acid–base reaction and a precipitation reaction?",
+      o: ["Ba(OH)₂(aq) + H₂SO₄(aq) → BaSO₄(s) + 2H₂O(l)", "HNO₃(aq) + KOH(aq) → KNO₃(aq) + H₂O(l)", "AgNO₃(aq) + KBr(aq) → AgBr(s) + KNO₃(aq)", "Fe(s) + CuSO₄(aq) → FeSO₄(aq) + Cu(s)"], c: 0,
+      w: "In choice A, protons pass from H₂SO₄ to OH⁻ (acid–base) and Ba²⁺ and SO₄²⁻ form insoluble BaSO₄ (precipitation). Choice B is only acid–base because KNO₃ is soluble (potassium and nitrate salts always are). Choice C is only precipitation; choice D is redox." },
+    { s: "Solutions of Na₂S(aq) and KNO₃(aq) are mixed. Based only on the solubility rule the AP exam expects you to know, what happens?",
+      o: ["A precipitate of K₂S forms, because sulfides are insoluble", "No precipitate forms, because the possible products NaNO₃ and K₂S are sodium, potassium, and nitrate salts, which are all soluble", "A precipitate of NaNO₃ forms", "A redox reaction occurs between S²⁻ and NO₃⁻"], c: 1,
+      w: "Swapping partners would give NaNO₃ and K₂S. All sodium, potassium, and nitrate salts are soluble, so no solid forms and no reaction occurs: the ions just stay in solution together. Choice A ignores the potassium rule, and choice C contradicts the rule for both Na⁺ and NO₃⁻." },
+    { s: "In which reaction does no element change its oxidation number?",
+      o: ["2H₂O₂(aq) → 2H₂O(l) + O₂(g)", "Fe₂O₃(s) + 3CO(g) → 2Fe(s) + 3CO₂(g)", "CaCO₃(s) + 2HCl(aq) → CaCl₂(aq) + H₂O(l) + CO₂(g)", "2KClO₃(s) → 2KCl(s) + 3O₂(g)"], c: 2,
+      w: "In choice C, Ca stays +2, C stays +4, O stays −2, H stays +1, and Cl stays −1: it is an acid–base reaction in which carbonate accepts protons. A gas forming does not make it redox. In choice A, oxygen goes from −1 to both 0 and −2." },
+    { s: "Cu(s) + 2AgNO₃(aq) → Cu(NO₃)₂(aq) + 2Ag(s). Which statement correctly identifies what is transferred?",
+      o: ["Two electrons are transferred from one Cu atom to two Ag⁺ ions.", "Two protons are transferred from AgNO₃ to Cu.", "Nitrate ions are transferred from Ag⁺ to Cu, so it is a precipitation reaction.", "One electron is transferred from Cu to Ag⁺, because the Ag coefficient is 2."], c: 0,
+      w: "Cu goes from 0 to +2 (loses 2 e⁻) and each Ag⁺ goes from +1 to 0 (gains 1 e⁻), so two Ag⁺ take the two electrons from one Cu. NO₃⁻ is a spectator ion, so choice C is wrong; Ag(s) is a metal formed by reduction, not a precipitate." },
+    { s: "A student mixes two clear solutions and sees a solid form. Which additional evidence would best support classifying the reaction as precipitation rather than redox?",
+      o: ["The solid is a metal that conducts electricity.", "The oxidation numbers of all elements are the same in reactants and products, and the solid is an ionic compound of two ions from the solutions.", "Bubbles of gas form along with the solid.", "The temperature of the mixture increases."], c: 1,
+      w: "Precipitation means dissolved ions combine into a low-solubility ionic solid, with no change in oxidation numbers. A metal forming (choice A) points to reduction of a metal ion, which is redox. Gas bubbles and temperature changes (choices C and D) show a chemical change but do not identify the type." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("4.7");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [4], topic: "4.7", compact: true, storageKey: "topic-4.7" });</script>
+</body>
+</html>

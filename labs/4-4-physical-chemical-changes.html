@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Physical and Chemical Changes Study Lab</title>
+<meta name="description" content="Classify eleven processes as physical or chemical from before-and-after particle diagrams, then check your reasoning about which bonds break, which form, and which intermolecular forces change.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.scenarios button .done { font-family: var(--mono); font-size: .76rem; margin-left: 6px; }
+.scenarios button .done.y { color: var(--good); } .scenarios button .done.n { color: var(--bad); }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 7px 14px; font-size: .88rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v.small { font-family: var(--body); font-size: .98rem; font-weight: 600; }
+.pair { display: grid; grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr); gap: 8px; align-items: center; width: 100%; max-width: 780px; margin: 0 auto; }
+.pair figure { margin: 0; display: grid; gap: 4px; }
+.pair figcaption { text-align: center; font-size: .86rem; color: var(--muted); }
+.pair .arr { text-align: center; font-size: 1.6rem; color: var(--muted); }
+.atomkey { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .82rem; color: var(--muted); }
+.atomkey span { display: inline-flex; align-items: center; gap: 5px; }
+.atomkey i { width: 14px; height: 14px; border-radius: 50%; display: inline-block; border: 1px solid var(--rule); }
+@media (max-width: 620px) { .pair { grid-template-columns: 1fr; } .pair .arr { transform: rotate(90deg); line-height: 1; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 4 · Topic 4.4</span>
+  <h1>Physical and Chemical Changes Study Lab</h1>
+  <p class="lede">The difference between a physical and a chemical change lives at the particle level. If chemical bonds break and new ones form, making new substances, the change is chemical. If only the attractions between particles change, as in melting or boiling, it is physical. Dissolving a salt sits on the line, and the CED says you can argue it either way. Classify each process from its particle diagram and justify your call.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Sort the changes</h2>
+    <p>Pick a process, study the before and after boxes, and make your call. The lab then lists the bonds broken and formed and the intermolecular forces that changed. Particle counts are small and illustrative. Water molecules are drawn only when they take part in the change; a shaded region means the particles are in water.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card" style="grid-column: 1 / -1;">
+      <h3 id="pv-title">Particle view <small id="pv-eq"></small></h3>
+      <div class="pair">
+        <figure><svg class="chart" id="sv-before" role="img" aria-label="Particles before the process"></svg><figcaption id="cap-b"></figcaption></figure>
+        <div class="arr" aria-hidden="true">→</div>
+        <figure><svg class="chart" id="sv-after" role="img" aria-label="Particles after the process"></svg><figcaption id="cap-a"></figcaption></figure>
+      </div>
+      <div class="atomkey" id="key"></div>
+    </div>
+  </div>
+
+  <div class="lab">
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Processes</div>
+        <div class="scenarios" id="procs"></div>
+      </div>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag" id="call-lbl">Your call</div>
+        <div class="seg" role="group" aria-labelledby="call-lbl">
+          <button type="button" data-call="physical" aria-pressed="false">Physical</button>
+          <button type="button" data-call="chemical" aria-pressed="false">Chemical</button>
+          <button type="button" data-call="either" aria-pressed="false">Could be argued either way</button>
+        </div>
+      </div>
+      <div class="group">
+        <div class="tag">Ask yourself</div>
+        <ol class="steps">
+          <li>Are the particles in the after box the same particles as in the before box (same atoms bonded the same way)?</li>
+          <li>If not, which chemical bonds (covalent, ionic) broke, and which new ones formed?</li>
+          <li>If so, what changed: spacing, order, phase, or what each particle is attracted to?</li>
+        </ol>
+      </div>
+      <div class="btnrow" style="display:flex; gap:10px; flex-wrap:wrap;"><button type="button" id="next">Next process</button><button type="button" id="reset">Clear my calls</button></div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Chemical bonds broken</div><div class="v small" id="r-1"></div></div>
+    <div class="stat"><div class="k">Chemical bonds formed</div><div class="v small" id="r-2"></div></div>
+    <div class="stat"><div class="k">Intermolecular forces</div><div class="v small" id="r-3"></div></div>
+    <div class="stat"><div class="k">Your calls</div><div class="v" id="r-4">0 / 0</div><div class="sub">correct on first try</div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Bonds break and form</span><h3>Chemical processes</h3><p>Processes that break and/or form chemical bonds (covalent, ionic, or metallic) are typically classified as chemical. Atoms end up bonded to different partners, so the products are new substances with different properties.</p></div>
+    <div class="card"><span class="tag">Only IMFs change</span><h3>Physical processes</h3><p>Processes that only change the intermolecular interactions between particles, such as phase changes, are typically physical. The molecules in steam are the same H₂O molecules as in ice; only how close and how ordered they are has changed.</p></div>
+    <div class="card"><span class="tag">The gray zone</span><h3>Dissolving a salt</h3><p>Dissolving NaCl breaks the ionic bonds of the crystal lattice and forms new ion–dipole attractions with water. No new substance with a new composition appears: the same Na⁺ and Cl⁻ ions are present. The CED says plausible arguments can be made for either classification.</p></div>
+    <div class="card"><span class="tag">Molecular solutes</span><h3>Dissolving sugar is physical</h3><p>When sucrose dissolves, whole sucrose molecules separate from each other and form hydrogen bonds with water. No covalent bonds inside the molecules break. Compare HCl, which reacts with water: its H–Cl bond breaks and H₃O⁺ forms, so dissolving HCl is chemical.</p></div>
+    <div class="card"><span class="tag">Macroscopic link</span><h3>Properties follow the particles</h3><p>New substances bring new properties: a new color, a new state at room temperature, a new odor or reactivity. A physical change keeps the substance's identity, so it can often be reversed by a physical method like cooling or evaporating.</p></div>
+    <div class="card"><span class="tag">Energy is not the test</span><h3>Both kinds involve energy</h3><p>Breaking attractions always takes energy and forming them always releases energy, whether the attractions are bonds or IMFs. Phase changes and reactions both absorb or release heat. Classify by what breaks and forms, not by whether there is a temperature change.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Classification table</h2>
+    <p>The justification column is the part graders look for. Notice that every justification names what happens to bonds or to intermolecular forces.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Process</th><th>Equation</th><th>Classification</th><th>Particle-level justification</th></tr></thead>
+    <tbody>
+      <tr><td>Melting ice</td><td>H₂O(s) → H₂O(l)</td><td><span class="lshift">Physical</span></td><td>Some hydrogen bonds between molecules break; O–H covalent bonds stay intact.</td></tr>
+      <tr><td>Boiling water</td><td>H₂O(l) → H₂O(g)</td><td><span class="lshift">Physical</span></td><td>Hydrogen bonds between molecules are overcome; molecules unchanged.</td></tr>
+      <tr><td>Subliming iodine</td><td>I₂(s) → I₂(g)</td><td><span class="lshift">Physical</span></td><td>London dispersion forces between I₂ molecules overcome; I–I bond intact.</td></tr>
+      <tr><td>Dissolving sugar</td><td>C₁₂H₂₂O₁₁(s) → C₁₂H₂₂O₁₁(aq)</td><td><span class="lshift">Physical</span></td><td>Sucrose–sucrose IMFs replaced by sucrose–water hydrogen bonds; no covalent bonds break.</td></tr>
+      <tr><td>Dissolving table salt</td><td>NaCl(s) → Na⁺(aq) + Cl⁻(aq)</td><td><b>Either, if justified</b></td><td>Physical: no new substance. Chemical: ionic bonds of the lattice break and ion–dipole interactions form.</td></tr>
+      <tr><td>Electrolysis of water</td><td>2H₂O(l) → 2H₂(g) + O₂(g)</td><td><span class="shift">Chemical</span></td><td>O–H bonds break; H–H and O=O bonds form.</td></tr>
+      <tr><td>Burning methane</td><td>CH₄(g) + 2O₂(g) → CO₂(g) + 2H₂O(g)</td><td><span class="shift">Chemical</span></td><td>C–H and O=O bonds break; C=O and O–H bonds form.</td></tr>
+      <tr><td>HCl gas dissolving in water</td><td>HCl(g) + H₂O(l) → H₃O⁺(aq) + Cl⁻(aq)</td><td><span class="shift">Chemical</span></td><td>The H–Cl covalent bond breaks and a new O–H bond forms in H₃O⁺.</td></tr>
+      <tr><td>Precipitation of AgCl</td><td>Ag⁺(aq) + Cl⁻(aq) → AgCl(s)</td><td><span class="shift">Chemical</span></td><td>Ions from two solutions form a new ionic solid with its own composition (a precipitation reaction).</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Answering the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Name the interaction that changes, precisely: "hydrogen bonds between water molecules," "the covalent O–H bonds within water molecules," "ionic bonds in the lattice," "ion–dipole interactions."</li>
+        <li>Distinguish <b>between</b> molecules (intermolecular forces) from <b>within</b> molecules (covalent bonds). Graders read those words closely.</li>
+        <li>For a chemical change, name at least one bond broken and one bond formed, or name the new substance.</li>
+        <li>For a physical change, say the particles keep their identity: "the H₂O molecules are unchanged; only the distance between them increases."</li>
+        <li>For dissolving an ionic compound, either answer can earn credit, but it must be backed with a particle-level reason.</li>
+        <li>Tie particle reasoning to observations when asked: a new color, gas, or solid supports the formation of a new substance.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying boiling water breaks the bonds in water and makes hydrogen and oxygen. Boiling separates whole molecules.</li>
+        <li>Calling a hydrogen bond a chemical bond in this context. Hydrogen bonds are intermolecular forces.</li>
+        <li>Classifying by energy: "it got cold, so it is chemical." Physical changes absorb and release energy too.</li>
+        <li>Treating all dissolving the same. Sugar dissolving is physical; HCl dissolving in water is a chemical reaction.</li>
+        <li>Saying a change is physical because it is reversible. Many chemical reactions can be reversed, and some physical changes are hard to undo.</li>
+        <li>Answering "it depends" on dissolving a salt without choosing and justifying a side.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 4.4. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-4.html">Unit 4 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = Lab.el;
+
+  // ---------- Particles ----------
+  var ATOM = {
+    H:  { r: 6.5, fill: "var(--surface)", stroke: "var(--ink)", text: "var(--ink)", name: "hydrogen" },
+    C:  { r: 9, fill: "var(--ink)", stroke: "var(--surface)", text: "var(--surface)", name: "carbon" },
+    O:  { r: 9, fill: "var(--bad)", stroke: "var(--surface)", text: "var(--surface)", name: "oxygen" },
+    Cl: { r: 11, fill: "var(--c2)", stroke: "var(--surface)", text: "var(--surface)", name: "chlorine" },
+    I:  { r: 12, fill: "var(--c3)", stroke: "var(--surface)", text: "var(--surface)", name: "iodine" },
+    Na: { r: 8, fill: "var(--c1)", stroke: "var(--surface)", text: "var(--surface)", name: "sodium ion" },
+    Ag: { r: 10, fill: "var(--muted)", stroke: "var(--surface)", text: "var(--surface)", name: "silver ion" }
+  };
+  // [element, dx, dy, label override]
+  var MOL = {
+    H2O:  [["O", 0, -2], ["H", -10, 6], ["H", 10, 6]],
+    H2:   [["H", -6, 0], ["H", 6, 0]],
+    O2:   [["O", -7.5, 0], ["O", 7.5, 0]],
+    Cl2:  [["Cl", -9.5, 0], ["Cl", 9.5, 0]],
+    I2:   [["I", -10.5, 0], ["I", 10.5, 0]],
+    HCl:  [["H", -10, 0], ["Cl", 4, 0]],
+    CH4:  [["C", 0, 0], ["H", -12, 0], ["H", 12, 0], ["H", 0, -12], ["H", 0, 12]],
+    CO2:  [["C", 0, 0], ["O", -14, 0], ["O", 14, 0]],
+    H2O2: [["O", -7, 0], ["O", 7, 0], ["H", -15, -7], ["H", 15, 7]],
+    H3O:  [["O", 0, 0, "O⁺"], ["H", -11, 5], ["H", 11, 5], ["H", 0, -12]],
+    Na:   [["Na", 0, 0, "+"]],
+    Cl_:  [["Cl", 0, 0, "−"]],
+    Ag:   [["Ag", 0, 0, "+"]],
+    // Sucrose: a six-membered ring and a five-membered ring joined through an O (simplified; H atoms not drawn).
+    SUC:  [["C", -18, -6], ["C", -11, -14], ["C", -2, -11], ["O", -2, 0], ["C", -11, 3], ["C", -18, 0], ["O", 7, 2], ["C", 15, -4], ["C", 22, 3], ["C", 19, 12], ["O", 10, 12]]
+  };
+  var MOL_SCALE = { SUC: 0.62 };
+  var NAMES = { H2O: "H₂O", H2: "H₂", O2: "O₂", Cl2: "Cl₂", I2: "I₂", HCl: "HCl", CH4: "CH₄", CO2: "CO₂", H2O2: "H₂O₂", H3O: "H₃O⁺", Na: "Na⁺", Cl_: "Cl⁻", Ag: "Ag⁺", SUC: "sucrose" };
+  function molR(f) { if (f === "SUC") return 22; var s = MOL_SCALE[f] || 1, r = 0; MOL[f].forEach(function (a) { r = Math.max(r, Math.hypot(a[1], a[2]) * s + ATOM[a[0]].r * s); }); return r; }
+  function poly(cx, cy, r, n, rot) { var pts = []; for (var i = 0; i < n; i++) { var a = rot + i * 2 * Math.PI / n; pts.push((cx + r * Math.cos(a)).toFixed(1) + "," + (cy + r * Math.sin(a)).toFixed(1)); } return pts.join(" "); }
+  function drawMol(g, f, x, y) {
+    if (f === "SUC") {
+      // Sucrose as a ring glyph: a six-membered ring linked through O to a five-membered ring.
+      el("line", { x1: x - 3, y1: y, x2: x + 5, y2: y, stroke: "var(--ink)", "stroke-width": 1.5 }, g);
+      el("polygon", { points: poly(x - 11, y, 10, 6, 0), fill: "var(--c1)", stroke: "var(--ink)", "stroke-width": 1.3 }, g);
+      el("polygon", { points: poly(x + 12, y, 8.5, 5, Math.PI), fill: "var(--c1)", stroke: "var(--ink)", "stroke-width": 1.3 }, g);
+      el("circle", { cx: x + 0.5, cy: y, r: 3.2, fill: "var(--bad)", stroke: "var(--ink)", "stroke-width": 1 }, g);
+      return;
+    }
+    var s = MOL_SCALE[f] || 1;
+    MOL[f].forEach(function (a) {
+      var A = ATOM[a[0]], cx = x + a[1] * s, cy = y + a[2] * s, r = A.r * s;
+      el("circle", { cx: cx, cy: cy, r: r, fill: A.fill, stroke: A.stroke, "stroke-width": 1.1 }, g);
+      if (r >= 6) el("text", { x: cx, y: cy + 3.2, "text-anchor": "middle", style: "font-size:" + (r >= 9 ? 8.5 : 7.5) + "px; font-weight:600; fill:" + A.text }, g, a[3] || a[0]);
+    });
+  }
+  function rng(seed) { var s = seed; return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+
+  // Layouts inside a W x H box. region: [top fraction, bottom fraction].
+  function layLattice(items, W, H, reg) {
+    var r = 0; items.forEach(function (it) { r = Math.max(r, it.r); });
+    var cell = 2 * r + 1, cols = Math.max(1, Math.min(items.length, Math.floor((W - 20) / cell))), rows = Math.ceil(items.length / cols);
+    var x0 = W / 2 - (cols - 1) * cell / 2, yb = H * reg[1] - r - 6;
+    // checkerboard order for ionic solids: alternate the two kinds row by row
+    items.forEach(function (it, n) { var row = Math.floor(n / cols), col = n % cols; it.x = x0 + col * cell; it.y = yb - row * cell; });
+    return items;
+  }
+  function layRandom(items, W, H, reg, seed, gap, avoid) {
+    var R = rng(seed), out = (avoid || []).slice();
+    var y0 = H * reg[0] + 6, y1 = H * reg[1] - 6;
+    items.forEach(function (it) {
+      var best = null, bestD = -1e9;
+      for (var t = 0; t < 250; t++) {
+        var x = 8 + it.r + R() * (W - 16 - 2 * it.r), y = y0 + it.r + R() * Math.max(1, y1 - y0 - 2 * it.r), d = 1e9;
+        out.forEach(function (q) { d = Math.min(d, Math.hypot(x - q.x, y - q.y) - it.r - q.r); });
+        if (d > gap) { best = { x: x, y: y }; break; }
+        if (d > bestD) { bestD = d; best = { x: x, y: y }; }
+      }
+      it.x = best.x; it.y = best.y; out.push(it);
+    });
+    return items;
+  }
+  // A box is { water: [top, bottom] or null, groups: [{ f, n, lay: "lattice" | "liquid" | "gas", reg: [t, b], mix: [f2, n2] }] }
+  var W = 300, H = 230;
+  function drawBox(svg, B, seed) {
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    el("rect", { x: 1.5, y: 1.5, width: W - 3, height: H - 3, rx: 8, fill: "var(--surface)", stroke: "var(--ink)", "stroke-width": 2 }, svg);
+    if (B.water) el("rect", { x: 3, y: H * B.water[0], width: W - 6, height: H * (B.water[1] - B.water[0]) - 3, rx: 6, fill: "var(--accent-soft)" }, svg);
+    var g = el("g", {}, svg), placed = [];
+    B.groups.forEach(function (G, gi) {
+      var items = [];
+      if (G.alt) { for (var i = 0; i < G.n; i++) G.alt.forEach(function (f) { items.push({ f: f, r: molR(f) }); }); }
+      else for (var j = 0; j < G.n; j++) items.push({ f: G.f, r: molR(G.f) });
+      if (G.lay === "lattice") {
+        if (G.alt) {
+          // checkerboard: in each row alternate, offset by one on the next row
+          var cols = G.cols || 4, rr = 0; items.forEach(function (it) { rr = Math.max(rr, it.r); });
+          var cell = 2 * rr + 1, rows = Math.ceil(items.length / cols), x0 = W / 2 - (cols - 1) * cell / 2, yb = H * G.reg[1] - rr - 6;
+          for (var rI = 0; rI < rows; rI++) for (var cI = 0; cI < cols; cI++) {
+            var k = rI * cols + cI; if (k >= items.length) break;
+            var it = { f: G.alt[(rI + cI) % 2], r: rr }; it.x = x0 + cI * cell; it.y = yb - rI * cell; placed.push(it);
+          }
+        } else layLattice(items, W, H, G.reg).forEach(function (it) { placed.push(it); });
+      } else {
+        layRandom(items, W, H, G.reg, seed + gi * 17, G.lay === "liquid" ? 0.5 : 8, placed);
+        items.forEach(function (it) { placed.push(it); });
+      }
+    });
+    placed.forEach(function (p) { drawMol(g, p.f, p.x, p.y); });
+  }
+
+  // ---------- Processes ----------
+  var LIQ = [0.5, 1], LOW = [0.42, 1], ALL = [0, 1], TOP = [0, 0.42];
+  var P = [
+    { id: "melt", name: "Melting ice", eq: "H₂O(s) → H₂O(l)", call: "physical",
+      b: { groups: [{ f: "H2O", n: 14, lay: "lattice", reg: ALL }] }, a: { groups: [{ f: "H2O", n: 14, lay: "liquid", reg: [0.56, 1] }] },
+      cb: "ice: ordered", ca: "liquid water: close, disordered",
+      broken: "None", formed: "None", imf: "Some hydrogen bonds between H₂O molecules break",
+      why: "Every particle in the after box is an intact H₂O molecule, one O bonded to two H, exactly as before. Melting breaks some of the hydrogen bonds that held the molecules in a fixed lattice, so the molecules can slide past each other. No covalent bonds break, so no new substance forms." },
+    { id: "boil", name: "Boiling water", eq: "H₂O(l) → H₂O(g)", call: "physical",
+      b: { groups: [{ f: "H2O", n: 12, lay: "liquid", reg: [0.45, 1] }] }, a: { groups: [{ f: "H2O", n: 12, lay: "gas", reg: ALL }] },
+      cb: "liquid water", ca: "water vapor: far apart",
+      broken: "None", formed: "None", imf: "Hydrogen bonds between molecules are overcome",
+      why: "The gas is made of the same H₂O molecules, now far apart. Boiling overcomes the hydrogen bonds between molecules; the O–H covalent bonds inside each molecule are untouched. The bubbles in boiling water are water vapor, not hydrogen or oxygen." },
+    { id: "subl", name: "Subliming iodine", eq: "I₂(s) → I₂(g)", call: "physical",
+      b: { groups: [{ f: "I2", n: 12, lay: "lattice", reg: ALL }] }, a: { groups: [{ f: "I2", n: 12, lay: "gas", reg: ALL }] },
+      cb: "solid iodine", ca: "violet iodine vapor",
+      broken: "None", formed: "None", imf: "London dispersion forces between I₂ molecules are overcome",
+      why: "Solid iodine turns directly into a violet gas. The I–I covalent bond in each molecule survives; only the London dispersion forces between the large, polarizable I₂ molecules are overcome. The color of the vapor is the color of I₂ itself, not a sign of a new substance." },
+    { id: "sugar", name: "Dissolving sugar", eq: "C₁₂H₂₂O₁₁(s) → C₁₂H₂₂O₁₁(aq)", call: "physical",
+      b: { water: [0.12, 1], groups: [{ f: "SUC", n: 10, lay: "lattice", reg: ALL }] }, a: { water: [0.12, 1], groups: [{ f: "SUC", n: 10, lay: "gas", reg: [0.12, 1] }] },
+      cb: "sugar crystal in water", ca: "sucrose molecules dispersed",
+      broken: "None", formed: "None", imf: "Sucrose–sucrose attractions replaced by sucrose–water hydrogen bonds",
+      why: "Whole sucrose molecules leave the crystal and spread through the water. Each molecule keeps all of its covalent bonds; it now forms hydrogen bonds with water molecules instead of with other sucrose molecules. The water could be evaporated to get the sugar back. (Each sucrose molecule is sketched as its two rings; the individual atoms are not drawn.)" },
+    { id: "nacl", name: "Dissolving table salt", eq: "NaCl(s) → Na⁺(aq) + Cl⁻(aq)", call: "either",
+      b: { water: [0.12, 1], groups: [{ alt: ["Na", "Cl_"], n: 8, cols: 4, lay: "lattice", reg: ALL }] }, a: { water: [0.12, 1], groups: [{ f: "Na", n: 8, lay: "gas", reg: [0.12, 1] }, { f: "Cl_", n: 8, lay: "gas", reg: [0.12, 1] }] },
+      cb: "NaCl crystal in water", ca: "separated, hydrated ions",
+      broken: "Ionic bonds in the crystal lattice", formed: "None (ion–dipole attractions form)", imf: "Ion–dipole interactions with water form",
+      why: "This is the CED's own example of an ambiguous case. Argument for <b>physical</b>: no new substance with a new composition forms; the same Na⁺ and Cl⁻ ions are present before and after, and evaporating the water returns solid NaCl. Argument for <b>chemical</b>: the ionic bonds holding the lattice together are broken, and new ion–dipole interactions form between the ions and water molecules." },
+    { id: "elec", name: "Electrolysis of water", eq: "2H₂O(l) → 2H₂(g) + O₂(g)", call: "chemical",
+      b: { groups: [{ f: "H2O", n: 6, lay: "liquid", reg: [0.5, 1] }] }, a: { groups: [{ f: "H2", n: 6, lay: "gas", reg: ALL }, { f: "O2", n: 3, lay: "gas", reg: ALL }] },
+      cb: "6 H₂O", ca: "6 H₂ + 3 O₂",
+      broken: "O–H bonds in water", formed: "H–H and O=O bonds", imf: "Changes too, but that is not the deciding feature",
+      why: "The after box contains H₂ and O₂ molecules, which were not in the before box. Every O–H covalent bond was broken and new H–H and O=O bonds formed. Count the atoms: 12 H and 6 O before, 12 H and 6 O after, rearranged into new substances." },
+    { id: "burn", name: "Burning methane", eq: "CH₄(g) + 2O₂(g) → CO₂(g) + 2H₂O(g)", call: "chemical",
+      b: { groups: [{ f: "CH4", n: 3, lay: "gas", reg: ALL }, { f: "O2", n: 6, lay: "gas", reg: ALL }] }, a: { groups: [{ f: "CO2", n: 3, lay: "gas", reg: ALL }, { f: "H2O", n: 6, lay: "gas", reg: ALL }] },
+      cb: "3 CH₄ + 6 O₂", ca: "3 CO₂ + 6 H₂O",
+      broken: "C–H and O=O bonds", formed: "C=O and O–H bonds", imf: "Not the deciding feature",
+      why: "Carbon atoms that were bonded to hydrogen are now bonded to oxygen, and hydrogen atoms are now bonded to oxygen. Breaking C–H and O=O bonds and forming C=O and O–H bonds makes two new substances. The number of molecules happens to stay at 9, but the molecules are different." },
+    { id: "hcl", name: "Hydrogen and chlorine react", eq: "H₂(g) + Cl₂(g) → 2HCl(g)", call: "chemical",
+      b: { groups: [{ f: "H2", n: 4, lay: "gas", reg: ALL }, { f: "Cl2", n: 4, lay: "gas", reg: ALL }] }, a: { groups: [{ f: "HCl", n: 8, lay: "gas", reg: ALL }] },
+      cb: "4 H₂ + 4 Cl₂", ca: "8 HCl",
+      broken: "H–H and Cl–Cl bonds", formed: "H–Cl bonds", imf: "Not the deciding feature",
+      why: "Each H atom has traded its H partner for a Cl partner. H–H and Cl–Cl covalent bonds break and H–Cl bonds form, making hydrogen chloride, a new substance with properties unlike either reactant." },
+    { id: "ppt", name: "Precipitating AgCl", eq: "Ag⁺(aq) + Cl⁻(aq) → AgCl(s)", call: "chemical",
+      b: { water: [0.12, 1], groups: [{ f: "Ag", n: 8, lay: "gas", reg: [0.12, 1] }, { f: "Cl_", n: 8, lay: "gas", reg: [0.12, 1] }] }, a: { water: [0.12, 1], groups: [{ alt: ["Ag", "Cl_"], n: 8, cols: 4, lay: "lattice", reg: ALL }] },
+      cb: "Ag⁺ and Cl⁻ from two solutions (spectators not shown)", ca: "solid AgCl settles",
+      broken: "None (ion–dipole attractions to water are lost)", formed: "Ionic bonds in a new AgCl lattice", imf: "Ion–dipole interactions with water are replaced",
+      why: "Silver ions from one solution and chloride ions from another combine into silver chloride, a white solid that was not in either solution. AP treats precipitation as a type of chemical reaction (topic 4.7) because a new compound forms. At the particle level it is the reverse of dissolving AgCl, which is why the formation of a precipitate is listed as evidence of a chemical change, not proof by itself." },
+    { id: "hcldis", name: "HCl gas dissolving in water", eq: "HCl(g) + H₂O(l) → H₃O⁺(aq) + Cl⁻(aq)", call: "chemical",
+      b: { water: [0.42, 1], groups: [{ f: "HCl", n: 4, lay: "gas", reg: TOP }, { f: "H2O", n: 8, lay: "liquid", reg: LOW }] }, a: { water: [0.42, 1], groups: [{ f: "H3O", n: 4, lay: "liquid", reg: LOW }, { f: "Cl_", n: 4, lay: "liquid", reg: LOW }, { f: "H2O", n: 4, lay: "liquid", reg: LOW }] },
+      cb: "HCl gas over water", ca: "H₃O⁺ and Cl⁻ in solution",
+      broken: "H–Cl covalent bonds", formed: "A new O–H bond in each H₃O⁺", imf: "Ion–dipole interactions form",
+      why: "Unlike sugar, HCl does not just spread out in water: each HCl molecule transfers H⁺ to a water molecule. The H–Cl covalent bond breaks and a new O–H bond forms, producing H₃O⁺ and Cl⁻, which are new species. That makes it a chemical change (an acid–base reaction, topic 4.8). Count: 4 H₂O were used, so 8 became 4." },
+    { id: "h2o2", name: "Decomposing hydrogen peroxide", eq: "2H₂O₂(l) → 2H₂O(l) + O₂(g)", call: "chemical",
+      b: { groups: [{ f: "H2O2", n: 6, lay: "liquid", reg: [0.48, 1] }] }, a: { groups: [{ f: "H2O", n: 6, lay: "liquid", reg: [0.55, 1] }, { f: "O2", n: 3, lay: "gas", reg: [0, 0.5] }] },
+      cb: "6 H₂O₂", ca: "6 H₂O + 3 O₂ bubbling off",
+      broken: "O–O and O–H bonds in H₂O₂", formed: "O–H bonds in H₂O and O=O bonds in O₂", imf: "Not the deciding feature",
+      why: "Hydrogen peroxide breaks down into water and oxygen gas, both new substances. The O–O single bond in each H₂O₂ breaks, and the oxygen atoms end up either in water or in O₂ molecules. The bubbles here are O₂, a new gas, unlike the bubbles of boiling water." }
+  ];
+  var CALL = { physical: "Physical", chemical: "Chemical", either: "Could be argued either way" };
+  var S = { i: 0, call: {}, first: {} };
+
+  function render() {
+    var p = P[S.i];
+    drawBox(document.getElementById("sv-before"), p.b, 11 + S.i * 3);
+    drawBox(document.getElementById("sv-after"), p.a, 41 + S.i * 3);
+    document.getElementById("pv-eq").textContent = p.eq;
+    document.getElementById("cap-b").textContent = "Before: " + p.cb;
+    document.getElementById("cap-a").textContent = "After: " + p.ca;
+    // key: every particle type that appears
+    var kinds = [];
+    [p.b, p.a].forEach(function (B) { B.groups.forEach(function (G) { (G.alt || [G.f]).forEach(function (f) { if (f === "SUC") { if (kinds.indexOf("SUC") < 0) kinds.push("SUC"); return; } MOL[f].forEach(function (a) { if (kinds.indexOf(a[0]) < 0) kinds.push(a[0]); }); }); }); });
+    document.getElementById("key").innerHTML = "Key: " + kinds.map(function (k) { return k === "SUC" ? '<span><i style="background:var(--c1); border-radius:2px"></i>one sucrose molecule, C₁₂H₂₂O₁₁ (ring sketch)</span>' : '<span><i style="background:' + ATOM[k].fill + '"></i>' + k + " (" + ATOM[k].name + ")</span>"; }).join("") + ([p.b, p.a].some(function (B) { return B.water; }) ? '<span><i style="background:var(--accent-soft); border-radius:3px"></i>water (molecules not drawn)</span>' : "");
+    var mine = S.call[p.id];
+    Array.prototype.forEach.call(document.querySelectorAll("[data-call]"), function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-call") === mine ? "true" : "false"); });
+    Array.prototype.forEach.call(document.querySelectorAll("#procs button"), function (b, i) {
+      b.setAttribute("aria-pressed", i === S.i ? "true" : "false");
+      var d = b.querySelector(".done"), id = P[i].id;
+      d.textContent = id in S.first ? (S.first[id] ? "✓" : "✗") : ""; d.className = "done " + (id in S.first ? (S.first[id] ? "y" : "n") : "");
+    });
+    var shown = !!mine;
+    document.getElementById("r-1").innerHTML = shown ? p.broken : "?";
+    document.getElementById("r-2").innerHTML = shown ? p.formed : "?";
+    document.getElementById("r-3").innerHTML = shown ? p.imf : "?";
+    var tried = Object.keys(S.first), right = tried.filter(function (k) { return S.first[k]; }).length;
+    document.getElementById("r-4").textContent = right + " / " + tried.length;
+    document.getElementById("story").innerHTML = story(p, mine);
+  }
+  function story(p, mine) {
+    if (!mine) return "<p><b>" + p.name + ": " + p.eq + ".</b> Compare the two boxes. Are the particles after the change the same particles as before? Make your call above; the bond and IMF readouts fill in once you do.</p>";
+    var h = "<p><b>" + (mine === p.call ? "Your call matches." : "Not this time.") + "</b> You said <b>" + CALL[mine].toLowerCase() + "</b>; the best answer is <b>" + CALL[p.call].toLowerCase() + "</b>.</p>";
+    h += "<p>" + p.why + "</p>";
+    h += "<p><b>AP answer:</b> " + (p.call === "chemical" ? "chemical, because " + p.broken.charAt(0).toLowerCase() + p.broken.slice(1) + " break and " + p.formed.charAt(0).toLowerCase() + p.formed.slice(1) + " form, producing new substances." :
+      p.call === "physical" ? "physical, because only intermolecular forces change (" + p.imf.charAt(0).toLowerCase() + p.imf.slice(1) + "); the particles keep their identity and no chemical bonds break." :
+      "either classification earns credit with a particle-level reason: physical because the same ions exist before and after with no new substance, or chemical because ionic bonds break and ion–dipole interactions form.") + "</p>";
+    return h;
+  }
+  P.forEach(function (p, i) {
+    var b = document.createElement("button"); b.type = "button"; b.setAttribute("aria-pressed", "false");
+    b.appendChild(document.createTextNode(p.name)); var d = document.createElement("span"); d.className = "done"; b.appendChild(d);
+    b.addEventListener("click", function () { S.i = i; render(); });
+    document.getElementById("procs").appendChild(b);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-call]"), function (b) {
+    b.addEventListener("click", function () {
+      var p = P[S.i], c = b.getAttribute("data-call");
+      if (!(p.id in S.first)) S.first[p.id] = c === p.call;
+      S.call[p.id] = c; render();
+    });
+  });
+  document.getElementById("next").addEventListener("click", function () { S.i = (S.i + 1) % P.length; render(); });
+  document.getElementById("reset").addEventListener("click", function () { S.call = {}; S.first = {}; render(); });
+  render();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Which of the following processes is best classified as a chemical change?",
+      o: ["Melting a sample of ice", "Dissolving sucrose in water", "Passing an electric current through water to produce H₂ and O₂", "Subliming solid carbon dioxide (dry ice)"], c: 2,
+      w: "Electrolysis breaks the O–H bonds in water and forms H–H and O=O bonds, producing new substances. Melting and sublimation only overcome intermolecular forces. Dissolving sucrose separates whole molecules without breaking covalent bonds." },
+    { s: "Which statement best explains why boiling water is classified as a physical change?",
+      o: ["The temperature of the water stays constant while it boils.", "Hydrogen bonds between H₂O molecules are overcome, but the covalent O–H bonds within each molecule remain intact.", "The O–H bonds in water break, but they re-form when the steam condenses.", "No gas is produced when water boils."], c: 1,
+      w: "Boiling separates whole H₂O molecules from each other by overcoming intermolecular hydrogen bonds. The molecules themselves are unchanged. Choice C describes covalent bonds breaking, which would be a chemical change; choice D is false, since water vapor is a gas." },
+    { s: "A student argues that dissolving NaCl(s) in water is a chemical change. Which statement provides the best support for the student's argument?",
+      o: ["Ionic bonds between Na⁺ and Cl⁻ ions in the crystal lattice are broken, and ion–dipole interactions form between the ions and water molecules.", "The solution conducts electricity, so electrons were transferred from Na to Cl.", "The NaCl can be recovered by evaporating the water.", "The solid disappears, so it has turned into a new substance."], c: 0,
+      w: "The chemical-change argument rests on bonds: the ionic bonds of the lattice break and new ion–dipole interactions form. Choice C supports the opposite (physical) argument. Choice B is wrong because the ions already existed in the solid; no electrons were transferred during dissolving." },
+    { s: "A particle diagram shows I₂ molecules packed in a regular pattern before a change and I₂ molecules spread far apart after it. Which correctly classifies the change and gives a valid reason?",
+      o: ["Chemical, because a solid became a gas", "Chemical, because the I–I bonds broke", "Physical, because the total number of atoms changed", "Physical, because the I₂ molecules are intact and only the dispersion forces between them were overcome"], c: 3,
+      w: "Every particle after the change is still an I₂ molecule, so the I–I bonds did not break. The molecules spread out because the London dispersion forces between them were overcome: this is sublimation. A change of state does not make a change chemical (choice A), and atoms are never gained or lost (choice C)." },
+    { s: "When HCl gas dissolves in water, H₃O⁺(aq) and Cl⁻(aq) form. Why is this classified as a chemical change, while dissolving sugar is a physical change?",
+      o: ["HCl is a gas and sugar is a solid.", "The H–Cl covalent bond breaks and a new O–H bond forms, while sugar molecules dissolve with all of their covalent bonds intact.", "Dissolving HCl releases heat, while dissolving sugar does not.", "HCl is more soluble in water than sugar is."], c: 1,
+      w: "Classification depends on what happens to chemical bonds. HCl transfers H⁺ to water, so a covalent bond breaks and another forms, producing new species. Sucrose molecules stay whole and only form new hydrogen bonds with water. The heat released (choice C) is not what decides it." },
+    { s: "Solid iodine is heated gently and a violet vapor forms. Which statement about the color change is correct?",
+      o: ["The violet color shows that a new substance formed, so the change is chemical.", "The violet color shows that I₂ molecules split into I atoms.", "The violet color is the color of gaseous I₂ molecules, so the color change does not show that a new substance formed.", "The violet color shows that iodine reacted with oxygen in the air."], c: 2,
+      w: "Gaseous iodine is made of the same I₂ molecules as the solid; I₂ vapor is violet. A color change is evidence of a chemical change only when the color belongs to a new substance. This is the physical change of sublimation." },
+    { s: "Melting ice absorbs energy. Which interactions are disrupted when ice melts?",
+      o: ["Some hydrogen bonds between neighboring H₂O molecules", "The covalent O–H bonds within H₂O molecules", "Ionic bonds between H⁺ and OH⁻ ions", "The O=O double bonds"], c: 0,
+      w: "Melting loosens the hydrogen-bonded lattice of ice so molecules can move past each other; the O–H covalent bonds within each molecule stay intact. Water is not made of H⁺ and OH⁻ ions held by ionic bonds (choice C), and there are no O=O bonds in water (choice D)." },
+    { s: "Which pair of processes are both chemical changes?",
+      o: ["Rusting of iron and boiling of water", "Dissolving sugar in tea and burning a candle", "Melting butter and frying an egg", "Burning methane and decomposing hydrogen peroxide into water and oxygen"], c: 3,
+      w: "Combustion of methane and decomposition of H₂O₂ both break covalent bonds and form new substances (CO₂ and H₂O; H₂O and O₂). Each other pair includes one physical change: boiling, dissolving sugar, or melting butter." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("4.4");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [4], topic: "4.4", compact: true, storageKey: "topic-4.4" });</script>
+</body>
+</html>

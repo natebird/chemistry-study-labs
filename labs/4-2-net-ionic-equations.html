@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Net Ionic Equations Study Lab</title>
+<meta name="description" content="Mix two ionic solutions, watch the ions at the particle level, and turn the molecular equation into a complete ionic and a net ionic equation with the spectator ions crossed out.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+:root { --sol-blue: #2f7fd0; --sol-yellow: #d9a514; --ppt-yellow: #e2b714; --ppt-brown: #9a4a1c; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --sol-blue: #5aa2e8; --sol-yellow: #e8c04a; --ppt-yellow: #f0cf4a; --ppt-brown: #d9824f; } }
+:root[data-theme="dark"] { --sol-blue: #5aa2e8; --sol-yellow: #e8c04a; --ppt-yellow: #f0cf4a; --ppt-brown: #d9824f; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.scenarios button:disabled { opacity: .42; cursor: not-allowed; text-decoration: line-through; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.pick { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+.pick .scenarios { align-items: flex-start; }
+.beakers { display: grid; grid-template-columns: 1fr 1fr 1.35fr; gap: 14px; align-items: end; }
+.beakers figure { margin: 0; display: grid; gap: 4px; }
+.beakers figcaption { font-size: .86rem; text-align: center; color: var(--muted); }
+.beakers figcaption b { color: var(--ink); font-weight: 600; }
+.eqrows { display: grid; gap: 10px; }
+.eqrow { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; align-items: center; }
+.eqrow .tag { margin: 0; }
+.eqn s { color: var(--muted); text-decoration-color: var(--bad); text-decoration-thickness: 2px; }
+.eqn .act { color: var(--accent); font-weight: 600; }
+.legend .l-c1 { color: var(--c1); } .legend .l-c3 { color: var(--c3); } .legend .l-sp { color: var(--muted); }
+.legend .l-sp::before { background: none; border-top: 2px dashed currentColor; height: 0; }
+.check { display: flex; gap: 8px; align-items: center; font-size: .9rem; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.note { font-size: .82rem; color: var(--muted); }
+@media (max-width: 760px) { .pick { grid-template-columns: 1fr; } .beakers { grid-template-columns: 1fr 1fr; } .beakers figure.mixed { grid-column: 1 / -1; } .eqrow { grid-template-columns: 1fr; gap: 4px; } .eqrow .eqn { white-space: normal; line-height: 1.9; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 4 · Topic 4.2</span>
+  <h1>Net Ionic Equations Study Lab</h1>
+  <p class="lede">When two ionic solutions are mixed, most of the ions just float around: only the ions that form a solid, water, or a gas actually react. A net ionic equation keeps those ions and drops the spectators. Mix pairs of solutions, watch the particles, and build the molecular, complete ionic, and net ionic equations side by side.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The mixing bench</h2>
+    <p>Pick one solution from each column. The AP exam expects you to know only one solubility rule: <b>all compounds containing Na⁺, K⁺, NH₄⁺, or NO₃⁻ are soluble in water.</b> Any other solubility information is given in the question, so this lab gives it to you too. Particle counts show the ions in the ratio of the balanced equation; they are illustrative, not real numbers of ions. Water molecules are left out of the drawings.</p>
+  </div>
+
+  <div class="card" style="display:grid; gap:14px;">
+    <div class="pick">
+      <div class="group">
+        <div class="tag">Solution A (every nitrate is soluble)</div>
+        <div class="scenarios" id="pick-a"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Solution B (every Na⁺ and K⁺ salt is soluble)</div>
+        <div class="scenarios" id="pick-b"></div>
+      </div>
+    </div>
+    <p class="note" id="skip-note">Crossed-out buttons are pairs whose chemistry goes beyond the solubility rules (redox, weak acids, or a salt that is only slightly soluble). Hover or focus one to see why.</p>
+    <div class="group">
+      <div class="tag">Classic exam pairs</div>
+      <div class="scenarios" id="presets"></div>
+    </div>
+  </div>
+
+  <div class="card graph-card">
+    <h3>Particle view <small id="pv-sub">before and after mixing</small></h3>
+    <div class="beakers">
+      <figure><svg class="chart" id="sv-a" role="img" aria-label="Ions in solution A"></svg><figcaption id="cap-a"></figcaption></figure>
+      <figure><svg class="chart" id="sv-b" role="img" aria-label="Ions in solution B"></svg><figcaption id="cap-b"></figcaption></figure>
+      <figure class="mixed"><svg class="chart" id="sv-m" role="img" aria-label="Ions after the two solutions are mixed"></svg><figcaption id="cap-m"></figcaption></figure>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-c1">Cation that reacts</span><span class="l-c3">Anion that reacts</span><span class="l-sp">Spectator ion (dashed)</span></div>
+    <label class="check" for="hide-sp"><input type="checkbox" id="hide-sp"> Hide spectator ions in the mixed beaker</label>
+  </div>
+
+  <div class="card eqrows" id="eqs" aria-live="polite"></div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">What forms</div><div class="v" id="r-1"></div><div class="sub" id="r-1s"></div></div>
+    <div class="stat"><div class="k">Driving force</div><div class="v" id="r-2"></div><div class="sub" id="r-2s"></div></div>
+    <div class="stat"><div class="k">Spectator ions</div><div class="v" id="r-3"></div><div class="sub" id="r-3s"></div></div>
+    <div class="stat"><div class="k">Net charge check</div><div class="v" id="r-4"></div><div class="sub" id="r-4s"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Three forms</span><h3>Molecular, complete ionic, net ionic</h3><p>The molecular equation writes every compound as a whole formula. The complete ionic equation splits every strong electrolyte in solution into its ions. The net ionic equation removes ions that appear unchanged on both sides. All three describe the same reaction; which one you use depends on what the question asks.</p></div>
+    <div class="card"><span class="tag">Must know</span><h3>The one solubility rule</h3><p>All compounds containing sodium, potassium, ammonium, or nitrate ions are soluble in water. If a product contains one of these ions, it stays dissolved. For any other compound, the exam tells you whether it is soluble.</p></div>
+    <div class="card"><span class="tag">Split into ions</span><h3>What gets written as ions</h3><p>Soluble ionic compounds (aq), strong acids (HCl, HBr, HI, HNO₃, HClO₄, H₂SO₄), and strong bases (Group 1 hydroxides and Ca, Sr, Ba hydroxides) are written as separated ions. Everything else stays together: solids, liquids, gases, water, weak acids, weak bases, and molecular substances.</p></div>
+    <div class="card"><span class="tag">Spectators</span><h3>Spectator ions</h3><p>A spectator ion is in solution before and after the reaction in the same form. It is still physically present in the beaker; it is just not part of the change. Cancel only ions that are identical on both sides: same formula, same charge, same state.</p></div>
+    <div class="card"><span class="tag">Driving forces</span><h3>When ions actually react</h3><p>Ions react when they can form something that leaves solution: an insoluble solid (precipitate), a molecular substance such as water, or a gas such as CO₂. If every possible product is soluble, all ions are spectators and there is no net ionic equation.</p></div>
+    <div class="card"><span class="tag">Check twice</span><h3>Balance atoms and charge</h3><p>A correct net ionic equation is balanced for atoms of each element and for total charge. For Pb²⁺ + 2I⁻ → PbI₂(s), the left side has a total charge of (+2) + 2(−1) = 0, matching the neutral solid. Use the smallest whole-number coefficients.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Split it or keep it together?</h2>
+    <p>Decide this for every species before you write the complete ionic equation. Rows marked "given" are general guidelines you may find useful; the exam supplies that solubility information when it matters.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Species</th><th>Write it as</th><th>Example in an ionic equation</th></tr></thead>
+    <tbody>
+      <tr><td>Any compound with Na⁺, K⁺, NH₄⁺, or NO₃⁻ <b>(must know)</b></td><td>Separate aqueous ions</td><td>KNO₃(aq) → K⁺(aq) + NO₃⁻(aq)</td></tr>
+      <tr><td>Other soluble ionic compounds (given)</td><td>Separate aqueous ions; keep polyatomic ions intact</td><td>CuSO₄(aq) → Cu²⁺(aq) + SO₄²⁻(aq)</td></tr>
+      <tr><td>Insoluble ionic compounds, the precipitate (given)</td><td>Whole formula, (s)</td><td>AgCl(s), BaSO₄(s), PbI₂(s), Cu(OH)₂(s)</td></tr>
+      <tr><td>Strong acids: HCl, HBr, HI, HNO₃, HClO₄, H₂SO₄</td><td>H⁺(aq) (or H₃O⁺) plus the anion</td><td>HNO₃(aq) → H⁺(aq) + NO₃⁻(aq)</td></tr>
+      <tr><td>Strong bases: LiOH, NaOH, KOH, Ca(OH)₂, Sr(OH)₂, Ba(OH)₂</td><td>Metal cation plus OH⁻(aq)</td><td>Ba(OH)₂(aq) → Ba²⁺(aq) + 2OH⁻(aq)</td></tr>
+      <tr><td>Weak acids and weak bases (HF, HC₂H₃O₂, NH₃)</td><td>Whole formula, (aq)</td><td>HC₂H₃O₂(aq) + OH⁻(aq) → C₂H₃O₂⁻(aq) + H₂O(l)</td></tr>
+      <tr><td>Water, gases, molecular solutes</td><td>Whole formula with its state</td><td>H₂O(l), CO₂(g), C₆H₁₂O₆(aq)</td></tr>
+      <tr><td>Carbonate plus a strong acid</td><td>Products H₂O(l) and CO₂(g) (from H₂CO₃)</td><td>2H⁺(aq) + CO₃²⁻(aq) → H₂O(l) + CO₂(g)</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Answering the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write the formula of each product correctly first: swap partners, then use charges to set subscripts (Pb²⁺ and I⁻ make PbI₂, not PbI).</li>
+        <li>Show states. A net ionic equation with (aq) on the reactant ions and (s), (l), or (g) on the product shows why the reaction happens.</li>
+        <li>Keep polyatomic ions together: SO₄²⁻ stays SO₄²⁻, never S + 4O.</li>
+        <li>Check both atom balance and charge balance, and reduce to the smallest whole-number coefficients (2Ag⁺ + 2Cl⁻ → 2AgCl reduces to Ag⁺ + Cl⁻ → AgCl).</li>
+        <li>When asked to identify spectator ions, name them with charges and explain that they are present in the same form before and after the reaction.</li>
+        <li>For a particle diagram after precipitation, draw the solid as a cluster of ions at the bottom and the spectator ions still dispersed in solution, in the correct numbers.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Splitting a precipitate, water, or a weak acid into ions. Only strong electrolytes in solution are split.</li>
+        <li>Leaving a strong acid as a molecule: HNO₃(aq) must be written as H⁺(aq) + NO₃⁻(aq).</li>
+        <li>Carrying the subscript of a compound into the ion's coefficient incorrectly: Ca(NO₃)₂ gives Ca²⁺ + <b>2</b>NO₃⁻, not NO₃²⁻ or N₂O₆.</li>
+        <li>Writing a net ionic equation when every product is soluble. The answer is "no reaction"; all ions are spectators.</li>
+        <li>Saying spectator ions leave the solution. They stay in the beaker; they just do not change.</li>
+        <li>Forgetting that a solid reactant (like a metal or CaCO₃(s)) stays as a whole formula even if it is ionic.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 4.2. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-4.html">Unit 4 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = Lab.el;
+
+  // ---------- Data ----------
+  // Cation sources (all nitrates) and anion sources (all Na+ or K+ salts).
+  var CAT = {
+    Ag: { s: "Ag", q: 1, name: "silver nitrate", color: null, r: 11 },
+    Pb: { s: "Pb", q: 2, name: "lead(II) nitrate", color: null, r: 12 },
+    Ba: { s: "Ba", q: 2, name: "barium nitrate", color: null, r: 12 },
+    Cu: { s: "Cu", q: 2, name: "copper(II) nitrate", color: "var(--sol-blue)", r: 10 },
+    Fe: { s: "Fe", q: 3, name: "iron(III) nitrate", color: "var(--sol-yellow)", r: 10 },
+    H:  { s: "H", q: 1, name: "nitric acid (a strong acid)", color: null, r: 8, acid: true }
+  };
+  var AN = {
+    Cl:  { s: "Cl", q: 1, ctr: "Na", poly: false, r: 12 },
+    I:   { s: "I", q: 1, ctr: "K", poly: false, r: 13 },
+    SO4: { s: "SO4", q: 2, ctr: "Na", poly: true, r: 13 },
+    CO3: { s: "CO3", q: 2, ctr: "Na", poly: true, r: 13 },
+    PO4: { s: "PO4", q: 3, ctr: "Na", poly: true, r: 14 },
+    OH:  { s: "OH", q: 1, ctr: "Na", poly: true, r: 11 }
+  };
+  var CAT_KEYS = ["Ag", "Pb", "Ba", "Cu", "Fe", "H"], AN_KEYS = ["Cl", "I", "SO4", "CO3", "PO4", "OH"];
+  // Insoluble products, with the color of the solid. Solubility here is "given," as on the exam.
+  var PPT = {
+    "Ag-Cl": ["white", "var(--surface)"], "Ag-I": ["pale yellow", "var(--ppt-yellow)"], "Ag-CO3": ["pale yellow", "var(--ppt-yellow)"], "Ag-PO4": ["yellow", "var(--ppt-yellow)"],
+    "Pb-Cl": ["white", "var(--surface)"], "Pb-I": ["bright yellow", "var(--ppt-yellow)"], "Pb-SO4": ["white", "var(--surface)"], "Pb-CO3": ["white", "var(--surface)"], "Pb-PO4": ["white", "var(--surface)"], "Pb-OH": ["white", "var(--surface)"],
+    "Ba-SO4": ["white", "var(--surface)"], "Ba-CO3": ["white", "var(--surface)"], "Ba-PO4": ["white", "var(--surface)"],
+    "Cu-PO4": ["blue-green", "var(--sol-blue)"], "Cu-OH": ["light blue", "var(--sol-blue)"],
+    "Fe-PO4": ["pale yellow", "var(--ppt-yellow)"], "Fe-OH": ["red-brown", "var(--ppt-brown)"]
+  };
+  var NOTES = {
+    "Pb-Cl": "PbCl₂ is one of the exceptions to \"most chlorides are soluble\": it is only slightly soluble and precipitates from solutions like these.",
+    "Ba-OH": "Barium hydroxide is a soluble strong base, so Ba²⁺ and OH⁻ stay dissolved.",
+    "Cu-Cl": "Copper(II) chloride is soluble. The blue color of the mixture comes from Cu²⁺(aq), which was already there.",
+    "Fe-Cl": "Iron(III) chloride is soluble, so no precipitate forms."
+  };
+  var SKIP = {
+    "Ag-SO4": "Ag₂SO₄ is only slightly soluble: whether a solid forms depends on the concentrations, so an AP question would have to tell you.",
+    "Ag-OH": "Ag⁺ and OH⁻ form brown silver oxide, Ag₂O, rather than a simple hydroxide. That is beyond the AP rules.",
+    "Cu-I": "Cu²⁺ oxidizes I⁻ to I₂ and forms CuI: a redox reaction (topic 4.9), not a simple precipitation.",
+    "Cu-CO3": "The solid that forms is a basic copper carbonate, not simple CuCO₃, so the equation would not follow the swap-partners pattern.",
+    "Fe-I": "Fe³⁺ oxidizes I⁻ to I₂: a redox reaction (topic 4.9), not a precipitation.",
+    "Fe-CO3": "Fe³⁺ and CO₃²⁻ produce Fe(OH)₃ and CO₂ gas, not Fe₂(CO₃)₃.",
+    "H-SO4": "H⁺ and SO₄²⁻ partly combine to form HSO₄⁻, a weak acid. That is acid–base chemistry from Unit 8.",
+    "H-PO4": "H⁺ and PO₄³⁻ form HPO₄²⁻ and H₂PO₄⁻ (weak acid chemistry from Unit 8)."
+  };
+  var PRESETS = [
+    { name: "AgNO₃ + NaCl", a: "Ag", b: "Cl" },
+    { name: "Pb(NO₃)₂ + KI", a: "Pb", b: "I" },
+    { name: "Ba(NO₃)₂ + Na₂SO₄", a: "Ba", b: "SO4" },
+    { name: "Pb(NO₃)₂ + Na₃PO₄", a: "Pb", b: "PO4" },
+    { name: "Fe(NO₃)₃ + NaOH", a: "Fe", b: "OH" },
+    { name: "HNO₃ + NaOH", a: "H", b: "OH" },
+    { name: "HNO₃ + Na₂CO₃", a: "H", b: "CO3" },
+    { name: "Ba(NO₃)₂ + NaCl (no reaction)", a: "Ba", b: "Cl" }
+  ];
+
+  function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+  // Neutral formula from a cation and an anion (polyatomic anions get parentheses when needed).
+  function compound(c, cq, a, aq, poly) {
+    var g = gcd(cq, aq), x = aq / g, y = cq / g;
+    return c + (x > 1 ? x : "") + (poly && y > 1 ? "(" + a + ")" + y : a + (y > 1 ? y : ""));
+  }
+  function ratio(cq, aq) { var g = gcd(cq, aq); return { x: aq / g, y: cq / g }; }
+  function saltA(k) { return compound(CAT[k].s, CAT[k].q, "NO3", 1, true); }
+  function saltB(k) { var a = AN[k]; return compound(a.ctr, 1, a.s, a.q, a.poly); }
+  function ionStr(sym, q, neg) { return sym + "^" + (q > 1 ? q : "") + (neg ? "-" : "+"); }
+  function F(s) { return Lab.fmla(s); }
+  function coef(n) { return n > 1 ? n : ""; }
+  function plain(html) { return html.replace(/<sub>(\d+)<\/sub>/g, function (m, d) { return d.split("").map(function (c) { return "₀₁₂₃₄₅₆₇₈₉"[+c]; }).join(""); }).replace(/<sup>([^<]*)<\/sup>/g, function (m, d) { return d.replace(/\d/g, function (c) { return "⁰¹²³⁴⁵⁶⁷⁸⁹"[+c]; }).replace("+", "⁺").replace("−", "⁻"); }); }
+
+  // ---------- Model ----------
+  function model(a, b) {
+    var C = CAT[a], A = AN[b], key = a + "-" + b, m = { a: a, b: b, key: key, C: C, A: A };
+    m.skip = SKIP[key] || null;
+    var r = ratio(C.q, A.q);           // x cations : y anions in the neutral product
+    m.x = r.x; m.y = r.y;
+    m.sA = saltA(a); m.sB = saltB(b);
+    m.ctr = A.ctr; m.by = compound(A.ctr, 1, "NO3", 1, true);   // NaNO3 or KNO3
+    m.cIon = ionStr(C.s, C.q, false); m.aIon = ionStr(A.s, A.q, true); m.ctrIon = A.ctr + "^+"; m.nIon = "NO3^-";
+    if (C.acid) m.kind = b === "OH" ? "water" : b === "CO3" ? "gas" : "none";
+    else m.kind = PPT[key] ? "ppt" : "none";
+    if (m.kind === "ppt") { m.ppt = compound(C.s, C.q, A.s, A.q, A.poly); m.pptColor = PPT[key]; }
+    return m;
+  }
+
+  // Equations as lists of terms {n, f (formula with ^charge), st, sp (spectator)}.
+  function terms(m) {
+    var x = m.x, y = m.y, qa = m.C.q, qb = m.A.q, out = {};
+    if (m.kind === "none") {
+      out.mol = { L: [{ n: 1, f: m.sA, st: "aq" }, { n: 1, f: m.sB, st: "aq" }], R: null };
+      out.ion = { L: [{ n: 1, f: m.cIon, st: "aq", sp: 1 }, { n: qa, f: m.nIon, st: "aq", sp: 1 }, { n: qb, f: m.ctrIon, st: "aq", sp: 1 }, { n: 1, f: m.aIon, st: "aq", sp: 1 }], R: null };
+      out.net = null;
+      return out;
+    }
+    if (m.kind === "ppt") {
+      out.mol = { L: [{ n: x, f: m.sA, st: "aq" }, { n: y, f: m.sB, st: "aq" }], R: [{ n: 1, f: m.ppt, st: "s" }, { n: x * qa, f: m.by, st: "aq" }] };
+      out.ion = { L: [{ n: x, f: m.cIon, st: "aq" }, { n: x * qa, f: m.nIon, st: "aq", sp: 1 }, { n: y * qb, f: m.ctrIon, st: "aq", sp: 1 }, { n: y, f: m.aIon, st: "aq" }],
+                  R: [{ n: 1, f: m.ppt, st: "s" }, { n: x * qa, f: m.ctrIon, st: "aq", sp: 1 }, { n: x * qa, f: m.nIon, st: "aq", sp: 1 }] };
+      out.net = { L: [{ n: x, f: m.cIon, st: "aq" }, { n: y, f: m.aIon, st: "aq" }], R: [{ n: 1, f: m.ppt, st: "s" }] };
+      return out;
+    }
+    if (m.kind === "water") {
+      out.mol = { L: [{ n: 1, f: "HNO3", st: "aq" }, { n: 1, f: "NaOH", st: "aq" }], R: [{ n: 1, f: "NaNO3", st: "aq" }, { n: 1, f: "H2O", st: "l" }] };
+      out.ion = { L: [{ n: 1, f: "H^+", st: "aq" }, { n: 1, f: "NO3^-", st: "aq", sp: 1 }, { n: 1, f: "Na^+", st: "aq", sp: 1 }, { n: 1, f: "OH^-", st: "aq" }],
+                  R: [{ n: 1, f: "Na^+", st: "aq", sp: 1 }, { n: 1, f: "NO3^-", st: "aq", sp: 1 }, { n: 1, f: "H2O", st: "l" }] };
+      out.net = { L: [{ n: 1, f: "H^+", st: "aq" }, { n: 1, f: "OH^-", st: "aq" }], R: [{ n: 1, f: "H2O", st: "l" }] };
+      return out;
+    }
+    // gas: carbonate + strong acid
+    out.mol = { L: [{ n: 2, f: "HNO3", st: "aq" }, { n: 1, f: "Na2CO3", st: "aq" }], R: [{ n: 2, f: "NaNO3", st: "aq" }, { n: 1, f: "H2O", st: "l" }, { n: 1, f: "CO2", st: "g" }] };
+    out.ion = { L: [{ n: 2, f: "H^+", st: "aq" }, { n: 2, f: "NO3^-", st: "aq", sp: 1 }, { n: 2, f: "Na^+", st: "aq", sp: 1 }, { n: 1, f: "CO3^2-", st: "aq" }],
+                R: [{ n: 2, f: "Na^+", st: "aq", sp: 1 }, { n: 2, f: "NO3^-", st: "aq", sp: 1 }, { n: 1, f: "H2O", st: "l" }, { n: 1, f: "CO2", st: "g" }] };
+    out.net = { L: [{ n: 2, f: "H^+", st: "aq" }, { n: 1, f: "CO3^2-", st: "aq" }], R: [{ n: 1, f: "H2O", st: "l" }, { n: 1, f: "CO2", st: "g" }] };
+    return out;
+  }
+  function side(list, strike) {
+    return list.map(function (t) {
+      var h = (t.n > 1 ? t.n : "") + F(t.f) + "(" + t.st + ")";
+      return strike && t.sp ? "<s>" + h + "</s>" : (strike ? '<span class="act">' + h + "</span>" : h);
+    }).join(" + ");
+  }
+  function eq(e, strike, noRxn) { return side(e.L, strike) + " → " + (e.R ? side(e.R, strike) : noRxn); }
+  function charge(list) { var t = 0; list.forEach(function (x) { var m = x.f.match(/\^(\d*)([+\-])$/); if (m) t += x.n * (m[1] ? +m[1] : 1) * (m[2] === "+" ? 1 : -1); }); return t; }
+  function sgnq(q) { return q > 0 ? "+" + q : q < 0 ? "−" + Math.abs(q) : "0"; }
+
+  // ---------- Particle drawings ----------
+  function rng(seed) { var s = seed; return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+  function beakerSVG(svg, W, H, tint) {
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var x0 = 10, x1 = W - 10, top = 34, bot = H - 8;
+    el("rect", { x: x0 + 1, y: top, width: x1 - x0 - 2, height: bot - top, rx: 8, fill: "var(--accent-soft)" }, svg);
+    if (tint) el("rect", { x: x0 + 1, y: top, width: x1 - x0 - 2, height: bot - top, rx: 8, fill: tint, opacity: .28 }, svg);
+    el("path", { d: "M" + x0 + " 14 L" + x0 + " " + (bot - 8) + " Q" + x0 + " " + bot + " " + (x0 + 8) + " " + bot + " L" + (x1 - 8) + " " + bot + " Q" + x1 + " " + bot + " " + x1 + " " + (bot - 8) + " L" + x1 + " 14", fill: "none", stroke: "var(--ink)", "stroke-width": 2 }, svg);
+    return { x0: x0 + 6, x1: x1 - 6, y0: top + 6, y1: bot - 6 };
+  }
+  // Place circles of given radii without overlap inside a box (seeded so the picture is stable).
+  function place(list, box, seed, avoid) {
+    var R = rng(seed), placed = (avoid || []).slice();
+    list.forEach(function (p) {
+      var best = null, bestD = -1;
+      for (var t = 0; t < 120; t++) {
+        var x = box.x0 + p.r + R() * (box.x1 - box.x0 - 2 * p.r), y = box.y0 + p.r + R() * (box.y1 - box.y0 - 2 * p.r), dmin = 1e9;
+        placed.forEach(function (q) { dmin = Math.min(dmin, Math.hypot(x - q.x, y - q.y) - p.r - q.r); });
+        if (dmin > 3) { best = { x: x, y: y }; break; }
+        if (dmin > bestD) { bestD = dmin; best = { x: x, y: y }; }
+      }
+      p.x = best.x; p.y = best.y; placed.push(p);
+    });
+    return list;
+  }
+  function glyphR(p) { return Math.max(p.r, p.label.length * 2.6 + 3); }
+  function fontFor(p) { return p.label.length >= 4 ? 8.2 : 9.5; }
+  function ionGlyph(svg, p) {
+    var g = el("g", {}, svg), fs = fontFor(p);
+    if (p.role === "sp") {
+      el("circle", { cx: p.x, cy: p.y, r: p.r, fill: "var(--surface)", stroke: "var(--muted)", "stroke-width": 1.4, "stroke-dasharray": "3 2" }, g);
+      el("text", { x: p.x, y: p.y + 3.5, "text-anchor": "middle", style: "font-size:" + fs + "px; font-weight:600; fill:var(--muted)" }, g, p.label);
+    } else {
+      el("circle", { cx: p.x, cy: p.y, r: p.r, fill: p.fill, stroke: p.stroke || "var(--surface)", "stroke-width": 1.4 }, g);
+      el("text", { x: p.x, y: p.y + 3.5, "text-anchor": "middle", style: "font-size:" + fs + "px; font-weight:600; fill:" + (p.text || "var(--surface)") }, g, p.label);
+    }
+  }
+  function lbl(f) { return plain(F(f)); }
+  function water(svg, x, y) {
+    el("circle", { cx: x - 8, cy: y + 5, r: 5, fill: "var(--surface)", stroke: "var(--ink)", "stroke-width": 1.2 }, svg);
+    el("circle", { cx: x + 8, cy: y + 5, r: 5, fill: "var(--surface)", stroke: "var(--ink)", "stroke-width": 1.2 }, svg);
+    el("circle", { cx: x, cy: y, r: 8, fill: "var(--bad)", stroke: "var(--surface)", "stroke-width": 1.2 }, svg);
+  }
+  function co2(svg, x, y) {
+    el("circle", { cx: x - 12, cy: y, r: 7, fill: "var(--bad)", stroke: "var(--surface)", "stroke-width": 1.2 }, svg);
+    el("circle", { cx: x + 12, cy: y, r: 7, fill: "var(--bad)", stroke: "var(--surface)", "stroke-width": 1.2 }, svg);
+    el("circle", { cx: x, cy: y, r: 7.5, fill: "var(--ink)", stroke: "var(--surface)", "stroke-width": 1.2 }, svg);
+  }
+
+  function counts(m) {
+    var per = m.x + m.x * m.C.q + m.y + m.y * m.A.q;   // ions per "unit" of the balanced molecular equation
+    if (m.kind === "water") per = 4; if (m.kind === "gas") per = 7;
+    var k = Math.max(1, Math.floor(20 / per));
+    var xs = m.kind === "gas" ? 2 : m.x, ys = m.kind === "gas" ? 1 : m.y;
+    if (m.kind === "water") { xs = 1; ys = 1; }
+    return { k: k, nCat: xs * k, nNit: xs * m.C.q * k, nAn: ys * k, nCtr: ys * m.A.q * k };
+  }
+
+  var S = { a: "Pb", b: "I", hide: false };
+  function draw(m) {
+    var c = counts(m);
+    var actorCat = { fill: "var(--c1)", r: m.C.r, label: lbl(m.cIon) }, actorAn = { fill: "var(--c3)", r: m.A.r, label: lbl(m.aIon) };
+    var spN = { role: "sp", r: 12, label: lbl("NO3^-") }, spC = { role: "sp", r: m.ctr === "K" ? 10 : 9, label: lbl(m.ctrIon) };
+    [actorCat, actorAn, spN, spC].forEach(function (t) { t.r = glyphR(t); });
+    var reacts = m.kind !== "none";
+    function mk(t, n) { var a = []; for (var i = 0; i < n; i++) a.push(Object.assign({}, t)); return a; }
+    var catT = reacts ? actorCat : Object.assign({ role: "sp" }, actorCat), anT = reacts ? actorAn : Object.assign({ role: "sp" }, actorAn);
+    // Solution A
+    var svA = document.getElementById("sv-a"), sw = Math.round(Math.max(150, Math.min(200, svA.clientWidth || 200))), boxA = beakerSVG(svA, sw, 200, m.C.color);
+    place(mk(catT, c.nCat).concat(mk(spN, c.nNit)), boxA, 7).forEach(function (p) { ionGlyph(svA, p); });
+    // Solution B
+    var svB = document.getElementById("sv-b"), boxB = beakerSVG(svB, sw, 200, null);
+    place(mk(anT, c.nAn).concat(mk(spC, c.nCtr)), boxB, 13).forEach(function (p) { ionGlyph(svB, p); });
+    // Mixed
+    var svM = document.getElementById("sv-m"), boxM = beakerSVG(svM, 270, 200, m.kind === "none" ? m.C.color : null);
+    var spect = S.hide ? [] : mk(spN, c.nNit).concat(mk(spC, m.kind === "none" ? c.nCtr : c.nCtr));
+    var solids = [];
+    if (m.kind === "ppt") {
+      // Lattice at the bottom: k formula units, x cations and y anions each.
+      var nC = c.nCat, nA = c.nAn, list = [], i = 0, j = 0;
+      while (i < nC || j < nA) { if (i * nA <= j * nC && i < nC) { list.push("c"); i++; } else { list.push("a"); j++; } }
+      var rr = Math.max(actorCat.r, actorAn.r), perRow = Math.min(list.length, Math.floor((boxM.x1 - boxM.x0 - rr) / (2 * rr + 0.5))), rows = Math.ceil(list.length / perRow);
+      list.forEach(function (t, n) {
+        var row = Math.floor(n / perRow), col = n % perRow, inRow = Math.min(perRow, list.length - row * perRow);
+        var cx = (boxM.x0 + boxM.x1) / 2 + (col - (inRow - 1) / 2) * (2 * rr + 0.5) + (row % 2 ? rr / 2 : 0), cy = boxM.y1 - rr - row * (2 * rr - 2);
+        solids.push(Object.assign({}, t === "c" ? actorCat : actorAn, { x: cx, y: cy, r: rr, stroke: "var(--ink)" }));
+      });
+      el("rect", { x: boxM.x0 - 2, y: boxM.y1 - rows * (2 * rr - 2) - 6, width: boxM.x1 - boxM.x0 + 4, height: rows * (2 * rr - 2) + 8, rx: 6, fill: m.pptColor[1], opacity: .55 }, svM);
+      var upper = { x0: boxM.x0, x1: boxM.x1, y0: boxM.y0, y1: boxM.y1 - rows * (2 * rr - 2) - 8 };
+      place(spect, upper, 29).forEach(function (p) { ionGlyph(svM, p); });
+      solids.forEach(function (p) { ionGlyph(svM, p); });
+    } else if (m.kind === "water") {
+      var ws = []; for (var w = 0; w < c.nCat; w++) ws.push({ r: 14 });
+      place(ws, boxM, 31);
+      place(spect, boxM, 37, ws).forEach(function (p) { ionGlyph(svM, p); });
+      ws.forEach(function (p) { water(svM, p.x, p.y); });
+    } else if (m.kind === "gas") {
+      var wq = []; for (var w2 = 0; w2 < c.nAn; w2++) wq.push({ r: 14 });
+      place(wq, { x0: boxM.x0, x1: boxM.x1, y0: boxM.y0 + 20, y1: boxM.y1 }, 41);
+      place(spect, boxM, 43, wq).forEach(function (p) { ionGlyph(svM, p); });
+      wq.forEach(function (p) { water(svM, p.x, p.y); });
+      for (var g2 = 0; g2 < c.nAn; g2++) { co2(svM, 70 + g2 * 60, 16); }
+      el("text", { x: 252, y: 20, "text-anchor": "end", style: "font-size:10px; fill:var(--muted)" }, svM, "CO₂ gas escapes");
+    } else {
+      var all = S.hide ? [] : mk(catT, c.nCat).concat(mk(anT, c.nAn), spect);
+      place(all, boxM, 53).forEach(function (p) { ionGlyph(svM, p); });
+    }
+    document.getElementById("cap-a").innerHTML = "<b>" + F(m.sA) + "(aq)</b>" + (m.C.color ? " · " + (m.a === "Cu" ? "blue" : "pale yellow") : " · colorless");
+    document.getElementById("cap-b").innerHTML = "<b>" + F(m.sB) + "(aq)</b> · colorless";
+    document.getElementById("cap-m").innerHTML = "<b>After mixing</b>" + (m.kind === "ppt" ? " · " + m.pptColor[0] + " " + F(m.ppt) + "(s) settles" : m.kind === "water" ? " · new H₂O molecules" : m.kind === "gas" ? " · H₂O forms and CO₂ bubbles off" : " · no change, ions just mix") + (S.hide ? " (spectators hidden)" : "");
+  }
+
+  // ---------- Render ----------
+  function render() {
+    var m = model(S.a, S.b);
+    Array.prototype.forEach.call(document.querySelectorAll("#pick-a button"), function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-k") === S.a ? "true" : "false"); });
+    Array.prototype.forEach.call(document.querySelectorAll("#pick-b button"), function (b) {
+      var k = b.getAttribute("data-k"), why = SKIP[S.a + "-" + k];
+      b.disabled = !!why; b.title = why || ""; if (why) b.setAttribute("aria-describedby", "skip-note"); else b.removeAttribute("aria-describedby");
+      b.setAttribute("aria-pressed", k === S.b ? "true" : "false");
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("#pick-a button"), function (b) {
+      var why = SKIP[b.getAttribute("data-k") + "-" + S.b]; b.disabled = !!why; b.title = why || "";
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("#presets button"), function (b, i) { b.setAttribute("aria-pressed", PRESETS[i].a === S.a && PRESETS[i].b === S.b ? "true" : "false"); });
+    draw(m);
+    var T = terms(m);
+    var rows = '<div class="eqrow"><span class="tag">Molecular</span><div class="eqn">' + eq(T.mol, false, "no reaction (all products soluble)") + "</div></div>" +
+      '<div class="eqrow"><span class="tag">Complete ionic</span><div class="eqn">' + eq(T.ion, true, "<s>same ions, all (aq)</s>") + "</div></div>" +
+      '<div class="eqrow"><span class="tag">Net ionic</span><div class="eqn">' + (T.net ? eq(T.net, false) : "None: every ion is a spectator") + "</div></div>";
+    document.getElementById("eqs").innerHTML = rows;
+    // readouts
+    var r1 = document.getElementById("r-1"), r2 = document.getElementById("r-2");
+    if (m.kind === "ppt") { r1.innerHTML = F(m.ppt) + "(s)"; document.getElementById("r-1s").textContent = m.pptColor[0] + " precipitate"; r2.innerHTML = '<span class="pill lr">Precipitate</span>'; document.getElementById("r-2s").textContent = "an insoluble solid forms"; }
+    else if (m.kind === "water") { r1.innerHTML = "H<sub>2</sub>O(l)"; document.getElementById("r-1s").textContent = "molecular product"; r2.innerHTML = '<span class="pill lr">Water</span>'; document.getElementById("r-2s").textContent = "H⁺ and OH⁻ combine"; }
+    else if (m.kind === "gas") { r1.innerHTML = "CO<sub>2</sub>(g)"; document.getElementById("r-1s").textContent = "plus H₂O(l)"; r2.innerHTML = '<span class="pill lr">Gas</span>'; document.getElementById("r-2s").textContent = "CO₂ leaves solution"; }
+    else { r1.textContent = "Nothing"; document.getElementById("r-1s").textContent = "all products soluble"; r2.innerHTML = '<span class="pill infl">None</span>'; document.getElementById("r-2s").textContent = "no reaction"; }
+    var sp = m.kind === "none" ? [m.cIon, m.nIon, m.ctrIon, m.aIon] : m.kind === "ppt" ? [m.ctrIon, m.nIon] : ["Na^+", "NO3^-"];
+    document.getElementById("r-3").innerHTML = sp.map(F).join(", ");
+    document.getElementById("r-3s").textContent = m.kind === "none" ? "every ion" : "unchanged on both sides";
+    if (T.net) { var qL = charge(T.net.L), qR = charge(T.net.R); document.getElementById("r-4").innerHTML = sgnq(qL) + " = " + sgnq(qR) + ' <span class="pill lr">OK</span>'; document.getElementById("r-4s").textContent = "total charge, left = right"; }
+    else { document.getElementById("r-4").textContent = "—"; document.getElementById("r-4s").textContent = "no net ionic equation"; }
+    document.getElementById("pv-sub").textContent = m.kind === "none" ? "nothing reacts" : "before and after mixing";
+    document.getElementById("story").innerHTML = story(m, T);
+  }
+
+  function story(m, T) {
+    var h = "", li = [];
+    var swapA = F(compound(m.C.s, m.C.q, m.A.s, m.A.q, m.A.poly)), swapB = F(m.by);
+    h += "<p><b>Mixing " + F(m.sA) + " and " + F(m.sB) + ".</b> Solution A contains " + F(m.cIon) + " and " + F(m.nIon) + " ions; solution B contains " + F(m.ctrIon) + " and " + F(m.aIon) + " ions. Swapping partners gives two possible new compounds: " + swapA + " and " + swapB + ".</p>";
+    li.push(swapB + " contains " + (m.ctr === "K" ? "K⁺" : "Na⁺") + " and NO₃⁻, so it is <b>soluble</b> by the one rule every AP student must know. Those ions stay dissolved as spectators.");
+    if (m.kind === "ppt") {
+      li.push(F(m.ppt) + " is <b>insoluble</b> (given). The " + F(m.cIon) + " and " + F(m.aIon) + " ions leave solution as a " + m.pptColor[0] + " solid in a " + m.x + " : " + m.y + " ratio, the ratio that makes the solid neutral: " + m.x + "(" + sgnq(m.C.q) + ") + " + m.y + "(−" + m.A.q + ") = 0.");
+      if (NOTES[m.key]) li.push(NOTES[m.key]);
+      li.push("In the complete ionic equation, " + F(m.ctrIon) + " and " + F(m.nIon) + " appear unchanged on both sides, so they cancel. What is left is the net ionic equation.");
+    } else if (m.kind === "water") {
+      li.push("HNO₃ is a strong acid and NaOH is a strong base, so both are written as ions. H⁺ and OH⁻ combine to form water, a molecular liquid that barely ionizes. Forming water is the driving force.");
+    } else if (m.kind === "gas") {
+      li.push("H⁺ from the strong acid combines with CO₃²⁻ to form carbonic acid, H₂CO₃, which breaks down into H₂O(l) and CO₂(g). The gas bubbles out of solution, which drives the reaction. Write the products as H₂O(l) + CO₂(g).");
+    } else {
+      if (m.C.acid) li.push(swapA + " is a <b>strong acid</b>, so in water it exists as separate H⁺ and " + F(m.aIon) + " ions. No solid, water, or gas forms, so the ions simply mix.");
+      else li.push(swapA + " is <b>soluble</b> too (given). " + (NOTES[m.key] || "") + " No solid, water, or gas forms, so the ions simply mix.");
+    }
+    h += "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
+    if (T.net) h += "<p><b>AP answer:</b> " + eq(T.net, false) + ". Spectator ions " + F(m.kind === "ppt" ? m.ctrIon : "Na^+") + " and " + F(m.nIon) + " are left out; atoms and total charge (" + sgnq(charge(T.net.L)) + ") balance on both sides.</p>";
+    else h += "<p><b>AP answer:</b> no reaction occurs. All four ions are spectators, so there is no net ionic equation. The particle diagram after mixing shows every ion still dispersed in solution.</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  CAT_KEYS.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.setAttribute("data-k", k); b.innerHTML = F(saltA(k)); b.setAttribute("aria-label", CAT[k].name);
+    b.addEventListener("click", function () { S.a = k; render(); });
+    document.getElementById("pick-a").appendChild(b);
+  });
+  AN_KEYS.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.setAttribute("data-k", k); b.innerHTML = F(saltB(k));
+    b.addEventListener("click", function () { S.b = k; render(); });
+    document.getElementById("pick-b").appendChild(b);
+  });
+  PRESETS.forEach(function (p) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = p.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S.a = p.a; S.b = p.b; render(); });
+    document.getElementById("presets").appendChild(b);
+  });
+  document.getElementById("hide-sp").addEventListener("change", function (e) { S.hide = e.target.checked; render(); });
+  render();
+  var lastW = window.innerWidth;
+  window.addEventListener("resize", function () { if (window.innerWidth !== lastW) { lastW = window.innerWidth; render(); } });
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Which of the following is the net ionic equation for the reaction that occurs when aqueous solutions of AgNO₃ and NaCl are mixed?",
+      o: ["AgNO₃(aq) + NaCl(aq) → AgCl(s) + NaNO₃(aq)", "Na⁺(aq) + NO₃⁻(aq) → NaNO₃(s)", "Ag⁺(aq) + Cl⁻(aq) → AgCl(s)", "Ag⁺(aq) + NO₃⁻(aq) + Na⁺(aq) + Cl⁻(aq) → AgCl(s) + Na⁺(aq) + NO₃⁻(aq)"], c: 2,
+      w: "Only Ag⁺ and Cl⁻ change: they leave solution as solid AgCl. Choice A is the molecular equation and choice D is the complete ionic equation, which still contains the spectators Na⁺ and NO₃⁻. Choice B is wrong because every sodium and nitrate compound is soluble." },
+    { s: "Aqueous solutions of Ba(NO₃)₂ and K₂SO₄ are mixed, and a white precipitate of BaSO₄ forms. Which ions are spectator ions?",
+      o: ["K⁺ and NO₃⁻", "Ba²⁺ and SO₄²⁻", "K⁺ only", "Ba²⁺ and NO₃⁻"], c: 0,
+      w: "Ba²⁺ and SO₄²⁻ form the precipitate, so they are the reacting ions. K⁺ and NO₃⁻ stay dissolved and appear unchanged on both sides of the complete ionic equation. Choice B names the ions that react, the opposite of spectators." },
+    { s: "Using only the rule that all compounds containing Na⁺, K⁺, NH₄⁺, or NO₃⁻ are soluble, which pair of aqueous solutions can you be certain will NOT form a precipitate when mixed?",
+      o: ["Pb(NO₃)₂ and KCl", "KI and NH₄NO₃", "Ba(NO₃)₂ and Na₂SO₄", "AgNO₃ and NaBr"], c: 1,
+      w: "The possible products of KI + NH₄NO₃ are KNO₃ and NH₄I. Both contain an ion from the rule, so both are soluble and nothing precipitates. For the other pairs, one possible product (PbCl₂, BaSO₄, or AgBr) contains none of those ions, so the rule alone cannot rule out a precipitate. In fact, all three form one." },
+    { s: "Which of the following is the net ionic equation for the reaction between aqueous nitric acid, HNO₃, and aqueous potassium hydroxide, KOH?",
+      o: ["HNO₃(aq) + OH⁻(aq) → NO₃⁻(aq) + H₂O(l)", "K⁺(aq) + NO₃⁻(aq) → KNO₃(aq)", "HNO₃(aq) + KOH(aq) → KNO₃(aq) + H₂O(l)", "H⁺(aq) + OH⁻(aq) → H₂O(l)"], c: 3,
+      w: "HNO₃ is a strong acid and KOH is a strong base, so both are fully ionized. K⁺ and NO₃⁻ are spectators, leaving H⁺ + OH⁻ → H₂O. Choice A treats HNO₃ as if it were a weak acid, which is correct only for weak acids such as HC₂H₃O₂." },
+    { s: "Which of the following is the net ionic equation for the reaction between aqueous Na₂CO₃ and excess hydrochloric acid?",
+      o: ["2H⁺(aq) + CO₃²⁻(aq) → H₂O(l) + CO₂(g)", "Na⁺(aq) + Cl⁻(aq) → NaCl(s)", "2HCl(aq) + CO₃²⁻(aq) → 2Cl⁻(aq) + H₂O(l) + CO₂(g)", "Na₂CO₃(s) + 2H⁺(aq) → 2Na⁺(aq) + H₂O(l) + CO₂(g)"], c: 0,
+      w: "Na₂CO₃ is soluble (it contains Na⁺) and HCl is a strong acid, so both are split into ions. Na⁺ and Cl⁻ are spectators. H⁺ and CO₃²⁻ form H₂CO₃, which decomposes to water and carbon dioxide gas. Choice D writes the dissolved carbonate as a solid, and choice C leaves the strong acid un-ionized." },
+    { s: "Equal volumes of 0.10 M Pb(NO₃)₂ and 0.20 M KI are mixed, and PbI₂(s) precipitates completely. Which ions remain in solution in significant amounts?",
+      o: ["Pb²⁺, I⁻, K⁺, and NO₃⁻", "Pb²⁺ and NO₃⁻ only", "K⁺ and NO₃⁻ only, in equal numbers", "K⁺ and I⁻ only, in equal numbers"], c: 2,
+      w: "Per liter of each solution: 0.10 mol Pb²⁺ and 0.20 mol NO₃⁻, plus 0.20 mol K⁺ and 0.20 mol I⁻. Pb²⁺ + 2I⁻ → PbI₂ uses exactly 0.10 mol Pb²⁺ and 0.20 mol I⁻, so neither is left over. The spectators K⁺ and NO₃⁻ remain, 0.20 mol each. A particle diagram should show them dispersed and PbI₂ as a solid." },
+    { s: "50.0 mL of 0.100 M BaCl₂ is mixed with 50.0 mL of 0.100 M Na₂SO₄, and BaSO₄ precipitates. What is the concentration of Na⁺ in the final 100.0 mL of solution?",
+      o: ["0.0500 M", "0.100 M", "0.200 M", "0 M, because Na⁺ precipitates"], c: 1,
+      w: "Na⁺ is a spectator, so none of it is removed. Moles of Na⁺ = 2 × (0.0500 L × 0.100 mol/L) = 0.0100 mol. Dividing by the total volume, 0.0100 mol ÷ 0.1000 L = 0.100 M. Choice C forgets that mixing doubled the volume; choice A forgets the 2 Na⁺ per Na₂SO₄." },
+    { s: "Acetic acid, HC₂H₃O₂, is a weak acid. Which is the net ionic equation for the reaction of aqueous acetic acid with aqueous sodium hydroxide?",
+      o: ["H⁺(aq) + OH⁻(aq) → H₂O(l)", "Na⁺(aq) + C₂H₃O₂⁻(aq) → NaC₂H₃O₂(s)", "HC₂H₃O₂(aq) + NaOH(aq) → NaC₂H₃O₂(aq) + H₂O(l)", "HC₂H₃O₂(aq) + OH⁻(aq) → C₂H₃O₂⁻(aq) + H₂O(l)"], c: 3,
+      w: "A weak acid is mostly un-ionized in solution, so it is written as a whole molecule. NaOH is a strong base, so it is written as Na⁺ + OH⁻, and Na⁺ is a spectator. Choice A would be correct only for a strong acid. Choice C is the molecular equation." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("4.2");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [4], topic: "4.2", compact: true, storageKey: "topic-4.2" });</script>
+</body>
+</html>

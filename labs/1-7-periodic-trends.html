@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Periodic Trends Study Lab</title>
+<meta name="description" content="Color the periodic table by atomic radius, ionization energy, electronegativity, or ionic radius, pick any two elements, and get a Coulomb's law explanation of which is larger, including the exceptions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.graph-card { align-content: start; }
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.ptcard { display: grid; gap: 10px; }
+.ptable button.pa { box-shadow: 0 0 0 3px var(--c1); position: relative; z-index: 1; }
+.ptable button.pb { box-shadow: 0 0 0 3px var(--c3); position: relative; z-index: 1; }
+.ptable button:disabled { opacity: .35; cursor: default; }
+.ptable button { color: var(--ink); }
+.scale { display: flex; align-items: center; gap: 8px; font-size: .78rem; color: var(--muted); flex-wrap: wrap; }
+.scale .bar { width: 160px; height: 10px; border-radius: 5px; background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 6%, var(--surface)), color-mix(in srgb, var(--accent) 55%, var(--surface))); border: 1px solid var(--rule); }
+.picker { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: .86rem; }
+.chipA, .chipB { font-family: var(--mono); font-weight: 600; padding: 2px 10px; border-radius: 999px; border: 2px solid; }
+.chipA { color: var(--c1); border-color: var(--c1); } .chipB { color: var(--c3); border-color: var(--c3); }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.legend .l-a { color: var(--c1); } .legend .l-b { color: var(--c3); }
+.note { font-size: .8rem; color: var(--muted); }
+@media (max-width: 520px) { .readout { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 1 · Topic 1.7</span>
+  <h1>Periodic Trends Study Lab</h1>
+  <p class="lede">Atomic radius, ionization energy, electronegativity, and ionic radius all change in regular patterns across the periodic table, and one idea explains them: Coulomb's law applied to the valence electrons. Color the table by a property, pick two elements, and read the explanation an AP grader wants, including the famous exceptions.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The trend explorer</h2>
+    <p>Darker tiles have larger values. Click a tile to set element A, then another for element B. Data: first ionization energies and Pauling electronegativities from the AP-style table used across this site; atomic radii are calculated values (Clementi, 1967) so the noble gases can be included; ionic radii are Shannon radii for six-coordinate ions (N³⁻ four-coordinate). Different sources give somewhat different radii, but the trends are the same.</p>
+  </div>
+
+  <div class="card ptcard">
+    <div class="group">
+      <span class="tag" id="tr-lbl">Color the table by</span>
+      <div class="seg" role="group" aria-labelledby="tr-lbl" id="trends"></div>
+    </div>
+    <div id="pt"></div>
+    <div class="scale"><span id="sc-lo"></span><span class="bar" aria-hidden="true"></span><span id="sc-hi"></span><span class="picker">Next click sets: <button type="button" id="pick-a" aria-pressed="true">A</button><button type="button" id="pick-b" aria-pressed="false">B</button> &nbsp; Comparing <span class="chipA" id="chip-a"></span> and <span class="chipB" id="chip-b"></span></span></div>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3 id="g-h">Trend vs. atomic number <small id="g-sub"></small></h3>
+      <svg class="chart" id="trend" role="img" aria-label="Line graph of the selected property against atomic number with elements A and B marked"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Exam-style comparisons</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-ad">Property vs. Z</span><span class="l-a">Element A</span><span class="l-b">Element B</span><span class="l-ghost">Noble gas (end of a period)</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k" id="r-a-k">A</div><div class="v" id="r-a"></div><div class="sub" id="r-a2"></div></div>
+    <div class="stat"><div class="k" id="r-b-k">B</div><div class="v" id="r-b"></div><div class="sub" id="r-b2"></div></div>
+    <div class="stat"><div class="k">Larger value</div><div class="v" id="r-big"></div><div class="sub" id="r-big2"></div></div>
+    <div class="stat"><div class="k">Relationship</div><div class="v" id="r-rel"></div><div class="sub" id="r-rel2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Across a period →</span><h3>More protons, same shell</h3><p>Moving right, each element adds a proton and an electron to the same valence shell. Core shielding stays about the same, so the valence electrons feel a stronger pull: radius shrinks, ionization energy and electronegativity rise.</p></div>
+    <div class="card"><span class="tag">Down a group ↓</span><h3>A new shell each period</h3><p>Moving down, valence electrons occupy a higher shell, farther from the nucleus and shielded by more core electrons. The attraction is weaker even though there are more protons: radius grows, ionization energy and electronegativity fall.</p></div>
+    <div class="card"><span class="tag">Ionization energy</span><h3>Energy to remove an electron</h3><p>First ionization energy is the energy to remove the most loosely held electron from a gaseous atom. Exceptions: B &lt; Be and Al &lt; Mg (the p electron is higher in energy and shielded by the s electrons), and O &lt; N and S &lt; P (a paired p electron is repelled by its partner).</p></div>
+    <div class="card"><span class="tag">Electronegativity</span><h3>Pull on shared electrons</h3><p>Electronegativity measures how strongly an atom attracts electrons in a bond. It follows ionization energy: highest at fluorine (3.98), lowest at the bottom of group 1. Noble gases He, Ne, and Ar have no listed value because they form no common compounds.</p></div>
+    <div class="card"><span class="tag">Ions</span><h3>Ionic radius</h3><p>A cation is smaller than its atom (it often loses its whole valence shell, and fewer electrons share the same nuclear charge). An anion is larger than its atom (added electrons repel each other). In an isoelectronic series, more protons means a smaller ion: O²⁻ &gt; F⁻ &gt; Na⁺ &gt; Mg²⁺ &gt; Al³⁺.</p></div>
+    <div class="card"><span class="tag">Electron affinity</span><h3>Energy change on gaining an electron</h3><p>Electron affinity generally becomes more favorable (more energy released) toward the upper right, for the same Coulomb's law reasons. It has more irregularities than ionization energy; AP questions focus on the general trend and on Coulombic reasoning.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Trend summary</h2>
+    <p>Every row has the same explanation underneath: the attraction between the nucleus and the valence electrons (Coulomb's law), set by nuclear charge, distance, and shielding.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Property</th><th>Across a period (left → right)</th><th>Down a group</th><th>Exceptions and notes</th></tr></thead>
+    <tbody>
+      <tr><td>Atomic radius</td><td><b>Decreases</b>: more protons, same shell</td><td><b>Increases</b>: valence electrons in a higher shell</td><td>Changes little across the transition metals</td></tr>
+      <tr><td>First ionization energy</td><td><b>Increases</b> (generally)</td><td><b>Decreases</b></td><td>Be &gt; B, Mg &gt; Al (s vs. p); N &gt; O, P &gt; S (paired p electron)</td></tr>
+      <tr><td>Electronegativity</td><td><b>Increases</b></td><td><b>Decreases</b></td><td>F is highest (3.98); He, Ne, Ar have no value</td></tr>
+      <tr><td>Ionic radius</td><td>Cations shrink as charge rises (Na⁺ &gt; Mg²⁺ &gt; Al³⁺); anions are larger than cations of the same period</td><td><b>Increases</b> for ions of the same charge</td><td>Isoelectronic ions: more protons → smaller</td></tr>
+      <tr><td>Successive ionization energies</td><td colspan="2">Each IE is larger than the last; a huge jump appears when an electron must come from a core shell</td><td>Mg: IE₂ = 1451, IE₃ = 7733 kJ/mol → 2 valence electrons</td></tr>
+      <tr><td>Metallic character</td><td><b>Decreases</b></td><td><b>Increases</b></td><td>Metals lose electrons easily (low IE)</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Trend explanations on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Name the structural difference first: "Na and Mg are in the same period" or "Na and K are in the same group."</li>
+        <li>Same period: cite the <b>greater number of protons</b> (nuclear charge) with valence electrons in the same shell.</li>
+        <li>Same group: cite the <b>higher shell</b> (greater distance) and more core electrons shielding the valence electrons.</li>
+        <li>Connect to Coulomb's law: greater attraction between the nucleus and the valence electrons → smaller radius, higher ionization energy.</li>
+        <li>For the N/O and Be/B exceptions, name the subshell and the cause: electron pairing repulsion in 2p⁴, or a 2p electron that is higher in energy than 2s.</li>
+        <li>For successive ionization energies, point to the large jump and say it means removing a core electron.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Explaining with "it wants a full octet" or "it is more stable." These earn no credit; use charge and distance.</li>
+        <li>Saying shielding increases across a period. Core shielding stays about the same; the nuclear charge grows.</li>
+        <li>Saying a larger atom has more protons, so it holds electrons more strongly. Distance wins down a group.</li>
+        <li>Comparing elements that differ in both period and group without checking whether both trends point the same way.</li>
+        <li>Forgetting that cations are smaller and anions larger than their neutral atoms.</li>
+        <li>Mixing up ionization energy (removing an electron) with electron affinity (adding one).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 1.7. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-1.html">Unit 1 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  // Calculated atomic radii, pm (Clementi, Raimondi & Reinhardt 1967), Z = 1-38.
+  var RAD = [null, 53, 31, 167, 112, 87, 67, 56, 48, 42, 38, 190, 145, 118, 111, 98, 88, 79, 71, 243, 194, 184, 176, 171, 166, 161, 156, 152, 149, 145, 142, 136, 125, 114, 103, 94, 88, 265, 219];
+  // Shannon ionic radii, pm (6-coordinate; N3- 4-coordinate). [charge, radius]
+  var ION = { 3: [1, 76], 4: [2, 45], 7: [-3, 146], 8: [-2, 140], 9: [-1, 133], 11: [1, 102], 12: [2, 72], 13: [3, 54], 16: [-2, 184], 17: [-1, 181], 19: [1, 138], 20: [2, 100], 21: [3, 75], 30: [2, 74], 31: [3, 62], 34: [-2, 198], 35: [-1, 196], 37: [1, 152], 38: [2, 118] };
+  var MAXZ = 38;
+  var TR = {
+    rad: { name: "Atomic radius", unit: "pm", get: function (z) { return RAD[z]; }, fmt: function (v) { return v + " pm"; }, dir: { period: -1, group: 1 } },
+    ie: { name: "First ionization energy", unit: "kJ/mol", get: function (z) { return Lab.ELEMENTS[z].ie; }, fmt: function (v) { return v + " kJ/mol"; }, dir: { period: 1, group: -1 } },
+    en: { name: "Electronegativity", unit: "Pauling", get: function (z) { return Lab.ELEMENTS[z].en; }, fmt: function (v) { return v.toFixed(2); }, dir: { period: 1, group: -1 } },
+    ion: { name: "Ionic radius", unit: "pm", get: function (z) { return ION[z] ? ION[z][1] : null; }, fmt: function (v) { return v + " pm"; }, dir: null }
+  };
+  var SUPS = { "1": "¹", "2": "²", "3": "³", "+": "⁺", "-": "⁻" };
+  function ionName(z) { var q = ION[z][0]; return Lab.ELEMENTS[z].s + ((Math.abs(q) > 1 ? String(Math.abs(q)) : "") + (q > 0 ? "+" : "-")).split("").map(function (c) { return SUPS[c]; }).join(""); }
+  function label(z, t) { return t === "ion" && ION[z] ? ionName(z) : Lab.ELEMENTS[z].s; }
+
+  var S = { t: "ie", a: 11, b: 12, next: "a", key: "namg" };
+  var SC = [
+    { key: "namg", name: "Na vs. Mg (same period)", t: "ie", a: 11, b: 12 },
+    { key: "nak", name: "Na vs. K (same group)", t: "rad", a: 11, b: 19 },
+    { key: "beb", name: "Be vs. B exception", t: "ie", a: 4, b: 5 },
+    { key: "no", name: "N vs. O exception", t: "ie", a: 7, b: 8 },
+    { key: "fcl", name: "F vs. Cl electronegativity", t: "en", a: 9, b: 17 },
+    { key: "iso", name: "O²⁻ vs. Mg²⁺ (isoelectronic)", t: "ion", a: 8, b: 12 },
+    { key: "clk", name: "Cl⁻ vs. K⁺ (isoelectronic)", t: "ion", a: 17, b: 19 },
+    { key: "diag", name: "Mg vs. Cl vs. diagonal", t: "rad", a: 3, b: 12 }
+  ];
+  SC[7].name = "Li vs. Mg (diagonal)";
+
+  function range(t) {
+    var vals = []; for (var z = 1; z <= MAXZ; z++) { var v = TR[t].get(z); if (v != null) vals.push(v); }
+    return [Math.min.apply(null, vals), Math.max.apply(null, vals)];
+  }
+  function relation(a, b) {
+    var A = Lab.ELEMENTS[a], B = Lab.ELEMENTS[b];
+    if (a === b) return { k: "same", txt: "Same element" };
+    if (A.p === B.p) return { k: "period", txt: "Same period (" + A.p + ")" };
+    if (A.g === B.g) return { k: "group", txt: "Same group (" + A.g + ")" };
+    // up-right vs down-left: both trends agree
+    var upper = A.p < B.p ? A : B, lower = upper === A ? B : A;
+    if (upper.g > lower.g) return { k: "diagUR", txt: "Different period and group", upper: upper, lower: lower };
+    return { k: "diagUL", txt: "Different period and group", upper: upper, lower: lower };
+  }
+
+  // ---------- Periodic table heat map ----------
+  var ptBox = document.getElementById("pt"), PT = null;
+  function buildPT() {
+    var t = S.t, rg = range(t);
+    PT = Lab.periodicTable(ptBox, {
+      maxZ: MAXZ, ariaLabel: "Periodic table colored by " + TR[t].name,
+      label: function (e) { var v = TR[t].get(e.z); return v == null ? "—" : t === "en" ? v.toFixed(2) : v; },
+      color: function (e) { var v = TR[t].get(e.z); if (v == null) return null; var f = (v - rg[0]) / (rg[1] - rg[0]); return "color-mix(in srgb, var(--accent) " + Math.round(6 + f * 49) + "%, var(--surface))"; },
+      disabled: function (e) { return t === "ion" && !ION[e.z]; },
+      onPick: function (e) { if (S.next === "a") { S.a = e.z; S.next = "b"; } else { S.b = e.z; S.next = "a"; } S.key = null; render(); }
+    });
+    document.getElementById("sc-lo").textContent = "low " + TR[t].fmt(rg[0]);
+    document.getElementById("sc-hi").textContent = "high " + TR[t].fmt(rg[1]);
+  }
+
+  // ---------- Graph ----------
+  var svg = document.getElementById("trend");
+  function narrow() { var w = svg.getBoundingClientRect().width; return w > 0 && w < 430; }
+  function drawGraph() {
+    var t = S.t, rg = range(t), top = t === "en" ? 4.2 : t === "ie" ? 2600 : t === "rad" ? 280 : 220;
+    var yt = t === "en" ? [0, 1, 2, 3, 4] : t === "ie" ? [0, 500, 1000, 1500, 2000, 2500] : [0, 50, 100, 150, 200, 250].filter(function (v) { return v <= top; });
+    var F = Lab.frame(svg, { x: [0, 39], y: [0, top], xLabel: "Atomic number (Z)", yLabel: TR[t].name + " (" + TR[t].unit + ")", xTicks: [1, 10, 18, 36], yTicks: yt, fmtX: function (v) { return v; }, fmtY: function (v) { return v; }, width: narrow() ? 340 : 460, height: 320 });
+    [2, 10, 18, 36].forEach(function (z) { Lab.line(F, [[z, 0], [z, top]], "var(--ghost)", 1, "3 4"); });
+    if (t === "ion") {
+      Object.keys(ION).forEach(function (k) { var z = +k; Lab.el("circle", { cx: F.sx(z), cy: F.sy(ION[z][1]), r: 4, fill: ION[z][0] > 0 ? "var(--accent)" : "var(--c2)" }, F.g); });
+      Lab.tag(F, 37, 205, "● cations", "var(--accent)", "end"); Lab.tag(F, 37, 190, "● anions", "var(--c2)", "end");
+    } else {
+      var seg = [];
+      for (var z = 1; z <= MAXZ; z++) {
+        var v = TR[t].get(z);
+        if (v == null) { if (seg.length > 1) Lab.line(F, seg, "var(--accent)", 2); seg = []; continue; }
+        if (z === 37 && seg.length > 1) { Lab.line(F, seg, "var(--accent)", 2); seg = []; }
+        seg.push([z, v]);
+        Lab.el("circle", { cx: F.sx(z), cy: F.sy(v), r: 2.5, fill: "var(--accent)" }, F.g);
+      }
+      if (seg.length > 1) Lab.line(F, seg, "var(--accent)", 2);
+    }
+    [[S.a, "var(--c1)"], [S.b, "var(--c3)"]].forEach(function (x, i) {
+      var v = TR[t].get(x[0]); if (v == null) return;
+      Lab.dot(F, x[0], v, x[1], false);
+      var right = x[0] < 30;
+      Lab.el("text", { x: F.sx(x[0]) + (right ? 9 : -9), y: F.sy(v) - 8 - (i && S.a !== S.b && Math.abs(TR[t].get(S.a) - v) < top * 0.06 ? -18 : 0), "text-anchor": right ? "start" : "end", "class": "lbl", style: "fill:" + x[1] }, F.svg, label(x[0], t) + " " + TR[t].fmt(v));
+    });
+  }
+
+  // ---------- Story ----------
+  function li(a) { return "<ul>" + a.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>"; }
+  var IE_EX = { "4-5": "s", "12-13": "s", "30-31": "s", "7-8": "pair", "15-16": "pair", "33-34": "pair" };
+  function story() {
+    var t = S.t, a = S.a, b = S.b, A = Lab.ELEMENTS[a], B = Lab.ELEMENTS[b], va = TR[t].get(a), vb = TR[t].get(b), L = [], h = "";
+    var rel = relation(a, b), nm = TR[t].name.toLowerCase();
+    var tm = function (E) { return E.g >= 3 && E.g <= 12; };
+    if (va == null || vb == null) {
+      var miss = va == null ? A : B;
+      h += "<p><b>No value for " + miss.n.toLowerCase() + ".</b> " + (t === "en" ? "Helium, neon, and argon have no Pauling electronegativity because they form no common compounds." : "This element has no common simple ion in this table.") + " Pick another element.</p>";
+      return h + "<p><b>AP answer:</b> compare elements using the attraction between the nucleus and the valence electrons (Coulomb's law).</p>";
+    }
+    if (rel.k === "same") return "<p><b>Pick two different elements</b> to compare. Click a tile to set A, then another to set B.</p><p><b>AP answer:</b> compare elements using the attraction between the nucleus and the valence electrons (Coulomb's law).</p>";
+    var big = va > vb ? A : vb > va ? B : null, small = big === A ? B : A;
+    h += "<p><b>" + TR[t].name + ": " + label(a, t) + " " + TR[t].fmt(va) + " vs. " + label(b, t) + " " + TR[t].fmt(vb) + ".</b> " + (big ? label(big.z, t) + " is larger." : "They are equal.") + "</p>";
+    if (t === "ion") {
+      var qa = ION[a][0], qb = ION[b][0], ea = a - qa, eb = b - qb;
+      if (ea === eb) L.push(label(a, t) + " and " + label(b, t) + " are <b>isoelectronic</b>: both have " + ea + " electrons in the same configuration. " + label(a < b ? a : b, t) + " has fewer protons (" + Math.min(a, b) + " vs. " + Math.max(a, b) + "), so its electrons are pulled in less strongly and it is larger.");
+      else if (A.g === B.g) L.push("Same group, same charge: " + label(Math.max(a, b), t) + " has its outer electrons in a higher shell, so it is larger.");
+      else if ((qa > 0) !== (qb > 0)) {
+        var an = qa < 0 ? a : b, ca = an === a ? b : a;
+        L.push(label(an, t) + " is an anion and " + label(ca, t) + " is a cation. " + (Lab.ELEMENTS[an].p >= Lab.ELEMENTS[ca].p ? "The anion keeps its valence shell and adds electrons to it, while the cation has lost its valence shell, so the anion is larger." : "Compare shells and protons: the cation here keeps a higher shell than the anion."));
+      } else L.push("Compare the number of electron shells the ions use and their nuclear charges; the ion whose outer electrons are farther out or less attracted is larger.");
+      L.push("Compared with neutral atoms: " + label(a, t) + " (" + RAD[a] + " pm as an atom) and " + label(b, t) + " (" + RAD[b] + " pm as an atom). Cations are smaller than their atoms; anions are larger. (The atomic radii here are calculated values, so compare them only with each other.)");
+      h += li(L) + "<p><b>AP answer:</b> for isoelectronic ions, the one with more protons has the stronger attraction for the same number of electrons and the smaller radius.</p>";
+      return h;
+    }
+    var expect = null, why = "";
+    if (rel.k === "period") {
+      var right = A.g > B.g ? A : B, left = right === A ? B : A;
+      expect = TR[t].dir.period > 0 ? right : left;
+      why = right.n + " has more protons (" + right.z + " vs. " + left.z + ") and its valence electrons are in the same shell (n = " + A.p + "), with about the same core shielding. The stronger attraction pulls the valence electrons closer and holds them more tightly.";
+    } else if (rel.k === "group") {
+      var low = A.p > B.p ? A : B, up = low === A ? B : A;
+      expect = TR[t].dir.group > 0 ? low : up;
+      why = low.n + "'s valence electrons are in a higher shell (n = " + low.p + " vs. n = " + up.p + "), farther from the nucleus and shielded by more core electrons. Even with more protons, the attraction for its valence electrons is weaker.";
+    } else if (rel.k === "diagUR") {
+      expect = TR[t].dir.period > 0 ? rel.upper : rel.lower;
+      why = rel.upper.n + " is both higher (fewer shells) and farther right (more protons for its shell) than " + rel.lower.n.toLowerCase() + ", so both trends point the same way.";
+    } else {
+      why = rel.upper.n + " is higher but farther left than " + rel.lower.n.toLowerCase() + ". The period trend and the group trend pull in opposite directions, so the general trends cannot decide; use the data. AP questions avoid asking you to predict these pairs.";
+    }
+    var tmPair = tm(A) || tm(B);
+    if (expect) {
+      var fits = expect === big;
+      L.push((fits ? "This follows the trend. " : "") + why);
+      if (!fits && big) {
+        var key = Math.min(a, b) + "-" + Math.max(a, b);
+        if (t === "ie" && IE_EX[key] === "s") L.push("<b>Exception.</b> " + Lab.ELEMENTS[Math.max(a, b)].n + "'s first electron comes from a " + (Math.max(a, b) === 31 ? "4p" : Math.max(a, b) === 5 ? "2p" : "3p") + " orbital, which is higher in energy than the filled s subshell below it and partly shielded by those s electrons, so it is easier to remove.");
+        else if (t === "ie" && IE_EX[key] === "pair") L.push("<b>Exception.</b> " + Lab.ELEMENTS[Math.max(a, b)].n + " has four p electrons, so one p orbital holds a pair. Repulsion between the paired electrons makes one of them easier to remove than any of " + Lab.ELEMENTS[Math.min(a, b)].n.toLowerCase() + "'s three unpaired p electrons.");
+        else if (tmPair) L.push("<b>Exception.</b> Transition metals add electrons to an inner 3d subshell, so their properties change only a little and not always smoothly across the row. These small irregularities are beyond the AP exam.");
+        else L.push("<b>Small irregularity.</b> Here the data run against the simple trend, mainly because the filled 3d subshell shields the 4s and 4p electrons poorly (gallium and germanium hold their electrons more tightly than expected). This detail is beyond the AP exam.");
+      }
+    } else L.push(why);
+    if (t === "rad") L.push("Ionization energy and electronegativity usually run opposite to radius: a smaller atom holds its electrons more tightly.");
+    if (t === "en" && (a === 9 || b === 9)) L.push("Fluorine has the highest electronegativity of all elements: it is small, with a high nuclear charge for its shell.");
+    h += li(L);
+    h += "<p><b>AP answer:</b> " + (rel.k === "group" ? "down a group, valence electrons are in a higher shell, farther from the nucleus and more shielded, so the Coulombic attraction is weaker." : rel.k === "period" ? "across a period, the number of protons increases while the valence electrons stay in the same shell with similar shielding, so the Coulombic attraction is stronger." : "compare the number of protons and the shell of the valence electrons; when the two trends conflict, rely on data.") + "</p>";
+    return h;
+  }
+
+  // ---------- Render ----------
+  var tBtns = {}, scBtns = {};
+  Object.keys(TR).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = TR[k].name;
+    b.addEventListener("click", function () {
+      S.t = k; S.key = null;
+      if (k === "ion") { if (!ION[S.a]) S.a = 8; if (!ION[S.b]) S.b = 12; }
+      buildPT(); render();
+    });
+    document.getElementById("trends").appendChild(b); tBtns[k] = b;
+  });
+  function render() {
+    var t = S.t, va = TR[t].get(S.a), vb = TR[t].get(S.b);
+    Object.keys(tBtns).forEach(function (k) { tBtns[k].setAttribute("aria-pressed", S.t === k ? "true" : "false"); });
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    Object.keys(PT.buttons).forEach(function (z) { var bt = PT.buttons[z]; bt.classList.toggle("pa", +z === S.a); bt.classList.toggle("pb", +z === S.b); bt.removeAttribute("aria-pressed"); });
+    document.getElementById("pick-a").setAttribute("aria-pressed", S.next === "a" ? "true" : "false");
+    document.getElementById("pick-b").setAttribute("aria-pressed", S.next === "b" ? "true" : "false");
+    document.getElementById("chip-a").textContent = label(S.a, t);
+    document.getElementById("chip-b").textContent = label(S.b, t);
+    document.getElementById("g-sub").textContent = TR[t].name + ", Z = 1 to 38";
+    drawGraph();
+    function set(id, k, v, sub) { document.getElementById(id + "-k").textContent = k; document.getElementById(id).textContent = v; document.getElementById(id + "2").textContent = sub; }
+    var A = Lab.ELEMENTS[S.a], B = Lab.ELEMENTS[S.b];
+    set("r-a", "A: " + A.n + (t === "ion" && ION[S.a] ? " ion" : ""), va == null ? "—" : label(S.a, t) + " " + TR[t].fmt(va), "period " + A.p + ", group " + A.g);
+    set("r-b", "B: " + B.n + (t === "ion" && ION[S.b] ? " ion" : ""), vb == null ? "—" : label(S.b, t) + " " + TR[t].fmt(vb), "period " + B.p + ", group " + B.g);
+    document.getElementById("r-big").textContent = va == null || vb == null || va === vb ? "—" : label(va > vb ? S.a : S.b, t);
+    document.getElementById("r-big2").textContent = va == null || vb == null ? "" : va === vb ? "equal" : "by " + TR[t].fmt(t === "en" ? Math.abs(va - vb) : Math.round(Math.abs(va - vb)));
+    var rel = relation(S.a, S.b);
+    document.getElementById("r-rel").textContent = rel.k === "period" ? "Period" : rel.k === "group" ? "Group" : rel.k === "same" ? "Same" : "Diagonal";
+    document.getElementById("r-rel2").textContent = rel.txt;
+    document.getElementById("story").innerHTML = story();
+  }
+  SC.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { var rebuild = S.t !== x.t; S.t = x.t; S.a = x.a; S.b = x.b; S.next = "a"; S.key = x.key; if (rebuild) buildPT(); render(); });
+    document.getElementById("sc").appendChild(b); scBtns[x.key] = b;
+  });
+  document.getElementById("pick-a").addEventListener("click", function () { S.next = "a"; render(); });
+  document.getElementById("pick-b").addEventListener("click", function () { S.next = "b"; render(); });
+  buildPT(); render();
+  var wasN = narrow();
+  window.addEventListener("resize", function () { var n = narrow(); if (n !== wasN) { wasN = n; render(); } });
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Which of the following atoms has the largest atomic radius?",
+      o: ["Na", "Mg", "K", "Ca"], c: 2,
+      w: "K and Ca have valence electrons in n = 4, farther out than Na and Mg (n = 3). Between K and Ca, which share a shell, K has fewer protons (19 vs. 20), so its valence electron is held less tightly and the atom is larger. Choice D overlooks the period trend." },
+    { s: "Which statement best explains why the first ionization energy of Mg is greater than that of Na?",
+      o: ["Mg has more protons than Na, and the valence electrons of both are in the same shell with similar shielding.", "Mg has a full 3s subshell, and full subshells are stable.", "Mg has more electrons than Na, so its electrons repel each other less.", "Mg's valence electrons are in a higher shell than Na's."], c: 0,
+      w: "Na and Mg are both in period 3, with valence electrons in n = 3 shielded by the same 10 core electrons. Mg has 12 protons vs. 11, so the Coulombic attraction for its 3s electrons is greater. Choice B names no force and would not earn credit." },
+    { s: "The first ionization energy of oxygen is less than that of nitrogen. Which explanation is best?",
+      o: ["Oxygen has fewer protons than nitrogen.", "Oxygen's valence electrons are in a higher shell than nitrogen's.", "Oxygen is more electronegative than nitrogen.", "In oxygen, one 2p orbital holds a pair of electrons, and repulsion between them makes one easier to remove."], c: 3,
+      w: "N is 2p³ with three unpaired electrons; O is 2p⁴ with one pair. The electron–electron repulsion in that paired orbital lowers the energy needed to remove one of them. Oxygen has more protons (choice A is false) and its valence electrons are in the same shell (choice B is false)." },
+    { s: "Which ion in the isoelectronic series O²⁻, F⁻, Na⁺, Mg²⁺ has the largest radius?",
+      o: ["F⁻", "O²⁻", "Na⁺", "Mg²⁺"], c: 1,
+      w: "All four ions have 10 electrons (1s² 2s² 2p⁶). O²⁻ has the fewest protons (8), so it has the weakest attraction for those electrons and the largest radius. Mg²⁺, with 12 protons, is the smallest." },
+    { s: "Which element has the greatest electronegativity?",
+      o: ["P", "S", "Se", "Cl"], c: 3,
+      w: "Electronegativity increases across a period and decreases down a group. Cl is the farthest right in period 3 (3.16), greater than S (2.58) and P (2.19). Se is below S in group 16, so it is less electronegative than S (2.55)." },
+    { s: "An element has successive ionization energies of 578, 1817, 2745, and 11,577 kJ/mol. In which group is it most likely found?",
+      o: ["Group 13", "Group 2", "Group 14", "Group 15"], c: 0,
+      w: "The huge jump comes between the third and fourth ionization energies, so the fourth electron must come from a core shell. The element has 3 valence electrons, so it is in group 13 (these are aluminum's values). A group 2 element would jump after the second." },
+    { s: "Which statement correctly explains why a Na⁺ ion is much smaller than a Na atom?",
+      o: ["Na⁺ has more protons than Na.", "Na⁺ has gained an electron, which pulls the shells inward.", "Na⁺ has lost its only n = 3 electron, so its outermost electrons are in n = 2, closer to the nucleus.", "The electrons in Na⁺ repel each other more strongly than those in Na."], c: 2,
+      w: "Na is [Ne] 3s¹. Losing the 3s electron removes the whole third shell, leaving electrons only in n = 1 and n = 2, and the same 11 protons now pull on 10 electrons. Na⁺ has the same number of protons as Na (choice A) and loses, not gains, an electron (choice B)." },
+    { s: "Why does atomic radius decrease from left to right across period 3?",
+      o: ["Each element has one more electron shell than the one before it.", "The number of protons increases while the valence electrons stay in the same shell, so they are pulled closer to the nucleus.", "Shielding by core electrons increases across the period.", "The valence electrons repel each other less as more are added."], c: 1,
+      w: "Across period 3, the core (1s² 2s² 2p⁶) and its shielding stay the same while the nuclear charge rises from 11 to 18. The valence electrons in n = 3 feel a stronger attraction and are pulled closer. Choice C is the most common error: core shielding stays about constant across a period." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("1.7");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [1], topic: "1.7", compact: true, storageKey: "topic-1.7" });</script>
+</body>
+</html>

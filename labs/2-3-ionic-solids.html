@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Structure of Ionic Solids Study Lab</title>
+<meta name="description" content="Rotate a 3D rock-salt crystal, slide one layer of ions past another until the crystal shatters, melt or dissolve the solid to see when it conducts electricity, and use Coulomb's law to rank lattice energies.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.check { display: flex; gap: 8px; align-items: center; font-size: .88rem; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+#cube { touch-action: none; cursor: grab; }
+#cube:active { cursor: grabbing; }
+.ctl-card { display: grid; gap: 16px; }
+.ctl-card .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.legend .l-cat { color: var(--accent); } .legend .l-an { color: var(--c4); } .legend .l-w { color: var(--c2); } .legend .l-rep { color: var(--bad); }
+@media (max-width: 520px) { .ctl-card .controls { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 2 · Topic 2.3</span>
+  <h1>Structure of Ionic Solids Study Lab</h1>
+  <p class="lede">An ionic solid is not a pile of molecules. It is a repeating three-dimensional lattice in which every cation is surrounded by anions and every anion by cations, an arrangement that maximizes attraction and minimizes repulsion. That structure explains why ionic solids melt at high temperatures, shatter instead of bending, and conduct electricity only when the ions can move.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Inside a crystal of table salt</h2>
+    <p>Every compound here has the rock-salt (NaCl) structure. Ion sizes are drawn to scale from standard ionic radii. Lattice energies and melting points are typical textbook values.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>One layer of the crystal <small id="layer-sub">solid</small></h3>
+      <svg class="chart" id="layer" role="img" aria-label="Particle view of one layer of the ionic compound between two electrodes"></svg>
+    </div>
+    <div class="card graph-card">
+      <h3>The 3D lattice <small>drag to rotate</small></h3>
+      <svg class="chart" id="cube" role="img" aria-label="Rotatable three-dimensional model of 27 ions in the rock-salt lattice"></svg>
+      <label class="check"><input type="checkbox" id="nbr" checked> Highlight the center ion and its 6 nearest neighbors</label>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-cat">Cation (smaller)</span><span class="l-an">Anion (larger)</span><span class="l-w">Water molecule (dissolved)</span><span class="l-rep">Like-charge repulsion</span></div>
+  </div>
+
+  <div class="card ctl-card">
+    <div class="group">
+      <div class="tag">Compound</div>
+      <div class="scenarios" id="sc-cmp"></div>
+    </div>
+    <div class="group">
+      <div class="tag">State</div>
+      <div class="seg" role="group" aria-label="State of the sample">
+        <button type="button" id="st-solid" aria-pressed="true">Solid</button>
+        <button type="button" id="st-molten" aria-pressed="false">Molten (melted)</button>
+        <button type="button" id="st-aq" aria-pressed="false">Dissolved in water</button>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="ctl">
+        <label for="s-shift">Push the top half sideways <output id="o-shift"></output></label>
+        <input type="range" id="s-shift" min="0" max="1" step="0.05">
+        <span class="hint" id="shift-hint">Solid only. Measured in ion spacings.</span>
+      </div>
+      <div class="ctl">
+        <label for="s-rot">Rotate the 3D model <output id="o-rot"></output></label>
+        <input type="range" id="s-rot" min="0" max="360" step="5">
+        <span class="hint">Or drag the model</span>
+      </div>
+    </div>
+    <div class="group">
+      <div class="tag">Exam scenarios</div>
+      <div class="scenarios" id="sc"></div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Ions</div><div class="v" id="r-ions"></div><div class="sub" id="r-ions2"></div></div>
+    <div class="stat"><div class="k">Distance between ion centers</div><div class="v" id="r-d"></div><div class="sub" id="r-d2"></div></div>
+    <div class="stat"><div class="k">Lattice energy</div><div class="v" id="r-le"></div><div class="sub" id="r-le2"></div></div>
+    <div class="stat"><div class="k">Conducts electricity?</div><div class="v" id="r-c"></div><div class="sub" id="r-c2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+
+  <div class="card graph-card">
+    <h3>Coulomb's law predicts the order <small>lattice energy, sorted by |q₁q₂| / r</small></h3>
+    <svg class="chart" id="le" role="img" aria-label="Bar chart of lattice energies of eight compounds sorted by the Coulomb's law prediction"></svg>
+    <p style="font-size:.88rem; color:var(--muted);">The compounds are sorted from left to right by |q₁q₂|/r, the Coulomb's law prediction (number under each name, relative to NaCl = 1.00). The measured lattice energies fall in exactly the same order. The 2+/2− compounds are about four to five times stronger than the 1+/1− compounds.</p>
+  </div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Structure</span><h3>A lattice, not molecules</h3><p>Cations and anions pack in a repeating 3D pattern in which each ion is surrounded by ions of the opposite charge. In NaCl each Na⁺ has 6 Cl⁻ nearest neighbors and each Cl⁻ has 6 Na⁺. The formula NaCl gives only the 1 : 1 ratio.</p></div>
+    <div class="card"><span class="tag">Drawing ions</span><h3>Cations are usually smaller</h3><p>A cation has lost electrons (often a whole shell), so it is smaller than its neutral atom. An anion has gained electrons, so it is larger. In particle diagrams, draw the anion larger, and keep oppositely charged ions next to each other.</p></div>
+    <div class="card"><span class="tag">Coulomb's law</span><h3>Strength of the lattice</h3><p>The attraction between ions grows with the charges and shrinks with distance (∝ q₁q₂/r). Higher charges and smaller ions give a larger lattice energy and usually a higher melting point. MgO melts above 2800 °C; NaCl at 801 °C.</p></div>
+    <div class="card"><span class="tag">Brittle</span><h3>Why ionic crystals shatter</h3><p>A strong force can shift one layer of ions relative to the next. After a shift of one ion position, cations line up with cations and anions with anions. The like charges repel and the crystal splits along that plane.</p></div>
+    <div class="card"><span class="tag">Conductivity</span><h3>Moving ions carry current</h3><p>Solid ionic compounds do not conduct: the ions are locked in place and there are no free electrons. When melted or dissolved, the ions can move, so the liquid or solution conducts electricity.</p></div>
+    <div class="card"><span class="tag">Other properties</span><h3>Low vapor pressure, high melting point</h3><p>Pulling ions out of the lattice means breaking many strong Coulombic attractions, so ionic solids have very low vapor pressures and high melting and boiling points.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Rock-salt compounds compared</h2>
+    <p>Ionic radii are standard tabulated values (pm) for six-coordinate ions. Lattice energies and melting points are typical textbook values. The Coulomb prediction ranks lattice energy perfectly; melting point follows the same overall trend but not exactly (KCl melts above NaBr), because melting depends on more than the lattice energy.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Compound</th><th>Ion charges</th><th>r₊ + r₋ (pm)</th><th>|q₁q₂|/r vs. NaCl</th><th>Lattice energy (kJ/mol)</th><th>Melting point (°C)</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Writing it on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Compare ionic compounds with Coulomb's law: name both the charges and the sizes of the specific ions, then link to the strength of attraction.</li>
+        <li>Connect stronger attraction to the property asked about: "more energy is required to separate the ions, so the melting point is higher."</li>
+        <li>In particle diagrams of ionic solids, alternate cations and anions, draw the anions larger (for typical cases), and show no discrete molecules.</li>
+        <li>Explain brittleness with repulsion: shifting a layer brings like-charged ions next to each other.</li>
+        <li>Explain conductivity with mobile charged particles: ions are fixed in the solid but free to move when molten or dissolved.</li>
+        <li>For dissolved ions, draw water molecules with the O end toward cations and the H ends toward anions.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying molten NaCl conducts because of free electrons. It conducts because the ions are mobile.</li>
+        <li>Drawing NaCl as separate Na–Cl pairs or molecules. Each ion is surrounded by six ions of the opposite charge.</li>
+        <li>Explaining a melting point difference with "stronger bonds" and nothing else. Say why: larger charges, smaller ions, Coulomb's law.</li>
+        <li>Comparing sizes when the charges differ. Charge usually dominates: CaO beats NaF even though Ca²⁺ is about the same size as Na⁺.</li>
+        <li>Using electronegativity to explain lattice strength. The AP argument is Coulombic: charge and distance.</li>
+        <li>Saying ionic solids bend like metals. Layers can't slide past each other without bringing like charges together.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 2.3. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-2.html">Unit 2 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = Lab.el;
+  function sup(q, sign) { var D = { 1: "", 2: "²", 3: "³" }; return D[q] + (sign === "+" ? "⁺" : "⁻"); }
+
+  // ---------- Data: ionic radii (pm, six-coordinate), lattice energy (kJ/mol), melting point (°C) ----------
+  var C = [
+    { id: "NaF", c: ["Na", 1, 102], a: ["F", 1, 133], le: 923, mp: 996 },
+    { id: "NaCl", c: ["Na", 1, 102], a: ["Cl", 1, 181], le: 786, mp: 801 },
+    { id: "NaBr", c: ["Na", 1, 102], a: ["Br", 1, 196], le: 747, mp: 747 },
+    { id: "NaI", c: ["Na", 1, 102], a: ["I", 1, 220], le: 704, mp: 661 },
+    { id: "KCl", c: ["K", 1, 138], a: ["Cl", 1, 181], le: 715, mp: 771 },
+    { id: "KBr", c: ["K", 1, 138], a: ["Br", 1, 196], le: 682, mp: 734 },
+    { id: "MgO", c: ["Mg", 2, 72], a: ["O", 2, 140], le: 3795, mp: 2825 },
+    { id: "CaO", c: ["Ca", 2, 100], a: ["O", 2, 140], le: 3414, mp: 2613 }
+  ];
+  C.forEach(function (x) { x.d = x.c[2] + x.a[2]; x.rel = (x.c[1] * x.a[1] / x.d) / (1 / 283); x.cn = x.c[0] + sup(x.c[1], "+"); x.an = x.a[0] + sup(x.a[1], "−"); });
+  function byId(id) { return C.filter(function (x) { return x.id === id; })[0]; }
+
+  var S = { cmp: "NaCl", state: "solid", shift: 0, yaw: 35, pitch: -22, nbr: true, key: null };
+
+  // ---------- 2D layer ----------
+  var lsvg = document.getElementById("layer"), LW = 440, LH = 370;
+  var ROWS = 6, COLS = 8, X0 = 30, X1 = 410, Y0 = 70, Y1 = 316;
+  var parts = [], raf = null, lastT = 0;
+  function spacing() { return Math.min((X1 - X0) / COLS, (Y1 - Y0) / ROWS); }
+  function buildParticles() {
+    var cmp = byId(S.cmp); parts = [];
+    var sp = spacing();
+    if (S.state === "solid") {
+      for (var r = 0; r < ROWS; r++) for (var c = -1; c <= COLS; c++) {
+        parts.push({ cat: (r + c + 2) % 2 === 0, r: r, c: c, x: 0, y: 0 });
+      }
+    } else {
+      var n = S.state === "molten" ? 34 : 12, seed = 11;
+      function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+      var nc = n / 2, na = n / 2;
+      if (cmp.c[1] !== cmp.a[1]) { /* all compounds here are 1:1 */ }
+      for (var i = 0; i < n; i++) {
+        parts.push({ cat: i < nc, x: X0 + 20 + rnd() * (X1 - X0 - 40), y: Y0 + 16 + rnd() * (Y1 - Y0 - 32), vx: 0, vy: 0, ph: rnd() * 6.28 });
+      }
+    }
+  }
+  function ionRadiusPx(cmp, cat) {
+    var sp = spacing(), sc = sp / cmp.d;              // touching along a row in the solid
+    var rr = (cat ? cmp.c[2] : cmp.a[2]) * sc;
+    return S.state === "aq" ? rr * 0.8 : rr;
+  }
+  function drawLayer(t) {
+    var cmp = byId(S.cmp), sp = spacing();
+    lsvg.setAttribute("viewBox", "0 0 " + LW + " " + LH);
+    while (lsvg.firstChild) lsvg.removeChild(lsvg.firstChild);
+    var defs = el("defs", {}, lsvg);
+    var cp = el("clipPath", { id: "layer-clip" }, defs);
+    var OX = (X0 + X1 - COLS * sp) / 2;
+    if (S.state === "solid") el("rect", { x: OX - 1, y: 4, width: COLS * sp + 2, height: Y1 + 10 }, cp);
+    else el("rect", { x: X0 - 4, y: 4, width: X1 - X0 + 8, height: Y1 + 10 }, cp);
+    // electrodes
+    var conducts = S.state !== "solid";
+    el("rect", { x: 6, y: Y0 - 6, width: 12, height: Y1 - Y0 + 12, rx: 3, fill: "var(--ghost)" }, lsvg);
+    el("rect", { x: LW - 18, y: Y0 - 6, width: 12, height: Y1 - Y0 + 12, rx: 3, fill: "var(--ghost)" }, lsvg);
+    el("text", { x: 12, y: Y0 - 12, "text-anchor": "middle", style: "fill:var(--ink); font-size:16px; font-weight:700" }, lsvg, "−");
+    el("text", { x: LW - 12, y: Y0 - 12, "text-anchor": "middle", style: "fill:var(--ink); font-size:16px; font-weight:700" }, lsvg, "+");
+    // wire + bulb along the bottom
+    var by = LH - 22;
+    el("path", { d: "M12 " + (Y1 + 6) + " V" + by + " H" + (LW / 2 - 14) + " M" + (LW / 2 + 14) + " " + by + " H" + (LW - 12) + " V" + (Y1 + 6), fill: "none", stroke: "var(--muted)", "stroke-width": 2 }, lsvg);
+    el("circle", { cx: LW / 2, cy: by, r: 12, fill: conducts ? "var(--c1)" : "none", "fill-opacity": conducts ? 0.85 : 1, stroke: conducts ? "var(--c1)" : "var(--muted)", "stroke-width": 2 }, lsvg);
+    if (conducts) [0, 45, 90, 135, 180, 225, 270, 315].forEach(function (a) {
+      var rad = a * Math.PI / 180;
+      el("line", { x1: LW / 2 + Math.cos(rad) * 16, y1: by + Math.sin(rad) * 16, x2: LW / 2 + Math.cos(rad) * 22, y2: by + Math.sin(rad) * 22, stroke: "var(--c1)", "stroke-width": 2 }, lsvg);
+    });
+    el("text", { x: LW / 2 + 28, y: by - 6, style: "fill:var(--ink); font-size:12px; font-weight:600" }, lsvg, conducts ? "bulb lights" : "bulb dark");
+    if (S.state === "aq") el("rect", { x: X0 - 4, y: Y0 - 8, width: X1 - X0 + 8, height: Y1 - Y0 + 16, rx: 8, fill: "var(--c2)", opacity: 0.07 }, lsvg);
+    var g = el("g", { "clip-path": "url(#layer-clip)" }, lsvg);
+    var rc = ionRadiusPx(cmp, true), ra = ionRadiusPx(cmp, false);
+    function ion(x, y, cat, dim) {
+      var r = cat ? rc : ra, col = cat ? "var(--accent)" : "var(--c4)";
+      el("circle", { cx: x, cy: y, r: r - 0.6, fill: col, "fill-opacity": dim ? 0.12 : 0.3, stroke: col, "stroke-width": 1.5 }, g);
+      el("text", { x: x, y: y + 4, "text-anchor": "middle", style: "fill:var(--ink); font-size:" + (r > 15 ? 12 : 10) + "px; font-weight:600" }, g, cat ? "+" : "−");
+    }
+    if (S.state === "solid") {
+      var lift = S.shift >= 0.85 ? (S.shift - 0.85) / 0.15 * 30 : 0;
+      var midY = Y0 + 3 * sp;
+      parts.forEach(function (p) {
+        var top = p.r < 3;
+        var jx = Lab.reduceMotion ? 0 : Math.sin(t / 180 + p.r * 1.3 + p.c * 2.1) * 1.2;
+        var jy = Lab.reduceMotion ? 0 : Math.cos(t / 210 + p.r * 2.7 + p.c * 0.9) * 1.2;
+        var x = OX + sp / 2 + (p.c + (top ? S.shift : 0)) * sp + jx;
+        var y = Y0 + sp / 2 + p.r * sp + jy - (top ? lift : 0);
+        ion(x, y, p.cat);
+      });
+      if (S.shift > 0.6) {
+        // like charges meeting across the slip plane
+        for (var c = 0; c < COLS; c++) {
+          var x = OX + sp / 2 + c * sp + S.shift * sp;
+          var yTop = Y0 + sp / 2 + 2 * sp - lift, yBot = Y0 + sp / 2 + 3 * sp;
+          if (x < OX || x > OX + COLS * sp) continue;
+          var my = (yTop + yBot) / 2;
+          el("path", { d: "M" + x + " " + (my - 5) + " l-4 6 h8 z M" + x + " " + (my + 5) + " l-4 -6 h8 z", fill: "var(--bad)", opacity: Math.min(1, (S.shift - 0.6) / 0.3) }, g);
+        }
+        if (lift > 0) el("text", { x: LW / 2, y: 36, "text-anchor": "middle", style: "fill:var(--bad); font-size:13px; font-weight:700" }, lsvg, "Like charges repel: the crystal splits along the dashed plane");
+      }
+      el("line", { x1: OX, x2: OX + COLS * sp, y1: midY - lift / 2, y2: midY - lift / 2, stroke: "var(--muted)", "stroke-width": 1, "stroke-dasharray": "4 4", opacity: S.shift > 0 ? 0.8 : 0 }, lsvg);
+    } else {
+      parts.forEach(function (p) {
+        var r = p.cat ? rc : ra;
+        if (S.state === "aq") {
+          // hydration shell: O end (larger, red-ish) toward cations, H ends toward anions
+          for (var k = 0; k < 4; k++) {
+            var ang = k * Math.PI / 2 + p.ph, dist = r + (p.cat ? 8 : 10);
+            var wx = p.x + Math.cos(ang) * dist, wy = p.y + Math.sin(ang) * dist;
+            var hOut = p.cat ? 1 : -1;   // H atoms point away from cations, toward anions
+            el("circle", { cx: wx, cy: wy, r: 4.5, fill: "var(--c2)", "fill-opacity": 0.55 }, g);
+            [0.75, -0.75].forEach(function (da) {
+              var hx = wx + Math.cos(ang + da * hOut) * 5.5 * hOut, hy = wy + Math.sin(ang + da * hOut) * 5.5 * hOut;
+              el("circle", { cx: hx, cy: hy, r: 2.4, fill: "var(--c2)", "fill-opacity": 0.9 }, g);
+            });
+          }
+        }
+        ion(p.x, p.y, p.cat);
+      });
+      el("text", { x: LW / 2, y: 30, "text-anchor": "middle", style: "font-size:12px; fill:var(--ink)" }, lsvg, "cations drift to the − electrode, anions to the +");
+    }
+    if (S.state === "solid") el("text", { x: LW / 2, y: 18, "text-anchor": "middle", style: "font-size:12px; fill:var(--ink)" }, lsvg, S.shift > 0 ? "top half pushed " + S.shift.toFixed(2) + " ion spacings" : "ions vibrate in fixed positions");
+  }
+  function stepParticles(dt) {
+    if (S.state === "solid") return;
+    var sp = S.state === "molten" ? 1 : 0.8, drift = 0.009;
+    parts.forEach(function (p) {
+      p.vx += (Math.random() - 0.5) * 0.12 * sp + (p.cat ? -drift : drift);
+      p.vy += (Math.random() - 0.5) * 0.12 * sp;
+      p.vx *= 0.92; p.vy *= 0.92;
+      p.x += p.vx * dt / 16; p.y += p.vy * dt / 16;
+      if (p.y < Y0 + 12) { p.y = Y0 + 12; p.vy = Math.abs(p.vy); }
+      if (p.y > Y1 - 12) { p.y = Y1 - 12; p.vy = -Math.abs(p.vy); }
+      if (p.cat && p.x < X0 + 8) p.x = X1 - 10;      // reaches the − electrode, re-enters on the right
+      if (!p.cat && p.x > X1 - 8) p.x = X0 + 10;
+    });
+    // keep particles from overlapping (dissolved ions keep room for their water shells)
+    var cmp = byId(S.cmp), rc = ionRadiusPx(cmp, true), ra = ionRadiusPx(cmp, false), pad = S.state === "aq" ? 22 : 1;
+    for (var i = 0; i < parts.length; i++) for (var j = i + 1; j < parts.length; j++) {
+      var a = parts[i], b = parts[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      var min = (a.cat ? rc : ra) + (b.cat ? rc : ra) + pad;
+      if (d < min) { var push = (min - d) / 2 / d; a.x -= dx * push; a.y -= dy * push; b.x += dx * push; b.y += dy * push; }
+    }
+  }
+  function loop(t) {
+    var dt = lastT ? Math.min(50, t - lastT) : 16; lastT = t;
+    stepParticles(dt); drawLayer(t);
+    raf = requestAnimationFrame(loop);
+  }
+  function startLoop() {
+    if (raf) cancelAnimationFrame(raf); raf = null; lastT = 0;
+    if (Lab.reduceMotion) {
+      if (S.state !== "solid") for (var i = 0; i < 40; i++) stepParticles(16);
+      drawLayer(0);
+    } else raf = requestAnimationFrame(loop);
+  }
+
+  // ---------- 3D cube ----------
+  var csvg = document.getElementById("cube"), CW = 440, CH = 360;
+  function drawCube() {
+    var cmp = byId(S.cmp);
+    csvg.setAttribute("viewBox", "0 0 " + CW + " " + CH);
+    while (csvg.firstChild) csvg.removeChild(csvg.firstChild);
+    var defs = el("defs", {}, csvg);
+    [["g-cat", "var(--accent)"], ["g-an", "var(--c4)"]].forEach(function (d) {
+      var rg = el("radialGradient", { id: d[0], cx: "0.38", cy: "0.34", r: "0.75" }, defs);
+      el("stop", { offset: "0", style: "stop-color:#ffffff; stop-opacity:.7" }, rg);
+      el("stop", { offset: "0.35", style: "stop-color:" + d[1] + "; stop-opacity:.75" }, rg);
+      el("stop", { offset: "1", style: "stop-color:" + d[1] }, rg);
+    });
+    var A = 92;   // px between neighboring ion centers
+    var sc = A / cmp.d, ry = S.yaw * Math.PI / 180, rp = S.pitch * Math.PI / 180;
+    var cy = Math.cos(ry), sy = Math.sin(ry), cpp = Math.cos(rp), sp = Math.sin(rp);
+    function P(x, y, z) {
+      var x1 = x * cy - z * sy, z1 = x * sy + z * cy;
+      var y2 = y * cpp - z1 * sp, z2 = y * sp + z1 * cpp;
+      var f = 700 / (700 - z2);
+      return { x: CW / 2 + x1 * f, y: CH / 2 + 4 - y2 * f, z: z2, f: f };
+    }
+    var items = [];
+    // lattice lines along the cube edges (drawn first, faint)
+    for (var a = -1; a <= 1; a++) for (var b = -1; b <= 1; b++) {
+      [[[-1, a, b], [1, a, b]], [[a, -1, b], [a, 1, b]], [[a, b, -1], [a, b, 1]]].forEach(function (L) {
+        var p1 = P(L[0][0] * A, L[0][1] * A, L[0][2] * A), p2 = P(L[1][0] * A, L[1][1] * A, L[1][2] * A);
+        el("line", { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, stroke: "var(--rule)", "stroke-width": 1 }, csvg);
+      });
+    }
+    for (var i = -1; i <= 1; i++) for (var j = -1; j <= 1; j++) for (var k = -1; k <= 1; k++) {
+      var cat = ((i + j + k) % 2 + 2) % 2 === 0;
+      var p = P(i * A, j * A, k * A), dist = Math.abs(i) + Math.abs(j) + Math.abs(k);
+      items.push({ p: p, cat: cat, center: dist === 0, nb: dist === 1 });
+    }
+    items.sort(function (u, v) { return u.p.z - v.p.z; });
+    var spread = 0.62;   // ions shrunk so the pattern is visible
+    items.forEach(function (it) {
+      var r = (it.cat ? cmp.c[2] : cmp.a[2]) * sc * spread * it.p.f;
+      var dim = S.nbr && !(it.center || it.nb);
+      el("circle", { cx: it.p.x, cy: it.p.y, r: r, fill: "url(#" + (it.cat ? "g-cat" : "g-an") + ")", opacity: dim ? 0.22 : 1, stroke: (S.nbr && it.center) ? "var(--c1)" : "none", "stroke-width": 3 }, csvg);
+      if (!dim && r > 11) el("text", { x: it.p.x, y: it.p.y + 4, "text-anchor": "middle", style: "fill:var(--surface); font-size:" + (r > 18 ? 12 : 10) + "px; font-weight:700" }, csvg, it.cat ? cmp.c[0] : cmp.a[0]);
+    });
+    el("text", { x: CW / 2, y: CH - 8, "text-anchor": "middle", style: "font-size:11px" }, csvg, S.nbr ? "Center " + cmp.cn + " (orange ring): 6 nearest neighbors, all " + cmp.an : "Ions shrunk to show the pattern; in the crystal they touch");
+  }
+  // drag to rotate
+  (function () {
+    var drag = null;
+    csvg.addEventListener("pointerdown", function (e) { drag = { x: e.clientX, y: e.clientY, yaw: S.yaw, pitch: S.pitch }; csvg.setPointerCapture(e.pointerId); });
+    csvg.addEventListener("pointermove", function (e) {
+      if (!drag) return;
+      S.yaw = ((drag.yaw + (e.clientX - drag.x) * 0.6) % 360 + 360) % 360;
+      S.pitch = Math.max(-80, Math.min(80, drag.pitch - (e.clientY - drag.y) * 0.5));
+      drawCube(); syncRot();
+    });
+    function end() { drag = null; }
+    csvg.addEventListener("pointerup", end); csvg.addEventListener("pointercancel", end);
+  })();
+
+  // ---------- Lattice energy chart ----------
+  function drawLE() {
+    var sorted = C.slice().sort(function (a, b) { return b.rel - a.rel; });
+    var F = Lab.bars(document.getElementById("le"), { x: [-0.6, 7.6], y: [0, 4400], xLabel: "", yLabel: "Lattice energy (kJ/mol)",
+      xTicks: [0, 1, 2, 3, 4, 5, 6, 7], yTicks: [0, 1000, 2000, 3000, 4000], fmtX: function (i) { return sorted[i].id; }, fmtY: String, width: 440, height: 290,
+      bars: sorted.map(function (x, i) { return { x: i, y: x.le, width: 0.62, color: x.id === S.cmp ? "var(--accent)" : "var(--ghost)", label: String(x.le) }; }) });
+    sorted.forEach(function (x, i) {
+      el("text", { x: F.sx(i), y: F.H - F.M.b + 31, "text-anchor": "middle", style: "font-size:10px; fill:var(--c1); font-weight:600" }, F.svg, x.rel.toFixed(2));
+    });
+  }
+
+  // ---------- Readouts and story ----------
+  function story() {
+    var x = byId(S.cmp), li = [], end;
+    var html = "<p><b>" + x.id + ": " + x.cn + " and " + x.an + ".</b> ";
+    if (S.state === "solid") {
+      if (S.shift === 0) {
+        html += "Each " + x.cn + " is surrounded by " + x.an + " ions and each " + x.an + " by " + x.cn + " ions. Neighbors always have opposite charges, which maximizes attraction and keeps like charges apart.</p>";
+        li.push("In 3D, every ion has <b>6 nearest neighbors</b> of the opposite charge (turn on the highlight and rotate the model). There are no " + x.id + " molecules; the formula only gives the 1 : 1 ratio of ions.");
+        li.push("The " + x.cn + " ion (" + x.c[2] + " pm) is drawn " + (x.c[2] < x.a[2] ? "smaller than" : "larger than") + " the " + x.an + " ion (" + x.a[2] + " pm). Cations lose electrons and shrink; anions gain electrons and grow.");
+        li.push("The ions only vibrate in place. With no mobile charged particles, <b>solid " + x.id + " does not conduct electricity</b>.");
+        end = "<b>AP answer:</b> in an ionic solid the cations and anions are arranged in a 3D lattice where each ion is surrounded by ions of opposite charge, maximizing attractions and minimizing repulsions.";
+      } else if (S.shift < 0.6) {
+        html += "A force pushes the top half of the crystal " + S.shift.toFixed(2) + " ion spacings to the right.</p>";
+        li.push("The ions across the dashed plane are no longer sitting directly over oppositely charged ions, so the attraction holding the two halves together weakens.");
+        li.push("Keep pushing. At one full spacing, every ion will sit directly over an ion with the same charge.");
+        end = "<b>AP answer:</b> shifting layers of an ionic crystal moves ions out of their most attractive positions.";
+      } else {
+        html += "The top half has moved " + S.shift.toFixed(2) + " ion spacings. Cations now line up across from cations and anions across from anions.</p>";
+        li.push("The like charges across the plane (red marks) <b>repel</b>. Instead of bending, the crystal splits along this plane" + (S.shift >= 0.85 ? ", as shown." : " once the shift reaches one spacing."));
+        li.push("This is why ionic solids are <b>brittle</b>. Metals are different: their cations sit in a sea of electrons, so layers can slide without lining up like charges (topic 2.4).");
+        end = "<b>AP answer:</b> ionic solids are brittle because a shift of one layer brings ions of the same charge next to each other, and the resulting repulsion splits the crystal.";
+      }
+    } else if (S.state === "molten") {
+      html += "Heating to " + x.mp + " °C gives the ions enough energy to break out of the lattice. The liquid still contains only ions, now free to move.</p>";
+      li.push("Mobile ions carry charge: cations drift toward the negative electrode and anions toward the positive electrode. <b>Molten " + x.id + " conducts electricity</b> and the bulb lights.");
+      li.push("The charge is carried by ions, not by free electrons.");
+      li.push("A melting point of " + x.mp + " °C reflects how much energy it takes to overcome the Coulombic attractions in the lattice (lattice energy " + x.le + " kJ/mol).");
+      end = "<b>AP answer:</b> molten ionic compounds conduct electricity because the ions are free to move and carry charge.";
+    } else {
+      html += "Water pulls the ions out of the lattice. Each dissolved ion is surrounded by water molecules.</p>";
+      li.push("The partially negative O ends of water face the cations, and the partially positive H ends face the anions (ion–dipole attractions, topic 3.7).");
+      li.push("The separated, hydrated ions move freely, so an <b>aqueous solution of " + x.id + " conducts electricity</b>.");
+      end = "<b>AP answer:</b> an aqueous solution of an ionic compound conducts because the dissolved ions are mobile charged particles.";
+    }
+    li.push("Coulomb's law: |q₁q₂|/r = " + (x.c[1] * x.a[1]) + "/" + x.d + " pm, which is <b>" + x.rel.toFixed(2) + " times</b> the value for NaCl. Lattice energy: " + x.le + " kJ/mol (NaCl: 786).");
+    return html + "<ul>" + li.map(function (s) { return "<li>" + s + "</li>"; }).join("") + "</ul><p>" + end + "</p>";
+  }
+  var elShift = document.getElementById("s-shift"), elRot = document.getElementById("s-rot"), cmpBtns = {}, scBtns = {};
+  var stBtns = { solid: document.getElementById("st-solid"), molten: document.getElementById("st-molten"), aq: document.getElementById("st-aq") };
+  function syncRot() { elRot.value = Math.round(S.yaw / 5) * 5; document.getElementById("o-rot").textContent = Math.round(S.yaw) + "°"; }
+  function render() {
+    var x = byId(S.cmp);
+    drawCube(); drawLE(); syncRot();
+    elShift.value = S.shift; elShift.disabled = S.state !== "solid";
+    document.getElementById("o-shift").textContent = S.shift.toFixed(2);
+    document.getElementById("shift-hint").textContent = S.state === "solid" ? "Solid only. Measured in ion spacings." : "Switch back to Solid to push a layer.";
+    document.getElementById("layer-sub").textContent = S.state === "solid" ? "solid" : S.state === "molten" ? "molten" : "aqueous solution";
+    Object.keys(stBtns).forEach(function (k) { stBtns[k].setAttribute("aria-pressed", S.state === k ? "true" : "false"); });
+    Object.keys(cmpBtns).forEach(function (k) { cmpBtns[k].setAttribute("aria-pressed", S.cmp === k ? "true" : "false"); });
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    document.getElementById("r-ions").textContent = x.cn + " " + x.an;
+    document.getElementById("r-ions2").textContent = "radii " + x.c[2] + " pm and " + x.a[2] + " pm";
+    document.getElementById("r-d").textContent = x.d + " pm";
+    document.getElementById("r-d2").textContent = "|q₁q₂|/r = " + x.rel.toFixed(2) + " × NaCl";
+    document.getElementById("r-le").textContent = x.le + " kJ/mol";
+    document.getElementById("r-le2").textContent = "melting point " + x.mp + " °C";
+    var cond = S.state !== "solid";
+    document.getElementById("r-c").innerHTML = cond ? '<span class="pill lr">Yes</span>' : '<span class="pill infl">No</span>';
+    document.getElementById("r-c2").textContent = cond ? "mobile ions carry charge" : "ions locked in the lattice";
+    document.getElementById("story").innerHTML = story();
+    if (!raf || Lab.reduceMotion) drawLayer(0);
+  }
+  elShift.addEventListener("input", function () { S.shift = +elShift.value; S.key = null; render(); if (Lab.reduceMotion) drawLayer(0); });
+  elRot.addEventListener("input", function () { S.yaw = +elRot.value; drawCube(); syncRot(); });
+  document.getElementById("nbr").addEventListener("change", function (e) { S.nbr = e.target.checked; drawCube(); });
+  function setState(st) { S.state = st; if (st !== "solid") S.shift = 0; buildParticles(); startLoop(); render(); }
+  Object.keys(stBtns).forEach(function (k) { stBtns[k].addEventListener("click", function () { S.key = null; setState(k); }); });
+  C.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.id; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S.cmp = x.id; S.key = null; buildParticles(); render(); });
+    document.getElementById("sc-cmp").appendChild(b); cmpBtns[x.id] = b;
+  });
+  var stopShift = function () {};
+  var SC = [
+    { key: "brittle", name: "Hit it with a hammer", run: function () {
+      S.cmp = "NaCl"; if (S.state !== "solid") setState("solid");
+      stopShift(); var s0 = S.shift;
+      stopShift = Lab.animate(1400, function (t) { S.shift = Math.round((s0 + (1 - s0) * t) * 100) / 100; render(); }, function () { S.shift = 1; render(); });
+    } },
+    { key: "melt", name: "Melt it", run: function () { S.cmp = "NaCl"; setState("molten"); } },
+    { key: "dissolve", name: "Dissolve it in water", run: function () { S.cmp = "NaCl"; setState("aq"); } },
+    { key: "mgo", name: "MgO vs. NaCl", run: function () { S.cmp = "MgO"; if (S.state !== "solid") setState("solid"); S.shift = 0; render(); } },
+    { key: "nai", name: "Biggest anion: NaI", run: function () { S.cmp = "NaI"; if (S.state !== "solid") setState("solid"); S.shift = 0; render(); } }
+  ];
+  SC.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { x.run(); S.key = x.key; buildParticlesIfNeeded(); render(); });
+    document.getElementById("sc").appendChild(b); scBtns[x.key] = b;
+  });
+  function buildParticlesIfNeeded() { if (!parts.length) buildParticles(); }
+
+  // table
+  document.getElementById("tbody").innerHTML = C.map(function (x) {
+    return "<tr><td>" + Lab.fmla(x.id) + "</td><td>" + x.cn + ", " + x.an + "</td><td>" + x.c[2] + " + " + x.a[2] + " = " + x.d + "</td><td>" + x.rel.toFixed(2) + "</td><td>" + x.le + "</td><td>" + x.mp + "</td></tr>";
+  }).join("");
+
+  buildParticles(); startLoop(); render();
+  document.addEventListener("visibilitychange", function () { if (document.hidden) { if (raf) cancelAnimationFrame(raf); raf = null; } else startLoop(); });
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "A student draws a particle diagram of solid NaCl. Which feature should the diagram include?",
+      o: ["Each Na⁺ ion is surrounded by Cl⁻ ions, and the Cl⁻ ions are drawn larger than the Na⁺ ions", "Separate Na–Cl pairs, each representing one NaCl molecule", "Na⁺ ions drawn larger than Cl⁻ ions, because Na has more protons", "Na⁺ and Cl⁻ ions arranged randomly, with some Na⁺ ions next to other Na⁺ ions"], c: 0,
+      w: "Ionic solids are lattices in which each ion is surrounded by ions of opposite charge, and Cl⁻ (181 pm) is larger than Na⁺ (102 pm). There are no NaCl molecules (choice B). Na⁺ has lost its whole third shell, so it is smaller than Cl⁻, which has gained an electron; nuclear charge alone does not decide size (choice C)." },
+    { s: "Which of the following best explains why a crystal of KBr shatters when struck with a hammer?",
+      o: ["The force breaks the covalent bonds between K and Br atoms.", "The delocalized electrons are knocked out of the crystal.", "Shifting one layer of ions brings ions of the same charge next to each other, and their repulsion splits the crystal.", "The hammer melts the crystal at the point of impact."], c: 2,
+      w: "A displacement of one ion position lines up K⁺ with K⁺ and Br⁻ with Br⁻ across the slip plane. The like charges repel and the crystal cleaves. Choice A is wrong because the bonding is ionic, and choice B describes a metal." },
+    { s: "Solid NaCl does not conduct electricity, but molten NaCl does. Which statement explains this?",
+      o: ["Melting frees electrons from the Cl⁻ ions, and the electrons carry the current.", "In the liquid the Na⁺ and Cl⁻ ions are free to move and carry charge; in the solid they are held in fixed positions.", "Melting converts the ions into neutral Na and Cl atoms, which conduct.", "Molten NaCl contains NaCl molecules that are polar."], c: 1,
+      w: "Conduction requires mobile charged particles. In the solid the ions only vibrate in place; in the melt the same ions can move toward the electrodes. The charge carriers are ions, not electrons (choice A)." },
+    { s: "Which of the following compounds is predicted to have the highest melting point?",
+      o: ["NaCl", "KCl", "NaF", "MgO"], c: 3,
+      w: "MgO is made of Mg²⁺ and O²⁻. The charge product (4) is four times that of the 1+/1− compounds, and both ions are small, so by Coulomb's law the attraction is much stronger. MgO melts at about 2825 °C. NaF (choice C) has the strongest attraction of the 1+/1− salts, but charge outweighs size here." },
+    { s: "NaF has a higher melting point than NaCl. Which is the best explanation?",
+      o: ["F is more electronegative than Cl, so it forms stronger covalent bonds with Na.", "F⁻ is smaller than Cl⁻, so the ion centers are closer and the Coulombic attraction is stronger.", "F⁻ has a larger charge than Cl⁻.", "NaF has more ions per formula unit than NaCl."], c: 1,
+      w: "Both compounds have 1+ and 1− ions, so the difference comes from distance. F⁻ (133 pm) has one fewer electron shell than Cl⁻ (181 pm), so the Na⁺–F⁻ distance is shorter and the attraction (∝ q₁q₂/r) is stronger. Choice A uses electronegativity and covalent bonding, which is not the AP argument for ionic solids. Choice C is false: both are 1−." },
+    { s: "In the sodium chloride crystal structure, how many Cl⁻ ions are nearest neighbors of each Na⁺ ion?",
+      o: ["4", "6", "8", "12"], c: 1,
+      w: "In the rock-salt structure each Na⁺ has Cl⁻ neighbors above, below, left, right, front, and back: 6 in all (an octahedral arrangement). Each Cl⁻ likewise has 6 Na⁺ neighbors. The 8 of choice C belongs to the CsCl structure, which you do not need to know." },
+    { s: "Which set of properties is typical of an ionic solid?",
+      o: ["Low melting point, soft, and conducts electricity as a solid", "Malleable, ductile, and conducts electricity as a solid", "High melting point, brittle, and conducts electricity only when molten or dissolved", "High melting point, brittle, and conducts electricity as a solid"], c: 2,
+      w: "Strong Coulombic attractions throughout the lattice give high melting points and low vapor pressures; like-charge repulsion after a layer shift makes the solid brittle; ions conduct only when they can move. Choice B describes a metal, and choice D is wrong about the solid conducting." },
+    { s: "CaO and KCl have the same crystal structure. CaO melts at about 2613 °C and KCl at about 771 °C. Which statement best explains the difference?",
+      o: ["CaO contains covalent bonds, while KCl is ionic.", "Ca is a heavier atom than K, so CaO needs more energy to melt.", "The O²⁻ ion is larger than the Cl⁻ ion, so it attracts Ca²⁺ more strongly.", "The ions in CaO have larger charges (2+ and 2−) and are smaller, so the Coulombic attraction between them is much stronger."], c: 3,
+      w: "Ca²⁺ (100 pm) is smaller than K⁺ (138 pm) and O²⁻ (140 pm) is smaller than Cl⁻ (181 pm), and the charge product is 4 instead of 1. Both factors raise q₁q₂/r, so more energy is needed to separate the ions. Choice C is backward: O²⁻ is the smaller ion, and smaller ions attract more strongly. Mass (choice B) is not the reason." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("2.3");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [2], topic: "2.3", compact: true, storageKey: "topic-2.3" });</script>
+</body>
+</html>

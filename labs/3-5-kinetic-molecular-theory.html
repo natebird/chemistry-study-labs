@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kinetic Molecular Theory Study Lab</title>
+<meta name="description" content="Compare Maxwell–Boltzmann speed distributions for two gas samples as you change temperature and molar mass, watch the particles move, and see why average kinetic energy depends only on kelvin temperature.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"], .chips button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { padding: 4px 11px; font-size: .84rem; }
+.chips.b button[aria-pressed="true"] { background: var(--paper); border-color: var(--c1); color: var(--c1); }
+.chips button:disabled { opacity: .45; cursor: default; }
+.ctl[hidden] { display: none; }
+.check { display: flex; gap: 8px; align-items: center; font-size: .9rem; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.va { color: var(--accent); } .vb { color: var(--c1); }
+.legend .l-gb { color: var(--c1); }
+.legend .l-sh::before { height: 10px; opacity: .35; background: var(--muted); }
+.legend .l-sh { color: var(--muted); }
+.lab-bar > * { min-width: 0; max-width: 100%; }
+#box .pa { fill: var(--accent); } #box .pb { fill: var(--c1); }
+@media (max-width: 520px) {
+  .lab-bar .eqn { white-space: normal; }
+  svg.chart text { font-size: 14px; }
+  svg.chart .lbl { font-size: 14px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 3 · Topic 3.5</span>
+  <h1>Kinetic Molecular Theory Study Lab</h1>
+  <p class="lede">The particles in a gas do not all move at the same speed. A Maxwell–Boltzmann distribution shows how many particles have each speed, and its shape depends on just two things: kelvin temperature and molar mass. Set up two gas samples, compare their curves and particles, and see why the average kinetic energy depends only on temperature.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Two gas samples, side by side</h2>
+    <p>Sample A is drawn in blue and sample B in orange. The curves are calculated from the Maxwell–Boltzmann equation with R = 8.314 J/(mol·K) and molar masses in kg/mol; you will not have to use that equation on the AP exam, only read and compare the curves. The area under every curve is the same, because each one accounts for all of the molecules in its sample.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Maxwell–Boltzmann distribution <small>fraction of molecules vs. speed</small></h3>
+      <svg class="chart" id="mb" role="img" aria-label="Speed distribution curves for gas samples A and B with the most probable speeds marked and the fast tail shaded"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">AP comparisons</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="group">
+        <div class="tag" style="color:var(--accent)">Sample A</div>
+        <div class="chips" id="ga" role="group" aria-label="Gas for sample A"></div>
+        <div class="ctl">
+          <label for="s-ta">Temperature A <output id="o-ta"></output></label>
+          <input type="range" id="s-ta" min="100" max="1000" step="10">
+        </div>
+      </div>
+      <div class="group">
+        <label class="check" for="b-on"><input type="checkbox" id="b-on" checked> <span style="color:var(--c1); font-weight:600">Compare with sample B</span></label>
+        <div class="chips b" id="gb" role="group" aria-label="Gas for sample B"></div>
+        <div class="ctl" id="ctl-tb">
+          <label for="s-tb">Temperature B <output id="o-tb"></output></label>
+          <input type="range" id="s-tb" min="100" max="1000" step="10">
+        </div>
+      </div>
+      <div class="ctl">
+        <label for="s-v">Threshold speed <output id="o-v"></output></label>
+        <input type="range" id="s-v" min="0" max="3000" step="50">
+        <span class="hint">Shades the molecules faster than this, like those with enough energy to react. 0 = off</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-ad">Sample A</span><span class="l-gb">Sample B</span><span class="l-sh">Faster than the threshold</span></div>
+    <div class="eqn">KE<sub>avg</sub> ∝ T (kelvin) &nbsp;·&nbsp; KE = ½mv² &nbsp;·&nbsp; same T → same KE<sub>avg</sub>, lighter → faster</div>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Particle view <small>speeds drawn from each distribution</small></h3>
+      <svg class="chart" id="box" role="img" aria-label="Box of moving gas particles for samples A and B"></svg>
+      <p class="hint" style="font-size:.8rem; color:var(--muted)">Speeds on screen are scaled down (about 1 pixel per second for every 8 m/s). Particles here pass through each other; in a real gas, elastic collisions keep trading energy, but the distribution of speeds stays the same.</p>
+    </div>
+    <div class="card graph-card">
+      <h3>Average kinetic energy <small>per mole, (3/2)RT</small></h3>
+      <svg class="chart" id="ke" role="img" aria-label="Bar chart of the average kinetic energy of samples A and B"></svg>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Sample A speeds</div><div class="v va" id="r-a"></div><div class="sub" id="r-a2"></div></div>
+    <div class="stat"><div class="k">Sample B speeds</div><div class="v vb" id="r-b"></div><div class="sub" id="r-b2"></div></div>
+    <div class="stat"><div class="k">Average KE per molecule</div><div class="v" id="r-ke"></div><div class="sub" id="r-ke2"></div></div>
+    <div class="stat"><div class="k" id="r-fk">Faster than threshold</div><div class="v" id="r-f"></div><div class="sub" id="r-f2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">The model</span><h3>Kinetic molecular theory</h3><p>An ideal gas is modeled as particles in constant, random, straight-line motion. Their own volume is negligible compared with the container, they neither attract nor repel each other, and their collisions are elastic: kinetic energy is exchanged but not lost.</p></div>
+    <div class="card"><span class="tag">KE<sub>avg</sub> ∝ T</span><h3>Temperature is average kinetic energy</h3><p>The average kinetic energy of the particles is directly proportional to the kelvin temperature. Double the kelvin temperature and you double the average KE. At the same temperature, every gas has the same average KE, whatever its molar mass.</p></div>
+    <div class="card"><span class="tag">KE = ½mv²</span><h3>Heavier means slower</h3><p>If two gases have the same average KE, the one with more mass per particle must move more slowly. Average speed is proportional to √(T/M), so a gas with 4 times the molar mass moves at half the average speed at the same temperature.</p></div>
+    <div class="card"><span class="tag">Curve shape</span><h3>Reading the distribution</h3><p>Higher temperature or lower molar mass shifts the peak to higher speed and makes the curve lower and broader. The area stays the same because the number of molecules does not change; the curve spreads out rather than growing.</p></div>
+    <div class="card"><span class="tag">Not one speed</span><h3>A range of speeds</h3><p>Collisions constantly trade energy between particles, so at any moment some are nearly still and some are very fast. Temperature tells you the <b>average</b>; the distribution tells you the spread. The most probable speed (the peak) is a little less than the average speed.</p></div>
+    <div class="card"><span class="tag">Link to kinetics</span><h3>The fast tail</h3><p>Raising the temperature greatly increases the fraction of particles in the high-speed tail. This is why a small temperature rise can speed up a reaction a lot: many more collisions have enough energy to react (topic 5.5).</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Distribution cheat sheet</h2>
+    <p>How each change moves a Maxwell–Boltzmann curve. "Same area" in every row: the curve rescales, it does not gain or lose molecules.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Change</th><th>Peak position</th><th>Peak height and spread</th><th>Average KE</th><th>Average speed</th></tr></thead>
+    <tbody>
+      <tr><td>Raise kelvin T, same gas</td><td><b>Higher speed</b></td><td>Lower and broader</td><td>Increases (∝ T)</td><td>Increases (∝ √T)</td></tr>
+      <tr><td>Lower kelvin T, same gas</td><td>Lower speed</td><td>Taller and narrower</td><td>Decreases</td><td>Decreases</td></tr>
+      <tr><td>Heavier gas, same T</td><td>Lower speed</td><td>Taller and narrower</td><td><b>Same</b></td><td>Lower (∝ 1/√M)</td></tr>
+      <tr><td>Lighter gas, same T</td><td><b>Higher speed</b></td><td>Lower and broader</td><td><b>Same</b></td><td>Higher</td></tr>
+      <tr><td>More molecules of the same gas, same T</td><td>Same</td><td>Same shape if the axis is "fraction of molecules"</td><td>Same</td><td>Same</td></tr>
+      <tr><td>Double kelvin T</td><td>×√2 ≈ 1.41</td><td>Lower and broader</td><td>×2</td><td>×√2 ≈ 1.41</td></tr>
+      <tr><td>Molar mass ×4, same T</td><td>×½</td><td>Taller and narrower</td><td>Same</td><td>×½</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. KMT on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points</h3>
+      <ul>
+        <li>Connect temperature to <b>average</b> kinetic energy: "the higher-temperature sample has greater average KE."</li>
+        <li>At the same temperature, say the average KEs are <b>equal</b>, then use KE = ½mv² to argue the lighter particles must have a greater average speed.</li>
+        <li>When you sketch a second curve for a higher temperature: peak shifted right, lower peak, broader curve, and roughly the same area. Label the curves.</li>
+        <li>Refer to the fraction (or number) of particles with speed or energy above a threshold when linking to reaction rate.</li>
+        <li>Use molar masses from the periodic table to justify speed rankings: compare M, not the number of atoms.</li>
+        <li>Name the KMT assumption that applies (negligible volume, no attractions, elastic collisions) when a question asks why the ideal gas law works.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying heavier gases have more kinetic energy. At the same temperature, average KE is the same for every gas.</li>
+        <li>Drawing the hotter curve taller. The higher-temperature curve is lower and broader, with the same area.</li>
+        <li>Saying all molecules in a sample move at the same speed. There is always a distribution.</li>
+        <li>Saying temperature is proportional to speed. Average KE is proportional to T; average speed is proportional to √T.</li>
+        <li>Using Celsius. Doubling from 20 °C to 40 °C does not double the average KE.</li>
+        <li>Mixing up "more particles" with "faster particles." Adding gas at the same T does not change the speed distribution.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 3.5. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-3.html">Unit 3 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var RJ = Lab.CONST.R_J, NA = Lab.CONST.NA, KB = RJ / NA;
+  var GASES = ["He", "Ne", "N2", "O2", "Ar", "CO2", "Xe"].map(function (f) {
+    return { f: f, u: f.replace(/2/g, "₂"), M: Lab.molarMass(f) };
+  });
+  function gas(f) { return GASES.filter(function (g) { return g.f === f; })[0]; }
+
+  var BASE = { a: "N2", ta: 300, bOn: true, b: "N2", tb: 600, vt: 0 };
+  var S = Object.assign({}, BASE), key = "heat";
+
+  // ---------- Physics ----------
+  function speeds(g, T) {
+    var M = g.M / 1000;
+    return { mp: Math.sqrt(2 * RJ * T / M), avg: Math.sqrt(8 * RJ * T / (Math.PI * M)), rms: Math.sqrt(3 * RJ * T / M), M: M, T: T };
+  }
+  function f(sp, v) { var a = sp.M / (2 * RJ * sp.T); return 4 * Math.PI * Math.pow(a / Math.PI, 1.5) * v * v * Math.exp(-a * v * v); }
+  function erfc(x) {   // Abramowitz & Stegun 7.1.26, |error| < 1.5e-7
+    var t = 1 / (1 + 0.3275911 * x);
+    return t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429)))) * Math.exp(-x * x);
+  }
+  function fracAbove(sp, v) { if (v <= 0) return 1; var x = v / sp.mp; return erfc(x) + 2 / Math.sqrt(Math.PI) * x * Math.exp(-x * x); }
+  function pct(p) { return p >= 0.995 ? "100%" : p >= 0.1 ? (p * 100).toFixed(0) + "%" : p >= 0.001 ? (p * 100).toFixed(1) + "%" : p >= 1e-5 ? (p * 100).toFixed(3) + "%" : "< 0.001%"; }
+  function ms(v) { return Math.round(v).toLocaleString("en-US") + " m/s"; }
+
+  // ---------- Distribution chart ----------
+  var svgMB = document.getElementById("mb");
+  function drawMB(A, B) {
+    var top = Math.max(A.mp, B ? B.mp : 0);
+    var xmax = [1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000].filter(function (x) { return x >= 2.6 * top; })[0] || 6000;
+    var peak = function (sp) { return f(sp, sp.mp); };
+    var ymax = Math.max(peak(A), B ? peak(B) : 0) * 1.18;
+    var step = xmax <= 1500 ? 250 : xmax <= 3000 ? 500 : 1000, ticks = [];
+    for (var x = 0; x <= xmax + 1; x += step) ticks.push(x);
+    var F = Lab.frame(svgMB, { x: [0, xmax], y: [0, ymax], xLabel: "Molecular speed (m/s)", yLabel: "Fraction of molecules", xTicks: ticks, yTicks: [], fmtX: function (v) { return v.toLocaleString("en-US"); }, width: 440, height: 320 });
+    [[A, "var(--accent)", "A"], [B, "var(--c1)", "B"]].forEach(function (c) {
+      var sp = c[0]; if (!sp) return;
+      if (S.vt > 0 && S.vt < xmax) {
+        var pts = [[S.vt, 0]];
+        for (var i = 0; i <= 80; i++) { var v = S.vt + (xmax - S.vt) * i / 80; pts.push([v, f(sp, v)]); }
+        pts.push([xmax, 0]);
+        Lab.el("path", { d: pts.map(function (p, i) { return (i ? "L" : "M") + F.sx(p[0]).toFixed(1) + " " + F.sy(p[1]).toFixed(1); }).join(" ") + "Z", fill: c[1], opacity: 0.25 }, F.g);
+      }
+      Lab.fn(F, function (v) { return f(sp, v); }, c[1], 3, null, 160);
+      Lab.line(F, [[sp.mp, 0], [sp.mp, f(sp, sp.mp)]], c[1], 1.2, "4 4");
+      Lab.el("circle", { cx: F.sx(sp.mp), cy: F.sy(f(sp, sp.mp)), r: 4.5, fill: c[1], stroke: "var(--surface)", "stroke-width": 1.5 }, F.g);
+    });
+    // labels: place each sample's label beside its peak, keeping them apart
+    var lab = [[A, "var(--accent)", "A: " + gas(S.a).u + ", " + S.ta + " K"]];
+    if (B) lab.push([B, "var(--c1)", "B: " + gas(S.b).u + ", " + S.tb + " K"]);
+    var used = [];
+    lab.forEach(function (c) {
+      var x = c[0].mp, y = f(c[0], c[0].mp) + ymax * 0.05;
+      used.forEach(function (u) { if (Math.abs(F.sy(y) - F.sy(u)) < 16) y = u + ymax * 0.08; });
+      used.push(y);
+      var right = F.sx(x) > 260;
+      Lab.tag(F, x + (right ? -1 : 1) * xmax * 0.02, y, c[2], c[1], right ? "end" : "start");
+    });
+    if (S.vt > 0) {
+      Lab.vline(F, Math.min(S.vt, xmax), "var(--muted)", 1.5, "6 4");
+      Lab.tag(F, Math.min(S.vt, xmax) + xmax * 0.015, ymax * 0.93, S.vt > xmax ? "threshold off scale" : "threshold", "var(--muted)", S.vt > xmax * 0.75 ? "end" : "start");
+    }
+  }
+
+  // ---------- KE bars ----------
+  var svgKE = document.getElementById("ke");
+  function drawKE(A, B) {
+    var ka = 1.5 * RJ * S.ta / 1000, kb = B ? 1.5 * RJ * S.tb / 1000 : null;
+    var bars = [{ x: 1, y: ka, color: "var(--accent)", label: ka.toFixed(2), width: 0.8 }];
+    if (B) bars.push({ x: 2, y: kb, color: "var(--c1)", label: kb.toFixed(2), width: 0.8 });
+    var ym = 14, yt = [0, 2, 4, 6, 8, 10, 12, 14];
+    var F = Lab.bars(svgKE, { x: [0.3, 2.7], y: [0, ym], xLabel: "", yLabel: "Average KE (kJ/mol)", xTicks: [], yTicks: yt, fmtY: String, bars: bars, width: 440, height: 320 });
+    Lab.el("text", { x: F.sx(1), y: F.H - F.M.b + 18, "text-anchor": "middle", "class": "lbl", style: "fill:var(--accent)" }, F.svg, "A: " + gas(S.a).u + ", " + S.ta + " K");
+    if (B) Lab.el("text", { x: F.sx(2), y: F.H - F.M.b + 18, "text-anchor": "middle", "class": "lbl", style: "fill:var(--c1)" }, F.svg, "B: " + gas(S.b).u + ", " + S.tb + " K");
+    if (B && S.ta === S.tb) Lab.tag(F, 1.5, ka + 1.6, "equal: same T", "var(--good)", "middle");
+  }
+
+  // ---------- Particle box ----------
+  var svgBox = document.getElementById("box");
+  svgBox.setAttribute("viewBox", "0 0 440 230");
+  Lab.el("rect", { x: 10, y: 10, width: 420, height: 210, fill: "var(--paper)", stroke: "var(--ink)", "stroke-width": 2, rx: 4 }, svgBox);
+  var pg = Lab.el("g", {}, svgBox);
+  var seed = 11;
+  function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+  function gauss() { var u = rnd() || 1e-9, v = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  var P = [];
+  function makeParticles() {
+    while (pg.firstChild) pg.removeChild(pg.firstChild);
+    P = [];
+    ["a", "b"].forEach(function (s) {
+      for (var i = 0; i < 26; i++) {
+        var gx = gauss(), gy = gauss(), gz = gauss(), ang = rnd() * 2 * Math.PI;
+        // u = 3D speed in units of sqrt(RT/M); its distribution is Maxwell–Boltzmann
+        P.push({ s: s, x: 20 + rnd() * 400, y: 20 + rnd() * 190, u: Math.sqrt(gx * gx + gy * gy + gz * gz), dx: Math.cos(ang), dy: Math.sin(ang), el: Lab.el("circle", { "class": "p" + s }, pg) });
+      }
+    });
+  }
+  makeParticles();
+  var scaleK = 1 / 8;   // px per s for each m/s
+  function radius(g) { return 3 + 3.2 * Math.log(g.M) / Math.log(131.29); }
+  function styleParticles() {
+    P.forEach(function (p) {
+      var on = p.s === "a" || S.bOn;
+      p.el.setAttribute("r", on ? radius(gas(p.s === "a" ? S.a : S.b)).toFixed(1) : 0);
+    });
+  }
+  function moveParticles(dt) {
+    var ga = gas(S.a), gb = gas(S.b);
+    var ka = Math.sqrt(RJ * S.ta / (ga.M / 1000)), kb = Math.sqrt(RJ * S.tb / (gb.M / 1000));
+    P.forEach(function (p) {
+      var v = p.u * (p.s === "a" ? ka : kb) * scaleK;
+      p.x += p.dx * v * dt; p.y += p.dy * v * dt;
+      if (p.x < 16) { p.x = 32 - p.x; p.dx = Math.abs(p.dx); } if (p.x > 424) { p.x = 848 - p.x; p.dx = -Math.abs(p.dx); }
+      if (p.y < 16) { p.y = 32 - p.y; p.dy = Math.abs(p.dy); } if (p.y > 214) { p.y = 428 - p.y; p.dy = -Math.abs(p.dy); }
+      p.x = Math.min(424, Math.max(16, p.x)); p.y = Math.min(214, Math.max(16, p.y));
+      p.el.setAttribute("cx", p.x.toFixed(1)); p.el.setAttribute("cy", p.y.toFixed(1));
+    });
+  }
+  moveParticles(0);
+  var visible = true, last = null;
+  if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { visible = es[0].isIntersecting; }).observe(svgBox);
+  function loop(t) {
+    if (last != null && visible) moveParticles(Math.min(0.05, (t - last) / 1000));
+    last = t; requestAnimationFrame(loop);
+  }
+  if (!Lab.reduceMotion) requestAnimationFrame(loop);
+
+  // ---------- Readouts and story ----------
+  function readouts(A, B) {
+    document.getElementById("r-a").textContent = ms(A.mp);
+    document.getElementById("r-a2").textContent = "peak; average " + ms(A.avg) + ", rms " + ms(A.rms);
+    document.getElementById("r-b").textContent = B ? ms(B.mp) : "off";
+    document.getElementById("r-b2").textContent = B ? "peak; average " + ms(B.avg) + ", rms " + ms(B.rms) : "turn on sample B to compare";
+    var kea = 1.5 * KB * S.ta;
+    document.getElementById("r-ke").innerHTML = '<span class="va">' + Lab.sci(kea, 3, true) + " J</span>";
+    document.getElementById("r-ke2").innerHTML = B ? "B: " + Lab.sci(1.5 * KB * S.tb, 3, true) + " J" + (S.ta === S.tb ? " (equal)" : " (ratio " + (S.tb / S.ta).toFixed(2) + " = T<sub>B</sub>/T<sub>A</sub>)") : "(3/2)k<sub>B</sub>T, depends only on T";
+    var fk = document.getElementById("r-fk"), fv = document.getElementById("r-f"), f2 = document.getElementById("r-f2");
+    if (S.vt <= 0) { fk.textContent = "Faster than threshold"; fv.textContent = "off"; f2.textContent = "move the threshold slider"; }
+    else {
+      fk.textContent = "Faster than " + ms(S.vt);
+      fv.innerHTML = '<span class="va">' + pct(fracAbove(A, S.vt)) + "</span>" + (B ? ' · <span class="vb">' + pct(fracAbove(B, S.vt)) + "</span>" : "");
+      f2.textContent = B ? "A · B, share of molecules" : "share of sample A";
+    }
+  }
+  function story(A, B) {
+    var ga = gas(S.a), gb = gas(S.b), html = "", li = [];
+    var nameA = ga.u + " at " + S.ta + " K", nameB = gb.u + " at " + S.tb + " K";
+    if (!B) {
+      html += "<p><b>Sample A: " + nameA + ".</b> The most probable speed is " + ms(A.mp) + " and the average speed is " + ms(A.avg) + ". The average kinetic energy is (3/2)RT = " + (1.5 * RJ * S.ta / 1000).toFixed(2) + " kJ/mol.</p>";
+      li.push("Drag the temperature: a higher temperature shifts the peak to higher speed and makes the curve lower and broader. The area does not change.");
+      li.push("Pick a different gas: a heavier gas at the same temperature has a taller, narrower curve at lower speeds, but exactly the same average KE.");
+    } else {
+      html += "<p><b>A: " + nameA + " vs. B: " + nameB + ".</b></p>";
+      var sameT = S.ta === S.tb, sameG = S.a === S.b;
+      if (sameT && sameG) li.push("The two samples are identical, so the curves lie on top of each other.");
+      else if (sameT) {
+        var light = ga.M < gb.M ? "A" : "B", heavy = light === "A" ? "B" : "A";
+        li.push("Same temperature, so the <b>average kinetic energies are equal</b> (" + (1.5 * RJ * S.ta / 1000).toFixed(2) + " kJ/mol each).");
+        li.push("KE = ½mv², so the lighter particles (" + (light === "A" ? ga.u : gb.u) + ", " + Lab.fmt(Math.min(ga.M, gb.M), 2) + " g/mol) must move faster to have the same KE as the heavier ones (" + (heavy === "A" ? ga.u : gb.u) + ", " + Lab.fmt(Math.max(ga.M, gb.M), 2) + " g/mol). Sample " + light + "'s curve peaks at higher speed and is lower and broader.");
+        li.push("Speed ratio: √(" + Lab.fmt(Math.max(ga.M, gb.M), 2) + " / " + Lab.fmt(Math.min(ga.M, gb.M), 2) + ") = " + Math.sqrt(Math.max(ga.M, gb.M) / Math.min(ga.M, gb.M)).toFixed(2) + ", so the lighter gas's average speed is " + Math.sqrt(Math.max(ga.M, gb.M) / Math.min(ga.M, gb.M)).toFixed(2) + " times as large.");
+      } else if (sameG) {
+        var hot = S.ta > S.tb ? "A" : "B";
+        li.push("Same gas at different temperatures. The hotter sample (" + hot + ") has the <b>greater average KE</b>, " + (Math.max(S.ta, S.tb) / Math.min(S.ta, S.tb)).toFixed(2) + " times as much, because average KE is proportional to kelvin temperature.");
+        li.push("Its curve peaks at a higher speed and is lower and broader: more molecules are very fast, and fewer are near the peak. The areas are equal because each curve accounts for all of the molecules in its sample; the hotter sample's molecules are just spread over a wider range of speeds.");
+        li.push("Average speed grows only as √T: " + ms(A.avg) + " vs. " + ms(B.avg) + ", a ratio of " + (Math.max(A.avg, B.avg) / Math.min(A.avg, B.avg)).toFixed(2) + ".");
+      } else {
+        var keHot = S.ta > S.tb ? "A" : "B", fast = A.avg > B.avg ? "A" : "B";
+        li.push("Different gases at different temperatures. Average KE depends only on T, so sample " + keHot + " (higher T) has the greater average KE: " + (1.5 * RJ * S.ta / 1000).toFixed(2) + " vs. " + (1.5 * RJ * S.tb / 1000).toFixed(2) + " kJ/mol.");
+        li.push("Speed depends on √(T/M). Sample " + fast + " has the greater average speed (" + ms(Math.max(A.avg, B.avg)) + " vs. " + ms(Math.min(A.avg, B.avg)) + ")" + (fast !== keHot ? ", even though it has the <b>smaller</b> average KE. Its particles are light enough to be faster with less energy." : "."));
+      }
+    }
+    if (S.vt > 0) {
+      var fa = fracAbove(A, S.vt), fb = B ? fracAbove(B, S.vt) : null;
+      var t = "Faster than " + ms(S.vt) + ": " + pct(fa) + " of sample A" + (B ? " and " + pct(fb) + " of sample B" : "") + ".";
+      if (B && fa > 0 && fb > 0 && Math.abs(Math.log(fa / fb)) > 0.1) t += " The shaded tail of sample " + (fa > fb ? "A" : "B") + " is " + (Math.max(fa, fb) / Math.min(fa, fb)).toFixed(1) + " times as large. If this threshold were the minimum energy needed to react, that sample would have that many times more effective collisions.";
+      li.push(t);
+    }
+    if (li.length) html += "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
+    var end;
+    if (!B) end = "a higher kelvin temperature means a greater average kinetic energy; the distribution shifts to higher speeds and becomes broader and lower, with the same area.";
+    else if (S.ta === S.tb && S.a !== S.b) end = "at the same temperature, both gases have the same average kinetic energy; the gas with the smaller molar mass has the greater average speed (KE = ½mv²).";
+    else if (S.a === S.b && S.ta !== S.tb) end = "the higher-temperature sample has the greater average kinetic energy and a curve that peaks at a higher speed and is broader and lower.";
+    else if (S.ta === S.tb) end = "identical samples have identical distributions.";
+    else end = "rank kinetic energy by kelvin temperature alone, then rank speed by temperature and molar mass together.";
+    html += "<p><b>AP answer:</b> " + end.charAt(0).toUpperCase() + end.slice(1) + "</p>";
+    return html;
+  }
+
+  // ---------- Controls ----------
+  var el = function (id) { return document.getElementById(id); };
+  var chipsA = {}, chipsB = {};
+  GASES.forEach(function (g) {
+    [["ga", chipsA, "a"], ["gb", chipsB, "b"]].forEach(function (c) {
+      var b = document.createElement("button"); b.type = "button"; b.textContent = g.u; b.title = g.f + ": " + Lab.fmt(g.M, 2) + " g/mol";
+      b.addEventListener("click", function () { S[c[2]] = g.f; key = null; render(); });
+      el(c[0]).appendChild(b); c[1][g.f] = b;
+    });
+  });
+  var SC = {
+    heat:  { name: "Same gas, higher temperature", a: "N2", ta: 300, b: "N2", tb: 600, bOn: true, vt: 0 },
+    mass:  { name: "Same temperature, different mass", a: "He", ta: 300, b: "Ar", tb: 300, bOn: true, vt: 0 },
+    close: { name: "N₂ vs. O₂ at 300 K", a: "N2", ta: 300, b: "O2", tb: 300, bOn: true, vt: 0 },
+    trap:  { name: "Faster but less energy", a: "He", ta: 300, b: "Ar", tb: 600, bOn: true, vt: 0 },
+    tail:  { name: "Fraction above a threshold", a: "N2", ta: 300, b: "N2", tb: 400, bOn: true, vt: 1000 },
+    one:   { name: "One sample only", a: "O2", ta: 300, b: "O2", tb: 300, bOn: false, vt: 0 }
+  };
+  var scBtns = {};
+  Object.keys(SC).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () {
+      var x = SC[k]; key = k;
+      S.a = x.a; S.b = x.b; S.bOn = x.bOn; S.vt = x.vt;
+      var ta0 = S.ta, tb0 = S.tb;
+      stop();
+      stop = Lab.animate(700, function (t) { S.ta = Math.round((ta0 + (x.ta - ta0) * t) / 10) * 10; S.tb = Math.round((tb0 + (x.tb - tb0) * t) / 10) * 10; render(false); },
+        function () { S.ta = x.ta; S.tb = x.tb; render(); });
+    });
+    el("sc").appendChild(b); scBtns[k] = b;
+  });
+  var stop = function () {};
+  var sTa = el("s-ta"), sTb = el("s-tb"), sV = el("s-v"), bOn = el("b-on");
+  sTa.addEventListener("input", function () { stop(); S.ta = +sTa.value; key = null; render(); });
+  sTb.addEventListener("input", function () { stop(); S.tb = +sTb.value; key = null; render(); });
+  sV.addEventListener("input", function () { S.vt = +sV.value; render(); });
+  bOn.addEventListener("change", function () { stop(); S.bOn = bOn.checked; key = null; render(); });
+
+  function render(full) {
+    var A = speeds(gas(S.a), S.ta), B = S.bOn ? speeds(gas(S.b), S.tb) : null;
+    drawMB(A, B); drawKE(A, B); styleParticles();
+    sTa.value = S.ta; sTb.value = S.tb; sV.value = S.vt; bOn.checked = S.bOn;
+    el("o-ta").textContent = S.ta + " K (" + (S.ta - 273) + " °C)";
+    el("o-tb").textContent = S.tb + " K (" + (S.tb - 273) + " °C)";
+    el("o-v").textContent = S.vt ? ms(S.vt) : "off";
+    sTb.disabled = !S.bOn;
+    Object.keys(chipsA).forEach(function (f) {
+      chipsA[f].setAttribute("aria-pressed", S.a === f ? "true" : "false");
+      chipsB[f].setAttribute("aria-pressed", S.bOn && S.b === f ? "true" : "false");
+      chipsB[f].disabled = !S.bOn;
+    });
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", key === k ? "true" : "false"); });
+    if (full !== false) { readouts(A, B); el("story").innerHTML = story(A, B); }
+  }
+  render();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Two Maxwell–Boltzmann curves are drawn for the same gas. Curve Y peaks at a higher speed than curve X and is lower and broader. Which statement is correct?",
+      o: ["Curve Y is at a lower temperature because its peak is lower", "The molecules in curve X have the greater average kinetic energy", "Curve Y is at a higher temperature, and the areas under the two curves are equal", "Curve Y represents a sample with more molecules"], c: 2,
+      w: "A higher temperature shifts the distribution to higher speeds and spreads it out, so the peak gets lower. The total area represents all the molecules, which does not change. Choice A reads peak height as temperature, the most common trap." },
+    { s: "Samples of He, Ne, and Ar are each at 300 K. Which sample has the greatest average kinetic energy per atom?",
+      o: ["He, because its atoms move fastest", "Ar, because its atoms are heaviest", "Ne, because it is between the two extremes", "All three have the same average kinetic energy"], c: 3,
+      w: "Average kinetic energy depends only on kelvin temperature. At the same T, all three have the same average KE. He atoms are fastest and Ar atoms heaviest, and ½mv² comes out the same. Choices A and B each consider only one factor in ½mv²." },
+    { s: "Which gas has the greatest average molecular speed at 25 °C?",
+      o: ["NH₃", "CH₄", "H₂O", "HF"], c: 1,
+      w: "At the same temperature, the gas with the smallest molar mass moves fastest. CH₄ is 16.04 g/mol, NH₃ is 17.03, H₂O is 18.02, and HF is 20.01 g/mol." },
+    { s: "A sample of gas is heated from 200 K to 400 K. By what factors do the average kinetic energy and the average speed of the molecules change?",
+      o: ["KE ×2; speed ×1.41", "KE ×4; speed ×2", "KE ×2; speed ×2", "KE ×1.41; speed ×1.41"], c: 0,
+      w: "Average KE is proportional to kelvin temperature, so doubling T doubles KE. Since KE = ½mv² and m is unchanged, v² doubles, so the average speed increases by √2 ≈ 1.41. Choice C assumes speed is proportional to T." },
+    { s: "At the same temperature, what is the ratio of the average speed of He atoms to the average speed of O₂ molecules?",
+      o: ["0.354", "8.00", "1.00", "2.83"], c: 3,
+      w: "Equal average KE means speed is proportional to 1/√M. Ratio = √(M of O₂ / M of He) = √(32.00 / 4.00) = √8 = 2.83. Choice B forgets the square root; choice A inverts the ratio." },
+    { s: "Raising the temperature increases the rate of many gas-phase reactions. Which explanation based on the Maxwell–Boltzmann distribution is best?",
+      o: ["The minimum energy needed for a reaction decreases", "All of the molecules move at the same, higher speed", "A larger fraction of molecules have enough kinetic energy to react when they collide", "The number of molecules in the sample increases"], c: 2,
+      w: "Heating shifts the distribution so a much larger fraction of molecules is in the high-energy tail above the threshold, so more collisions are energetic enough. The threshold itself does not change with temperature (choice A); a catalyst would be needed for that." },
+    { s: "Container 1 holds CH₄ at 400 K. Container 2 holds SO₂ at 200 K. Which statement is correct?",
+      o: ["The average kinetic energy of CH₄ molecules is twice that of SO₂ molecules", "The average kinetic energies are equal because both are gases", "SO₂ molecules have greater average kinetic energy because they are heavier", "The two gases have the same average speed"], c: 0,
+      w: "Average KE is proportional to kelvin temperature: 400 K / 200 K = 2. Molar mass does not affect average KE. The speeds are not equal: CH₄ is lighter and hotter, so its average speed is √((400/16.04)/(200/64.07)) ≈ 2.8 times that of SO₂." },
+    { s: "Which of the following is NOT an assumption of the kinetic molecular theory for an ideal gas?",
+      o: ["Gas particles are in constant, random motion", "Gas particles attract each other weakly", "Collisions between particles are elastic", "The volume of the particles is negligible compared with the volume of the container"], c: 1,
+      w: "Ideal gas particles are assumed to have no attractive or repulsive forces between them. Real gases do have attractions, which is one reason they deviate from ideal behavior (topic 3.6). The other three choices are KMT assumptions." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("3.5");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [3], topic: "3.5", compact: true, storageKey: "topic-3.5" });</script>
+</body>
+</html>

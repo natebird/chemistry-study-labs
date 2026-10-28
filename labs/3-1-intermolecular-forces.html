@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intermolecular and Interparticle Forces Study Lab</title>
+<meta name="description" content="Inspect pairs of molecules to see which intermolecular forces act between them, then rank real boiling points for classic AP comparison sets and check your reasoning.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.part { font-size: 1.25rem; margin-top: 6px; }
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"], .chips button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { padding: 4px 11px; font-size: .88rem; }
+.chips button .pos { font-family: var(--mono); font-size: .74rem; margin-right: 5px; color: var(--accent); }
+.chips button:disabled { opacity: .55; cursor: default; }
+.btnrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.forces { width: 100%; border-collapse: collapse; min-width: 0; border: 0; background: none; }
+.forces td { padding: 6px 6px; font-size: .88rem; border-bottom: 1px dashed var(--rule); vertical-align: top; }
+.forces td:first-child { font-weight: 600; white-space: nowrap; }
+.forces td.yes { color: var(--good); font-weight: 700; white-space: nowrap; }
+.forces td.no { color: var(--muted); white-space: nowrap; }
+.forces td:last-child { color: var(--muted); }
+.order { font-family: var(--mono); font-size: .9rem; min-height: 1.4em; }
+.order .ok { color: var(--good); } .order .bad { color: var(--bad); }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v.txt { font-family: var(--body); font-size: 1rem; font-weight: 600; }
+#pair text.big { font-size: 13px; font-weight: 700; }
+@media (max-width: 520px) {
+  svg.chart text { font-size: 14px; }
+  svg.chart .lbl { font-size: 14px; }
+  #pair text.big { font-size: 16px; }
+  .forces td:first-child { white-space: normal; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 3 · Topic 3.1</span>
+  <h1>Intermolecular and Interparticle Forces Study Lab</h1>
+  <p class="lede">Intermolecular forces are the attractions between separate molecules, and they decide boiling points, melting points, and vapor pressures. Every molecule has London dispersion forces; polar molecules add dipole–dipole forces; molecules with H bonded to N, O, or F can hydrogen bond. Inspect each force at the particle level, then rank real boiling points and check your reasoning.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Forces between molecules</h2>
+    <p>Pick one of the classic AP comparison sets. Part A shows two molecules of the substance you choose and the forces between them; Part B asks you to rank the set by boiling point. Boiling points are measured values at 1 atm. Molecule drawings are flat sketches, not to exact scale; the faint halo around each molecule suggests the size of its electron cloud.</p>
+  </div>
+
+  <div class="card group">
+    <div class="tag">Comparison set</div>
+    <div class="scenarios" id="sets"></div>
+  </div>
+
+  <h3 class="part">Part A: Inspect a substance</h3>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Two molecules up close <small id="pair-sub"></small></h3>
+      <svg class="chart" id="pair" role="img" aria-label="Particle drawing of two molecules of the selected substance and the intermolecular force between them"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Substances in this set</div>
+        <div class="chips" id="members" role="group" aria-label="Substance to inspect"></div>
+      </div>
+      <div class="group">
+        <div class="tag" id="f-title">Forces present</div>
+        <table class="forces" aria-label="Forces present between molecules of the selected substance"><tbody id="forces"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Forces present</div><div class="v txt" id="r-f"></div><div class="sub" id="r-f2"></div></div>
+    <div class="stat"><div class="k">Electrons per molecule</div><div class="v" id="r-e"></div><div class="sub">more electrons, more polarizable</div></div>
+    <div class="stat"><div class="k">Molar mass</div><div class="v" id="r-m"></div><div class="sub">g/mol</div></div>
+    <div class="stat"><div class="k">Boiling point</div><div class="v" id="r-bp"></div><div class="sub" id="r-bp2"></div></div>
+  </div>
+
+  <h3 class="part">Part B: Rank the boiling points</h3>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Boiling points <small id="bar-sub">hidden until you check</small></h3>
+      <svg class="chart" id="bars" role="img" aria-label="Bar chart of the boiling points of the substances in the set"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Click from lowest to highest boiling point</div>
+        <div class="chips" id="rank" role="group" aria-label="Substances to rank"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Your order (lowest first)</div>
+        <div class="order" id="order"></div>
+      </div>
+      <div class="btnrow">
+        <button type="button" class="primary" id="b-check" disabled>Check my ranking</button>
+        <button type="button" id="b-show">Show the answer</button>
+        <button type="button" id="b-clear">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Every molecule</span><h3>London dispersion forces</h3><p>Electrons are always moving, so at any instant a molecule can have a temporary dipole that induces a dipole in its neighbor. The attraction is stronger when the electron cloud is more <b>polarizable</b>: more electrons, larger atoms, and more surface contact between molecules.</p></div>
+    <div class="card"><span class="tag">Polar molecules</span><h3>Dipole–dipole forces</h3><p>A molecule with a permanent dipole lines up its δ+ end with the δ− end of a neighbor. Polarity needs polar bonds <b>and</b> a shape where the bond dipoles do not cancel. CO<sub>2</sub> and CCl<sub>4</sub> have polar bonds but are nonpolar.</p></div>
+    <div class="card"><span class="tag">H bonded to N, O, F</span><h3>Hydrogen bonding</h3><p>An especially strong dipole–dipole attraction between an H atom covalently bonded to N, O, or F and a lone pair on an N, O, or F atom of another molecule. It explains why water, HF, and alcohols boil far higher than similar-size molecules.</p></div>
+    <div class="card"><span class="tag">Ions in polar solvents</span><h3>Ion–dipole forces</h3><p>An ion attracts the oppositely charged end of polar molecules: the O side of water around a cation, the H side around an anion. These attractions are why many ionic compounds dissolve in water. A polar molecule can also induce a dipole in a nonpolar one (dipole–induced dipole).</p></div>
+    <div class="card"><span class="tag">Size can win</span><h3>Dispersion can beat dipoles</h3><p>Do not assume polar always boils higher. HI is less polar than HCl but boils higher because its 54 electrons give much larger dispersion forces. CCl<sub>4</sub> (nonpolar) boils far above CH<sub>3</sub>F (polar). Compare dispersion forces whenever sizes differ a lot.</p></div>
+    <div class="card"><span class="tag">Intra vs. inter</span><h3>Bonds don't break on boiling</h3><p>Covalent bonds hold atoms together <b>inside</b> a molecule; intermolecular forces act <b>between</b> molecules and are much weaker. Boiling water separates H<sub>2</sub>O molecules from each other; it does not break O–H bonds.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. IMF cheat sheet</h2>
+    <p>Work through the questions in order for any molecule: Does it have electrons? (always: dispersion.) Is it polar? (dipole–dipole.) Does it have H on N, O, or F? (hydrogen bonding.) Then compare sizes before you rank.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Force</th><th>Acts between</th><th>Requirement</th><th>Strength depends on</th><th>Examples</th></tr></thead>
+    <tbody>
+      <tr><td><b>London dispersion</b></td><td>All molecules and atoms</td><td>Electrons (always present)</td><td>Number of electrons (polarizability), shape and contact area</td><td>He, CH<sub>4</sub>, I<sub>2</sub>, C<sub>8</sub>H<sub>18</sub></td></tr>
+      <tr><td><b>Dipole–induced dipole</b></td><td>Polar and nonpolar molecules</td><td>One permanent dipole</td><td>Dipole size and polarizability of the partner</td><td>HCl with Ar; H<sub>2</sub>O with O<sub>2</sub></td></tr>
+      <tr><td><b>Dipole–dipole</b></td><td>Polar molecules</td><td>Net molecular dipole</td><td>Size of the dipole</td><td>HCl, CH<sub>3</sub>OCH<sub>3</sub>, SO<sub>2</sub>, CH<sub>3</sub>CHO</td></tr>
+      <tr><td><b>Hydrogen bonding</b></td><td>Molecules with H–N, H–O, or H–F</td><td>H on N, O, or F, plus a lone pair on N, O, or F of the partner</td><td>Number of H-bonds each molecule can make</td><td>H<sub>2</sub>O, NH<sub>3</sub>, HF, CH<sub>3</sub>OH</td></tr>
+      <tr><td><b>Ion–dipole</b></td><td>Ions and polar molecules</td><td>An ion and a polar molecule</td><td>Ion charge and size; dipole size</td><td>Na<sup>+</sup> or Cl<sup>−</sup> in water</td></tr>
+      <tr><td>Ionic, metallic, covalent network (topic 3.2)</td><td>Particles in those solids</td><td>Not intermolecular forces</td><td>Much stronger than IMFs</td><td>NaCl, Cu, SiO<sub>2</sub></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. IMFs on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points</h3>
+      <ul>
+        <li>Name the specific force for <b>each</b> substance being compared. "Stronger IMFs" alone does not earn the point.</li>
+        <li>For dispersion forces, connect electrons to polarizability: "I<sub>2</sub> has more electrons, so its electron cloud is more polarizable and its dispersion forces are stronger."</li>
+        <li>For hydrogen bonding, say where it comes from: an H atom bonded to O (or N, F) attracted to a lone pair on O of a neighboring molecule.</li>
+        <li>Tie the force to the property: stronger IMFs mean more energy needed to separate molecules, so a higher boiling point and lower vapor pressure.</li>
+        <li>When the molecules are similar in size, compare polarity and hydrogen bonding; when sizes are very different, address dispersion forces first.</li>
+        <li>In a diagram, draw a hydrogen bond as a dashed line from H on one molecule to a lone pair on N, O, or F of another.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying covalent bonds break when a molecular substance boils.</li>
+        <li>Counting any H atom as a hydrogen-bond donor. In CH<sub>3</sub>OCH<sub>3</sub> and CH<sub>3</sub>CHO every H is on carbon, so these molecules do not hydrogen bond with each other.</li>
+        <li>Drawing a hydrogen bond inside one molecule, along the O–H covalent bond.</li>
+        <li>Using molar mass as the explanation. Mass correlates with electrons, but the reason is polarizability of the electron cloud.</li>
+        <li>Assuming polar always beats nonpolar. Large nonpolar molecules can have stronger total IMFs than small polar ones.</li>
+        <li>Calling a molecule polar because it has polar bonds. Check the shape: symmetric molecules like CO<sub>2</sub> and CH<sub>4</sub> are nonpolar.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 3.1. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-3.html">Unit 3 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = function (id) { return document.getElementById(id); };
+
+  // ---------- Atom styles (radius in Å for drawing; colors are theme variables) ----------
+  var AT = {
+    H: [0.34, "var(--surface)"], C: [0.5, "var(--muted)"], CH3: [0.66, "var(--muted)"], CH2: [0.62, "var(--muted)"], CH: [0.58, "var(--muted)"],
+    O: [0.5, "var(--bad)"], N: [0.5, "var(--accent)"], F: [0.46, "var(--c2)"], Cl: [0.64, "var(--c2)"], Br: [0.72, "var(--c2)"], I: [0.84, "var(--c2)"],
+    S: [0.64, "var(--c1)"], Se: [0.7, "var(--c1)"], Te: [0.8, "var(--c1)"],
+    He: [0.42, "var(--c3)"], Ne: [0.52, "var(--c3)"], Ar: [0.66, "var(--c3)"], Kr: [0.74, "var(--c3)"], Xe: [0.86, "var(--c3)"],
+    "Na⁺": [0.62, "var(--c3)"], "Cl⁻": [1.0, "var(--c2)"]
+  };
+  function zz(n, lab) {   // zigzag carbon chain, united atoms (CH3 ends, CH2 inside)
+    var a = [];
+    for (var i = 0; i < n; i++) a.push([i === 0 || i === n - 1 ? "CH3" : "CH2", i * 1.28, i % 2 ? -0.74 : 0]);
+    return a;
+  }
+  function bent(X, d, half) { var r = half * Math.PI / 180; return [[X, 0, 0], ["H", d * Math.cos(r), -d * Math.sin(r)], ["H", d * Math.cos(r), d * Math.sin(r)]]; }
+  var NOBLE = { pw: "Single atom: no bonds, so no permanent dipole.", hw: "No H atoms." };
+  var ALK = { pw: "C–C and C–H bonds are nearly nonpolar.", hw: "Every H atom is bonded to C." };
+  // f: formula for electrons and molar mass; u: display formula; bp in °C at 1 atm (measured)
+  var MOL = {
+    He: { u: "He", f: "He", name: "Helium", bp: -268.9, atoms: [["He", 0, 0]], pw: NOBLE.pw, hw: NOBLE.hw },
+    Ne: { u: "Ne", f: "Ne", name: "Neon", bp: -246.0, atoms: [["Ne", 0, 0]], pw: NOBLE.pw, hw: NOBLE.hw },
+    Ar: { u: "Ar", f: "Ar", name: "Argon", bp: -185.8, atoms: [["Ar", 0, 0]], pw: NOBLE.pw, hw: NOBLE.hw },
+    Kr: { u: "Kr", f: "Kr", name: "Krypton", bp: -153.4, atoms: [["Kr", 0, 0]], pw: NOBLE.pw, hw: NOBLE.hw },
+    Xe: { u: "Xe", f: "Xe", name: "Xenon", bp: -108.1, atoms: [["Xe", 0, 0]], pw: NOBLE.pw, hw: NOBLE.hw },
+    F2: { u: "F₂", f: "F2", name: "Fluorine", bp: -188.1, atoms: [["F", 0, 0], ["F", 1.42, 0]], pw: "Two identical atoms: the bond is nonpolar.", hw: "No H atoms." },
+    Cl2: { u: "Cl₂", f: "Cl2", name: "Chlorine", bp: -34.0, atoms: [["Cl", 0, 0], ["Cl", 1.99, 0]], pw: "Two identical atoms: the bond is nonpolar.", hw: "No H atoms." },
+    Br2: { u: "Br₂", f: "Br2", name: "Bromine", bp: 58.8, atoms: [["Br", 0, 0], ["Br", 2.28, 0]], pw: "Two identical atoms: the bond is nonpolar.", hw: "No H atoms." },
+    I2: { u: "I₂", f: "I2", name: "Iodine", bp: 184.3, atoms: [["I", 0, 0], ["I", 2.67, 0]], pw: "Two identical atoms: the bond is nonpolar.", hw: "No H atoms." },
+    HF: { u: "HF", f: "HF", name: "Hydrogen fluoride", bp: 19.5, polar: true, hb: true, atoms: [["F", 0, 0], ["H", 0.92, 0]], acc: 0, don: 1, pw: "The H–F bond is very polar.", hw: "H is bonded to F, and F has lone pairs." },
+    HCl: { u: "HCl", f: "HCl", name: "Hydrogen chloride", bp: -85.1, polar: true, atoms: [["Cl", 0, 0], ["H", 1.27, 0]], acc: 0, don: 1, pw: "The H–Cl bond is polar.", hw: "H is bonded to Cl, not to N, O, or F." },
+    HBr: { u: "HBr", f: "HBr", name: "Hydrogen bromide", bp: -66.8, polar: true, atoms: [["Br", 0, 0], ["H", 1.41, 0]], acc: 0, don: 1, pw: "The H–Br bond is polar (less than H–Cl).", hw: "H is bonded to Br, not to N, O, or F." },
+    HI: { u: "HI", f: "HI", name: "Hydrogen iodide", bp: -35.4, polar: true, atoms: [["I", 0, 0], ["H", 1.61, 0]], acc: 0, don: 1, pw: "The H–I bond is only slightly polar.", hw: "H is bonded to I, not to N, O, or F." },
+    H2O: { u: "H₂O", f: "H2O", name: "Water", bp: 100.0, polar: true, hb: true, atoms: bent("O", 0.96, 52.25), acc: 0, don: 1, pw: "Bent, with polar O–H bonds: the bond dipoles do not cancel.", hw: "H is bonded to O, and O has two lone pairs." },
+    H2S: { u: "H₂S", f: "H2S", name: "Hydrogen sulfide", bp: -60.3, polar: true, atoms: bent("S", 1.34, 46), acc: 0, don: 1, pw: "Bent, with polar S–H bonds (less polar than O–H).", hw: "H is bonded to S, not to N, O, or F." },
+    H2Se: { u: "H₂Se", f: "H2Se", name: "Hydrogen selenide", bp: -41.3, polar: true, atoms: bent("Se", 1.46, 46), acc: 0, don: 1, pw: "Bent, with slightly polar Se–H bonds.", hw: "H is bonded to Se, not to N, O, or F." },
+    H2Te: { u: "H₂Te", f: "H2Te", name: "Hydrogen telluride", bp: -2.2, polar: true, atoms: bent("Te", 1.69, 45), acc: 0, don: 1, pw: "Bent, with only slightly polar Te–H bonds.", hw: "H is bonded to Te, not to N, O, or F." },
+    CH4: { u: "CH₄", f: "CH4", name: "Methane", bp: -161.5, atoms: [["C", 0, 0], ["H", 1.09, 0], ["H", -1.09, 0], ["H", 0, 1.09], ["H", 0, -1.09]], bonds: [[0, 1], [0, 2], [0, 3], [0, 4]], pw: "Symmetric tetrahedron: the small C–H bond dipoles cancel.", hw: ALK.hw },
+    C3H8: { u: "C₃H₈", f: "C3H8", name: "Propane", bp: -42.1, atoms: zz(3), pw: ALK.pw, hw: ALK.hw },
+    C4H10: { u: "C₄H₁₀", f: "C4H10", name: "Butane", bp: -0.5, atoms: zz(4), pw: ALK.pw, hw: ALK.hw },
+    C6H14: { u: "C₆H₁₄", f: "C6H14", name: "Hexane", bp: 68.7, atoms: zz(6), pw: ALK.pw, hw: ALK.hw },
+    C8H18: { u: "C₈H₁₈", f: "C8H18", name: "Octane", bp: 125.6, atoms: zz(8), pw: ALK.pw, hw: ALK.hw },
+    npent: { u: "n-pentane", f: "C5H12", name: "Pentane (straight chain)", bp: 36.1, atoms: zz(5), pw: ALK.pw, hw: ALK.hw },
+    ipent: { u: "isopentane", f: "C5H12", name: "Isopentane (2-methylbutane)", bp: 27.8, atoms: [["CH3", 0, 0], ["CH", 1.28, -0.74], ["CH2", 2.56, 0], ["CH3", 3.84, -0.74], ["CH3", 1.28, -2.22]], bonds: [[0, 1], [1, 2], [2, 3], [1, 4]], pw: ALK.pw, hw: ALK.hw },
+    neopent: { u: "neopentane", f: "C5H12", name: "Neopentane (2,2-dimethylpropane)", bp: 9.5, atoms: [["C", 0, 0], ["CH3", 1.4, 0], ["CH3", -1.4, 0], ["CH3", 0, 1.4], ["CH3", 0, -1.4]], bonds: [[0, 1], [0, 2], [0, 3], [0, 4]], pw: ALK.pw, hw: ALK.hw },
+    DME: { u: "CH₃OCH₃", f: "C2H6O", name: "Dimethyl ether", bp: -24.0, polar: true, atoms: [["O", 0, 0], ["CH3", 0.95, -1.05], ["CH3", 0.95, 1.05]], bonds: [[0, 1], [0, 2]], acc: 0, don: 1, pw: "Bent C–O–C with polar C–O bonds: polar.", hw: "Every H is on a carbon, so no H can be donated (the O can only accept H-bonds, for example from water)." },
+    ACET: { u: "CH₃CHO", f: "C2H4O", name: "Acetaldehyde", bp: 20.2, polar: true, atoms: [["O", 0, 0], ["CH", 1.22, 0], ["CH3", 2.0, -1.1]], bonds: [[0, 1], [1, 2]], dbl: [[0, 1]], acc: 0, don: 1, pw: "The C=O bond is strongly polar: polar.", hw: "Every H is on a carbon, so these molecules cannot hydrogen bond with each other." },
+    EtOH: { u: "C₂H₅OH", f: "C2H6O", name: "Ethanol", bp: 78.4, polar: true, hb: true, atoms: [["CH3", -2.5, 0.35], ["CH2", -1.25, -0.4], ["O", 0, 0.3], ["H", 0.82, -0.2]], bonds: [[0, 1], [1, 2], [2, 3]], acc: 2, don: 3, rot: 90, pw: "Polar O–H and C–O bonds: polar.", hw: "H is bonded to O, and O has two lone pairs." },
+    MeOH: { u: "CH₃OH", f: "CH4O", name: "Methanol", bp: 64.7, polar: true, hb: true, atoms: [["CH3", -1.35, -0.45], ["O", 0, 0.2], ["H", 0.82, -0.3]], bonds: [[0, 1], [1, 2]], acc: 1, don: 2, rot: 90, pw: "Polar O–H and C–O bonds: polar.", hw: "H is bonded to O, and O has two lone pairs." },
+    NaAq: { u: "Na⁺ in water", ion: "Na⁺", name: "Sodium ion in water" },
+    ClAq: { u: "Cl⁻ in water", ion: "Cl⁻", name: "Chloride ion in water" }
+  };
+  Object.keys(MOL).forEach(function (k) {
+    var m = MOL[k]; m.k = k;
+    if (m.ion) return;
+    var c = Lab.parseFormula(m.f), e = 0; for (var s in c) e += Lab.BY_SYMBOL[s].z * c[s];
+    m.e = e; m.M = Lab.molarMass(m.f);
+    if (!m.bonds) { m.bonds = []; for (var i = 1; i < m.atoms.length; i++) m.bonds.push(m.atoms[0][0] === "C" || /^[A-Z][a-z]?$/.test(m.atoms[0][0]) && m.atoms.length === 3 && m.atoms[1][0] === "H" ? [0, i] : [i - 1, i]); }
+  });
+
+  var SETS = [
+    { k: "noble", name: "Noble gases", mem: ["He", "Ne", "Ar", "Kr", "Xe"], show: ["Kr", "He", "Xe", "Ar", "Ne"],
+      hint: "Every member is a single atom with only London dispersion forces. Look at the number of electrons.",
+      ex: "Boiling points rise steadily from He to Xe. Each atom has more electrons in a larger cloud that is easier to distort, so its temporary dipoles are larger and the dispersion forces between atoms are stronger.",
+      ap: "With only dispersion forces, the atom with more electrons has a more polarizable electron cloud, stronger dispersion forces, and a higher boiling point." },
+    { k: "halo", name: "Halogens", mem: ["F2", "Cl2", "Br2", "I2"], show: ["Br2", "F2", "I2", "Cl2"],
+      hint: "All four are nonpolar diatomic molecules. Only one kind of force is present; what makes it stronger?",
+      ex: "F₂ (18 electrons) and Cl₂ (34) are gases at room temperature, Br₂ (70) is a liquid, and I₂ (106) is a solid. More electrons mean a more polarizable cloud and stronger dispersion forces.",
+      ap: "Down the group the molecules have more electrons, so their electron clouds are more polarizable and the London dispersion forces, and boiling points, increase." },
+    { k: "hx", name: "Hydrogen halides", mem: ["HF", "HCl", "HBr", "HI"], show: ["HCl", "HI", "HF", "HBr"],
+      hint: "From HCl to HI the bonds get less polar but the molecules get more electrons. One member can hydrogen bond.",
+      ex: "HCl < HBr < HI even though the bonds get less polar: the growing dispersion forces outweigh the shrinking dipole–dipole forces. HF breaks the trend and boils highest because its molecules hydrogen bond.",
+      ap: "HI boils above HCl because its larger, more polarizable electron cloud gives stronger dispersion forces; HF boils highest because it forms hydrogen bonds (H bonded to F)." },
+    { k: "g16", name: "Group 16 hydrides", mem: ["H2O", "H2S", "H2Se", "H2Te"], show: ["H2Se", "H2O", "H2Te", "H2S"],
+      hint: "All four are bent and polar. Which one has H bonded to N, O, or F?",
+      ex: "H₂S < H₂Se < H₂Te follows the number of electrons (dispersion forces). Water should boil lowest by that trend, near −90 °C, but it boils at 100 °C because each molecule can make up to four hydrogen bonds.",
+      ap: "Water's boiling point is far above the trend because H₂O molecules hydrogen bond; for H₂S, H₂Se, and H₂Te, increasing dispersion forces raise the boiling point." },
+    { k: "mass", name: "Similar size, different forces", mem: ["C3H8", "DME", "ACET", "EtOH"], show: ["ACET", "EtOH", "C3H8", "DME"],
+      hint: "All have 24 to 26 electrons, so their dispersion forces are similar. Check each for polarity and for H on O.",
+      ex: "With similar dispersion forces, the other forces decide. Propane is nonpolar and boils lowest. Dimethyl ether is polar (dipole–dipole). Acetaldehyde's C=O makes it more polar, so it boils higher even with 2 fewer electrons. Ethanol boils highest: its O–H lets it hydrogen bond. Ethanol and dimethyl ether have the same formula, C₂H₆O, and differ by 102 °C.",
+      ap: "When molecules have similar numbers of electrons, the one that hydrogen bonds boils highest, polar molecules boil above nonpolar ones, and a larger dipole gives a higher boiling point." },
+    { k: "shape", name: "Same formula, different shape", mem: ["neopent", "ipent", "npent"], show: ["npent", "neopent", "ipent"],
+      hint: "All three are C₅H₁₂: same electrons, same mass, all nonpolar. Compare how much of each molecule can touch its neighbors.",
+      ex: "The straight chain (n-pentane) has the most surface area in contact with neighbors, so its temporary dipoles interact over a larger area: strongest dispersion forces. Branching makes the molecule more compact; neopentane is nearly spherical and boils lowest.",
+      ap: "Isomers with the same number of electrons differ in contact area: the long, unbranched molecule has more surface contact, stronger dispersion forces, and a higher boiling point." },
+    { k: "alk", name: "Alkanes", mem: ["CH4", "C3H8", "C4H10", "C6H14", "C8H18"], show: ["C6H14", "CH4", "C8H18", "C3H8", "C4H10"],
+      hint: "All are nonpolar hydrocarbons. What grows as the chain gets longer?",
+      ex: "Each added CH₂ adds 8 electrons and more surface contact, so dispersion forces and boiling points rise steadily: methane and propane are gases at room temperature, hexane and octane are liquids.",
+      ap: "Longer alkanes have more electrons and more surface area, so stronger London dispersion forces and higher boiling points." },
+    { k: "e18", name: "Same electrons (18)", mem: ["F2", "HCl", "MeOH"], show: ["MeOH", "F2", "HCl"],
+      hint: "All three have 18 electrons, so their dispersion forces are similar. What else does each have?",
+      ex: "F₂ has only dispersion forces. HCl adds dipole–dipole forces and boils about 100 °C higher. CH₃OH adds hydrogen bonding and boils about 150 °C higher still, above room temperature.",
+      ap: "With equal numbers of electrons, dispersion forces are similar, so polarity raises the boiling point and hydrogen bonding raises it the most." },
+    { k: "ion", name: "Salt in water (ion–dipole)", mem: ["NaAq", "ClAq"], show: [], noRank: true,
+      hint: "Ion–dipole attractions act between ions and polar molecules. There are no boiling points to rank in this set; inspect each ion instead.",
+      ex: "", ap: "Water molecules orient their partial negative O toward cations and their partial positive H toward anions; these ion–dipole attractions help ionic solids dissolve." }
+  ];
+  var S = { set: 4, sel: "EtOH", order: [], revealed: false, checked: false };
+
+  // ---------- Particle drawing ----------
+  var svg = el("pair"), W = 440, H = 300;
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  function rotPts(m, deg, ox, oy) {
+    var r = deg * Math.PI / 180, c = Math.cos(r), s = Math.sin(r), a = m.atoms[m.acc || 0];
+    return m.atoms.map(function (at) { var x = at[1] - a[1], y = at[2] - a[2]; return [at[0], ox + x * c - y * s, oy + x * s + y * c]; });
+  }
+  function bounds(list, pad) {
+    var b = [1e9, 1e9, -1e9, -1e9];
+    list.forEach(function (a) { var r = AT[a[0]][0] + (pad || 0); b[0] = Math.min(b[0], a[1] - r); b[1] = Math.min(b[1], a[2] - r); b[2] = Math.max(b[2], a[1] + r); b[3] = Math.max(b[3], a[2] + r); });
+    return b;
+  }
+  function drawPair() {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var m = MOL[S.sel];
+    if (m.ion) return drawIon(m);
+    var type = m.hb ? "hb" : m.polar ? "dd" : "ldf";
+    var A = m.atoms.map(function (a) { return [a[0], a[1], a[2]]; }), B;
+    if (type === "ldf") {
+      var bA = bounds(A, 0);
+      var tmp = rotPts(m, 0, 0, 0), bB = bounds(tmp, 0);
+      var dx = bA[2] - bB[0] + 1.3, dy = (bA[1] + bA[3]) / 2 - (bB[1] + bB[3]) / 2;
+      B = tmp.map(function (a) { return [a[0], a[1] + dx, a[2] + dy]; });
+    } else {
+      var d = A[m.don], rA = AT[d[0]][0], rB = AT[A[m.acc][0]][0];
+      var gap = type === "hb" ? 1.85 : rA + rB + 1.0;
+      B = rotPts(m, m.rot || 0, d[1] + gap, d[2]);
+    }
+    var pad = 0.18 + 0.06 * Math.sqrt(m.e);
+    var all = A.concat(B), bb = bounds(all, pad);
+    var sc = Math.min(48, (W - 60) / (bb[2] - bb[0]), (H - 110) / (bb[3] - bb[1]));
+    var ox = W / 2 - sc * (bb[0] + bb[2]) / 2, oy = 150 - sc * (bb[1] + bb[3]) / 2;
+    var X = function (x) { return ox + sc * x; }, Y = function (y) { return oy + sc * y; };
+    var shift = type === "ldf" ? -0.18 : 0;   // electron clouds shifted left: an instantaneous dipole
+    [A, B].forEach(function (mol) {
+      mol.forEach(function (a) { Lab.el("circle", { cx: X(a[1] + shift), cy: Y(a[2]), r: sc * (AT[a[0]][0] + pad), fill: "var(--accent)", opacity: 0.1 }, svg); });
+    });
+    [A, B].forEach(function (mol) {
+      m.bonds.forEach(function (b) {
+        var p = mol[b[0]], q = mol[b[1]];
+        var isDbl = (m.dbl || []).some(function (z) { return z[0] === b[0] && z[1] === b[1]; });
+        if (isDbl) {
+          var ux = q[2] - p[2], uy = -(q[1] - p[1]), L = Math.hypot(ux, uy) || 1; ux = ux / L * 3.2; uy = uy / L * 3.2;
+          [-1, 1].forEach(function (sg) { Lab.el("line", { x1: X(p[1]) + sg * ux, y1: Y(p[2]) + sg * uy, x2: X(q[1]) + sg * ux, y2: Y(q[2]) + sg * uy, stroke: "var(--ink)", "stroke-width": 2.5 }, svg); });
+        } else Lab.el("line", { x1: X(p[1]), y1: Y(p[2]), x2: X(q[1]), y2: Y(q[2]), stroke: "var(--ink)", "stroke-width": 3 }, svg);
+      });
+      mol.forEach(function (a) {
+        var st = AT[a[0]];
+        Lab.el("circle", { cx: X(a[1]), cy: Y(a[2]), r: sc * st[0], fill: st[1], stroke: a[0] === "H" ? "var(--muted)" : "var(--surface)", "stroke-width": 1.5 }, svg);
+        var lbl = a[0].replace("3", "₃").replace("2", "₂");
+        if (sc * st[0] > 9) Lab.el("text", { x: X(a[1]), y: Y(a[2]) + 4, "text-anchor": "middle", style: "fill:" + (a[0] === "H" ? "var(--ink)" : "var(--surface)") + "; font-weight:600; font-size:" + Math.min(13, sc * st[0] * 0.75).toFixed(1) + "px" }, svg, lbl);
+      });
+    });
+    var cap, col;
+    if (type === "ldf") {
+      var bA2 = bounds(A, pad), bB2 = bounds(B, pad), cy = (bA2[1] + bA2[3]) / 2;
+      [[bA2, "temporary"], [bB2, "induced"]].forEach(function (z) {
+        Lab.el("text", { x: X(z[0][0]) - 2, y: Y(z[0][1]) - 4, "text-anchor": "start", "class": "big", style: "fill:var(--c4)" }, svg, "δ−");
+        Lab.el("text", { x: X(z[0][2]) + 2, y: Y(z[0][1]) - 4, "text-anchor": "end", "class": "big", style: "fill:var(--c4)" }, svg, "δ+");
+        Lab.el("text", { x: X((z[0][0] + z[0][2]) / 2), y: Y(z[0][3]) + 16, "text-anchor": "middle", style: "fill:var(--muted)" }, svg, z[1] + " dipole");
+      });
+      Lab.el("line", { x1: X(bA2[2]) - 4, x2: X(bB2[0]) + 4, y1: Y(cy), y2: Y(cy), stroke: "var(--c4)", "stroke-width": 2.5, "stroke-dasharray": "2 4" }, svg);
+      cap = "London dispersion: a temporary dipole induces a dipole in the neighbor"; col = "var(--c4)";
+    } else {
+      var d1 = A[m.don], a2 = B[m.acc];
+      var ux = a2[1] - d1[1], uy = a2[2] - d1[2], L = Math.hypot(ux, uy); ux /= L; uy /= L;
+      var r1 = AT[d1[0]][0], r2 = AT[a2[0]][0];
+      Lab.el("line", { x1: X(d1[1] + ux * r1), y1: Y(d1[2] + uy * r1), x2: X(a2[1] - ux * r2), y2: Y(a2[2] - uy * r2), stroke: type === "hb" ? "var(--good)" : "var(--c4)", "stroke-width": 3, "stroke-dasharray": "3 4" }, svg);
+      [A, B].forEach(function (mol) {
+        var n = mol[m.acc], p = mol[m.don];
+        Lab.el("text", { x: X(n[1]), y: Y(n[2]) - sc * AT[n[0]][0] - 5, "text-anchor": "middle", "class": "big", style: "fill:var(--bad)" }, svg, "δ−");
+        Lab.el("text", { x: X(p[1]), y: Y(p[2]) - sc * AT[p[0]][0] - 5, "text-anchor": "middle", "class": "big", style: "fill:var(--accent)" }, svg, "δ+");
+      });
+      cap = type === "hb" ? "Hydrogen bond: H on one molecule to a lone pair on " + A[m.acc][0] + " of the other" : "Dipole–dipole: δ+ end of one molecule attracts δ− end of the next";
+      col = type === "hb" ? "var(--good)" : "var(--c4)";
+    }
+    Lab.el("text", { x: W / 2, y: H - 12, "text-anchor": "middle", "class": "lbl", style: "fill:" + col }, svg, cap);
+    if (m.atoms.some(function (a) { return /CH/.test(a[0]); })) Lab.el("text", { x: W / 2, y: 18, "text-anchor": "middle" }, svg, "CH₃, CH₂, CH drawn as single spheres");
+  }
+  function drawIon(m) {
+    var cat = m.ion === "Na⁺", sc = 34, cx = W / 2, cy = 140;
+    var rIon = AT[m.ion][0];
+    // four water molecules around the ion; O toward a cation, one H toward an anion
+    [0, 90, 180, 270].forEach(function (deg) {
+      var t = deg * Math.PI / 180, ux = Math.cos(t), uy = Math.sin(t), px = -uy, py = ux;
+      var O, H1, H2;
+      if (cat) {
+        var dO = rIon + 0.5 + 0.75;
+        O = [ux * dO, uy * dO];
+        H1 = [O[0] + ux * 0.59 + px * 0.76, O[1] + uy * 0.59 + py * 0.76];
+        H2 = [O[0] + ux * 0.59 - px * 0.76, O[1] + uy * 0.59 - py * 0.76];
+      } else {
+        var dH = rIon + 0.34 + 0.75;
+        H1 = [ux * dH, uy * dH];
+        O = [H1[0] + ux * 0.96, H1[1] + uy * 0.96];
+        var a = 104.5 * Math.PI / 180, bx = Math.cos(a) * -ux - Math.sin(a) * -uy, by = Math.sin(a) * -ux + Math.cos(a) * -uy;
+        H2 = [O[0] + bx * 0.96, O[1] + by * 0.96];
+      }
+      [H1, H2].forEach(function (h) { Lab.el("line", { x1: cx + sc * O[0], y1: cy + sc * O[1], x2: cx + sc * h[0], y2: cy + sc * h[1], stroke: "var(--ink)", "stroke-width": 3 }, svg); });
+      var near = cat ? O : H1, rn = cat ? 0.5 : 0.34;
+      Lab.el("line", { x1: cx + sc * ux * rIon, y1: cy + sc * uy * rIon, x2: cx + sc * (near[0] - ux * rn), y2: cy + sc * (near[1] - uy * rn), stroke: "var(--c4)", "stroke-width": 3, "stroke-dasharray": "3 4" }, svg);
+      Lab.el("circle", { cx: cx + sc * O[0], cy: cy + sc * O[1], r: sc * 0.5, fill: "var(--bad)", stroke: "var(--surface)", "stroke-width": 1.5 }, svg);
+      [H1, H2].forEach(function (h) { Lab.el("circle", { cx: cx + sc * h[0], cy: cy + sc * h[1], r: sc * 0.34, fill: "var(--surface)", stroke: "var(--muted)", "stroke-width": 1.5 }, svg); });
+      var lp = cat ? O : H1;
+      Lab.el("text", { x: cx + sc * (lp[0] + ux * (cat ? 0.95 : 0.9)) + (deg === 90 || deg === 270 ? 16 : 0), y: cy + sc * (lp[1] + uy * (cat ? 0.95 : 0.9)) + 5, "text-anchor": "middle", "class": "big", style: "fill:" + (cat ? "var(--bad)" : "var(--accent)") }, svg, cat ? "δ−" : "δ+");
+    });
+    Lab.el("circle", { cx: cx, cy: cy, r: sc * rIon, fill: AT[m.ion][1], stroke: "var(--surface)", "stroke-width": 2 }, svg);
+    Lab.el("text", { x: cx, y: cy + 6, "text-anchor": "middle", style: "fill:var(--surface); font-weight:700; font-size:16px" }, svg, m.ion);
+    Lab.el("text", { x: W / 2, y: H - 12, "text-anchor": "middle", "class": "lbl", style: "fill:var(--c4)" }, svg, cat ? "Ion–dipole: partially negative O atoms face the cation" : "Ion–dipole: partially positive H atoms face the anion");
+  }
+
+  // ---------- Forces table and readouts ----------
+  function forcesOf(m) {
+    if (m.ion) return ["Ion–dipole"];
+    var f = ["London dispersion"]; if (m.polar) f.push("dipole–dipole"); if (m.hb) f.push("hydrogen bonding"); return f;
+  }
+  function renderInspector() {
+    var m = MOL[S.sel], rows;
+    if (m.ion) {
+      rows = [["Ion–dipole", true, m.ion === "Na⁺" ? "The cation attracts the partially negative O end of each water molecule." : "The anion attracts the partially positive H atoms of water molecules."],
+        ["Hydrogen bonding", true, "Between the water molecules themselves (not with the ion)."],
+        ["London dispersion", true, "Present between all particles."]];
+    } else rows = [
+      ["London dispersion", true, "All molecules: " + m.e + " electrons per molecule."],
+      ["Dipole–dipole", !!m.polar, m.pw],
+      ["Hydrogen bonding", !!m.hb, m.hw]
+    ];
+    el("f-title").textContent = "Forces between " + (m.ion ? "the ion and water" : m.u + " molecules");
+    el("forces").innerHTML = rows.map(function (r) { return "<tr><td>" + r[0] + '</td><td class="' + (r[1] ? "yes" : "no") + '">' + (r[1] ? "yes" : "no") + "</td><td>" + r[2] + "</td></tr>"; }).join("");
+    el("pair-sub").textContent = m.name;
+    var f = forcesOf(m);
+    el("r-f").textContent = f.length === 1 ? f[0] : f.length === 2 ? "Dispersion + dipole" : "Dispersion + dipole + H-bond";
+    el("r-f2").textContent = m.ion ? "ion with polar water molecules" : m.hb ? "H bonded to " + m.atoms[m.acc][0] : m.polar ? "polar, no H on N, O, or F" : "nonpolar";
+    el("r-e").textContent = m.ion ? (m.ion === "Na⁺" ? "10" : "18") : String(m.e);
+    el("r-m").textContent = m.ion ? (m.ion === "Na⁺" ? "22.99" : "35.45") : m.M.toFixed(2);
+    var set = SETS[S.set];
+    if (m.ion) { el("r-bp").textContent = "—"; el("r-bp2").textContent = "not a molecular substance"; }
+    else if (S.revealed) { el("r-bp").textContent = fmtT(m.bp); el("r-bp2").textContent = "at 1 atm"; }
+    else { el("r-bp").textContent = "?"; el("r-bp2").textContent = "rank the set to reveal"; }
+    memberBtns.forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.k === S.sel ? "true" : "false"); });
+    drawPair();
+  }
+  function fmtT(t) { return (t < 0 ? "−" : "") + Math.abs(t).toFixed(1) + " °C"; }
+
+  // ---------- Ranking ----------
+  var barSvg = el("bars");
+  function drawBars() {
+    var set = SETS[S.set];
+    if (set.noRank) {
+      Lab.frame(barSvg, { x: [0, 1], y: [0, 1], xLabel: "", yLabel: "", width: 440, height: 300 });
+      Lab.el("text", { x: 230, y: 140, "text-anchor": "middle", "class": "lbl", style: "fill:var(--muted)" }, barSvg, "No boiling points to rank in this set.");
+      Lab.el("text", { x: 230, y: 162, "text-anchor": "middle", style: "fill:var(--muted)" }, barSvg, "Pick another comparison set.");
+      return;
+    }
+    var mem = set.mem.map(function (k) { return MOL[k]; }).sort(function (a, b) { return a.bp - b.bp; });
+    var lo = Math.floor((mem[0].bp - 40) / 50) * 50, hi = Math.ceil((mem[mem.length - 1].bp + 25) / 50) * 50;
+    var step = hi - lo > 300 ? 100 : 50, yt = []; for (var v = lo; v <= hi; v += step) yt.push(v);
+    var bars = mem.map(function (m, i) {
+      var pos = S.order.indexOf(m.k), ok = S.checked && pos === i;
+      return { x: i + 1, y: S.revealed ? m.bp : lo, color: !S.checked ? "var(--accent)" : ok ? "var(--good)" : "var(--bad)", label: S.revealed ? fmtT(m.bp).replace(" °C", "") : "", width: 0.62 };
+    });
+    var F = Lab.bars(barSvg, { x: [0.4, mem.length + 0.6], y: [lo, hi], xLabel: S.revealed ? "Lowest to highest boiling point" : "", yLabel: "Boiling point (°C)", xTicks: [], yTicks: yt, fmtY: function (v) { return String(v).replace("-", "−"); }, bars: bars, width: 440, height: 300 });
+    if (lo < 0 && hi > 0) Lab.hline(F, 0, "var(--muted)", 1, "4 4");
+    if (lo < 25 && hi > 25) Lab.tag(F, mem.length + 0.55, 31, "room temp.", "var(--muted)", "end");
+    if (lo < 25 && hi > 25) Lab.hline(F, 25, "var(--ghost)", 1, "2 4");
+    mem.forEach(function (m, i) {
+      if (!S.revealed) Lab.el("text", { x: F.sx(i + 1), y: F.sy((lo + hi) / 2), "text-anchor": "middle", "class": "lbl", style: "fill:var(--muted); font-size:20px" }, barSvg, "?");
+      Lab.el("text", { x: F.sx(i + 1), y: F.H - F.M.b + 18, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, barSvg, S.revealed ? m.u : "");
+    });
+  }
+  function renderRank() {
+    var set = SETS[S.set], box = el("rank");
+    box.innerHTML = "";
+    set.show.forEach(function (k) {
+      var b = document.createElement("button"); b.type = "button";
+      var pos = S.order.indexOf(k);
+      b.innerHTML = (pos >= 0 ? '<span class="pos">' + (pos + 1) + "</span>" : "") + MOL[k].u;
+      b.setAttribute("aria-pressed", pos >= 0 ? "true" : "false");
+      b.disabled = pos >= 0 || S.revealed;
+      b.addEventListener("click", function () { S.order.push(k); S.sel = k; render(); });
+      box.appendChild(b);
+    });
+    var sorted = set.mem.slice().sort(function (a, b) { return MOL[a].bp - MOL[b].bp; });
+    el("order").innerHTML = set.noRank ? "—" : S.order.length ? S.order.map(function (k, i) {
+      var cls = S.checked ? (sorted[i] === k ? "ok" : "bad") : "";
+      return '<span class="' + cls + '">' + MOL[k].u + "</span>";
+    }).join(" &lt; ") : "click the substances above";
+    el("b-check").disabled = set.noRank || S.order.length !== set.mem.length || S.checked;
+    el("b-show").disabled = set.noRank || S.revealed;
+    el("bar-sub").textContent = set.noRank ? "" : S.revealed ? "measured, at 1 atm" : "hidden until you check";
+    drawBars();
+  }
+
+  // ---------- Story ----------
+  function story() {
+    var set = SETS[S.set], m = MOL[S.sel], html = "", li = [];
+    var f = forcesOf(m);
+    if (m.ion) html += "<p><b>" + m.name + ".</b> " + (m.ion === "Na⁺" ? "Water molecules crowd around the Na⁺ ion with their partially negative O atoms pointing in." : "Water molecules crowd around the Cl⁻ ion with partially positive H atoms pointing in.") + " This ion–dipole attraction is stronger than the hydrogen bonds between water molecules, which is part of why NaCl dissolves.</p>";
+    else html += "<p><b>" + m.name + " (" + m.u + ").</b> Between its molecules: " + f.join(", ") + ". " + (m.hb ? "Hydrogen bonding is the strongest of these per interaction." : m.polar ? "It is polar, but it has no H bonded to N, O, or F, so no hydrogen bonding." : "It is nonpolar, so dispersion is the only force.") + "</p>";
+    if (!set.noRank) {
+      if (!S.revealed) li.push("<b>" + set.name + ":</b> " + set.hint + " Then click the substances from lowest to highest boiling point.");
+      else {
+        if (S.checked) {
+          var sorted = set.mem.slice().sort(function (a, b) { return MOL[a].bp - MOL[b].bp; });
+          var right = S.order.filter(function (k, i) { return sorted[i] === k; }).length;
+          li.push(right === sorted.length ? "<b style='color:var(--good)'>All " + right + " in the right order.</b>" : "<b style='color:var(--bad)'>" + right + " of " + sorted.length + " in the right position.</b> Correct order: " + sorted.map(function (k) { return MOL[k].u; }).join(" < ") + ".");
+        }
+        li.push(set.ex);
+      }
+    } else li.push(set.hint);
+    html += "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
+    var ap = set.noRank || S.revealed ? set.ap : m.hb ? "molecules with H bonded to N, O, or F form hydrogen bonds, the strongest intermolecular force between neutral molecules; name the H–O, H–N, or H–F bond and the lone pair it attracts." :
+      m.polar ? "a polar molecule has dipole–dipole forces in addition to dispersion forces; justify polarity with both polar bonds and a shape that does not cancel them." :
+      "a nonpolar molecule has only London dispersion forces; their strength grows with the number of electrons (polarizability) and with contact area.";
+    html += "<p><b>AP answer:</b> " + ap.charAt(0).toUpperCase() + ap.slice(1) + "</p>";
+    return html;
+  }
+
+  // ---------- Controls ----------
+  var setBtns = [], memberBtns = [];
+  SETS.forEach(function (s, i) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = s.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S.set = i; S.sel = s.mem[0]; S.order = []; S.revealed = false; S.checked = false; render(); });
+    el("sets").appendChild(b); setBtns.push(b);
+  });
+  function buildMembers() {
+    var box = el("members"); box.innerHTML = ""; memberBtns = [];
+    var set = SETS[S.set];
+    (set.noRank ? set.mem : set.show).forEach(function (k) {
+      var b = document.createElement("button"); b.type = "button"; b.textContent = MOL[k].u; b.dataset.k = k;
+      b.addEventListener("click", function () { S.sel = k; render(); });
+      box.appendChild(b); memberBtns.push(b);
+    });
+  }
+  el("b-check").addEventListener("click", function () { S.checked = true; S.revealed = true; render(); });
+  el("b-show").addEventListener("click", function () {
+    var set = SETS[S.set];
+    S.order = set.mem.slice().sort(function (a, b) { return MOL[a].bp - MOL[b].bp; });
+    S.revealed = true; S.checked = false; render();
+  });
+  el("b-clear").addEventListener("click", function () { S.order = []; S.revealed = false; S.checked = false; render(); });
+  function render() {
+    setBtns.forEach(function (b, i) { b.setAttribute("aria-pressed", i === S.set ? "true" : "false"); });
+    buildMembers();
+    renderInspector();
+    renderRank();
+    el("story").innerHTML = story();
+  }
+  render();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "HI has a higher boiling point than HCl. Which statement best explains this?",
+      o: ["HI is more polar than HCl, so its dipole–dipole forces are stronger", "HI molecules form hydrogen bonds, and HCl molecules do not", "HI has more electrons and a more polarizable electron cloud, so its London dispersion forces are stronger", "The H–I bond is stronger than the H–Cl bond, so more energy is needed to break it"], c: 2,
+      w: "HI (54 electrons) has a much larger, more polarizable electron cloud than HCl (18), and the stronger dispersion forces outweigh its smaller dipole. Choice A is false: H–I is less polar. Choice D confuses breaking covalent bonds with separating molecules." },
+    { s: "Which of the following substances can form hydrogen bonds between its own molecules?",
+      o: ["CH₃OCH₃", "CH₃F", "CH₃NH₂", "H₂S"], c: 2,
+      w: "CH₃NH₂ has H atoms bonded directly to N, and N has a lone pair, so its molecules hydrogen bond. In CH₃OCH₃ and CH₃F every H is bonded to carbon. In H₂S the H is bonded to S, which is not N, O, or F." },
+    { s: "Pentane (CH₃CH₂CH₂CH₂CH₃) boils at 36 °C and neopentane, C(CH₃)₄, boils at 9.5 °C. Both have the formula C₅H₁₂. Which statement explains the difference?",
+      o: ["Pentane has a greater molar mass", "Pentane's long, unbranched shape gives more surface contact between molecules, so its dispersion forces are stronger", "Neopentane is polar and pentane is not", "Pentane forms hydrogen bonds"], c: 1,
+      w: "The two isomers have the same number of electrons and the same molar mass (choice A is false), and both are nonpolar with no hydrogen bonding. The straight chain can touch its neighbors over a larger area, so the dispersion forces are larger." },
+    { s: "A student draws hydrogen bonding in liquid water as a dashed line between the O atom and an H atom of the same water molecule. What is wrong with the drawing?",
+      o: ["Nothing; hydrogen bonds are the O–H bonds within a molecule", "The dashed line should connect two H atoms on neighboring molecules", "The dashed line should connect two O atoms on neighboring molecules", "The dashed line should connect an H atom of one molecule to a lone pair on the O atom of a different molecule"], c: 3,
+      w: "A hydrogen bond is an intermolecular attraction between H (covalently bonded to O) on one molecule and a lone pair on O of another molecule. The O–H line within one molecule is a covalent bond. Choices B and C would join like partial charges." },
+    { s: "Which statement correctly describes what happens when liquid water boils?",
+      o: ["O–H covalent bonds break, forming H₂ and O₂ gas", "Hydrogen bonds between water molecules are overcome, and the molecules separate", "Water molecules lose electrons and become ions", "London dispersion forces are created between the molecules"], c: 1,
+      w: "Boiling is a physical change: whole H₂O molecules leave the liquid when they have enough energy to overcome the intermolecular attractions (mainly hydrogen bonds). No covalent bonds break, so choice A describes a chemical change instead." },
+    { s: "When KCl dissolves in water, how are the water molecules oriented around the K⁺ ions?",
+      o: ["The partially negative O atoms point toward K⁺", "The partially positive H atoms point toward K⁺", "Water molecules are randomly oriented, since water is neutral", "Water molecules form covalent bonds with K⁺"], c: 0,
+      w: "A cation attracts the negative end of the water dipole, which is the O atom. Around the Cl⁻ ions, the H atoms point inward instead. These are ion–dipole attractions, not covalent bonds." },
+    { s: "Which substance has the highest boiling point? Butane, CH₃CH₂CH₂CH₃ (58 g/mol); acetone, CH₃COCH₃ (58 g/mol); 1-propanol, CH₃CH₂CH₂OH (60 g/mol); methoxyethane, CH₃CH₂OCH₃ (60 g/mol).",
+      o: ["Butane", "Acetone", "Methoxyethane", "1-Propanol"], c: 3,
+      w: "All four have similar numbers of electrons, so dispersion forces are similar. Only 1-propanol has an O–H bond, so it hydrogen bonds and boils highest (97 °C). Acetone (56 °C) and methoxyethane (7 °C) are polar but have no H on O; butane (−0.5 °C) is nonpolar." },
+    { s: "CH₃F (polar, 18 electrons) boils at −78 °C. CCl₄ (nonpolar, 74 electrons) boils at 77 °C. Which statement is correct?",
+      o: ["CCl₄ boils higher because its larger, more polarizable electron cloud gives dispersion forces stronger than all the attractions between CH₃F molecules", "CH₃F should boil higher because dipole–dipole forces are always stronger than dispersion forces", "CCl₄ boils higher because it forms hydrogen bonds", "CCl₄ boils higher because its C–Cl bonds are stronger than C–F bonds"], c: 0,
+      w: "CCl₄ has four times as many electrons, so its dispersion forces are much larger than the dipole–dipole plus dispersion forces between the small CH₃F molecules. Choice B is the trap: polar does not always beat nonpolar when sizes differ a lot. Choice D is about covalent bonds, which do not break on boiling." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("3.1");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [3], topic: "3.1", compact: true, storageKey: "topic-3.1" });</script>
+</body>
+</html>

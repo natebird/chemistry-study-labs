@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VSEPR and Hybridization Study Lab</title>
+<meta name="description" content="Spin 3D models of every VSEPR shape from linear to octahedral, add lone pairs and watch the molecular geometry change, and read off the bond angles, hybridization, polarity, and sigma and pi bonds for 16 real molecules.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; min-width: 38px; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.seg button:disabled { opacity: .35; cursor: default; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v { font-size: 1.02rem; }
+.check { display: flex; gap: 8px; align-items: center; font-size: .88rem; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.checks { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.axe { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center; font-size: .86rem; }
+#model { touch-action: none; cursor: grab; }
+#model:active { cursor: grabbing; }
+.legend .l-lp { color: var(--c3); } .legend .l-ang { color: var(--c1); } .legend .l-dip { color: var(--c4); } .legend .l-ad { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 2 · Topic 2.7</span>
+  <h1>VSEPR and Hybridization Study Lab</h1>
+  <p class="lede">Electron domains around a central atom repel each other and spread as far apart as possible. That one idea (valence shell electron pair repulsion, VSEPR) predicts a molecule's shape, its bond angles, whether it is polar, and the hybridization of the central atom. Build any shape, add lone pairs, and spin the 3D model.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. VSEPR explorer</h2>
+    <p>Pick a real molecule or build a generic one (A = central atom, X = outer atom, E = lone pair). Drag the model to rotate it. A multiple bond counts as one electron domain. Bond angles marked "about" are typical experimental values; the model shows ideal positions with lone pairs nudging the bonds slightly closer together.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3><span id="m-title"></span> <small>drag to rotate</small></h3>
+      <svg class="chart" id="model" role="img" aria-label="Rotatable three-dimensional model of the molecule with lone pairs and a bond angle"></svg>
+      <div class="checks">
+        <label class="check"><input type="checkbox" id="c-lp" checked> Lone pairs</label>
+        <label class="check"><input type="checkbox" id="c-ang" checked> Bond angle</label>
+        <label class="check"><input type="checkbox" id="c-dip"> Bond dipoles</label>
+        <label class="check"><input type="checkbox" id="c-spin"> Spin</label>
+      </div>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">2 or 3 electron domains</div>
+        <div class="scenarios" id="g-23"></div>
+      </div>
+      <div class="group">
+        <div class="tag">4 electron domains</div>
+        <div class="scenarios" id="g-4"></div>
+      </div>
+      <div class="group">
+        <div class="tag">5 or 6 electron domains (expanded octets)</div>
+        <div class="scenarios" id="g-56"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Build a generic AXₘEₙ molecule</div>
+        <div class="axe">
+          <span>Electron domains</span><div class="seg" role="group" aria-label="Number of electron domains" id="seg-d"></div>
+          <span>Lone pairs</span><div class="seg" role="group" aria-label="Number of lone pairs on the central atom" id="seg-l"></div>
+        </div>
+        <label class="check"><input type="checkbox" id="c-diff"> Make one outer atom different (Y)</label>
+      </div>
+      <div class="ctl">
+        <label for="s-rot">Rotate <output id="o-rot"></output></label>
+        <input type="range" id="s-rot" min="0" max="360" step="5">
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-ad">Central atom</span><span class="l-lp">Lone pair</span><span class="l-ang">Bond angle</span><span class="l-dip">Bond dipole (toward the more electronegative atom)</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Electron domains</div><div class="v" id="r-ed"></div><div class="sub" id="r-ed2"></div></div>
+    <div class="stat"><div class="k">Molecular geometry</div><div class="v" id="r-mg"></div><div class="sub" id="r-mg2"></div></div>
+    <div class="stat"><div class="k">Hybridization of central atom</div><div class="v" id="r-hy"></div><div class="sub" id="r-hy2"></div></div>
+    <div class="stat"><div class="k">Polarity</div><div class="v" id="r-po"></div><div class="sub" id="r-po2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Count domains</span><h3>Electron domains</h3><p>An electron domain is any region of electrons around the central atom: a single bond, a double bond, a triple bond, or a lone pair. Each counts as one domain. Get the count from the Lewis diagram, never from the formula alone.</p></div>
+    <div class="card"><span class="tag">Two geometries</span><h3>Electron vs. molecular geometry</h3><p>The electron-domain geometry describes where all domains point. The molecular geometry describes only where the atoms are. NH<sub>3</sub> has a tetrahedral electron geometry but a trigonal pyramidal molecular geometry, because one domain is a lone pair.</p></div>
+    <div class="card"><span class="tag">Squeezed angles</span><h3>Lone pairs repel more</h3><p>A lone pair is held by only one nucleus, so it spreads out and repels more strongly than a bonding pair. Bond angles shrink: 109.5° in CH<sub>4</sub>, about 107° in NH<sub>3</sub>, about 104.5° in H<sub>2</sub>O.</p></div>
+    <div class="card"><span class="tag">Hybridization</span><h3>sp, sp², sp³</h3><p>2 domains: sp hybridized, 180°. 3 domains: sp², 120°. 4 domains: sp³, 109.5°. Hybridization involving d orbitals (5 and 6 domains) is not assessed on the AP exam.</p></div>
+    <div class="card"><span class="tag">σ and π</span><h3>Sigma and pi bonds</h3><p>Every single bond is a σ bond (end-to-end overlap). A double bond is one σ + one π; a triple bond is one σ + two π. π bonds come from side-by-side overlap, are weaker than σ bonds, and prevent rotation around a double bond.</p></div>
+    <div class="card"><span class="tag">Dipoles</span><h3>Polar molecules</h3><p>A molecule is polar if its bond dipoles do not cancel. Symmetric shapes with identical outer atoms (linear AX<sub>2</sub>, trigonal planar, tetrahedral, trigonal bipyramidal, octahedral, square planar) are nonpolar. Lone pairs on the central atom usually make the shape asymmetric and the molecule polar.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. VSEPR master table</h2>
+    <p>All thirteen shapes the AP exam uses. "Polar?" assumes all outer atoms are identical. Angles with "&lt;" are smaller than ideal because of lone-pair repulsion.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Domains</th><th>Lone pairs</th><th>Electron geometry</th><th>Molecular geometry</th><th>Bond angles</th><th>Hybridization</th><th>Polar?</th><th>Example</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Writing it on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Start from the Lewis diagram and state the count: "the central N has four electron domains: three bonding pairs and one lone pair."</li>
+        <li>Name the molecular geometry, not just the electron geometry, when the question asks for the shape of the molecule.</li>
+        <li>Justify a bond angle with repulsion: "the lone pair repels the bonding pairs more strongly than they repel each other, so the angle is less than 109.5°."</li>
+        <li>Justify polarity with both bond polarity and shape: "the C–F bonds are polar, but the tetrahedral shape makes the dipoles cancel, so CF<sub>4</sub> is nonpolar."</li>
+        <li>Connect hybridization to domains: 4 domains → sp³, 3 → sp², 2 → sp.</li>
+        <li>Count σ and π bonds from the Lewis diagram: every bond has exactly one σ; extra bonds in a double or triple bond are π.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Counting a double or triple bond as two or three domains. It is one domain.</li>
+        <li>Calling NH<sub>3</sub> "tetrahedral" or H<sub>2</sub>O "linear." Lone pairs set the electron geometry but are not part of the molecular shape.</li>
+        <li>Saying a molecule with polar bonds must be polar. Symmetry can cancel the dipoles (CO<sub>2</sub>, BF<sub>3</sub>, CCl<sub>4</sub>, XeF<sub>4</sub>).</li>
+        <li>Forgetting the lone pairs on the central atom when they come from an expanded octet (SF<sub>4</sub>, XeF<sub>2</sub>, XeF<sub>4</sub>).</li>
+        <li>Putting lone pairs in axial positions of a trigonal bipyramid. They go equatorial, where they have more room.</li>
+        <li>Writing a bond angle of exactly 109.5° for NH<sub>3</sub> or H<sub>2</sub>O. Write "less than 109.5°."</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 2.7. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-2.html">Unit 2 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = Lab.el;
+  function norm(v) { var l = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]); return [v[0] / l, v[1] / l, v[2] / l]; }
+  function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+  function cross(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
+
+  // ---------- Domain directions (y up, z toward the viewer) and the order lone pairs fill them ----------
+  var T = Math.sqrt(8) / 3, r3 = Math.sqrt(3) / 2;
+  function tet(a) { a *= Math.PI / 180; return [T * Math.cos(a), -1 / 3, T * Math.sin(a)]; }
+  function eq(a) { a *= Math.PI / 180; return [Math.sin(a), 0, Math.cos(a)]; }
+  var DIRS = {
+    2: { d: [[1, 0, 0], [-1, 0, 0]], lp: [] },
+    3: { d: [[0, 1, 0], [-r3, -0.5, 0], [r3, -0.5, 0]], lp: [0] },
+    4: { d: [[0, 1, 0], tet(90), tet(210), tet(330)], lp: [0, 1] },
+    5: { d: [eq(180), eq(60), eq(300), [0, 1, 0], [0, -1, 0]], lp: [0, 1, 2] },   // equatorial first: lone pairs go there
+    6: { d: [[0, 1, 0], [0, -1, 0], [1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]], lp: [1, 0] }
+  };
+  // ---------- The thirteen AP shapes ----------
+  var SH = {
+    "2-0": { eg: "Linear", mg: "Linear", ang: "180°", hy: "sp", polar: false, arcs: [[0, 1, "180°"]], ex: "CO₂" },
+    "3-0": { eg: "Trigonal planar", mg: "Trigonal planar", ang: "120°", hy: "sp²", polar: false, arcs: [[1, 2, "120°"]], ex: "BF₃" },
+    "3-1": { eg: "Trigonal planar", mg: "Bent", ang: "< 120°", hy: "sp²", polar: true, arcs: [[1, 2, "< 120°"]], ex: "SO₂" },
+    "4-0": { eg: "Tetrahedral", mg: "Tetrahedral", ang: "109.5°", hy: "sp³", polar: false, arcs: [[1, 2, "109.5°"]], ex: "CH₄" },
+    "4-1": { eg: "Tetrahedral", mg: "Trigonal pyramidal", ang: "< 109.5°", hy: "sp³", polar: true, arcs: [[1, 2, "< 109.5°"]], ex: "NH₃" },
+    "4-2": { eg: "Tetrahedral", mg: "Bent", ang: "< 109.5°", hy: "sp³", polar: true, arcs: [[2, 3, "< 109.5°"]], ex: "H₂O" },
+    "5-0": { eg: "Trigonal bipyramidal", mg: "Trigonal bipyramidal", ang: "90°, 120°, 180°", hy: "sp³d*", polar: false, arcs: [[3, 1, "90°"], [1, 2, "120°"]], ex: "PCl₅" },
+    "5-1": { eg: "Trigonal bipyramidal", mg: "Seesaw", ang: "< 90°, < 120°", hy: "sp³d*", polar: true, arcs: [[3, 1, "< 90°"], [1, 2, "< 120°"]], ex: "SF₄" },
+    "5-2": { eg: "Trigonal bipyramidal", mg: "T-shaped", ang: "< 90°", hy: "sp³d*", polar: true, arcs: [[3, 2, "< 90°"]], ex: "ClF₃" },
+    "5-3": { eg: "Trigonal bipyramidal", mg: "Linear", ang: "180°", hy: "sp³d*", polar: false, arcs: [[3, 4, "180°"]], ex: "XeF₂" },
+    "6-0": { eg: "Octahedral", mg: "Octahedral", ang: "90°", hy: "sp³d²*", polar: false, arcs: [[0, 2, "90°"]], ex: "SF₆" },
+    "6-1": { eg: "Octahedral", mg: "Square pyramidal", ang: "< 90°", hy: "sp³d²*", polar: true, arcs: [[0, 2, "< 90°"]], ex: "BrF₅" },
+    "6-2": { eg: "Octahedral", mg: "Square planar", ang: "90°", hy: "sp³d²*", polar: false, arcs: [[2, 4, "90°"]], ex: "XeF₄" }
+  };
+  // ---------- Real molecules. outer[] fills the bonding positions in order; ord = bond orders. ----------
+  var EN = { H: 2.20, B: 2.04, C: 2.55, N: 3.04, O: 3.44, F: 3.98, P: 2.19, S: 2.58, Cl: 3.16, Br: 2.96, Xe: 2.60 };
+  var MOL = {
+    CO2:  { f: "CO₂", g: "23", c: "C", d: 2, l: 0, outer: ["O", "O"], ord: [2, 2], ang: "180°" },
+    HCN:  { f: "HCN", g: "23", c: "C", d: 2, l: 0, outer: ["N", "H"], ord: [3, 1], ang: "180°" },
+    BF3:  { f: "BF₃", g: "23", c: "B", d: 3, l: 0, outer: ["F", "F", "F"], ord: [1, 1, 1], ang: "120°", note: "B has only 6 electrons (an incomplete octet), but it still has three electron domains." },
+    CH2O: { f: "CH₂O", g: "23", c: "C", d: 3, l: 0, outer: ["O", "H", "H"], ord: [2, 1, 1], ang: "about 120°", note: "The C=O double bond counts as one domain, so C has three domains even though it has four bonds' worth of electrons." },
+    SO2:  { f: "SO₂", g: "23", c: "S", d: 3, l: 1, outer: ["O", "O"], ord: [2, 1], ang: "about 119°", note: "SO₂ has resonance: the S=O double bond can be to either O. Each resonance structure has 1 π bond; the two S–O bonds are identical in the real molecule." },
+    CH4:  { f: "CH₄", g: "4", c: "C", d: 4, l: 0, outer: ["H", "H", "H", "H"], ord: [1, 1, 1, 1], ang: "109.5°" },
+    NH3:  { f: "NH₃", g: "4", c: "N", d: 4, l: 1, outer: ["H", "H", "H"], ord: [1, 1, 1], ang: "about 107°" },
+    H2O:  { f: "H₂O", g: "4", c: "O", d: 4, l: 2, outer: ["H", "H"], ord: [1, 1], ang: "about 104.5°" },
+    CH3Cl:{ f: "CH₃Cl", g: "4", c: "C", d: 4, l: 0, outer: ["Cl", "H", "H", "H"], ord: [1, 1, 1, 1], ang: "about 109.5°", note: "The shape is tetrahedral, but the outer atoms are not all the same, so the bond dipoles do not cancel." },
+    PCl5: { f: "PCl₅", g: "56", c: "P", d: 5, l: 0, outer: ["Cl", "Cl", "Cl", "Cl", "Cl"], ord: [1, 1, 1, 1, 1], ang: "90°, 120°, 180°" },
+    SF4:  { f: "SF₄", g: "56", c: "S", d: 5, l: 1, outer: ["F", "F", "F", "F"], ord: [1, 1, 1, 1], ang: "about 102° (equatorial) and 87° (axial–equatorial)" },
+    ClF3: { f: "ClF₃", g: "56", c: "Cl", d: 5, l: 2, outer: ["F", "F", "F"], ord: [1, 1, 1], ang: "about 87.5°" },
+    XeF2: { f: "XeF₂", g: "56", c: "Xe", d: 5, l: 3, outer: ["F", "F"], ord: [1, 1], ang: "180°" },
+    SF6:  { f: "SF₆", g: "56", c: "S", d: 6, l: 0, outer: ["F", "F", "F", "F", "F", "F"], ord: [1, 1, 1, 1, 1, 1], ang: "90°" },
+    BrF5: { f: "BrF₅", g: "56", c: "Br", d: 6, l: 1, outer: ["F", "F", "F", "F", "F"], ord: [1, 1, 1, 1, 1], ang: "about 85°" },
+    XeF4: { f: "XeF₄", g: "56", c: "Xe", d: 6, l: 2, outer: ["F", "F", "F", "F"], ord: [1, 1, 1, 1], ang: "90°" }
+  };
+  var COL = { H: "ghost", B: "c1", C: "ink", N: "c3", O: "c4", F: "c2", Cl: "c2", Br: "c1", P: "c1", S: "c1", Xe: "c3", X: "c2", Y: "c4", A: "accent" };
+
+  var S = { key: "CH4", d: 4, l: 0, diff: false, yaw: 25, pitch: -18, lp: true, ang: true, dip: false, spin: false };
+
+  // ---------- Current molecule ----------
+  function current() {
+    var sh = SH[S.d + "-" + S.l], dd = DIRS[S.d], lpIdx = dd.lp.slice(0, S.l);
+    var bondIdx = dd.d.map(function (v, i) { return i; }).filter(function (i) { return lpIdx.indexOf(i) < 0; });
+    var m = S.key ? MOL[S.key] : null;
+    var c = m ? m.c : "A";
+    var outer = bondIdx.map(function (bi, k) { return m ? m.outer[k] : (S.diff && k === 0 ? "Y" : "X"); });
+    var ord = bondIdx.map(function (bi, k) { return m ? m.ord[k] : 1; });
+    // display directions: bonds nudged away from lone pairs so the squeezed angle is visible
+    var shown = dd.d.map(function (v, i) {
+      if (lpIdx.indexOf(i) >= 0 || !lpIdx.length) return v;
+      var w = v.slice();
+      lpIdx.forEach(function (j) { var l = dd.d[j]; w = [w[0] - 0.09 * l[0], w[1] - 0.09 * l[1], w[2] - 0.09 * l[2]]; });
+      return norm(w);
+    });
+    // polarity: vector sum of bond dipoles (ideal directions), pointing toward the more electronegative atom
+    var mu = [0, 0, 0];
+    bondIdx.forEach(function (bi, k) {
+      var w = m ? EN[outer[k]] - EN[c] : (outer[k] === "Y" ? 1.0 : 0.5);
+      var v = dd.d[bi]; mu = [mu[0] + w * v[0], mu[1] + w * v[1], mu[2] + w * v[2]];
+    });
+    var muL = Math.sqrt(dot(mu, mu));
+    var sigma = ord.length, pi = ord.reduce(function (t, o) { return t + o - 1; }, 0);
+    return { sh: sh, dd: dd, lpIdx: lpIdx, bondIdx: bondIdx, outer: outer, ord: ord, c: c, m: m, shown: shown, polar: muL > 0.05, mu: mu, muL: muL, sigma: sigma, pi: pi };
+  }
+
+  // ---------- 3D drawing ----------
+  var svg = document.getElementById("model"), W = 440, H = 400, CX = 220, CY = 196, BL = 118;
+  function draw() {
+    var M = current();
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var defs = el("defs", {}, svg);
+    ["accent", "c1", "c2", "c3", "c4", "ink", "ghost"].forEach(function (k) {
+      var rg = el("radialGradient", { id: "gr-" + k, cx: "0.36", cy: "0.32", r: "0.78" }, defs);
+      el("stop", { offset: "0", style: "stop-color:#ffffff; stop-opacity:.75" }, rg);
+      el("stop", { offset: "0.4", style: "stop-color:var(--" + k + "); stop-opacity:.85" }, rg);
+      el("stop", { offset: "1", style: "stop-color:var(--" + k + ")" }, rg);
+    });
+    var ry = S.yaw * Math.PI / 180, rp = S.pitch * Math.PI / 180, cy = Math.cos(ry), sy = Math.sin(ry), cp = Math.cos(rp), sp = Math.sin(rp);
+    function R(v) { var x1 = v[0] * cy + v[2] * sy, z1 = -v[0] * sy + v[2] * cy; var y2 = v[1] * cp - z1 * sp, z2 = v[1] * sp + z1 * cp; return [x1, y2, z2]; }
+    function P(v, len) { var r = R(v), f = 900 / (900 - r[2] * len); return { x: CX + r[0] * len * f, y: CY - r[1] * len * f, z: r[2] * len, f: f }; }
+    var items = [];
+    // bonds and outer atoms
+    M.bondIdx.forEach(function (bi, k) {
+      var v = M.shown[bi], pa = P(v, BL), p0 = P([0, 0, 0], 0);
+      var s = M.outer[k], rad = (s === "H" ? 15 : 21) * pa.f;
+      items.push({ z: pa.z / 2 - 0.01, draw: function () {
+        var dx = pa.x - p0.x, dy = pa.y - p0.y, L = Math.sqrt(dx * dx + dy * dy) || 1, nx = -dy / L, ny = dx / L;
+        var o = M.ord[k], offs = o === 1 ? [0] : o === 2 ? [-4.5, 4.5] : [-7, 0, 7];
+        offs.forEach(function (d) { el("line", { x1: p0.x + nx * d, y1: p0.y + ny * d, x2: pa.x + nx * d, y2: pa.y + ny * d, stroke: "var(--muted)", "stroke-width": o === 1 ? 6 : 3.4, "stroke-linecap": "round" }, svg); });
+      } });
+      items.push({ z: pa.z, draw: function () {
+        el("circle", { cx: pa.x, cy: pa.y, r: rad, fill: "url(#gr-" + COL[s] + ")", stroke: "var(--surface)", "stroke-width": 1 }, svg);
+        el("text", { x: pa.x, y: pa.y + 4.5, "text-anchor": "middle", style: "font-size:" + Math.round(13 * pa.f) + "px; font-weight:700; fill:" + (COL[s] === "ghost" || COL[s] === "ink" ? "var(--surface)" : "var(--surface)") }, svg, s);
+      } });
+      if (S.dip) {
+        var w = M.m ? EN[s] - EN[M.c] : (s === "Y" ? 1.0 : 0.5);
+        if (Math.abs(w) > 0.05) items.push({ z: pa.z + 50, draw: function () {
+          var a0 = w > 0 ? 0.32 : 0.78, a1 = w > 0 ? 0.78 : 0.32;
+          var q0 = P(v, BL * a0), q1 = P(v, BL * a1), off = 15;
+          var dx = q1.x - q0.x, dy = q1.y - q0.y, L = Math.sqrt(dx * dx + dy * dy) || 1, nx = -dy / L * off, ny = dx / L * off;
+          if (L < 10) return;
+          el("line", { x1: q0.x + nx, y1: q0.y + ny, x2: q1.x + nx - dx / L * 8, y2: q1.y + ny - dy / L * 8, stroke: "var(--c4)", "stroke-width": 2.5 }, svg);
+          el("path", { d: "M" + (q1.x + nx) + " " + (q1.y + ny) + " l" + (-dx / L * 10 + dy / L * 5) + " " + (-dy / L * 10 - dx / L * 5) + " l" + (-dy / L * 10) + " " + (dx / L * 10) + " z", fill: "var(--c4)" }, svg);
+          el("line", { x1: q0.x + nx + dx / L * 6 - dy / L * 5, y1: q0.y + ny + dy / L * 6 + dx / L * 5, x2: q0.x + nx + dx / L * 6 + dy / L * 5, y2: q0.y + ny + dy / L * 6 - dx / L * 5, stroke: "var(--c4)", "stroke-width": 2 }, svg);
+        } });
+      }
+    });
+    // lone pairs
+    if (S.lp) M.lpIdx.forEach(function (li) {
+      var v = M.dd.d[li], c = P(v, 52), tip = P(v, 74), base = P([0, 0, 0], 0);
+      var dx = tip.x - base.x, dy = tip.y - base.y, Lp = Math.sqrt(dx * dx + dy * dy) / 74;
+      var ang = Math.atan2(dy, dx) * 180 / Math.PI;
+      items.push({ z: c.z, draw: function () {
+        var rx = Math.max(19, 36 * Lp), ryy = 19;
+        el("ellipse", { cx: c.x, cy: c.y, rx: rx, ry: ryy, transform: "rotate(" + ang + " " + c.x + " " + c.y + ")", fill: "var(--c3)", "fill-opacity": 0.2, stroke: "var(--c3)", "stroke-width": 1.5 }, svg);
+        var px = -Math.sin(ang * Math.PI / 180) * 5, py = Math.cos(ang * Math.PI / 180) * 5;
+        var ex = Math.cos(ang * Math.PI / 180) * 6, ey = Math.sin(ang * Math.PI / 180) * 6;
+        el("circle", { cx: c.x + ex + px, cy: c.y + ey + py, r: 3, fill: "var(--c3)" }, svg);
+        el("circle", { cx: c.x + ex - px, cy: c.y + ey - py, r: 3, fill: "var(--c3)" }, svg);
+      } });
+    });
+    // central atom
+    items.push({ z: 0, draw: function () {
+      var p0 = P([0, 0, 0], 0);
+      el("circle", { cx: p0.x, cy: p0.y, r: 27, fill: "url(#gr-accent)", stroke: "var(--surface)", "stroke-width": 1 }, svg);
+      el("text", { x: p0.x, y: p0.y + 5.5, "text-anchor": "middle", style: "font-size:15px; font-weight:700; fill:var(--surface)" }, svg, M.c);
+    } });
+    items.sort(function (a, b) { return a.z - b.z; });
+    items.forEach(function (it) { it.draw(); });
+    // bond-angle arcs, drawn on top
+    if (S.ang) M.sh.arcs.forEach(function (a, n) {
+      var u = M.shown[a[0]], w = M.shown[a[1]], pts = [];
+      var th = Math.acos(Math.max(-1, Math.min(1, dot(u, w))));
+      var mid;
+      if (th > 3.1) { mid = norm(cross(u, Math.abs(u[1]) < 0.9 ? [0, 1, 0] : [0, 0, 1])); if (mid[1] < 0 || (Math.abs(mid[1]) < 1e-6 && mid[2] < 0)) mid = [-mid[0], -mid[1], -mid[2]]; }
+      for (var i = 0; i <= 24; i++) {
+        var t = i / 24, v;
+        if (th > 3.1) { var phi = t * Math.PI; var cu = Math.cos(phi), su = Math.sin(phi); v = [u[0] * cu + mid[0] * su, u[1] * cu + mid[1] * su, u[2] * cu + mid[2] * su]; }
+        else { var s1 = Math.sin((1 - t) * th) / Math.sin(th), s2 = Math.sin(t * th) / Math.sin(th); v = [u[0] * s1 + w[0] * s2, u[1] * s1 + w[1] * s2, u[2] * s1 + w[2] * s2]; }
+        var p = P(v, 50); pts.push(p.x.toFixed(1) + " " + p.y.toFixed(1));
+      }
+      el("path", { d: "M" + pts.join(" L"), fill: "none", stroke: "var(--c1)", "stroke-width": 2.5 }, svg);
+      var mv = th > 3.1 ? mid : norm([u[0] + w[0], u[1] + w[1], u[2] + w[2]]);
+      var lp = P(mv, 72), label = M.m && M.sh.arcs.length === 1 && M.m.ang.indexOf("about") === 0 ? "≈" + M.m.ang.replace("about ", "") : a[2];
+      var tw = label.length * 7 + 10;
+      el("rect", { x: lp.x - tw / 2, y: lp.y - 11, width: tw, height: 20, rx: 6, fill: "var(--surface)", stroke: "var(--c1)", "stroke-width": 1 }, svg);
+      el("text", { x: lp.x, y: lp.y + 4, "text-anchor": "middle", style: "font-size:12px; font-weight:700; fill:var(--c1)" }, svg, label);
+    });
+    el("text", { x: W / 2, y: H - 10, "text-anchor": "middle", style: "font-size:12px; fill:var(--ink); font-weight:600" }, svg, M.sh.mg + (M.l ? "" : "") + "  ·  AX" + sub(M.bondIdx.length) + (S.l ? "E" + sub(S.l) : ""));
+  }
+  function sub(n) { return n === 1 ? "" : String(n).replace(/\d/g, function (d) { return "₀₁₂₃₄₅₆₇₈₉"[d]; }); }
+
+  // drag + spin
+  (function () {
+    var drag = null;
+    svg.addEventListener("pointerdown", function (e) { drag = { x: e.clientX, y: e.clientY, yaw: S.yaw, pitch: S.pitch }; svg.setPointerCapture(e.pointerId); });
+    svg.addEventListener("pointermove", function (e) {
+      if (!drag) return;
+      var k = 440 / svg.getBoundingClientRect().width;
+      S.yaw = ((drag.yaw + (e.clientX - drag.x) * 0.6 * k) % 360 + 360) % 360;
+      S.pitch = Math.max(-85, Math.min(85, drag.pitch + (e.clientY - drag.y) * 0.5 * k));
+      draw(); syncRot();
+    });
+    function end() { drag = null; }
+    svg.addEventListener("pointerup", end); svg.addEventListener("pointercancel", end);
+  })();
+  var spinRaf = null, lastT = 0;
+  function spinLoop(t) { var dt = lastT ? Math.min(50, t - lastT) : 16; lastT = t; S.yaw = (S.yaw + dt * 0.03) % 360; draw(); syncRot(); spinRaf = requestAnimationFrame(spinLoop); }
+  function setSpin(on) { S.spin = on; if (spinRaf) cancelAnimationFrame(spinRaf); spinRaf = null; lastT = 0; if (on && !Lab.reduceMotion) spinRaf = requestAnimationFrame(spinLoop); }
+  document.addEventListener("visibilitychange", function () { if (document.hidden) { if (spinRaf) cancelAnimationFrame(spinRaf); spinRaf = null; } else if (S.spin) setSpin(true); });
+
+  // ---------- Readouts and story ----------
+  function story(M) {
+    var sh = M.sh, m = M.m, nb = M.bondIdx.length, nl = S.l, name = m ? m.f : "AX" + sub(nb) + (nl ? "E" + sub(nl) : "");
+    var li = [], html;
+    html = "<p><b>" + name + ": " + sh.mg.toLowerCase() + ".</b> The central " + (m ? m.c : "atom A") + " has <b>" + S.d + " electron domains</b>: " + nb + " bonding domain" + (nb > 1 ? "s" : "") + (nl ? " and " + nl + " lone pair" + (nl > 1 ? "s" : "") : " and no lone pairs") + ".</p>";
+    li.push("Electron domains spread as far apart as possible, so the " + S.d + " domains point toward the corners of a <b>" + sh.eg.toLowerCase() + "</b> arrangement" + (nl ? ". Only the atoms define the molecular shape, so with " + nl + " of those positions taken by lone pairs the molecule is <b>" + sh.mg.toLowerCase() + "</b>." : ", and with no lone pairs the molecular geometry is the same."));
+    if (m && m.ord.some(function (o) { return o > 1; })) li.push("Each multiple bond counts as <b>one</b> domain.");
+    if (m && m.note) li.push(m.note);
+    var angTxt = m ? m.ang : sh.ang;
+    if (nl && S.d <= 4) li.push("Bond angle " + angTxt + ": lone pairs repel more strongly than bonding pairs, squeezing the bonds closer than the ideal " + (S.d === 4 ? "109.5°" : "120°") + ".");
+    else if (nl && S.d >= 5 && sh.ang.indexOf("<") >= 0) li.push("Bond angles " + angTxt + ": lone pairs push the bonds slightly closer than the ideal 90° and 120°. " + (S.d === 5 ? "Lone pairs sit in equatorial positions, where they have more room (only two neighbors at 90° instead of three)." : ""));
+    else li.push("Bond angle" + (sh.ang.indexOf(",") >= 0 ? "s" : "") + ": " + angTxt + ".");
+    if (S.d <= 4) li.push("Hybridization: " + S.d + " domains → <b>" + sh.hy + "</b> on the central atom" + (m ? " (" + M.sigma + " σ bond" + (M.sigma > 1 ? "s" : "") + " and " + M.pi + " π bond" + (M.pi === 1 ? "" : "s") + " in the molecule)" : "") + ".");
+    else li.push("Hybridization: " + S.d + " domains would be " + sh.hy.replace("*", "") + ", but hybridization involving d orbitals is <b>not assessed</b> on the AP exam." + (m ? " The molecule has " + M.sigma + " σ bonds and no π bonds." : ""));
+    if (M.polar) li.push("<b>Polar.</b> " + (sh.polar ? "The shape is not symmetric, so the bond dipoles do not cancel; there is a net dipole." : "The shape is symmetric, but the outer atoms are not all the same, so the bond dipoles do not cancel."));
+    else li.push("<b>Nonpolar.</b> " + (m && m.outer.every(function (o) { return Math.abs(EN[o] - EN[m.c]) < 0.4; }) ? "The bonds are nonpolar or nearly so, and the shape is symmetric." : "Each bond is polar, but the shape is symmetric with identical outer atoms, so the bond dipoles cancel."));
+    var end = "<b>AP answer:</b> " + (m ? m.c : "A") + " has " + S.d + " electron domains (" + nb + " bonding, " + nl + " nonbonding), so the electron-domain geometry is " + sh.eg.toLowerCase() + " and the molecular geometry is " + sh.mg.toLowerCase() + (M.polar ? "; the bond dipoles do not cancel, so the molecule is polar." : "; the bond dipoles cancel, so the molecule is nonpolar.");
+    return html + "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul><p>" + end + "</p>";
+  }
+  var elRot = document.getElementById("s-rot");
+  function syncRot() { elRot.value = Math.round(S.yaw / 5) * 5; document.getElementById("o-rot").textContent = Math.round(S.yaw) + "°"; }
+  var btns = {}, dBtns = {}, lBtns = {};
+  function render() {
+    var M = current(), sh = M.sh;
+    draw(); syncRot();
+    document.getElementById("m-title").textContent = M.m ? M.m.f : "Generic AX" + sub(M.bondIdx.length) + (S.l ? "E" + sub(S.l) : "") + (S.diff ? " (one Y)" : "");
+    document.getElementById("r-ed").textContent = S.d + " (" + M.bondIdx.length + " bond" + (M.bondIdx.length > 1 ? "s" : "") + ", " + S.l + " LP)";
+    document.getElementById("r-ed2").textContent = sh.eg + " electron geometry";
+    document.getElementById("r-mg").textContent = sh.mg;
+    document.getElementById("r-mg2").textContent = "angles: " + (M.m ? M.m.ang : sh.ang);
+    document.getElementById("r-hy").textContent = sh.hy.replace("*", "");
+    document.getElementById("r-hy2").textContent = S.d >= 5 ? "d-orbital hybridization: not on the AP exam" : M.m ? M.sigma + " σ, " + M.pi + " π bonds" : (S.d === 2 ? "180°" : S.d === 3 ? "120°" : "109.5°") + " ideal angles";
+    document.getElementById("r-po").innerHTML = M.polar ? '<span class="pill infl">Polar</span>' : '<span class="pill lr">Nonpolar</span>';
+    document.getElementById("r-po2").textContent = M.polar ? "bond dipoles do not cancel" : "dipoles cancel (or bonds nonpolar)";
+    document.getElementById("story").innerHTML = story(M);
+    Object.keys(btns).forEach(function (k) { btns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    Object.keys(dBtns).forEach(function (k) { dBtns[k].setAttribute("aria-pressed", +k === S.d ? "true" : "false"); });
+    Object.keys(lBtns).forEach(function (k) { var n = +k, ok = n < DIRS[S.d].lp.length + 1 && S.d - n >= 2 && SH[S.d + "-" + n]; lBtns[k].disabled = !ok; lBtns[k].setAttribute("aria-pressed", n === S.l ? "true" : "false"); });
+    document.getElementById("c-diff").disabled = !!S.key;
+  }
+  Object.keys(MOL).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = MOL[k].f; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S.key = k; S.d = MOL[k].d; S.l = MOL[k].l; S.diff = false; document.getElementById("c-diff").checked = false; render(); });
+    document.getElementById("g-" + MOL[k].g).appendChild(b); btns[k] = b;
+  });
+  [2, 3, 4, 5, 6].forEach(function (n) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = n;
+    b.addEventListener("click", function () { S.key = null; S.d = n; if (!SH[n + "-" + S.l]) S.l = 0; render(); });
+    document.getElementById("seg-d").appendChild(b); dBtns[n] = b;
+  });
+  [0, 1, 2, 3].forEach(function (n) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = n;
+    b.addEventListener("click", function () { if (!SH[S.d + "-" + n]) return; S.key = null; S.l = n; render(); });
+    document.getElementById("seg-l").appendChild(b); lBtns[n] = b;
+  });
+  document.getElementById("c-diff").addEventListener("change", function (e) { S.diff = e.target.checked; render(); });
+  document.getElementById("c-lp").addEventListener("change", function (e) { S.lp = e.target.checked; draw(); });
+  document.getElementById("c-ang").addEventListener("change", function (e) { S.ang = e.target.checked; draw(); });
+  document.getElementById("c-dip").addEventListener("change", function (e) { S.dip = e.target.checked; draw(); });
+  document.getElementById("c-spin").addEventListener("change", function (e) { setSpin(e.target.checked); });
+  elRot.addEventListener("input", function () { S.yaw = +elRot.value; draw(); syncRot(); });
+  render();
+
+  // master table
+  document.getElementById("tbody").innerHTML = Object.keys(SH).map(function (k) {
+    var x = SH[k], p = k.split("-");
+    return "<tr><td>" + p[0] + "</td><td>" + p[1] + "</td><td>" + x.eg + "</td><td><b>" + x.mg + "</b></td><td>" + x.ang + "</td><td>" + (+p[0] >= 5 ? x.hy.replace("*", "") + " (not assessed)" : x.hy) + "</td><td>" + (x.polar ? "Polar" : "Nonpolar") + "</td><td>" + x.ex + "</td></tr>";
+  }).join("");
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "What is the molecular geometry of NH₃?",
+      o: ["Tetrahedral", "Trigonal planar", "Trigonal pyramidal", "Bent"], c: 2,
+      w: "N has three bonding domains and one lone pair: four domains in a tetrahedral electron geometry. The molecular geometry describes only the atoms, so NH₃ is trigonal pyramidal. Choice A is the electron-domain geometry, the most common trap." },
+    { s: "The H–O–H bond angle in water is about 104.5°, smaller than the 109.5° tetrahedral angle. Which statement best explains this?",
+      o: ["Oxygen is sp² hybridized, so its angles are smaller than 109.5°.", "The two lone pairs on O repel the bonding pairs more strongly than the bonding pairs repel each other, pushing the O–H bonds closer together.", "The H atoms attract each other, pulling the bonds together.", "The O–H bonds are polar, and polar bonds always have smaller angles."], c: 1,
+      w: "O has four electron domains (sp³), two of them lone pairs. A lone pair is held by only one nucleus and occupies more space, so lone pair–bond pair repulsion is greater than bond pair–bond pair repulsion, compressing the angle. Choice A is wrong: four domains means sp³." },
+    { s: "What is the hybridization of the carbon atom in CO₂?",
+      o: ["sp", "sp²", "sp³", "sp³d"], c: 0,
+      w: "The Lewis diagram is O=C=O. Each double bond counts as one electron domain, so C has two domains, a linear arrangement with 180° angles: sp hybridization. Choice B comes from counting the two π bonds as extra domains." },
+    { s: "Which of the following molecules is nonpolar even though it contains polar bonds?",
+      o: ["H₂O", "NH₃", "CF₄", "CH₃Cl"], c: 2,
+      w: "CF₄ is tetrahedral with four identical C–F bonds, so the four bond dipoles cancel. H₂O (bent) and NH₃ (trigonal pyramidal) are asymmetric. CH₃Cl is tetrahedral, but its outer atoms are not all the same, so its dipoles do not cancel." },
+    { s: "How many sigma (σ) bonds and pi (π) bonds are in a molecule of ethene, C₂H₄ (H₂C=CH₂)?",
+      o: ["4 σ and 2 π", "5 σ and 1 π", "6 σ and 0 π", "6 σ and 1 π"], c: 1,
+      w: "Ethene has four C–H single bonds (4 σ) and one C=C double bond (1 σ + 1 π). Total: 5 σ and 1 π. Choice D counts the double bond as two σ bonds plus a π bond; every bond, single or multiple, contains exactly one σ bond." },
+    { s: "SF₄ has four bonding domains and one lone pair on S. What is its molecular geometry?",
+      o: ["Tetrahedral", "Square planar", "Trigonal pyramidal", "Seesaw"], c: 3,
+      w: "Five electron domains give a trigonal bipyramidal electron geometry. The lone pair takes an equatorial position (more room), leaving the four F atoms in a seesaw shape. Choices A and C would apply only if S had four domains in total; the lone pair from the expanded octet is the easy-to-miss fifth domain." },
+    { s: "Which statement correctly describes XeF₄?",
+      o: ["It is square planar and nonpolar.", "It is tetrahedral and nonpolar.", "It is seesaw and polar.", "It is square pyramidal and polar."], c: 0,
+      w: "Xe has 4 bonding domains and 2 lone pairs (6 domains, octahedral electron geometry). The lone pairs sit opposite each other, leaving the four F atoms in a square plane. The four Xe–F dipoles cancel, so the molecule is nonpolar. Choice B treats the 4 bonds as the only domains." },
+    { s: "Which statement about the C=C double bond in ethene is correct?",
+      o: ["It contains two σ bonds.", "Its π bond is stronger than its σ bond.", "Rotation around the C=C bond is easy because the π bond is weak.", "It contains one σ bond and one π bond, and the π bond prevents rotation around the C=C axis."], c: 3,
+      w: "A double bond is one σ bond (end-to-end overlap) plus one π bond (side-by-side overlap of p orbitals). The π overlap is weaker than σ overlap, but twisting the molecule would break the side-by-side overlap, so the π bond locks the two ends in place. Choice C has the reasoning backward." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("2.7");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [2], topic: "2.7", compact: true, storageKey: "topic-2.7" });</script>
+</body>
+</html>

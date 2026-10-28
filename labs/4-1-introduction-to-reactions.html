@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Introduction for Reactions Study Lab</title>
+<meta name="description" content="Watch eleven lab-bench events, decide from the evidence whether each is a physical or chemical change, then balance equations with a coefficient balancer that counts atoms on each side.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+:root { --sol-blue: #2f7fd0; --ppt-yellow: #e2b714; --copper: #b5652b; --silver: #8f99a5; --rust: #9a3d1c; --dye: #2e9e4f; --crystal: #c9d3df; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --sol-blue: #5aa2e8; --ppt-yellow: #f0cf4a; --copper: #e0955c; --silver: #c3cad3; --rust: #d9724a; --dye: #55cf80; --crystal: #dfe6ee; } }
+:root[data-theme="dark"] { --sol-blue: #5aa2e8; --ppt-yellow: #f0cf4a; --copper: #e0955c; --silver: #c3cad3; --rust: #d9724a; --dye: #55cf80; --crystal: #dfe6ee; }
+.part { font-size: 1.25rem; margin-top: 6px; }
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.evid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.evid li { font-size: .86rem; border: 1px solid var(--rule); border-radius: 8px; padding: 6px 10px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+.evid li::before { content: ""; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--ghost); flex: none; }
+.evid li.on { color: var(--ink); border-color: var(--accent); background: var(--accent-soft); font-weight: 500; }
+.evid li.on::before { background: var(--accent); border-color: var(--accent); }
+.prompt { font-size: .95rem; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; }
+.btnrow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+/* Balancer */
+.bal-eq { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 8px; justify-content: center; padding: 6px 0; }
+.sp { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--rule); border-radius: 10px; padding: 4px 8px 4px 4px; background: var(--paper); }
+.sp .step { display: inline-grid; grid-template-columns: 28px 30px 28px; align-items: center; }
+.sp .step button { padding: 0; width: 28px; height: 28px; border-radius: 50%; font-size: 1rem; line-height: 1; }
+.sp .step output { text-align: center; font-family: var(--mono); font-size: 1.05rem; color: var(--accent); font-weight: 600; }
+.sp .f { font-size: 1.08rem; font-weight: 500; white-space: nowrap; }
+.sp .st { font-size: .8rem; color: var(--muted); }
+.op { font-size: 1.15rem; color: var(--muted); }
+.atoms td, .atoms th { padding: 6px 10px; text-align: center; }
+.atoms td:first-child, .atoms th:first-child { text-align: left; }
+.atoms table { min-width: 0; }
+.calc .row span:last-child { white-space: nowrap; font-family: var(--mono); }
+.ok { color: var(--good); font-weight: 600; white-space: nowrap; } .no { color: var(--bad); font-weight: 600; white-space: nowrap; }
+.legend .l-good { color: var(--good); } .legend .l-bad { color: var(--bad); }
+@media (max-width: 520px) { .atoms td, .atoms th { padding: 6px 6px; font-size: .86rem; } .evid { grid-template-columns: 1fr; } .sp .f { font-size: 1rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 4 · Topic 4.1</span>
+  <h1>Introduction for Reactions Study Lab</h1>
+  <p class="lede">A chemical change makes new substances with a different composition; a physical change alters a substance's form but not what it is made of. Heat, light, gas, a precipitate, or a color change can be evidence of a chemical change, but none of them proves it on its own. Judge eleven lab-bench events from what you can see, then balance equations so every atom is accounted for.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Evidence and balanced equations</h2>
+    <p>Part A is a lab bench: pick an event, watch what happens, read the evidence, and make your call before you see the answer. Part B is a coefficient balancer that keeps a running count of every atom on each side. Temperatures on the bench are illustrative, chosen to show the direction of the change.</p>
+  </div>
+
+  <h3 class="part" id="pa-h">Part A: What does the evidence say?</h3>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3 id="bench-title">Lab bench <small id="bench-sub">before and after</small></h3>
+      <svg class="chart" id="bench" role="img" aria-label="Drawing of the lab bench event with a thermometer"></svg>
+      <div class="btnrow"><button type="button" id="replay">Replay</button><span class="hint" style="font-size:.8rem; color:var(--muted);">Thermometer shows starting and final temperature.</span></div>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Pick an event</div>
+        <div class="scenarios" id="events"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Evidence you can observe</div>
+        <ul class="evid" id="evid"></ul>
+      </div>
+      <div class="group">
+        <div class="tag" id="call-lbl">Your call</div>
+        <div class="seg" role="group" aria-labelledby="call-lbl">
+          <button type="button" data-call="physical" aria-pressed="false">Physical change</button>
+          <button type="button" data-call="chemical" aria-pressed="false">Chemical change</button>
+          <button type="button" data-call="either" aria-pressed="false">Could be argued either way</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Temperature</div><div class="v" id="r-t">22 °C</div><div class="sub" id="r-t2"></div></div>
+    <div class="stat"><div class="k">Evidence items seen</div><div class="v" id="r-e">0</div><div class="sub" id="r-e2"></div></div>
+    <div class="stat"><div class="k">New substance formed?</div><div class="v" id="r-n">?</div><div class="sub" id="r-n2">make your call first</div></div>
+    <div class="stat"><div class="k">Your calls</div><div class="v" id="r-s">0 / 0</div><div class="sub">correct on first try</div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+
+  <h3 class="part" id="pb-h">Part B: Balance the equation</h3>
+
+  <div class="card" style="display:grid; gap:14px;">
+    <div class="group">
+      <div class="tag">Pick an equation</div>
+      <div class="scenarios" id="eqs"></div>
+    </div>
+    <div class="bal-eq" id="bal" aria-describedby="pb-h"></div>
+    <div class="btnrow"><button type="button" id="b-hint">Give me a hint</button><button type="button" id="b-ones">Reset to all 1s</button><button type="button" id="b-show">Show the balanced equation</button></div>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Atom count <small>reactants left, products right</small></h3>
+      <svg class="chart" id="tally" role="img" aria-label="Paired bars comparing the number of atoms of each element on the reactant and product sides"></svg>
+    </div>
+    <div class="card graph-card atoms">
+      <h3>Atom inventory <small>coefficient × subscript</small></h3>
+      <div class="tbl-wrap"><table id="atoms"></table></div>
+      <div class="calc" id="mass"></div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-good">Element balanced</span><span class="l-bad">Element not balanced</span></div>
+  </div>
+
+  <div class="story" id="b-story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Same composition</span><h3>Physical change</h3><p>A physical change alters a substance's properties or form but not its composition. Phase changes (melting, boiling, sublimation) and making or separating mixtures are the common examples. The particles before and after are the same particles.</p></div>
+    <div class="card"><span class="tag">New composition</span><h3>Chemical change</h3><p>A chemical change turns substances into new substances, usually with different compositions. Atoms are rearranged into new combinations: old bonds break and new bonds form. Nothing is created or destroyed, so atoms of every element are conserved.</p></div>
+    <div class="card"><span class="tag">Possible evidence</span><h3>Signs of a chemical change</h3><p>Production of heat or light, formation of a gas, formation of a precipitate, and a color change are possible evidence of a chemical change. The CED says "possible": each sign also shows up in some physical changes, so the strongest case combines the observation with what the substances are.</p></div>
+    <div class="card"><span class="tag">Evidence is not proof</span><h3>Check for a new substance</h3><p>Bubbles in boiling water are water vapor, not a new gas. Crystals that appear when a solution cools are the same solute coming out. Food coloring changes color by mixing. Ask: is the gas, solid, or color a <em>different substance</em> from what you started with?</p></div>
+    <div class="card"><span class="tag">Conservation</span><h3>Why we balance</h3><p>Because atoms are only rearranged, a correct equation has the same number of atoms of each element on both sides. That is also why mass is conserved: total mass of reactants equals total mass of products. Mass seems to "disappear" only when a gas escapes an open container.</p></div>
+    <div class="card"><span class="tag">Coefficients only</span><h3>How to balance</h3><p>Change only the coefficients in front of formulas. Changing a subscript changes the substance (H₂O to H₂O₂ is a different compound). Use the smallest whole-number set. Coefficients count particles or moles, not grams.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Evidence cheat sheet</h2>
+    <p>Each kind of evidence has a chemical example and a physical look-alike. On the exam, name the observation and connect it to a new substance (or to the absence of one).</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Observation</th><th>Points to a chemical change when…</th><th>Chemical example</th><th>Physical look-alike</th></tr></thead>
+    <tbody>
+      <tr><td><b>Gas forms</b> (bubbles, fizzing)</td><td>the gas is a new substance (H₂, CO₂, O₂)</td><td>Mg(s) + 2HCl(aq) → MgCl₂(aq) + H₂(g)</td><td>Boiling water: H₂O(l) → H₂O(g); a warm soda losing dissolved CO₂</td></tr>
+      <tr><td><b>Precipitate forms</b> (solid appears in a solution)</td><td>the solid is a new compound made from ions of two different solutions</td><td>Pb(NO₃)₂(aq) + 2KI(aq) → PbI₂(s) + 2KNO₃(aq)</td><td>Cooling a saturated KNO₃ solution until KNO₃ crystals form</td></tr>
+      <tr><td><b>Color change</b></td><td>a new substance with a different color forms</td><td>Cu(s) + 2AgNO₃(aq) → Cu(NO₃)₂(aq) + 2Ag(s): solution turns blue</td><td>Adding food coloring to water; diluting a colored solution</td></tr>
+      <tr><td><b>Heat released or absorbed</b> (temperature changes)</td><td>it comes with other signs of a new substance, or the substances are known to react</td><td>HCl(aq) + NaOH(aq) → NaCl(aq) + H₂O(l): warms up, nothing visible</td><td>Dissolving NH₄NO₃ (a cold pack); condensing steam releases heat</td></tr>
+      <tr><td><b>Light is given off</b></td><td>it comes from a reaction such as combustion</td><td>CH₄(g) + 2O₂(g) → CO₂(g) + 2H₂O(g)</td><td>A glowing light-bulb filament (hot metal, no new substance)</td></tr>
+      <tr><td><b>Mass seems to change</b></td><td>never by itself: mass is always conserved</td><td>CaCO₃(s) → CaO(s) + CO₂(g): solid loses mass as CO₂ escapes</td><td>Water evaporating from an open beaker</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Answering the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Name the specific observation ("a yellow solid formed when the two clear solutions were mixed"), then tie it to a new substance ("PbI₂, which was not present in either solution").</li>
+        <li>When asked to justify "chemical," point to composition: new substances with different formulas form because atoms are rearranged.</li>
+        <li>When asked to justify "physical," say the particles keep their identity: the same molecules or ions are present before and after; only their arrangement or the attractions between them change.</li>
+        <li>Write equations with correct formulas first, then balance with whole-number coefficients. Include states (s), (l), (g), (aq) when the question asks for them.</li>
+        <li>Check your balancing atom by atom, and check total charge if ions appear.</li>
+        <li>Use conservation of mass to explain mass data: if the container is open and a gas forms, the measured mass falls by the mass of gas that escaped.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying bubbles always mean a reaction. Boiling makes bubbles of the same substance in a different phase.</li>
+        <li>Calling any temperature change proof of a reaction. Dissolving and phase changes also absorb or release energy.</li>
+        <li>Balancing by changing subscripts. That changes the identity of the substance.</li>
+        <li>Thinking the total number of molecules must be the same on both sides. Only atoms are conserved: 2H₂ + O₂ → 2H₂O has 3 molecules on the left and 2 on the right.</li>
+        <li>Leaving coefficients that share a common factor (4H₂ + 2O₂ → 4H₂O). It is balanced, but not in lowest terms.</li>
+        <li>Forgetting the diatomic elements: H₂, N₂, O₂, F₂, Cl₂, Br₂, I₂ are written as diatomic molecules when they appear as elements.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 4.1. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-4.html">Unit 4 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = Lab.el;
+
+  // =====================================================================
+  // PART A: the lab bench
+  // =====================================================================
+  // Each event: kind of drawing, evidence flags, temperatures (illustrative), verdict, equation, explanation.
+  // ev keys: heat (temperature rises), cold (temperature falls), light, gas, ppt (solid forms), color.
+  var EVENTS = [
+    { id: "ppt", name: "Mix Pb(NO₃)₂ and KI solutions", draw: "ppt", t0: 22, t1: 22, ev: ["ppt", "color"], call: "chemical",
+      see: "Two clear, colorless solutions are poured together. A bright yellow solid appears at once and settles to the bottom.",
+      eq: "Pb(NO3)2(aq) + 2KI(aq) → PbI2(s) + 2KNO3(aq)",
+      why: "The yellow solid is lead(II) iodide, PbI₂, a compound that was in neither starting solution. Pb²⁺ ions from one solution and I⁻ ions from the other combined into a new, insoluble substance. The precipitate and its new color are evidence of a new substance." },
+    { id: "mg", name: "Magnesium ribbon in HCl", draw: "mg", t0: 22, t1: 38, ev: ["gas", "heat"], call: "chemical",
+      see: "A strip of magnesium is dropped into hydrochloric acid. It fizzes hard, the metal slowly disappears, and the beaker gets warm.",
+      eq: "Mg(s) + 2HCl(aq) → MgCl2(aq) + H2(g)",
+      why: "The bubbles are hydrogen gas, a substance that was not there before, and the magnesium metal is used up as it becomes Mg²⁺ ions in solution. Gas formation plus a temperature rise plus a disappearing reactant make a strong case for a chemical change." },
+    { id: "soda", name: "Baking soda in vinegar", draw: "soda", t0: 22, t1: 17, ev: ["gas", "cold"], call: "chemical",
+      see: "Baking soda (NaHCO₃) is added to vinegar (acetic acid). The mixture foams up and feels cooler.",
+      eq: "NaHCO3(s) + HC2H3O2(aq) → NaC2H3O2(aq) + H2O(l) + CO2(g)",
+      why: "The gas is carbon dioxide, made from the hydrogen carbonate ion reacting with the acid. Neither starting material is CO₂, so a new substance formed. A temperature drop can come with a chemical change too: this reaction absorbs energy from the surroundings." },
+    { id: "cu", name: "Copper wire in AgNO₃ solution", draw: "cu", t0: 22, t1: 22, ev: ["color", "ppt"], call: "chemical",
+      see: "A coil of copper wire sits in a clear, colorless silver nitrate solution. Over several minutes, gray-silver crystals grow on the wire and the solution turns blue.",
+      eq: "Cu(s) + 2AgNO3(aq) → Cu(NO3)2(aq) + 2Ag(s)",
+      why: "The crystals are silver metal and the blue color comes from Cu²⁺ ions. Copper atoms gave electrons to silver ions, so both the solid and the solution contain substances that were not there at the start. (This is a redox reaction, topic 4.9.)" },
+    { id: "burn", name: "Burn methane in a burner", draw: "flame", t0: 22, t1: 60, ev: ["light", "heat"], call: "chemical",
+      see: "Natural gas (methane) from a Bunsen burner is lit. It burns with a blue flame and gives off heat and light.",
+      eq: "CH4(g) + 2O2(g) → CO2(g) + 2H2O(g)",
+      why: "Combustion breaks the C–H bonds in methane and the O=O bonds in oxygen and forms new C=O and O–H bonds in carbon dioxide and water. Heat and light come from a reaction that makes new substances. (The thermometer here reads the air just above the flame; values are illustrative.)" },
+    { id: "rust", name: "Steel wool rusts", draw: "rust", t0: 22, t1: 22, ev: ["color"], call: "chemical",
+      see: "Damp steel wool is left in an open beaker for a week. The shiny gray metal turns a crumbly reddish brown.",
+      eq: "4Fe(s) + 3O2(g) → 2Fe2O3(s)",
+      why: "Rust is iron(III) oxide (really a hydrated form, Fe₂O₃·xH₂O), a new compound with different properties from iron metal. The color change comes from a new substance. The reaction is slow, so the small heat it releases is not noticeable. The equation is the simplified form." },
+    { id: "neut", name: "Mix HCl and NaOH solutions", draw: "neut", t0: 22, t1: 29, ev: ["heat"], call: "chemical",
+      see: "Equal volumes of hydrochloric acid and sodium hydroxide solution, both clear and colorless, are mixed. Nothing visible happens, but the temperature rises several degrees.",
+      eq: "HCl(aq) + NaOH(aq) → NaCl(aq) + H2O(l)",
+      why: "The only evidence is the temperature rise, which by itself would not prove anything. What settles it is what we know about the substances: H⁺ and OH⁻ ions combine to form new water molecules (topic 4.8). Some chemical changes give no visible sign at all." },
+    { id: "boil", name: "Boil water", draw: "boil", t0: 22, t1: 100, ev: ["gas"], call: "physical",
+      see: "A beaker of water sits on a hot plate. Large bubbles form throughout the liquid and steam rises.",
+      eq: "H2O(l) → H2O(g)",
+      why: "The bubbles are water vapor, the same substance as the liquid. Boiling overcomes the hydrogen bonds between water molecules; the O–H bonds inside each molecule stay intact. A gas formed, but it is not a new substance. The temperature rose because the hot plate heated the water, not because of a reaction." },
+    { id: "dye", name: "Add food coloring to water", draw: "dye", t0: 22, t1: 22, ev: ["color"], call: "physical",
+      see: "A drop of green food coloring is added to clear water. The color spreads until the whole beaker is evenly green.",
+      eq: "dye(aq, concentrated) → dye(aq, dilute)",
+      why: "The color change is mixing: the dye molecules spread out among the water molecules. No new substance forms, and the dye could in principle be separated from the water again. A color change counts as evidence only when the color belongs to a new substance." },
+    { id: "cryst", name: "Cool a hot, saturated KNO₃ solution", draw: "cryst", t0: 80, t1: 20, ev: ["ppt"], call: "physical",
+      see: "A clear solution of potassium nitrate, saturated at 80 °C, is cooled in an ice bath. White needle-shaped crystals form and settle.",
+      eq: "K+(aq) + NO3−(aq) → KNO3(s)  (crystallization)",
+      why: "The solid is potassium nitrate, the same compound that was dissolved. KNO₃ is less soluble in cold water, so some of it comes back out of solution. A solid appeared, but it is not a new substance: this is the reverse of dissolving, a separation of a mixture." },
+    { id: "cold", name: "Dissolve NH₄NO₃ (cold pack)", draw: "coldpack", t0: 22, t1: 6, ev: ["cold"], call: "either",
+      see: "Solid ammonium nitrate is stirred into water. The crystals disappear and the beaker becomes cold to the touch.",
+      eq: "NH4NO3(s) → NH4+(aq) + NO3−(aq)",
+      why: "The temperature drop is not proof of a reaction: no new substance with a new composition forms. The NH₄⁺ and NO₃⁻ ions that were in the solid are the same ions now in solution, so most textbooks call dissolving physical. But dissolving an ionic solid breaks the ionic bonds in the crystal and forms new ion–dipole attractions with water, so the CED (topic 4.4) notes that a plausible argument can be made either way. On the exam, the justification is what earns the point." }
+  ];
+  var EV_NAMES = { heat: "Heat released (gets warmer)", cold: "Heat absorbed (gets colder)", light: "Light given off", gas: "Gas forms (bubbles)", ppt: "Solid forms in a liquid", color: "Color changes" };
+  var EV_ORDER = ["gas", "ppt", "color", "heat", "cold", "light"];
+  var CALL_NAMES = { physical: "Physical change", chemical: "Chemical change", either: "Could be argued either way" };
+
+  var A = { i: 0, t: 1, call: {}, first: {} };   // call: event id -> user's latest call; first: event id -> correct on first try?
+
+  // Seeded positions so drawings do not jump between frames.
+  function rng(seed) { var s = seed; return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+  function mix(a, b, t) { return a + (b - a) * t; }
+
+  var bench = document.getElementById("bench");
+  var BX0 = 120, BX1 = 290, BY0 = 70, BY1 = 262, LIQ = 120;   // beaker box and liquid top
+  function beaker(g) {
+    el("path", { d: "M" + BX0 + " " + (BY0 - 10) + " L" + BX0 + " " + BY1 + " Q" + BX0 + " " + (BY1 + 8) + " " + (BX0 + 8) + " " + (BY1 + 8) + " L" + (BX1 - 8) + " " + (BY1 + 8) + " Q" + BX1 + " " + (BY1 + 8) + " " + BX1 + " " + BY1 + " L" + BX1 + " " + (BY0 - 10), fill: "none", stroke: "var(--ink)", "stroke-width": 2.5, "stroke-linejoin": "round" }, g);
+    for (var k = 0; k < 4; k++) { var y = BY1 - 30 - k * 40; el("line", { x1: BX0, x2: BX0 + 14, y1: y, y2: y, stroke: "var(--muted)", "stroke-width": 1 }, g); }
+  }
+  function liquid(g, fill, op) { el("rect", { x: BX0 + 1.5, y: LIQ, width: BX1 - BX0 - 3, height: BY1 + 6 - LIQ, rx: 6, fill: fill, opacity: op == null ? 1 : op }, g); }
+  function thermo(g, T) {
+    var x = 370, top = 60, bot = 250, lo = 0, hi = 100;
+    var yT = function (v) { return bot - (Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo) * (bot - top); };
+    el("rect", { x: x - 7, y: top - 8, width: 14, height: bot - top + 16, rx: 7, fill: "var(--surface)", stroke: "var(--ink)", "stroke-width": 1.5 }, g);
+    el("circle", { cx: x, cy: bot + 14, r: 12, fill: "var(--bad)", stroke: "var(--ink)", "stroke-width": 1.5 }, g);
+    el("rect", { x: x - 3.5, y: yT(T), width: 7, height: bot + 6 - yT(T), fill: "var(--bad)" }, g);
+    [0, 20, 40, 60, 80, 100].forEach(function (v) {
+      el("line", { x1: x + 8, x2: x + 14, y1: yT(v), y2: yT(v), stroke: "var(--muted)" }, g);
+      el("text", { x: x + 17, y: yT(v) + 4, style: "font-size:11px" }, g, String(v));
+    });
+    el("text", { x: x, y: top - 16, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink); font-size:13px" }, g, Math.round(T) + " °C");
+  }
+  function bubbles(g, n, seed, t, x0, x1, y0, y1, r) {
+    var R = rng(seed);
+    for (var i = 0; i < n; i++) {
+      var bx = mix(x0, x1, R()), phase = R(), by = y1 - ((phase + t * 1.7) % 1) * (y1 - y0), rr = (r || 3) + R() * 3;
+      el("circle", { cx: bx, cy: by, r: rr, fill: "none", stroke: "var(--ink)", "stroke-width": 1.2, opacity: .75 }, g);
+    }
+  }
+  function settle(g, n, seed, t, fill, shape) {
+    var R = rng(seed);
+    for (var i = 0; i < n; i++) {
+      var x = mix(BX0 + 12, BX1 - 12, R()), ys = mix(LIQ + 10, BY1 - 40, R()), yf = BY1 + 2 - R() * 14 - (i % 3) * 3;
+      var y = mix(ys, yf, Math.min(1, t * 1.25));
+      if (shape === "needle") el("line", { x1: x - 6, y1: y + 3, x2: x + 6, y2: y - 3, stroke: fill, "stroke-width": 2.5, "stroke-linecap": "round" }, g);
+      else el("circle", { cx: x, cy: y, r: 2.6, fill: fill }, g);
+    }
+  }
+  function label(g, x, y, txt, anchor) { el("text", { x: x, y: y, "text-anchor": anchor || "middle", style: "font-size:12px; fill:var(--muted)" }, g, txt); }
+
+  function drawBench() {
+    var E = EVENTS[A.i], t = A.t;
+    bench.setAttribute("viewBox", "84 28 340 272");
+    while (bench.firstChild) bench.removeChild(bench.firstChild);
+    var g = el("g", {}, bench);
+    var T = mix(E.t0, E.t1, t);
+    if (E.draw === "flame") {
+      // Bunsen burner and flame
+      el("rect", { x: 186, y: 200, width: 18, height: 60, fill: "var(--ghost)", stroke: "var(--ink)", "stroke-width": 1.5 }, g);
+      el("rect", { x: 160, y: 258, width: 70, height: 12, rx: 3, fill: "var(--ghost)", stroke: "var(--ink)", "stroke-width": 1.5 }, g);
+      var h = 110 * t;
+      if (t > 0.02) {
+        el("circle", { cx: 195, cy: 200 - h * 0.55, r: 30 + 40 * t, fill: "var(--c1)", opacity: .12 * t }, g);
+        el("path", { d: "M183 200 Q178 " + (200 - h * 0.5) + " 195 " + (200 - h) + " Q212 " + (200 - h * 0.5) + " 207 200 Z", fill: "var(--sol-blue)", opacity: .85 }, g);
+        el("path", { d: "M188 200 Q186 " + (200 - h * 0.3) + " 195 " + (200 - h * 0.55) + " Q204 " + (200 - h * 0.3) + " 202 200 Z", fill: "var(--surface)", opacity: .6 }, g);
+        for (var k = 0; k < 8; k++) {
+          var a = -Math.PI / 2 + (k - 3.5) * 0.32, r0 = 50, r1 = 50 + 22 * t;
+          el("line", { x1: 195 + r0 * Math.cos(a) * 1.2, y1: 200 - h * 0.55 + r0 * Math.sin(a), x2: 195 + r1 * Math.cos(a) * 1.2, y2: 200 - h * 0.55 + r1 * Math.sin(a), stroke: "var(--c1)", "stroke-width": 2, opacity: t, "stroke-linecap": "round" }, g);
+        }
+      }
+      label(g, 195, 290, "CH₄ + O₂ (air)");
+    } else {
+      if (E.draw === "boil") {
+        el("rect", { x: BX0 - 20, y: BY1 + 10, width: BX1 - BX0 + 40, height: 14, rx: 3, fill: "var(--ghost)", stroke: "var(--ink)", "stroke-width": 1.5 }, g);
+        el("rect", { x: BX0, y: BY1 + 10, width: BX1 - BX0, height: 4, fill: "var(--bad)", opacity: .3 + .7 * t }, g);
+      }
+      if (E.draw === "cryst") {
+        // ice bath around the beaker
+        el("rect", { x: BX0 - 22, y: LIQ + 20, width: BX1 - BX0 + 44, height: BY1 - LIQ - 6, rx: 8, fill: "var(--accent-soft)", stroke: "var(--muted)", "stroke-dasharray": "4 3", opacity: t }, g);
+        var R0 = rng(5);
+        for (var q = 0; q < 6; q++) el("rect", { x: q < 3 ? BX0 - 18 : BX1 + 4, y: LIQ + 34 + (q % 3) * 40 + R0() * 10, width: 14, height: 14, rx: 3, fill: "var(--surface)", stroke: "var(--muted)", opacity: t }, g);
+      }
+      var tint = { cu: "var(--sol-blue)", dye: "var(--dye)" }[E.draw];
+      liquid(g, "var(--accent-soft)");
+      if (tint) liquid(g, tint, (E.draw === "cu" ? 0.55 : 0.6) * t);
+      if (E.draw === "dye" && t < 0.9) el("circle", { cx: 205, cy: LIQ + 14 + 40 * t, r: 6 + 60 * t, fill: "var(--dye)", opacity: .7 * (1 - t) }, g);
+      if (E.draw === "ppt") settle(g, 70, 11, t, "var(--ppt-yellow)");
+      if (E.draw === "cryst") settle(g, Math.round(26 * t), 17, 1, "var(--crystal)", "needle");
+      if (E.draw === "mg") {
+        var hh = 90 * (1 - 0.75 * t);
+        el("rect", { x: 196, y: BY1 - hh, width: 10, height: hh, fill: "var(--silver)", stroke: "var(--ink)", "stroke-width": 1 }, g);
+        bubbles(g, Math.round(28 * Math.min(1, t * 3)), 3, t, 175, 230, LIQ + 4, BY1 - 4, 2);
+      }
+      if (E.draw === "soda") {
+        el("rect", { x: BX0 + 4, y: LIQ - 30 * t, width: BX1 - BX0 - 8, height: 30 * t + 4, fill: "var(--surface)", stroke: "var(--ink)", "stroke-width": .8, opacity: .85, rx: 4 }, g);
+        bubbles(g, Math.round(40 * Math.min(1, t * 3)), 9, t, BX0 + 10, BX1 - 10, LIQ - 26 * t, BY1 - 4, 2);
+      }
+      if (E.draw === "cu") {
+        var px = [];
+        for (var y = LIQ - 30; y < BY1 - 10; y += 12) px.push((px.length % 2 ? 214 : 196) + " " + y);
+        el("path", { d: "M" + px.join(" L"), fill: "none", stroke: "var(--copper)", "stroke-width": 4, "stroke-linejoin": "round" }, g);
+        var R1 = rng(23);
+        for (var c = 0; c < 26 * t; c++) { var yy = LIQ + R1() * (BY1 - LIQ - 14); el("path", { d: "M" + (205 + (R1() - .5) * 34) + " " + yy + " l4 -6 l4 6 l-4 6 z", fill: "var(--silver)", stroke: "var(--ink)", "stroke-width": .6 }, g); }
+      }
+      if (E.draw === "rust") {
+        var R2 = rng(31);
+        for (var w = 0; w < 50; w++) {
+          var cx = 205 + (R2() - .5) * 110, cy = BY1 - 30 + (R2() - .5) * 40;
+          el("path", { d: "M" + cx + " " + cy + " q8 -10 16 0 q-8 10 -16 0", fill: "none", stroke: "var(--silver)", "stroke-width": 2 }, g);
+          if (R2() < t) el("path", { d: "M" + cx + " " + cy + " q8 -10 16 0 q-8 10 -16 0", fill: "none", stroke: "var(--rust)", "stroke-width": 2.6 }, g);
+        }
+      }
+      if (E.draw === "boil") {
+        bubbles(g, Math.round(30 * t), 13, t, BX0 + 10, BX1 - 10, LIQ + 6, BY1 - 4, 4);
+        for (var s = 0; s < 3; s++) el("path", { d: "M" + (170 + s * 35) + " " + (LIQ - 8) + " q-8 -14 0 -28 q8 -14 0 -28", fill: "none", stroke: "var(--ghost)", "stroke-width": 3, opacity: t, "stroke-linecap": "round" }, g);
+      }
+      if (E.draw === "coldpack") {
+        var R3 = rng(41);
+        for (var k2 = 0; k2 < 22; k2++) el("rect", { x: BX0 + 14 + R3() * (BX1 - BX0 - 34), y: BY1 - 4 - R3() * 16, width: 8, height: 8, fill: "var(--crystal)", stroke: "var(--muted)", "stroke-width": .8, opacity: Math.max(0, 1 - 1.4 * t) }, g);
+      }
+      beaker(g);
+      var tags = { ppt: "Pb(NO₃)₂ + KI", mg: "Mg + HCl", soda: "NaHCO₃ + vinegar", cu: "Cu + AgNO₃", rust: "steel wool + air + water", neut: "HCl + NaOH", boil: "water on a hot plate", dye: "water + food coloring", cryst: "KNO₃ solution in an ice bath", coldpack: "NH₄NO₃ + water" };
+      label(g, (BX0 + BX1) / 2, BY0 - 24, tags[E.draw] || "");
+    }
+    thermo(g, T);
+    label(g, 90, 294, t < 1 ? "reacting…" : "after", "start");
+    return T;
+  }
+
+  function evidenceList() {
+    var E = EVENTS[A.i], seen = A.t > 0.6;
+    document.getElementById("evid").innerHTML = EV_ORDER.map(function (k) {
+      var on = seen && E.ev.indexOf(k) >= 0;
+      return '<li class="' + (on ? "on" : "") + '">' + EV_NAMES[k] + "</li>";
+    }).join("");
+  }
+
+  function renderA(full) {
+    var E = EVENTS[A.i];
+    var T = drawBench();
+    evidenceList();
+    if (full === false) return;
+    document.getElementById("bench-sub").textContent = E.name;
+    Array.prototype.forEach.call(document.querySelectorAll("#events button"), function (b, i) { b.setAttribute("aria-pressed", i === A.i ? "true" : "false"); });
+    var mine = A.call[E.id];
+    Array.prototype.forEach.call(document.querySelectorAll("[data-call]"), function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-call") === mine ? "true" : "false"); });
+    var dT = E.t1 - E.t0;
+    document.getElementById("r-t").textContent = Math.round(T) + " °C";
+    document.getElementById("r-t2").textContent = dT === 0 ? "no noticeable change" : (dT > 0 ? "rose " : "fell ") + Math.abs(dT) + " °C from " + E.t0 + " °C";
+    document.getElementById("r-e").textContent = String(E.ev.length);
+    document.getElementById("r-e2").textContent = E.ev.map(function (k) { return { heat: "warmer", cold: "colder", light: "light", gas: "gas", ppt: "solid", color: "color" }[k]; }).join(", ");
+    var n = document.getElementById("r-n"), n2 = document.getElementById("r-n2");
+    if (!mine) { n.textContent = "?"; n2.textContent = "make your call first"; }
+    else if (E.call === "either") { n.innerHTML = '<span class="pill rec">Arguable</span>'; n2.textContent = "same ions, new attractions"; }
+    else if (E.call === "chemical") { n.innerHTML = '<span class="pill lr">Yes</span>'; n2.textContent = "atoms rearranged"; }
+    else { n.innerHTML = '<span class="pill infl">No</span>'; n2.textContent = "same substance, new form"; }
+    var tried = Object.keys(A.first), right = tried.filter(function (k) { return A.first[k]; }).length;
+    document.getElementById("r-s").textContent = right + " / " + tried.length;
+    document.getElementById("story").innerHTML = storyA(E, mine);
+  }
+
+  function storyA(E, mine) {
+    var html = "<p><b>What you see.</b> " + E.see + "</p>";
+    if (!mine) {
+      html += "<p>Evidence observed: " + E.ev.map(function (k) { return EV_NAMES[k].toLowerCase(); }).join("; ") + ". Is that enough? Decide whether a new substance formed, then make your call above.</p>";
+      return html;
+    }
+    var right = mine === E.call;
+    html += "<p><b>" + (right ? "Your call matches." : "Not this time.") + "</b> You said <b>" + CALL_NAMES[mine].toLowerCase() + "</b>; the best answer is <b>" + CALL_NAMES[E.call].toLowerCase() + "</b>.</p>";
+    html += '<div class="eqn">' + eqHTML(E.eq) + "</div>";
+    html += "<p>" + E.why + "</p>";
+    var end = E.call === "chemical"
+      ? "<b>AP answer:</b> name the observation, then connect it to a new substance with a different composition (here, the substance that appears on the product side but not the reactant side)."
+      : E.call === "physical"
+        ? "<b>AP answer:</b> the same particles are present before and after; the observation comes from a change in phase, mixing, or arrangement, not from a new substance."
+        : "<b>AP answer:</b> either classification can earn credit if it is justified at the particle level: physical because no new substance forms, or chemical because ionic bonds in the solid are broken and new ion–dipole attractions form.";
+    html += "<p>" + end + "</p>";
+    return html;
+  }
+
+  // Turn "Pb(NO3)2(aq) + 2KI(aq) → ..." into HTML with subscripts and charges.
+  function eqHTML(s) {
+    return s.split(" ").map(function (tok) {
+      if (/^(→|\+|\(crystallization\)|dye\(.*|concentrated\)|dilute\))$/.test(tok) || tok === "") return tok;
+      var m = tok.match(/^(\d*)([A-Za-z(][^]*?)(\((?:aq|s|l|g)\))?$/);
+      if (!m) return tok;
+      var core = m[2], ch = "";
+      var c = core.match(/([+−])$/);
+      if (c) { core = core.slice(0, -1); ch = c[1]; }
+      return (m[1] ? "<b>" + m[1] + "</b>" : "") + Lab.fmla(core) + (ch ? "<sup>" + ch + "</sup>" : "") + (m[3] || "");
+    }).join(" ");
+  }
+
+  var stopA = function () {};
+  function play() {
+    stopA();
+    A.t = 0; renderA();
+    stopA = Lab.animate(1800, function (t) { A.t = t; renderA(false); }, function () { A.t = 1; renderA(); });
+  }
+  EVENTS.forEach(function (E, i) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = E.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { A.i = i; play(); });
+    document.getElementById("events").appendChild(b);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-call]"), function (b) {
+    b.addEventListener("click", function () {
+      var E = EVENTS[A.i], c = b.getAttribute("data-call");
+      if (!(E.id in A.first)) A.first[E.id] = c === E.call;
+      A.call[E.id] = c;
+      stopA(); A.t = 1; renderA();
+    });
+  });
+  document.getElementById("replay").addEventListener("click", play);
+  renderA();
+
+  // =====================================================================
+  // PART B: the coefficient balancer
+  // =====================================================================
+  var EQS = [
+    { name: "H₂ + O₂ → H₂O", r: ["H2", "O2"], p: ["H2O"], st: ["g", "g", "l"], ans: [2, 1, 2] },
+    { name: "N₂ + H₂ → NH₃", r: ["N2", "H2"], p: ["NH3"], st: ["g", "g", "g"], ans: [1, 3, 2] },
+    { name: "CH₄ + O₂ → CO₂ + H₂O", r: ["CH4", "O2"], p: ["CO2", "H2O"], st: ["g", "g", "g", "g"], ans: [1, 2, 1, 2] },
+    { name: "KClO₃ → KCl + O₂", r: ["KClO3"], p: ["KCl", "O2"], st: ["s", "s", "g"], ans: [2, 2, 3] },
+    { name: "Fe + O₂ → Fe₂O₃", r: ["Fe", "O2"], p: ["Fe2O3"], st: ["s", "g", "s"], ans: [4, 3, 2] },
+    { name: "Al + HCl → AlCl₃ + H₂", r: ["Al", "HCl"], p: ["AlCl3", "H2"], st: ["s", "aq", "aq", "g"], ans: [2, 6, 2, 3] },
+    { name: "C₃H₈ + O₂ → CO₂ + H₂O", r: ["C3H8", "O2"], p: ["CO2", "H2O"], st: ["g", "g", "g", "g"], ans: [1, 5, 3, 4] },
+    { name: "Fe₂O₃ + CO → Fe + CO₂", r: ["Fe2O3", "CO"], p: ["Fe", "CO2"], st: ["s", "g", "s", "g"], ans: [1, 3, 2, 3] },
+    { name: "NH₃ + O₂ → NO + H₂O", r: ["NH3", "O2"], p: ["NO", "H2O"], st: ["g", "g", "g", "g"], ans: [4, 5, 4, 6] },
+    { name: "C₂H₆ + O₂ → CO₂ + H₂O", r: ["C2H6", "O2"], p: ["CO2", "H2O"], st: ["g", "g", "g", "g"], ans: [2, 7, 4, 6] },
+    { name: "Na₃PO₄ + CaCl₂ → Ca₃(PO₄)₂ + NaCl", r: ["Na3PO4", "CaCl2"], p: ["Ca3(PO4)2", "NaCl"], st: ["aq", "aq", "s", "aq"], ans: [2, 3, 1, 6] }
+  ];
+  var B = { i: 2, k: [1, 1, 1, 1], hint: 0 };
+  var MAXC = 12;
+  function species(e) { return e.r.concat(e.p); }
+  function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+  function count(e, k) {
+    var sp = species(e), nr = e.r.length, L = {}, R = {}, order = [];
+    sp.forEach(function (f, j) {
+      var c = Lab.parseFormula(f);
+      Object.keys(c).forEach(function (s) {
+        if (order.indexOf(s) < 0) order.push(s);
+        var tgt = j < nr ? L : R; tgt[s] = (tgt[s] || 0) + c[s] * k[j];
+      });
+    });
+    return { L: L, R: R, order: order };
+  }
+  function massSide(e, k, side) {
+    var list = side === "L" ? e.r : e.p, off = side === "L" ? 0 : e.r.length, t = 0;
+    list.forEach(function (f, j) { t += Lab.molarMass(f) * k[off + j]; });
+    return t;
+  }
+
+  var balBox = document.getElementById("bal");
+  function buildBal() {
+    var e = EQS[B.i], sp = species(e), html = "";
+    sp.forEach(function (f, j) {
+      if (j === e.r.length) html += '<span class="op" aria-hidden="true">→</span>';
+      else if (j > 0) html += '<span class="op" aria-hidden="true">+</span>';
+      html += '<span class="sp"><span class="step"><button type="button" data-j="' + j + '" data-d="-1" aria-label="Decrease coefficient of ' + f + '">−</button><output id="k' + j + '"></output><button type="button" data-j="' + j + '" data-d="1" aria-label="Increase coefficient of ' + f + '">+</button></span><span class="f">' + Lab.fmla(f) + '<span class="st">(' + e.st[j] + ')</span></span></span>';
+    });
+    balBox.innerHTML = html;
+    Array.prototype.forEach.call(balBox.querySelectorAll("button"), function (b) {
+      b.addEventListener("click", function () {
+        var j = +b.getAttribute("data-j"), d = +b.getAttribute("data-d");
+        B.k[j] = Math.max(1, Math.min(MAXC, B.k[j] + d)); B.hint = 0; renderB();
+      });
+    });
+  }
+
+  function drawTally(c) {
+    var svg = document.getElementById("tally"), els = c.order, n = els.length;
+    var W = Math.max(300, Math.min(440, svg.clientWidth || 440)), rowH = 44, H = 50 + n * rowH, mid = W / 2;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var max = 1; els.forEach(function (s) { max = Math.max(max, c.L[s] || 0, c.R[s] || 0); });
+    var span = mid - 70;
+    el("text", { x: mid - 30, y: 20, "text-anchor": "end", "class": "lbl", style: "fill:var(--ink)" }, svg, "Reactant side");
+    el("text", { x: mid + 30, y: 20, "class": "lbl", style: "fill:var(--ink)" }, svg, "Product side");
+    els.forEach(function (s, i) {
+      var y = 38 + i * rowH, l = c.L[s] || 0, r = c.R[s] || 0, ok = l === r, col = ok ? "var(--good)" : "var(--bad)";
+      el("rect", { x: mid - 22 - span * l / max, y: y, width: span * l / max, height: 22, rx: 3, fill: col, opacity: ok ? .85 : .7 }, svg);
+      el("rect", { x: mid + 22, y: y, width: span * r / max, height: 22, rx: 3, fill: col, opacity: ok ? .85 : .7 }, svg);
+      el("text", { x: mid, y: y + 16, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink); font-size:14px" }, svg, s);
+      el("text", { x: mid - 28 - span * l / max, y: y + 16, "text-anchor": "end", style: "fill:var(--ink); font-size:13px; font-weight:600" }, svg, String(l));
+      el("text", { x: mid + 28 + span * r / max, y: y + 16, style: "fill:var(--ink); font-size:13px; font-weight:600" }, svg, String(r));
+    });
+  }
+
+  function hintText(e, c) {
+    var sp = species(e), nr = e.r.length, bad = c.order.filter(function (s) { return c.L[s] !== c.R[s]; });
+    if (!bad.length) return "";
+    // Prefer an element that appears in exactly one formula on each side and is not a free element (balance free elements last).
+    function holders(s) { return sp.map(function (f, j) { return { f: f, j: j, c: Lab.parseFormula(f) }; }).filter(function (x) { return x.c[s]; }); }
+    function isFree(f) { return Object.keys(Lab.parseFormula(f)).length === 1; }
+    var pick = null;
+    bad.forEach(function (s) {
+      var h = holders(s), lh = h.filter(function (x) { return x.j < nr; }), rh = h.filter(function (x) { return x.j >= nr; });
+      var simple = lh.length === 1 && rh.length === 1, free = h.some(function (x) { return isFree(x.f); });
+      var score = (simple ? 2 : 0) + (free ? 0 : 1);
+      if (!pick || score > pick.score) pick = { s: s, score: score, lh: lh, rh: rh, free: free };
+    });
+    var s = pick.s, l = c.L[s], r = c.R[s], lcm = l * r / gcd(l, r);
+    var names = pick.lh.concat(pick.rh).map(function (x) { return "<span class=\"chem\">" + Lab.fmla(x.f) + "</span>"; });
+    var t = "<b>Hint:</b> <b>" + s + "</b> has " + l + " on the left and " + r + " on the right. ";
+    if (pick.lh.length === 1 && pick.rh.length === 1) t += "It appears in " + names.join(" and ") + ". Adjust those coefficients so both sides reach " + lcm + " " + s + " atoms (the least common multiple), then recheck the other elements.";
+    else t += "It appears in " + names.join(", ") + ". Count every formula that contains " + s + " on each side before you change anything.";
+    if (pick.free) t += " Elements that appear by themselves (like O₂ or Fe) are easiest to fix last, because changing them affects nothing else.";
+    if (e.r.concat(e.p).some(function (f) { return /\(PO4\)/.test(f); })) t += " Phosphate stays intact here, so you can count PO₄ as one unit.";
+    return t;
+  }
+
+  function renderB() {
+    var e = EQS[B.i], sp = species(e), k = B.k.slice(0, sp.length), c = count(e, k);
+    sp.forEach(function (f, j) { document.getElementById("k" + j).textContent = String(k[j]); });
+    Array.prototype.forEach.call(document.querySelectorAll("#eqs button"), function (b, i) { b.setAttribute("aria-pressed", i === B.i ? "true" : "false"); });
+    drawTally(c);
+    var rows = c.order.map(function (s) {
+      var l = c.L[s] || 0, r = c.R[s] || 0;
+      return "<tr><td><b>" + s + "</b></td><td>" + l + "</td><td>" + r + "</td><td class=\"" + (l === r ? "ok\">✓ equal" : "no\">✗ off " + Math.abs(l - r)) + "</td></tr>";
+    }).join("");
+    document.getElementById("atoms").innerHTML = "<thead><tr><th>Element</th><th>Left</th><th>Right</th><th>Status</th></tr></thead><tbody>" + rows + "</tbody>";
+    var mL = massSide(e, k, "L"), mR = massSide(e, k, "R");
+    document.getElementById("mass").innerHTML =
+      '<div class="row"><span>Mass of reactants (mol = coefficients)</span><span>' + mL.toFixed(2) + ' g</span></div>' +
+      '<div class="row"><span>Mass of products (mol = coefficients)</span><span>' + mR.toFixed(2) + ' g</span></div>' +
+      '<div class="row"><span>' + (Math.abs(mL - mR) < 0.005 ? "Mass is conserved" : "Difference (not allowed in a real reaction)") + '</span><span>' + (Math.abs(mL - mR) < 0.005 ? "✓" : Math.abs(mL - mR).toFixed(2) + " g") + "</span></div>";
+    var bad = c.order.filter(function (s) { return c.L[s] !== c.R[s]; });
+    var g = k.reduce(function (a, b) { return gcd(a, b); });
+    var html = "";
+    var eqLine = '<div class="eqn">' + sp.map(function (f, j) { return (j === e.r.length ? "→ " : j ? "+ " : "") + (k[j] > 1 ? "<b>" + k[j] + "</b>" : "") + Lab.fmla(f) + "(" + e.st[j] + ")"; }).join(" ") + "</div>";
+    html += eqLine;
+    if (bad.length) {
+      html += "<p><b>Not balanced yet.</b> " + bad.map(function (s) { return s + ": " + (c.L[s] || 0) + " on the left, " + (c.R[s] || 0) + " on the right"; }).join("; ") + ".</p>";
+      if (B.hint) html += "<p>" + hintText(e, c) + "</p>";
+      html += "<p><b>AP answer:</b> a balanced equation has the same number of atoms of each element on both sides. Change only coefficients, never subscripts.</p>";
+    } else if (g > 1) {
+      html += "<p><b>Balanced, but not in lowest terms.</b> Every coefficient shares a factor of " + g + ". Divide each one by " + g + " to get the standard form.</p>";
+      html += "<p><b>AP answer:</b> use the smallest whole-number coefficients. A multiple of a balanced equation is still balanced, but it is not the expected form.</p>";
+    } else {
+      html += "<p><b>Balanced.</b> Every element has the same count on both sides (" + c.order.map(function (s) { return s + " " + c.L[s]; }).join(", ") + "). Reading the coefficients as moles, " + mL.toFixed(2) + " g of reactants becomes " + mR.toFixed(2) + " g of products, so mass is conserved.</p>";
+      var nL = k.slice(0, e.r.length).reduce(function (a, b) { return a + b; }), nR = k.slice(e.r.length).reduce(function (a, b) { return a + b; });
+      if (nL !== nR) html += "<p>Notice that the number of molecules or formula units is not conserved: " + nL + " on the left, " + nR + " on the right. Only atoms (and mass) are conserved.</p>";
+      html += "<p><b>AP answer:</b> coefficients give the mole ratio of the reaction. These are the numbers you will use for stoichiometry in topic 4.5.</p>";
+    }
+    document.getElementById("b-story").innerHTML = html;
+  }
+
+  EQS.forEach(function (e, i) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = e.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { B.i = i; B.k = [1, 1, 1, 1]; B.hint = 0; buildBal(); renderB(); });
+    document.getElementById("eqs").appendChild(b);
+  });
+  document.getElementById("b-hint").addEventListener("click", function () { B.hint = 1; renderB(); });
+  document.getElementById("b-ones").addEventListener("click", function () { B.k = [1, 1, 1, 1]; B.hint = 0; renderB(); });
+  document.getElementById("b-show").addEventListener("click", function () { B.k = EQS[B.i].ans.slice(); B.hint = 0; renderB(); });
+  buildBal(); renderB();
+  var lastW = window.innerWidth;
+  window.addEventListener("resize", function () { if (window.innerWidth !== lastW) { lastW = window.innerWidth; renderB(); } });
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "When the equation __C₃H₈ + __O₂ → __CO₂ + __H₂O is balanced with the smallest whole-number coefficients, what is the coefficient of O₂?",
+      o: ["3", "5", "7", "10"], c: 1,
+      w: "Balance C first (3CO₂), then H (4H₂O). The product side now has 3 × 2 + 4 × 1 = 10 O atoms, which takes 5 O₂ molecules: C₃H₈ + 5O₂ → 3CO₂ + 4H₂O. Choice D is the number of oxygen <em>atoms</em>, not O₂ molecules." },
+    { s: "Which observation, by itself, gives the strongest evidence that a chemical reaction has occurred?",
+      o: ["Bubbles form when a pot of water is heated on a stove.", "A white solid forms when a hot, saturated KNO₃ solution is cooled.", "The color of a beaker of water changes when a drop of food coloring is added.", "Bubbles form when zinc metal is placed in hydrochloric acid, and the zinc slowly disappears."], c: 3,
+      w: "Zinc reacts with acid to make hydrogen gas, a new substance, and the zinc is used up as it becomes Zn²⁺ ions. In A the bubbles are water vapor (same substance), in B the solid is the same KNO₃ that was dissolved, and in C the dye only mixes with the water." },
+    { s: "When __Al + __O₂ → __Al₂O₃ is balanced with the smallest whole-number coefficients, what is the sum of the coefficients?",
+      o: ["5", "7", "9", "12"], c: 2,
+      w: "The O count must be a multiple of both 2 (in O₂) and 3 (in Al₂O₃), so use 6 O atoms: 3O₂ and 2Al₂O₃. Then 2Al₂O₃ needs 4Al. 4Al + 3O₂ → 2Al₂O₃, and 4 + 3 + 2 = 9. Choice A comes from 2Al + 2O₂ → Al₂O₃, which is not balanced (4 O on the left, 3 on the right)." },
+    { s: "A student balances H₂ + O₂ → H₂O by writing H₂ + O₂ → H₂O₂. Which statement best explains why this is not acceptable?",
+      o: ["Changing the subscript changed the product to hydrogen peroxide, a different substance.", "The equation is balanced, but the coefficients are not in lowest terms.", "There are more atoms on the product side than on the reactant side.", "Diatomic oxygen cannot be a reactant in a chemical equation."], c: 0,
+      w: "Subscripts are part of a substance's identity. H₂O₂ is hydrogen peroxide, not water. The correct way to balance is with coefficients: 2H₂ + O₂ → 2H₂O. Choice C is false: H₂ + O₂ → H₂O₂ has 2 H and 2 O on each side, which is exactly why it looks tempting." },
+    { s: "A 50.0 g sample of CaCO₃ is heated in an open crucible until it has completely decomposed into CaO(s) and CO₂(g). The solid left in the crucible has a mass of 28.0 g. What mass of CO₂ was produced?",
+      o: ["0 g, because mass is conserved", "22.0 g", "28.0 g", "78.0 g"], c: 1,
+      w: "Mass is conserved, so the 50.0 g of CaCO₃ becomes 50.0 g of products. The solid CaO is 28.0 g, so the CO₂ gas that escaped is 50.0 − 28.0 = 22.0 g. (Check: 50.0 g ÷ 100.09 g/mol = 0.500 mol CaCO₃, which makes 0.500 mol × 44.01 g/mol = 22.0 g CO₂.) Choice A misapplies conservation: the mass is conserved but the gas left the open crucible." },
+    { s: "Which statement about any correctly balanced chemical equation is true?",
+      o: ["The total number of molecules is the same on both sides.", "The sum of the coefficients on the left equals the sum on the right.", "The number of atoms of each element is the same on both sides, so total mass is conserved.", "The total number of moles of substance is the same on both sides."], c: 2,
+      w: "Atoms are rearranged, not created or destroyed, so each element's atom count is the same on both sides, and so is total mass. Molecules and moles are not conserved: 2H₂ + O₂ → 2H₂O turns 3 molecules (3 mol) into 2. Choices A, B, and D all fail for that equation." },
+    { s: "When __Ca(OH)₂ + __H₃PO₄ → __Ca₃(PO₄)₂ + __H₂O is balanced with the smallest whole-number coefficients, what is the coefficient of H₂O?",
+      o: ["2", "3", "4", "6"], c: 3,
+      w: "Ca₃(PO₄)₂ needs 3Ca(OH)₂ and 2H₃PO₄. The left side then has 3 × 2 + 2 × 3 = 12 H atoms, so 6H₂O. Check O: left 3 × 2 + 2 × 4 = 14; right 8 + 6 = 14. 3Ca(OH)₂ + 2H₃PO₄ → Ca₃(PO₄)₂ + 6H₂O. Choice B balances only the hydroxide groups (6 OH⁻ need 6 H⁺, not 3 water molecules)." },
+    { s: "Solid ammonium nitrate dissolves in water and the solution becomes cold. A student claims the temperature change proves that a chemical reaction occurred. Which response best evaluates the claim?",
+      o: ["The claim is correct, because any temperature change shows that bonds were broken and formed.", "The claim is not justified, because temperature changes also accompany physical processes; the NH₄⁺ and NO₃⁻ ions in solution are the same ions that were in the solid.", "The claim is correct, because a cold solution means a new substance with lower energy formed.", "The claim is not justified, because a chemical reaction always releases heat."], c: 1,
+      w: "Energy changes happen in physical processes too (melting absorbs heat, condensing releases it). Dissolving NH₄NO₃ makes no new substance with a new composition. The CED notes dissolving a salt can be argued either way, but a temperature change alone is never proof. Choice D is false: many reactions absorb heat, such as baking soda with vinegar." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("4.1");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [4], topic: "4.1", compact: true, storageKey: "topic-4.1" });</script>
+</body>
+</html>

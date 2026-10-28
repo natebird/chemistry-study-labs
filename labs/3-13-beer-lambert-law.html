@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beer–Lambert Law Study Lab</title>
+<meta name="description" content="Drive a spectrophotometer with A = εbc, build a calibration curve to find an unknown concentration, and test how classic lab errors such as fingerprints, a wet cuvette or the wrong wavelength change the result.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v sup { font-size: .65em; }
+.side .controls { grid-template-columns: 1fr; }
+.sub-h { font-family: var(--display); font-size: 1.25rem; margin-top: 10px; }
+svg.mini { width: 100%; height: auto; display: block; }
+#spec text, #cuv text, #cal text { font-size: 11.5px; }
+#spec text.lbl, #cuv text.lbl, #cal text.lbl { font-size: 12.5px; }
+@media (max-width: 520px) { #spec text, #cuv text, #cal text { font-size: 14px; } #spec text.lbl, #cuv text.lbl, #cal text.lbl { font-size: 14.5px; } }
+.legend .l-std { color: var(--accent); } .legend .l-unk { color: var(--c4); } .legend .l-true { color: var(--c2); }
+.legend .l-std::before, .legend .l-unk::before, .legend .l-true::before { width: 10px; height: 10px; border-radius: 50%; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 3 · Topic 3.13</span>
+  <h1>Beer–Lambert Law Study Lab</h1>
+  <p class="lede">A spectrophotometer measures how much light a solution absorbs. The Beer–Lambert law, A = εbc, says absorbance is proportional to concentration, so a measured absorbance tells you how concentrated a solution is. Drive the instrument, build a calibration curve for an unknown, and work out how each classic lab error pushes the answer.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Spectrophotometer bench</h2>
+    <p>The sample is an illustrative red dye with a molar absorptivity of ε = 2.00 × 10<sup>4</sup> M<sup>−1</sup> cm<sup>−1</sup> at its absorbance maximum, 500 nm. Real dyes have values in this range, but these numbers are chosen for clean arithmetic. Concentrations are in micromolar: 1 µM = 1 × 10<sup>−6</sup> M.</p>
+  </div>
+
+  <h3 class="sub-h">A. A = εbc</h3>
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Absorbance spectrum <small>this sample at each wavelength</small></h3>
+      <svg class="chart" id="spec" role="img" aria-label="Absorbance spectrum of the dye with the selected wavelength marked"></svg>
+    </div>
+    <div class="card side">
+      <svg class="mini" id="cuv" role="img" aria-label="Light beam passing through the cuvette to the detector"></svg>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-c">Concentration c <output id="o-c"></output></label>
+          <input type="range" id="s-c" min="0" max="60" step="0.5">
+          <span class="hint">Micromolar (10<sup>−6</sup> mol/L)</span>
+        </div>
+        <div class="ctl">
+          <label for="s-l">Wavelength <output id="o-l"></output></label>
+          <input type="range" id="s-l" min="400" max="700" step="1">
+          <span class="hint">ε changes with wavelength; it peaks at 500 nm</span>
+        </div>
+      </div>
+      <div class="group">
+        <div class="tag" id="b-lbl">Path length b (cuvette width)</div>
+        <div class="seg" role="group" aria-labelledby="b-lbl" id="b-btns"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Try these</div>
+        <div class="scenarios" id="sc-a"></div>
+      </div>
+    </div>
+  </div>
+  <div class="readout">
+    <div class="stat"><div class="k">Molar absorptivity ε at this λ</div><div class="v" id="ra-eps"></div><div class="sub">M<sup>−1</sup> cm<sup>−1</sup></div></div>
+    <div class="stat"><div class="k">Absorbance A = εbc</div><div class="v" id="ra-a"></div><div class="sub" id="ra-a2"></div></div>
+    <div class="stat"><div class="k">Light transmitted</div><div class="v" id="ra-t"></div><div class="sub">%T = 100 × 10<sup>−A</sup></div></div>
+    <div class="stat"><div class="k">Concentration</div><div class="v" id="ra-c"></div><div class="sub" id="ra-c2"></div></div>
+  </div>
+  <div class="story" id="story" aria-live="polite"></div>
+
+  <h3 class="sub-h">B. Calibration curve and lab errors</h3>
+  <p style="color:var(--muted); max-width:70ch">Five standards (10.0 to 50.0 µM) were measured at 500 nm in a 1.00 cm cuvette, with small random scatter like real data. The line is the least-squares best fit. Measure the unknown, read its concentration from the line, then introduce an error and see which way the answer moves.</p>
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Calibration curve <small>absorbance vs. concentration</small></h3>
+      <svg class="chart" id="cal" role="img" aria-label="Calibration curve with standards, best-fit line and the unknown"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">What went wrong?</div>
+        <div class="scenarios" id="sc-b"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-u">Unknown's true concentration <output id="o-u"></output></label>
+          <input type="range" id="s-u" min="5" max="75" step="0.5">
+          <span class="hint">Hidden in a real lab; shown here so you can check the error</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="lab-bar"><div class="legend"><span class="l-std">Standards</span><span class="l-ad">Best-fit line</span><span class="l-unk">Unknown as measured</span><span class="l-true">True concentration</span></div></div>
+  <div class="readout">
+    <div class="stat"><div class="k">Best-fit line</div><div class="v" id="rb-fit" style="font-size:.95rem"></div><div class="sub" id="rb-fit2"></div></div>
+    <div class="stat"><div class="k">Unknown's measured A</div><div class="v" id="rb-a"></div><div class="sub" id="rb-a2"></div></div>
+    <div class="stat"><div class="k">Calculated concentration</div><div class="v" id="rb-c"></div><div class="sub" id="rb-c2"></div></div>
+    <div class="stat"><div class="k">Error</div><div class="v" id="rb-e"></div><div class="sub" id="rb-e2"></div></div>
+  </div>
+  <div class="story" id="story-b" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">A = εbc</span><h3>The Beer–Lambert law</h3><p>Absorbance A has no units. ε is the molar absorptivity (M<sup>−1</sup> cm<sup>−1</sup>), a property of the substance at a given wavelength. b is the path length in cm (usually 1.00 cm). c is the molar concentration.</p></div>
+    <div class="card"><span class="tag">Direct proportion</span><h3>Double c, double A</h3><p>At a fixed wavelength and path length, absorbance is directly proportional to concentration. A plot of A against c for standards is a straight line through (or very near) the origin: a calibration curve.</p></div>
+    <div class="card"><span class="tag">λ<sub>max</sub></span><h3>Measure at the absorbance maximum</h3><p>At λ<sub>max</sub>, ε is largest, so a small change in concentration gives the largest change in absorbance. The method is most sensitive there, and small wavelength drifts matter least because the peak is flat on top.</p></div>
+    <div class="card"><span class="tag">Color</span><h3>Absorbed vs. seen</h3><p>A red solution looks red because it transmits red light and absorbs green-blue light. Its λ<sub>max</sub> is in the green-blue region, near 500 nm, not at a red wavelength.</p></div>
+    <div class="card"><span class="tag">Blank</span><h3>Zero the instrument</h3><p>Before measuring, a cuvette of the solvent (the blank) is used to set A = 0. Then the reading reflects only the absorbing solute, not the solvent or the glass.</p></div>
+    <div class="card"><span class="tag">Error analysis</span><h3>Follow the absorbance</h3><p>Any error that makes the measured absorbance too high makes the calculated concentration too high, and the reverse. Ask: did this change A for the unknown only, or for the standards too?</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Lab error cheat sheet</h2>
+    <p>The errors the AP exam asks about most often. "Calculated c" is the concentration read from a calibration curve made correctly with the standards, unless the row says otherwise.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>What happened</th><th>Effect on the unknown's measured A</th><th>Calculated c</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Fingerprints, smudges or scratches on the unknown's cuvette</td><td>Higher</td><td><b>Too high</b></td><td>Light scattered or absorbed by the smudge is counted as absorbance</td></tr>
+      <tr><td>Air bubble in the light path</td><td>Higher</td><td><b>Too high</b></td><td>The bubble scatters light away from the detector</td></tr>
+      <tr><td>Cuvette rinsed with water and not with the unknown before filling</td><td>Lower</td><td><b>Too low</b></td><td>Leftover water dilutes the sample</td></tr>
+      <tr><td>Unknown measured at a different wavelength from the standards</td><td>Lower (if away from λ<sub>max</sub>)</td><td><b>Too low</b></td><td>ε is smaller there, but the standards' line assumes the λ<sub>max</sub> value</td></tr>
+      <tr><td>Unknown in a narrower cuvette than the standards</td><td>Lower</td><td><b>Too low</b></td><td>A is proportional to b</td></tr>
+      <tr><td>Standards and unknown all measured without blanking (same offset in every reading)</td><td>Higher, by the same amount as the standards</td><td><b>No effect</b></td><td>The offset shifts the whole calibration line up, and the unknown is read from that same line</td></tr>
+      <tr><td>Unknown's absorbance above the highest standard</td><td>Beyond the curve</td><td><b>Unreliable</b></td><td>Extrapolation; dilute the unknown by a known factor and remeasure</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Answering it on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Solve A = εbc for the unknown quantity and show the substitution with units: c = A ÷ (εb).</li>
+        <li>From a calibration line A = mc + k, solve c = (A − k) ÷ m; the slope m equals εb.</li>
+        <li>Justify the wavelength: "at λ<sub>max</sub> the absorbance is greatest, so the measurement is most sensitive to changes in concentration."</li>
+        <li>For error questions, state the effect on the measured absorbance <b>and then</b> the effect on the calculated concentration.</li>
+        <li>Connect color to the absorbed wavelength: the solution absorbs the complementary color of what you see.</li>
+        <li>Say why a blank is used: it sets A = 0 for everything except the solute.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Choosing a wavelength the solution transmits (red light for a red solution). It barely absorbs there.</li>
+        <li>Giving A units. Absorbance is unitless; ε carries M<sup>−1</sup> cm<sup>−1</sup>.</li>
+        <li>Forgetting that b and ε cancel out of an error if the standards and unknown share them.</li>
+        <li>Saying a diluted sample gives a "higher concentration because more light gets through." More light through means lower A and lower calculated c.</li>
+        <li>Extrapolating far past the highest standard.</li>
+        <li>Confusing %T with A: A = 1 means only 10% of the light gets through, not that it all does.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 3.13. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-3.html">Unit 3 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = Lab.el, sci = function (v) { return Lab.sci(v, 3, true); };
+  // Illustrative dye: Gaussian absorbance band, eps(λ) = EMAX · exp(−((λ − 500)/W)²)
+  var EMAX = 2.00e4, LMAX = 500, WID = 50;
+  function eps(l) { return EMAX * Math.exp(-Math.pow((l - LMAX) / WID, 2)); }
+  function visColor(nm) {
+    var hue = nm < 440 ? 270 : nm < 490 ? 270 - (nm - 440) / 50 * 70 : nm < 510 ? 200 - (nm - 490) / 20 * 60 : nm < 580 ? 140 - (nm - 510) / 70 * 80 : nm < 645 ? 60 - (nm - 580) / 65 * 60 : 0;
+    return "hsl(" + hue.toFixed(0) + ", 85%, 50%)";
+  }
+  function f3(v) { return v.toFixed(3); }
+
+  // ================= Part A =================
+  var A = { c: 25, l: 500, b: 1.0, key: 0 };
+  var SCA = [
+    { name: "25.0 µM at λmax", c: 25, l: 500, b: 1.0, why: "The standard setup: 1.00 cm cuvette, measured at the absorbance maximum." },
+    { name: "Double the concentration", c: 50, l: 500, b: 1.0, why: "Twice as many absorbing particles in the beam's path: absorbance doubles." },
+    { name: "Double the path length", c: 25, l: 500, b: 2.0, why: "A 2.00 cm cuvette makes the light pass through twice as many particles, so absorbance doubles, just as doubling c does." },
+    { name: "Measure at a red wavelength", c: 25, l: 650, b: 1.0, why: "The dye looks red because it transmits red light. At 650 nm it barely absorbs, so the reading is tiny and insensitive to concentration." },
+    { name: "Too concentrated", c: 60, l: 500, b: 1.0, why: "A = 1.20 means only about 6% of the light reaches the detector. Readings this high are less precise; diluting the sample is better practice." }
+  ];
+  var spec = document.getElementById("spec"), cuv = document.getElementById("cuv");
+  function drawSpec() {
+    var bc = A.b * A.c * 1e-6, aMax = Math.max(0.2, EMAX * bc * 1.15);
+    var top = Math.ceil(aMax * 5) / 5;
+    var ticks = []; for (var t = 0; t <= top + 1e-9; t += top > 1.2 ? 0.4 : 0.2) ticks.push(+t.toFixed(1));
+    var F = Lab.frame(spec, { x: [400, 700], y: [0, top], xLabel: "Wavelength (nm)", yLabel: "Absorbance", xTicks: [400, 450, 500, 550, 600, 650, 700], yTicks: ticks,
+      fmtX: String, fmtY: function (v) { return v.toFixed(1); }, width: 440, height: 320 });
+    // visible color band along the bottom
+    for (var l = 400; l < 700; l += 5) Lab.rect(F, l, 0, l + 5, top * 0.03, visColor(l + 2.5), 0.9);
+    Lab.fn(F, function (x) { return eps(x) * bc; }, "var(--accent)", 3, null, 150);
+    var a = eps(A.l) * bc;
+    Lab.vline(F, A.l, "var(--c4)", 1.5, "5 4");
+    Lab.dot(F, A.l, a, "var(--c4)", false);
+    Lab.tag(F, A.l + (A.l > 600 ? -6 : 6), Math.min(top * 0.93, a + top * 0.07), "A = " + f3(a), "var(--c4)", A.l > 600 ? "end" : "start");
+    Lab.tag(F, 503, Math.min(top * 0.98, EMAX * bc + top * 0.05), A.c > 0 ? "λmax = 500 nm" : "", "var(--accent)");
+  }
+  function drawCuv() {
+    var W = 440, H = 120, a = eps(A.l) * A.b * A.c * 1e-6, T = Math.pow(10, -a);
+    cuv.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (cuv.firstChild) cuv.removeChild(cuv.firstChild);
+    var col = visColor(A.l), cw = 40 * A.b, cx = 220;
+    el("rect", { x: 10, y: 40, width: 46, height: 36, rx: 6, fill: "var(--surface)", stroke: "var(--ink)" }, cuv);
+    el("text", { x: 33, y: 96, "text-anchor": "middle" }, cuv, "source");
+    el("rect", { x: 56, y: 52, width: cx - cw / 2 - 56, height: 12, fill: col, opacity: 0.9 }, cuv);
+    el("text", { x: (56 + cx - cw / 2) / 2, y: 44, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, cuv, "I₀");
+    el("rect", { x: cx - cw / 2, y: 22, width: cw, height: 72, fill: "var(--c4)", opacity: Math.min(0.85, 0.04 + A.c / 60 * 0.6), stroke: "var(--ink)", "stroke-width": 1.5 }, cuv);
+    el("text", { x: cx, y: 110, "text-anchor": "middle" }, cuv, "b = " + A.b.toFixed(2) + " cm");
+    el("rect", { x: cx + cw / 2, y: 52, width: 360 - cx - cw / 2, height: 12, fill: col, opacity: Math.max(0.03, 0.9 * T) }, cuv);
+    el("text", { x: (cx + cw / 2 + 360) / 2, y: 44, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, cuv, "I = " + (100 * T).toFixed(1) + "% of I₀");
+    el("rect", { x: 360, y: 36, width: 60, height: 44, rx: 6, fill: "var(--accent-soft)", stroke: "var(--ink)" }, cuv);
+    el("text", { x: 390, y: 63, "text-anchor": "middle", style: "fill:var(--ink); font-family:var(--mono)" }, cuv, "A " + a.toFixed(3));
+    el("text", { x: 390, y: 96, "text-anchor": "middle" }, cuv, "detector");
+  }
+  var bBtns = {}, scaBtns = [];
+  function renderA() {
+    var e = eps(A.l), a = e * A.b * A.c * 1e-6, T = Math.pow(10, -a);
+    drawSpec(); drawCuv();
+    document.getElementById("s-c").value = A.c; document.getElementById("s-l").value = A.l;
+    document.getElementById("o-c").textContent = A.c.toFixed(1) + " µM";
+    document.getElementById("o-l").textContent = A.l + " nm";
+    Object.keys(bBtns).forEach(function (k) { bBtns[k].setAttribute("aria-pressed", Math.abs(+k - A.b) < 1e-9 ? "true" : "false"); });
+    scaBtns.forEach(function (b, i) { b.setAttribute("aria-pressed", A.key === i ? "true" : "false"); });
+    document.getElementById("ra-eps").innerHTML = sci(e);
+    document.getElementById("ra-a").textContent = f3(a);
+    document.getElementById("ra-a2").textContent = "no units";
+    document.getElementById("ra-t").textContent = (100 * T).toFixed(1) + "%";
+    document.getElementById("ra-c").innerHTML = sci(A.c * 1e-6) + " M";
+    document.getElementById("ra-c2").textContent = "= " + A.c.toFixed(1) + " µM";
+    var sc = A.key != null ? SCA[A.key] : null, out = "";
+    if (sc) out += "<p><b>" + sc.name + ".</b> " + sc.why + "</p>";
+    out += '<ol class="steps"><li>ε at ' + A.l + " nm = " + sci(e) + " M<sup>−1</sup> cm<sup>−1</sup>" + (A.l === LMAX ? " (the maximum)." : ", " + (100 * e / EMAX).toFixed(0) + "% of the value at λ<sub>max</sub>.") + "</li>";
+    out += "<li>A = εbc = (" + sci(e) + " M<sup>−1</sup> cm<sup>−1</sup>)(" + A.b.toFixed(2) + " cm)(" + sci(A.c * 1e-6) + " M) = <b>" + f3(a) + "</b>.</li>";
+    out += "<li>Fraction of light transmitted: 10<sup>−A</sup> = 10<sup>−" + f3(a) + "</sup> = " + (100 * T).toFixed(1) + "%.</li></ol>";
+    if (A.c === 0) out += "<p>With no dye, A = 0: this is what the blank looks like.</p>";
+    else if (Math.abs(A.l - LMAX) > 60) out += "<p>At this wavelength the dye hardly absorbs. A calibration here would have a shallow slope, so the same uncertainty in A would mean a much larger uncertainty in c. Measure at λ<sub>max</sub> instead.</p>";
+    out += "<p><b>AP answer:</b> absorbance is directly proportional to concentration and to path length (A = εbc); measure at λ<sub>max</sub>, where ε is largest, for the most sensitive determination of concentration.</p>";
+    document.getElementById("story").innerHTML = out;
+  }
+  [0.5, 1.0, 2.0].forEach(function (b) {
+    var x = document.createElement("button"); x.type = "button"; x.textContent = b.toFixed(2) + " cm"; x.setAttribute("aria-pressed", "false");
+    x.addEventListener("click", function () { A.b = b; A.key = null; renderA(); });
+    document.getElementById("b-btns").appendChild(x); bBtns[b] = x;
+  });
+  SCA.forEach(function (s, i) {
+    var x = document.createElement("button"); x.type = "button"; x.textContent = s.name; x.setAttribute("aria-pressed", "false");
+    x.addEventListener("click", function () { A.c = s.c; A.l = s.l; A.b = s.b; A.key = i; renderA(); });
+    document.getElementById("sc-a").appendChild(x); scaBtns.push(x);
+  });
+  document.getElementById("s-c").addEventListener("input", function (e) { A.c = parseFloat(e.target.value); A.key = null; renderA(); });
+  document.getElementById("s-l").addEventListener("input", function (e) { A.l = parseInt(e.target.value, 10); A.key = null; renderA(); });
+  renderA();
+
+  // ================= Part B =================
+  var STD_C = [10, 20, 30, 40, 50], NOISE = [0.003, -0.004, 0.002, 0.005, -0.003];
+  var ERR = [
+    { k: "none", name: "No error", unk: function (a) { return a; }, std: 0,
+      why: "Everything done correctly. The small difference from the true value comes from the scatter in the standards.", dir: 0 },
+    { k: "finger", name: "Fingerprint on the unknown's cuvette", unk: function (a) { return a + 0.050; }, std: 0,
+      why: "The smudge scatters and absorbs some light, adding about 0.050 to the unknown's absorbance. The detector cannot tell this from absorbance by the dye.", dir: 1 },
+    { k: "wet", name: "Cuvette wet with water", unk: function (a) { return a * 0.95; }, std: 0,
+      why: "Water left in the cuvette diluted the unknown by about 5%, so fewer dye particles are in the beam and the absorbance is about 5% low.", dir: -1 },
+    { k: "lambda", name: "Unknown read at 540 nm", unk: function (a) { return a * eps(540) / EMAX; }, std: 0,
+      why: "The standards were measured at 500 nm but the unknown at 540 nm, where ε is only " + (100 * eps(540) / EMAX).toFixed(0) + "% as large. Its absorbance is much lower than it would be at 500 nm.", dir: -1 },
+    { k: "path", name: "Unknown in a 0.50 cm cuvette", unk: function (a) { return a * 0.5; }, std: 0,
+      why: "A is proportional to b. Halving the path length halves the unknown's absorbance, but the calibration line assumes 1.00 cm.", dir: -1 },
+    { k: "blank", name: "Never blanked (all readings +0.040)", unk: function (a) { return a + 0.040; }, std: 0.040,
+      why: "The solvent and cuvette add 0.040 to every reading, standards and unknown alike. The whole calibration line shifts up by 0.040 (look at the intercept), and the unknown is read from that same shifted line.", dir: 0 }
+  ];
+  var B = { e: 0, u: 27 };
+  function fit(xs, ys) {
+    var n = xs.length, mx = 0, my = 0, sxx = 0, sxy = 0;
+    for (var i = 0; i < n; i++) { mx += xs[i] / n; my += ys[i] / n; }
+    for (var j = 0; j < n; j++) { sxx += (xs[j] - mx) * (xs[j] - mx); sxy += (xs[j] - mx) * (ys[j] - my); }
+    var m = sxy / sxx; return { m: m, k: my - m * mx };
+  }
+  var cal = document.getElementById("cal");
+  function renderB() {
+    var er = ERR[B.e];
+    var stdA = STD_C.map(function (c, i) { return EMAX * 1.00 * c * 1e-6 + NOISE[i] + er.std; });
+    var ft = fit(STD_C, stdA);
+    var trueA = EMAX * 1.00 * B.u * 1e-6, measA = er.unk(trueA), cCalc = (measA - ft.k) / ft.m;
+    var F = Lab.frame(cal, { x: [0, 80], y: [0, 1.7], xLabel: "Concentration (µM)", yLabel: "Absorbance at 500 nm", xTicks: [0, 10, 20, 30, 40, 50, 60, 70, 80], yTicks: [0, 0.4, 0.8, 1.2, 1.6],
+      fmtX: String, fmtY: function (v) { return v.toFixed(1); }, width: 440, height: 320 });
+    Lab.rect(F, 50, 0, 80, 1.7, "var(--ghost)", 0.15);
+    Lab.tag(F, 79, 1.6, "beyond the standards", "var(--muted)", "end");
+    Lab.line(F, [[0, ft.k], [50, ft.k + ft.m * 50]], "var(--accent)", 2.5);
+    Lab.line(F, [[50, ft.k + ft.m * 50], [80, ft.k + ft.m * 80]], "var(--accent)", 1.5, "5 4");
+    stdA.forEach(function (a, i) { el("circle", { cx: F.sx(STD_C[i]), cy: F.sy(a), r: 5, fill: "var(--accent)", stroke: "var(--surface)", "stroke-width": 1.5 }, F.g); });
+    // unknown: across from measured A to the line, then down
+    Lab.line(F, [[0, measA], [cCalc, measA], [cCalc, 0]], "var(--c4)", 1.5, "4 3");
+    Lab.dot(F, cCalc, measA, "var(--c4)", false);
+    el("path", { d: "M" + F.sx(B.u) + " " + (F.sy(0) - 2) + " l-6 -10 h12 z", fill: "var(--c2)" }, F.svg);
+    Lab.tag(F, cCalc + 1.5, Math.min(1.6, measA + 0.07), "unknown", "var(--c4)");
+    // readouts
+    document.getElementById("rb-fit").textContent = "A = " + ft.m.toFixed(5) + " c " + (ft.k >= 0 ? "+ " : "− ") + Math.abs(ft.k).toFixed(4);
+    document.getElementById("rb-fit2").innerHTML = "c in µM; slope = εb = " + sci(ft.m * 1e6) + " M<sup>−1</sup>";
+    document.getElementById("rb-a").textContent = f3(measA);
+    document.getElementById("rb-a2").textContent = Math.abs(measA - trueA) > 1e-6 ? "should be " + f3(trueA + er.std) : "measured correctly";
+    document.getElementById("rb-c").textContent = cCalc.toFixed(1) + " µM";
+    document.getElementById("rb-c2").textContent = "(A − intercept) ÷ slope";
+    var pct = (cCalc - B.u) / B.u * 100;
+    document.getElementById("rb-e").innerHTML = Math.abs(pct) < 1.5 ? '<span class="pill lr">' + (pct >= 0 ? "+" : "−") + Math.abs(pct).toFixed(1) + "%</span>" : '<span class="pill infl">' + (pct > 0 ? "+" : "−") + Math.abs(pct).toFixed(1) + "% " + (pct > 0 ? "too high" : "too low") + "</span>";
+    document.getElementById("rb-e2").textContent = "true value " + B.u.toFixed(1) + " µM";
+    errBtns.forEach(function (b, i) { b.setAttribute("aria-pressed", B.e === i ? "true" : "false"); });
+    document.getElementById("s-u").value = B.u; document.getElementById("o-u").textContent = B.u.toFixed(1) + " µM";
+    var out = "<p><b>" + er.name + ".</b> " + er.why + "</p>";
+    out += '<ol class="steps"><li>Best-fit line from the standards: A = ' + ft.m.toFixed(5) + " c " + (ft.k >= 0 ? "+ " : "− ") + Math.abs(ft.k).toFixed(4) + " (c in µM).</li>";
+    out += "<li>Measured A of the unknown: " + f3(measA) + ".</li>";
+    out += "<li>c = (" + f3(measA) + " " + (ft.k >= 0 ? "− " : "+ ") + Math.abs(ft.k).toFixed(4) + ") ÷ " + ft.m.toFixed(5) + " = <b>" + cCalc.toFixed(1) + " µM</b> (true value " + B.u.toFixed(1) + " µM).</li></ol>";
+    if (B.u > 50) out += "<p>The unknown is more concentrated than the highest standard, so its concentration comes from extending the line past the data. Dilute it by a known factor (for example, 5.00 mL to 10.00 mL) so its absorbance falls inside the standards, then multiply the result by the dilution factor.</p>";
+    var ap;
+    if (er.dir > 0) ap = "the measured absorbance of the unknown is too high, so the calculated concentration is too high.";
+    else if (er.dir < 0) ap = "the measured absorbance of the unknown is too low, so the calculated concentration is too low.";
+    else if (er.k === "blank") ap = "the same error affects the standards and the unknown, so it shifts the calibration line and cancels out; the calculated concentration is essentially unaffected.";
+    else ap = "read the unknown's absorbance across to the calibration line and down to the concentration axis, or solve c = (A − intercept) ÷ slope.";
+    out += "<p><b>AP answer:</b> " + ap + "</p>";
+    document.getElementById("story-b").innerHTML = out;
+  }
+  var errBtns = [];
+  ERR.forEach(function (e, i) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = e.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { B.e = i; renderB(); });
+    document.getElementById("sc-b").appendChild(b); errBtns.push(b);
+  });
+  document.getElementById("s-u").addEventListener("input", function (e) { B.u = parseFloat(e.target.value); renderB(); });
+  renderB();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "A solution has an absorbance of 0.450 in a 1.00 cm cuvette. The molar absorptivity of the solute at this wavelength is 1.50 × 10⁴ M⁻¹ cm⁻¹. What is the concentration of the solute?",
+      o: ["6.75 × 10³ M", "3.00 × 10⁻⁵ M", "3.33 × 10⁴ M", "3.00 × 10⁻³ M"], c: 1,
+      w: "c = A ÷ (εb) = 0.450 ÷ (1.50 × 10⁴ M⁻¹ cm⁻¹ × 1.00 cm) = 3.00 × 10⁻⁵ M. Choice A multiplies A by ε instead of dividing. Choice C is εb/A, the reciprocal." },
+    { s: "A student doubles the concentration of a solution and also moves it to a cuvette with half the path length. How does the absorbance change?",
+      o: ["It doubles", "It is halved", "It does not change", "It quadruples"], c: 2,
+      w: "A = εbc. Doubling c doubles A and halving b halves A, so the two changes cancel. The same number of absorbing particles lies in the light's path." },
+    { s: "Why is a spectrophotometer usually set to the wavelength of maximum absorbance, λmax, for concentration measurements?",
+      o: ["Only at λmax does the Beer–Lambert law apply", "At λmax the solution transmits the most light", "At λmax the molar absorptivity is zero, so the blank is most accurate", "At λmax the absorbance changes the most for a given change in concentration, so the measurement is most sensitive"], c: 3,
+      w: "ε is largest at λmax, so the calibration line is steepest and small concentration differences give the biggest absorbance differences. The law applies at other wavelengths too (A is wrong), and at λmax the solution transmits the least light (B is backward)." },
+    { s: "A student leaves a fingerprint on the cuvette before measuring the absorbance of an unknown. The calibration curve was made correctly. How does this affect the calculated concentration of the unknown?",
+      o: ["It is too high, because the fingerprint blocks some light and increases the measured absorbance", "It is too low, because the fingerprint absorbs light that the solute would have absorbed", "It is not affected, because the fingerprint is outside the solution", "It is too low, because less light reaches the solution"], c: 0,
+      w: "The detector measures all light lost between the source and the detector. Light scattered or absorbed by the fingerprint looks like extra absorbance, so A is too high and the concentration read from the curve is too high." },
+    { s: "Before adding the unknown, a student rinses the cuvette with distilled water and does not dry it or rinse it with the unknown. What is the effect on the calculated concentration?",
+      o: ["Too high, because water absorbs light", "Too low, because the unknown is diluted, which lowers its absorbance", "No effect, because water is the solvent", "Too high, because the dilution increases the transmittance"], c: 1,
+      w: "Leftover water dilutes the sample in the cuvette, so fewer solute particles are in the beam, A is lower, and the calculated concentration is too low. Higher transmittance (D) means lower absorbance, which gives a lower, not higher, concentration." },
+    { s: "A calibration curve gives A = (1.85 × 10⁴ M⁻¹)c + 0.002. An unknown has A = 0.372. What is its concentration?",
+      o: ["6.88 × 10³ M", "5.00 × 10⁴ M", "2.00 × 10⁻⁵ M", "2.00 × 10⁻³ M"], c: 2,
+      w: "c = (A − 0.002) ÷ 1.85 × 10⁴ M⁻¹ = 0.370 ÷ 1.85 × 10⁴ M⁻¹ = 2.00 × 10⁻⁵ M. Choice A multiplies A by the slope. Choice B is the slope divided by A, the reciprocal." },
+    { s: "A solution has an absorbance of 1.00 at the wavelength used. What percentage of the incident light passes through the sample?",
+      o: ["0%", "1%", "10%", "90%"], c: 2,
+      w: "A = −log(I/I₀), so I/I₀ = 10⁻¹·⁰⁰ = 0.100, or 10% transmitted and 90% absorbed. Choice D is the percentage absorbed, not transmitted." },
+    { s: "A solution of a copper(II) complex appears blue. At which wavelength should its absorbance be measured to determine its concentration?",
+      o: ["About 450 nm, because the solution is blue", "About 620 nm, because the solution absorbs orange-red light and transmits blue", "About 300 nm, because UV light has the most energy", "Any wavelength gives the same sensitivity, because ε does not depend on wavelength"], c: 1,
+      w: "A blue solution looks blue because it transmits blue light and absorbs the complementary orange-red light, so its absorbance maximum is in the orange-red region (Cu²⁺ complexes absorb strongly near 600–800 nm). Measuring where it transmits (choice A) gives a small, insensitive reading. ε depends strongly on wavelength, so D is false." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("3.13");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [3], topic: "3.13", compact: true, storageKey: "topic-3.13" });</script>
+</body>
+</html>

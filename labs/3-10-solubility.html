@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solubility Study Lab</title>
+<meta name="description" content="Predict whether ten solutes dissolve in water or hexane, check each prediction against an IMF scorecard, and watch alcohol solubility fall as the carbon chain grows.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.side .controls { grid-template-columns: 1fr; }
+.sub-h { font-family: var(--display); font-size: 1.25rem; margin-top: 10px; }
+.imf { display: grid; gap: 8px; }
+.imf .row { display: grid; grid-template-columns: 9.5em 1fr; gap: 10px; align-items: center; font-size: .86rem; }
+.imf .row .lab-n { color: var(--muted); }
+.imf .bar { height: 22px; border-radius: 6px; background: var(--grid); position: relative; overflow: hidden; }
+.imf .bar i { position: absolute; inset: 0 auto 0 0; border-radius: 6px; opacity: .35; }
+.imf .bar span { position: relative; display: flex; align-items: center; height: 100%; padding-left: 8px; font-size: .78rem; font-weight: 600; color: var(--ink); white-space: nowrap; }
+.predict { display: flex; gap: 8px; flex-wrap: wrap; }
+svg.mini { width: 100%; height: auto; display: block; }
+#tube text, #chain text, #alc text { font-size: 11.5px; }
+#tube text.lbl, #alc text.lbl { font-size: 12.5px; }
+@media (max-width: 520px) { #tube text, #alc text, #chain text { font-size: 14px; } #tube text.lbl, #alc text.lbl { font-size: 14.5px; } .imf .row { grid-template-columns: 1fr; gap: 2px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 3 · Topic 3.10</span>
+  <h1>Solubility Study Lab</h1>
+  <p class="lede">"Like dissolves like" is shorthand for an IMF argument: a substance dissolves well when the attractions it can form with the solvent are comparable to the attractions that must be broken inside the solute and inside the solvent. Predict, test, and explain ten solute–solvent pairs, then watch what a growing nonpolar chain does to solubility in water.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Will it dissolve?</h2>
+    <p>Pick a solute and a solvent, make a prediction, then see the result in the test tube with the IMF scorecard that explains it. The bar lengths in the scorecard rank the types of attraction qualitatively; they are not measured energies. Results are for room temperature.</p>
+  </div>
+
+  <h3 class="sub-h">A. Predict and test</h3>
+  <div class="lab">
+    <div class="card graph-card">
+      <h3><span id="t-title">Test tube</span> <small id="t-sub"></small></h3>
+      <svg class="chart" id="tube" role="img" aria-label="Test tube showing whether the solute dissolves in the solvent"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Solvent</div>
+        <div class="seg" role="group" aria-label="Solvent">
+          <button type="button" id="sv-w" aria-pressed="true">Water (polar, H-bonding)</button>
+          <button type="button" id="sv-h" aria-pressed="false">Hexane (nonpolar)</button>
+        </div>
+      </div>
+      <div class="group">
+        <div class="tag">Solute</div>
+        <div class="scenarios" id="sol-btns"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Your prediction</div>
+        <div class="predict">
+          <button type="button" id="p-yes">Dissolves / mixes</button>
+          <button type="button" id="p-no">Does not dissolve / mix</button>
+          <button type="button" id="p-show">Just show me</button>
+        </div>
+      </div>
+      <div class="group">
+        <div class="tag">IMF scorecard</div>
+        <div class="imf" id="imf"></div>
+      </div>
+    </div>
+  </div>
+  <div class="readout">
+    <div class="stat"><div class="k">Solute</div><div class="v" id="r-s" style="font-size:1rem"></div><div class="sub" id="r-s2"></div></div>
+    <div class="stat"><div class="k">Solvent</div><div class="v" id="r-v" style="font-size:1rem"></div><div class="sub" id="r-v2"></div></div>
+    <div class="stat"><div class="k">Result</div><div class="v" id="r-r"></div><div class="sub" id="r-r2"></div></div>
+    <div class="stat"><div class="k">Predictions correct</div><div class="v" id="r-p">0 / 0</div><div class="sub">all 20 pairs to try</div></div>
+  </div>
+  <div class="story" id="story" aria-live="polite"></div>
+
+  <h3 class="sub-h">B. Alcohols in water: the chain gets longer</h3>
+  <p style="color:var(--muted); max-width:70ch">Straight-chain alcohols CH<sub>3</sub>(CH<sub>2</sub>)<sub>n−1</sub>OH all have one −OH group that hydrogen-bonds to water. Only the nonpolar carbon chain changes. Solubilities are approximate values at about 20–25 °C; the vertical axis is logarithmic.</p>
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Solubility in water <small>g per 100 mL, log scale</small></h3>
+      <svg class="chart" id="alc" role="img" aria-label="Bar chart of the solubility of straight-chain alcohols in water against number of carbon atoms"></svg>
+    </div>
+    <div class="card side">
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-c">Carbon atoms <output id="o-c"></output></label>
+          <input type="range" id="s-c" min="1" max="8" step="1">
+          <span class="hint">From methanol (1) to 1-octanol (8)</span>
+        </div>
+      </div>
+      <svg class="mini" id="chain" role="img" aria-label="Structure of the selected alcohol with its polar and nonpolar parts marked"></svg>
+    </div>
+  </div>
+  <div class="readout">
+    <div class="stat"><div class="k">Alcohol</div><div class="v" id="rb-n" style="font-size:1rem"></div><div class="sub" id="rb-f"></div></div>
+    <div class="stat"><div class="k">Solubility in water</div><div class="v" id="rb-s"></div><div class="sub">approximate, room temperature</div></div>
+    <div class="stat"><div class="k">Electrons</div><div class="v" id="rb-e"></div><div class="sub">more electrons, stronger London forces</div></div>
+    <div class="stat"><div class="k">−OH groups</div><div class="v">1</div><div class="sub">hydrogen bonding to water stays the same</div></div>
+  </div>
+  <div class="story" id="story-b" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Like dissolves like</span><h3>Similar IMFs mix</h3><p>Substances with similar intermolecular interactions tend to be soluble in or miscible with each other. Polar and ionic solutes dissolve in polar solvents such as water; nonpolar solutes dissolve in nonpolar solvents such as hexane.</p></div>
+    <div class="card"><span class="tag">Break and make</span><h3>Three sets of attractions</h3><p>Dissolving breaks solute–solute and solvent–solvent attractions and forms solute–solvent attractions. If the new attractions are comparable in strength to the ones broken, the solute dissolves.</p></div>
+    <div class="card"><span class="tag">Polar + nonpolar</span><h3>Why oil and water separate</h3><p>Hexane can form only weak London forces with water. To dissolve, it would have to break water's strong hydrogen bonds and get little back, so the water molecules stay together and push the hexane out as a separate layer.</p></div>
+    <div class="card"><span class="tag">Ionic solutes</span><h3>Ion–dipole attractions</h3><p>Water's dipoles surround ions and can make up for the strong ionic attractions in the solid. Hexane has no dipole, so ionic solids do not dissolve in it. Not every ionic solid dissolves in water; all sodium, potassium, ammonium and nitrate salts do.</p></div>
+    <div class="card"><span class="tag">Two-part molecules</span><h3>Polar head, nonpolar tail</h3><p>Alcohols have a polar −OH and a nonpolar carbon chain. Short chains (methanol, ethanol) mix with water in any proportion. Each added CH<sub>2</sub> makes the molecule more like hexane and less soluble in water.</p></div>
+    <div class="card"><span class="tag">Miscible</span><h3>Vocabulary</h3><p><b>Miscible</b> liquids mix in all proportions to form one phase. <b>Immiscible</b> liquids form separate layers, with the less dense liquid on top. <b>Soluble</b> and <b>insoluble</b> describe a solid or gas dissolving in a liquid.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Solubility cheat sheet</h2>
+    <p>Identify the strongest attraction each substance can form, then compare solute with solvent.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Solute type (example)</th><th>Strongest solute–solute force</th><th>In water</th><th>In hexane</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Soluble ionic (NaCl, KNO<sub>3</sub>)</td><td>Ionic (Coulombic) attractions</td><td><b>Dissolves</b></td><td>Does not</td><td>Ion–dipole attractions with water; nothing comparable with hexane</td></tr>
+      <tr><td>Small molecule with −OH (ethanol, glucose)</td><td>Hydrogen bonding</td><td><b>Dissolves / miscible</b></td><td>Glucose does not; ethanol mixes</td><td>Hydrogen bonds to water; ethanol's ethyl group also gives London forces with hexane</td></tr>
+      <tr><td>Polar, no O–H (acetone)</td><td>Dipole–dipole</td><td><b>Miscible</b></td><td><b>Miscible</b></td><td>Accepts hydrogen bonds from water; its CH<sub>3</sub> groups interact with hexane</td></tr>
+      <tr><td>Nonpolar (I<sub>2</sub>, octane, CCl<sub>4</sub>)</td><td>London dispersion</td><td>Does not (layers or solid left)</td><td><b>Dissolves / miscible</b></td><td>London forces with hexane replace London forces in the solute</td></tr>
+      <tr><td>Long-chain alcohol (1-octanol)</td><td>London (large) plus hydrogen bonding</td><td>Barely</td><td><b>Miscible</b></td><td>The large nonpolar chain dominates</td></tr>
+      <tr><td>Insoluble ionic (AgCl)</td><td>Ionic</td><td>Does not</td><td>Does not</td><td>Attractions within the solid outweigh ion–dipole attractions; the exam gives you this when it matters</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Explaining it on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>"Like dissolves like" alone earns little. Name the IMFs of the solute, of the solvent, and between them.</li>
+        <li>Use comparative language: "the London dispersion forces between I<sub>2</sub> and hexane are similar in strength to those broken in pure I<sub>2</sub> and pure hexane."</li>
+        <li>For ionic solutes in water, say "ion–dipole attractions between the ions and the polar water molecules."</li>
+        <li>For a polar–nonpolar pair, explain that the solute–solvent attractions are too weak to make up for the hydrogen bonds (or dipole attractions) that would be broken.</li>
+        <li>When comparing two similar molecules, point to the structural feature: an −OH group, the length of a nonpolar chain, a dipole.</li>
+        <li>For immiscible liquids, say which layer is on top using density.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying a nonpolar substance is "repelled" by water. The issue is that it cannot form attractions strong enough to replace water's hydrogen bonds.</li>
+        <li>Saying covalent bonds break when a molecular solute dissolves. Only intermolecular attractions change.</li>
+        <li>Assuming every ionic compound dissolves in water.</li>
+        <li>Calling any molecule with H and O "hydrogen-bonding." Acetone can accept a hydrogen bond from water but cannot donate one.</li>
+        <li>Forgetting that a molecule can have a polar part and a nonpolar part, and both matter.</li>
+        <li>Using "soluble" for two liquids where "miscible" is the precise word.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 3.10. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-3.html">Unit 3 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = Lab.el, fm = Lab.fmla;
+
+  // ---------- Data ----------
+  // Qualitative IMF strength ranking used for the scorecard bars (1 = weak ... 5 = strong). Not energies.
+  var IMF = {
+    ldfS: { t: "London dispersion (small)", v: 1.2 }, ldfM: { t: "London dispersion", v: 1.8 }, ldfL: { t: "London dispersion (large)", v: 2.3 },
+    dip: { t: "Dipole–dipole", v: 2.6 }, hb: { t: "Hydrogen bonding", v: 3.4 }, iond: { t: "Ion–dipole", v: 4.2 }, ionic: { t: "Ionic attractions", v: 4.8 },
+    ionind: { t: "Ion–induced dipole (weak)", v: 1.0 }, dipind: { t: "Dipole–induced dipole", v: 1.4 }, hbldf: { t: "H-bonding + London", v: 3.2 }
+  };
+  // state: s solid or l liquid; dens g/mL for liquids; tint color when dissolved; w / h = result in water / hexane
+  var SOL = [
+    { k: "nacl", f: "NaCl", name: "sodium chloride", type: "ionic", state: "s", ss: "ionic",
+      w: { ok: true, sv: "iond", amt: "about 36 g per 100 mL", why: "Water's partially negative O ends surround Na<sup>+</sup> and its partially positive H ends surround Cl<sup>−</sup>. These ion–dipole attractions are strong enough to make up for the ionic attractions in the crystal and the hydrogen bonds between water molecules that must be broken." },
+      h: { ok: false, sv: "ionind", why: "Hexane has no dipole. The only attraction it can offer an ion is a weak ion–induced dipole attraction, nowhere near enough to pull ions out of the crystal lattice. The salt sits on the bottom." } },
+    { k: "kno3", f: "KNO3", name: "potassium nitrate", type: "ionic", state: "s", ss: "ionic",
+      w: { ok: true, sv: "iond", amt: "about 32 g per 100 mL", why: "K<sup>+</sup> and NO<sub>3</sub><sup>−</sup> are each surrounded by oriented water molecules (ion–dipole attractions). All potassium salts and all nitrates are soluble in water." },
+      h: { ok: false, sv: "ionind", why: "No dipoles, no ion–dipole attractions: a nonpolar solvent cannot separate the ions of an ionic solid." } },
+    { k: "agcl", f: "AgCl", name: "silver chloride", type: "ionic (insoluble)", state: "s", ss: "ionic",
+      w: { ok: false, sv: "iond", amt: "about 0.0002 g per 100 mL", why: "AgCl is ionic, and water does form ion–dipole attractions with Ag<sup>+</sup> and Cl<sup>−</sup>, but here they do not make up for the attractions holding the solid together. This is the limit of \"like dissolves like\": the rule says what is likely, not what always happens. On the exam, the solubility of such a salt is given (you are expected to know only that Na<sup>+</sup>, K<sup>+</sup>, NH<sub>4</sub><sup>+</sup> and NO<sub>3</sub><sup>−</sup> salts are soluble)." },
+      h: { ok: false, sv: "ionind", why: "If water cannot dissolve AgCl, a nonpolar solvent certainly cannot: it offers only weak ion–induced dipole attractions." } },
+    { k: "glu", f: "C6H12O6", name: "glucose", type: "polar, five −OH groups", state: "s", ss: "hb",
+      w: { ok: true, sv: "hb", amt: "about 90 g per 100 mL", why: "Glucose has five −OH groups and a ring O. Each forms hydrogen bonds with water, replacing the hydrogen bonds that held the glucose crystal and the water together. It dissolves as whole molecules, not ions." },
+      h: { ok: false, sv: "dipind", why: "Glucose molecules hold each other by many hydrogen bonds. Hexane can offer only weak London and dipole–induced dipole attractions, so the crystal stays intact." } },
+    { k: "etoh", f: "C2H5OH", name: "ethanol", type: "polar −OH, small nonpolar part", state: "l", dens: 0.79, ss: "hb",
+      w: { ok: true, sv: "hb", amt: "miscible in all proportions", why: "Ethanol's −OH group hydrogen-bonds with water just as water does with itself. Its small ethyl group does little to disrupt this, so the two liquids mix in any proportion." },
+      h: { ok: true, sv: "ldfM", amt: "miscible", why: "Ethanol's ethyl group gives it London forces comparable to hexane's, so ethanol also mixes with hexane. Small molecules with a polar head and a nonpolar part can be miscible with both kinds of solvent. (Methanol, with only one carbon, does <i>not</i> fully mix with hexane at room temperature.)" } },
+    { k: "acet", f: "(CH3)2CO", name: "acetone", type: "polar, no O–H", state: "l", dens: 0.79, ss: "dip",
+      w: { ok: true, sv: "hb", amt: "miscible in all proportions", why: "Acetone cannot donate a hydrogen bond (no H on O), but its C=O oxygen accepts hydrogen bonds from water's O–H. Those attractions plus dipole–dipole forces make it miscible with water." },
+      h: { ok: true, sv: "dipind", amt: "miscible", why: "Acetone's two CH<sub>3</sub> groups give London forces with hexane, and acetone's own dipole–dipole forces are not strong enough to keep it out. Acetone mixes with hexane too, which is why it is such a common lab solvent." } },
+    { k: "i2", f: "I2", name: "iodine", type: "nonpolar", state: "s", ss: "ldfL", tint: "var(--c3)",
+      w: { ok: false, sv: "dipind", amt: "about 0.03 g per 100 mL (a faint tint)", why: "I<sub>2</sub> is nonpolar but has 106 electrons, so it is very polarizable and its London forces are strong. Water can offer only dipole–induced dipole attractions, which do not make up for breaking water's hydrogen bonds. A trace dissolves; almost all stays solid." },
+      h: { ok: true, sv: "ldfM", amt: "dissolves readily: a purple solution", why: "I<sub>2</sub> and hexane both attract by London dispersion forces. The I<sub>2</sub>–hexane attractions are similar to those broken in each pure substance, so iodine dissolves and gives the violet color of I<sub>2</sub> in a nonpolar solvent." } },
+    { k: "oct", f: "C8H18", name: "octane", type: "nonpolar", state: "l", dens: 0.70, ss: "ldfL",
+      w: { ok: false, sv: "dipind", why: "Octane has only London forces. Mixing it into water would break water's hydrogen bonds and replace them with much weaker attractions, so the liquids stay as two layers. Octane (0.70 g/mL) floats on water." },
+      h: { ok: true, sv: "ldfM", amt: "miscible", why: "Octane and hexane are both nonpolar alkanes with London forces of similar strength, so they mix in all proportions." } },
+    { k: "ccl4", f: "CCl4", name: "carbon tetrachloride", type: "nonpolar (symmetric)", state: "l", dens: 1.59, ss: "ldfL",
+      w: { ok: false, sv: "dipind", why: "Each C–Cl bond is polar, but the tetrahedral shape cancels the bond dipoles, so CCl<sub>4</sub> is nonpolar. It forms two layers with water; at 1.59 g/mL it sinks to the bottom." },
+      h: { ok: true, sv: "ldfM", amt: "miscible", why: "Two nonpolar liquids attracted by London forces: they mix in all proportions." } },
+    { k: "octol", f: "C8H17OH", name: "1-octanol", type: "−OH + long nonpolar chain", state: "l", dens: 0.83, ss: "hbldf",
+      w: { ok: false, sv: "hb", amt: "about 0.05 g per 100 mL", why: "1-Octanol has an −OH group that can hydrogen-bond to water, but the eight-carbon chain is a large nonpolar region. Fitting that chain among water molecules disrupts many hydrogen bonds, so very little dissolves; it floats as a layer (0.83 g/mL). See part B." },
+      h: { ok: true, sv: "ldfL", amt: "miscible", why: "The long chain gives strong London forces with hexane, which outweigh the cost of separating 1-octanol's hydrogen-bonded −OH groups. It mixes with hexane." } }
+  ];
+  var SOLV = {
+    w: { name: "water", f: "H2O", imf: "hb", dens: 1.00, note: "polar; hydrogen bonding" },
+    h: { name: "hexane", f: "C6H14", imf: "ldfM", dens: 0.66, note: "nonpolar; London forces only" }
+  };
+
+  function lc(t) { return /^(London|H-)/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1); }
+  var S = { i: 0, sv: "w", revealed: false, pred: null, tried: {}, right: 0, total: 0 };
+
+  // ---------- Test tube ----------
+  var tube = document.getElementById("tube");
+  function drawTube() {
+    var x = SOL[S.i], sv = SOLV[S.sv], res = x[S.sv];
+    var W = 440, H = 330, cx = 170, tw = 70, top = 30, bot = 290;
+    tube.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (tube.firstChild) tube.removeChild(tube.firstChild);
+    var defs = el("defs", {}, tube), cp = el("clipPath", { id: "tube-clip" }, defs);
+    var path = "M" + (cx - tw / 2) + " " + top + " L" + (cx - tw / 2) + " " + (bot - tw / 2) + " A" + tw / 2 + " " + tw / 2 + " 0 0 0 " + (cx + tw / 2) + " " + (bot - tw / 2) + " L" + (cx + tw / 2) + " " + top;
+    el("path", { d: path + " Z" }, cp);
+    var g = el("g", { "clip-path": "url(#tube-clip)" }, tube);
+    var liqTop = 95, svCol = "var(--accent)";
+    function layer(y0, y1, fill, op) { el("rect", { x: cx - tw, y: y0, width: 2 * tw, height: y1 - y0, fill: fill, opacity: op }, g); }
+    function label(y, txt, col) {
+      el("line", { x1: cx + tw / 2 + 4, x2: cx + tw / 2 + 26, y1: y, y2: y, stroke: "var(--muted)" }, tube);
+      el("text", { x: cx + tw / 2 + 30, y: y + 4, style: "fill:" + (col || "var(--ink)") }, tube, txt);
+    }
+    var solidPile = function (col, n) {
+      for (var i = 0; i < n; i++) {
+        var px = cx - 22 + (i * 13) % 44 + (i % 3), py = bot - 8 - Math.floor(i / 4) * 7;
+        el("rect", { x: px, y: py, width: 8, height: 6, rx: 1, fill: col, transform: "rotate(" + (i * 37 % 60 - 30) + " " + (px + 4) + " " + (py + 3) + ")" }, g);
+      }
+    };
+    if (!S.revealed) {
+      layer(liqTop, bot + 5, svCol, 0.12);
+      el("text", { x: cx, y: 190, "text-anchor": "middle", style: "fill:var(--muted); font-size:40px; font-family:var(--display)" }, tube, "?");
+      label(liqTop + 20, sv.name);
+      el("text", { x: cx, y: 18, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, tube, "add " + x.name + " to " + sv.name + "…");
+    } else if (x.state === "s") {
+      var tint = x.tint || "var(--c2)";
+      if (res.ok) {
+        layer(liqTop, bot + 5, x.tint || svCol, x.tint ? 0.45 : 0.14);
+        label(liqTop + 20, "one clear phase: a solution");
+      } else {
+        layer(liqTop, bot + 5, x.tint || svCol, x.tint ? 0.1 : 0.12);
+        solidPile(x.tint || "var(--ghost)", 16);
+        label(liqTop + 20, sv.name);
+        label(bot - 14, "undissolved " + x.name);
+      }
+    } else {
+      if (res.ok) {
+        layer(liqTop - 20, bot + 5, svCol, 0.16);
+        label(liqTop, "one phase: miscible");
+      } else {
+        // two layers, denser at the bottom
+        var mid = (liqTop - 20 + bot) / 2 + 20, topIsSolute = x.dens < sv.dens;
+        layer(liqTop - 20, mid, topIsSolute ? "var(--c1)" : svCol, topIsSolute ? 0.28 : 0.14);
+        layer(mid, bot + 5, topIsSolute ? svCol : "var(--c1)", topIsSolute ? 0.14 : 0.28);
+        el("line", { x1: cx - tw, x2: cx + tw, y1: mid, y2: mid, stroke: "var(--ink)", "stroke-width": 1.2 }, g);
+        label((liqTop - 20 + mid) / 2, (topIsSolute ? x.name + " " + x.dens.toFixed(2) : sv.name + " " + sv.dens.toFixed(2)) + " g/mL");
+        label((mid + bot) / 2, (topIsSolute ? sv.name + " " + sv.dens.toFixed(2) : x.name + " " + x.dens.toFixed(2)) + " g/mL");
+      }
+    }
+    el("path", { d: path, fill: "none", stroke: "var(--ink)", "stroke-width": 2 }, tube);
+    el("ellipse", { cx: cx, cy: top, rx: tw / 2 + 4, ry: 4, fill: "none", stroke: "var(--ink)", "stroke-width": 1.5 }, tube);
+  }
+
+  // ---------- Scorecard ----------
+  function bar(lbl, key, col) {
+    var m = IMF[key];
+    return '<div class="row"><span class="lab-n">' + lbl + '</span><div class="bar"><i style="width:' + (m.v / 5 * 100).toFixed(0) + "%; background:" + col + '"></i><span>' + m.t + "</span></div></div>";
+  }
+  function scorecard() {
+    var x = SOL[S.i], sv = SOLV[S.sv], res = x[S.sv];
+    var h = bar("Solute–solute", x.ss, "var(--c1)") + bar("Solvent–solvent", sv.imf, "var(--c3)");
+    h += S.revealed ? bar("Solute–solvent", res.sv, res.ok ? "var(--good)" : "var(--bad)") : '<div class="row"><span class="lab-n">Solute–solvent</span><div class="bar"><span style="color:var(--muted)">make a prediction to reveal</span></div></div>';
+    document.getElementById("imf").innerHTML = h;
+  }
+
+  function render() {
+    var x = SOL[S.i], sv = SOLV[S.sv], res = x[S.sv];
+    drawTube(); scorecard();
+    solBtns.forEach(function (b, i) { b.setAttribute("aria-pressed", S.i === i ? "true" : "false"); });
+    document.getElementById("sv-w").setAttribute("aria-pressed", S.sv === "w" ? "true" : "false");
+    document.getElementById("sv-h").setAttribute("aria-pressed", S.sv === "h" ? "true" : "false");
+    ["p-yes", "p-no", "p-show"].forEach(function (id) { document.getElementById(id).disabled = S.revealed; });
+    document.getElementById("t-title").textContent = "Test tube";
+    document.getElementById("t-sub").innerHTML = fm(x.f) + " + " + fm(sv.f);
+    document.getElementById("r-s").innerHTML = fm(x.f);
+    document.getElementById("r-s2").textContent = x.name + ": " + x.type;
+    document.getElementById("r-v").innerHTML = fm(sv.f);
+    document.getElementById("r-v2").textContent = sv.name + ": " + sv.note;
+    var liquid = x.state === "l";
+    document.getElementById("r-r").innerHTML = !S.revealed ? '<span class="pill rec">?</span>' : res.ok ? '<span class="pill lr">' + (liquid ? "Miscible" : "Dissolves") + "</span>" : '<span class="pill infl">' + (liquid ? "Immiscible" : "Insoluble") + "</span>";
+    document.getElementById("r-r2").textContent = S.revealed ? (res.amt || (res.ok ? "" : liquid ? "two layers" : "solid remains")) : "predict first";
+    document.getElementById("r-p").textContent = S.right + " / " + S.total;
+    var h = "";
+    if (!S.revealed) {
+      h = "<p><b>Predict first.</b> " + fm(x.f) + " is " + x.type + "; its strongest attraction to itself is " + lc(IMF[x.ss].t) + ". " + sv.name.charAt(0).toUpperCase() + sv.name.slice(1) + " is " + sv.note + ". Will the attractions between them be comparable to the ones that must be broken?</p>";
+    } else {
+      if (S.pred != null) h += "<p><b style=\"color:var(--" + (S.pred === res.ok ? "good" : "bad") + ")\">" + (S.pred === res.ok ? "Your prediction was right." : "Not this time.") + "</b> " + fm(x.f) + (res.ok ? (liquid ? " is miscible with " : " dissolves in ") : (liquid ? " does not mix with " : " does not dissolve in ")) + sv.name + (res.amt ? " (" + res.amt + ")" : "") + ".</p>";
+      else h += "<p><b>" + fm(x.f) + " in " + sv.name + ":</b> " + (res.ok ? (liquid ? "miscible" : "dissolves") : (liquid ? "immiscible" : "does not dissolve")) + (res.amt ? " (" + res.amt + ")" : "") + ".</p>";
+      h += "<p>" + res.why + "</p>";
+      h += "<ul><li>Broken: " + lc(IMF[x.ss].t) + " (solute–solute) and " + lc(IMF[sv.imf].t) + " (" + sv.name + "–" + sv.name + ").</li><li>Formed: " + lc(IMF[res.sv].t) + " (solute–" + sv.name + "), which " + (res.ok ? "is comparable to what was broken." : "is too weak to make up for what would be broken.") + "</li></ul>";
+      h += "<p><b>AP answer:</b> " + fm(x.f) + (res.ok ? " is soluble in " : " is not appreciably soluble in ") + sv.name + " because the " + lc(IMF[res.sv].t) + " attractions between " + fm(x.f) + " and " + sv.name + " " + (res.ok ? "are similar in strength to" : "are much weaker than") + " the attractions that must be overcome within the pure substances.</p>";
+    }
+    document.getElementById("story").innerHTML = h;
+  }
+
+  var solBtns = [];
+  SOL.forEach(function (x, i) {
+    var b = document.createElement("button"); b.type = "button"; b.innerHTML = fm(x.f); b.title = x.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S.i = i; S.revealed = !!S.tried[i + S.sv]; S.pred = S.tried[i + S.sv] ? S.tried[i + S.sv].p : null; render(); });
+    document.getElementById("sol-btns").appendChild(b); solBtns.push(b);
+  });
+  function pickSolvent(k) { S.sv = k; var t = S.tried[S.i + k]; S.revealed = !!t; S.pred = t ? t.p : null; render(); }
+  document.getElementById("sv-w").addEventListener("click", function () { pickSolvent("w"); });
+  document.getElementById("sv-h").addEventListener("click", function () { pickSolvent("h"); });
+  function reveal(pred) {
+    if (S.revealed) return;
+    var res = SOL[S.i][S.sv];
+    S.revealed = true; S.pred = pred;
+    S.tried[S.i + S.sv] = { p: pred };
+    if (pred != null) { S.total++; if (pred === res.ok) S.right++; }
+    render();
+  }
+  document.getElementById("p-yes").addEventListener("click", function () { reveal(true); });
+  document.getElementById("p-no").addEventListener("click", function () { reveal(false); });
+  document.getElementById("p-show").addEventListener("click", function () { reveal(null); });
+  render();
+
+  // ---------- Part B: alcohol chain length ----------
+  var ALC = [
+    { n: 1, name: "methanol", sol: null }, { n: 2, name: "ethanol", sol: null }, { n: 3, name: "1-propanol", sol: null },
+    { n: 4, name: "1-butanol", sol: 7.4 }, { n: 5, name: "1-pentanol", sol: 2.2 }, { n: 6, name: "1-hexanol", sol: 0.59 },
+    { n: 7, name: "1-heptanol", sol: 0.17 }, { n: 8, name: "1-octanol", sol: 0.054 }
+  ];
+  var B = { n: 4 };
+  var alc = document.getElementById("alc"), chain = document.getElementById("chain");
+  function formulaHTML(n) { return n === 1 ? "CH<sub>3</sub>OH" : n === 2 ? "CH<sub>3</sub>CH<sub>2</sub>OH" : "CH<sub>3</sub>(CH<sub>2</sub>)<sub>" + (n - 1) + "</sub>OH"; }
+  function electrons(n) { return 6 * n + (2 * n + 2) + 8; }   // C: 6 each, H: 2n+2, O: 8
+  function drawB() {
+    var F = Lab.frame(alc, { x: [0.3, 8.7], y: [-2, 2.7], xLabel: "Carbon atoms in the alcohol", yLabel: "Solubility (g/100 mL)",
+      xTicks: [1, 2, 3, 4, 5, 6, 7, 8], yTicks: [-2, -1, 0, 1, 2], fmtX: String, fmtY: function (v) { return ["0.01", "0.1", "1", "10", "100"][v + 2]; }, width: 440, height: 320 });
+    ALC.forEach(function (a) {
+      var y = a.sol == null ? 2.3 : Math.log10(a.sol), sel = a.n === B.n;
+      Lab.rect(F, a.n - 0.32, -2, a.n + 0.32, y, sel ? "var(--c4)" : a.sol == null ? "var(--c2)" : "var(--accent)", sel ? 0.95 : 0.55);
+      if (a.sol == null) Lab.tag(F, a.n, 1.85, "∞", "var(--surface)", "middle");
+    });
+    var a = ALC[B.n - 1];
+    var yy = a.sol == null ? 1.6 : Math.log10(a.sol) + 0.18;
+    if (a.sol != null) Lab.tag(F, a.n, yy, a.sol + " g", "var(--c4)", "middle");
+    Lab.tag(F, 0.45, 2.45, "C1–C3: miscible in all proportions (∞)", "var(--c2)");
+  }
+  function drawChain() {
+    var n = B.n, W = 440, H = 120, dx = Math.min(44, 330 / (n + 1.5)), x0 = 30, y0 = 70, amp = 16;
+    chain.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (chain.firstChild) chain.removeChild(chain.firstChild);
+    var pts = [];
+    for (var i = 0; i < n; i++) pts.push([x0 + i * dx, y0 + (i % 2 ? -amp : amp) / 2]);
+    var oPt = [x0 + n * dx, y0 + (n % 2 ? -amp : amp) / 2];
+    // nonpolar region
+    el("rect", { x: x0 - 16, y: y0 - 34, width: (n - 1) * dx + 32, height: 64, rx: 14, fill: "var(--c1)", opacity: 0.14 }, chain);
+    el("text", { x: x0 - 12, y: 20, style: "fill:var(--c1); font-weight:600" }, chain, "nonpolar chain: London forces");
+    el("circle", { cx: oPt[0] + 8, cy: oPt[1], r: 22, fill: "var(--c2)", opacity: 0.16 }, chain);
+    el("text", { x: oPt[0] + 8, y: H - 6, "text-anchor": "middle", style: "fill:var(--c2); font-weight:600" }, chain, "polar −OH");
+    var all = pts.concat([oPt]);
+    for (var j = 0; j < all.length - 1; j++) el("line", { x1: all[j][0], y1: all[j][1], x2: all[j + 1][0], y2: all[j + 1][1], stroke: "var(--ink)", "stroke-width": 2 }, chain);
+    pts.forEach(function (p) { el("circle", { cx: p[0], cy: p[1], r: 6.5, fill: "var(--ink)" }, chain); });
+    el("circle", { cx: oPt[0], cy: oPt[1], r: 8, fill: "var(--bad)" }, chain);
+    el("text", { x: oPt[0], y: oPt[1] + 4, "text-anchor": "middle", style: "fill:var(--surface); font-weight:600" }, chain, "O");
+    el("line", { x1: oPt[0], y1: oPt[1], x2: oPt[0] + 18, y2: oPt[1] + (n % 2 ? 10 : -10), stroke: "var(--ink)", "stroke-width": 2 }, chain);
+    el("circle", { cx: oPt[0] + 18, cy: oPt[1] + (n % 2 ? 10 : -10), r: 5, fill: "var(--surface)", style: "stroke:var(--ink); stroke-width:1.5" }, chain);
+  }
+  function renderB() {
+    var a = ALC[B.n - 1];
+    document.getElementById("s-c").value = B.n;
+    document.getElementById("o-c").textContent = B.n + " (" + a.name + ")";
+    drawB(); drawChain();
+    document.getElementById("rb-n").textContent = a.name;
+    document.getElementById("rb-f").innerHTML = formulaHTML(B.n);
+    document.getElementById("rb-s").textContent = a.sol == null ? "miscible" : "≈ " + a.sol + " g/100 mL";
+    document.getElementById("rb-e").textContent = electrons(B.n);
+    var h = "<p><b>" + a.name.charAt(0).toUpperCase() + a.name.slice(1) + ", " + formulaHTML(B.n) + ".</b> ";
+    if (a.sol == null) h += "With only " + B.n + " carbon" + (B.n > 1 ? "s" : "") + ", the −OH group dominates. The alcohol hydrogen-bonds to water about as well as water bonds to itself, and the short nonpolar part costs little, so it mixes with water in any proportion.</p>";
+    else h += "The −OH group still hydrogen-bonds to water, but the " + B.n + "-carbon chain is now a large nonpolar region. To make room for it, water must give up hydrogen bonds with neighboring water molecules, and the chain offers only weak attractions in return. Solubility has fallen to about " + a.sol + " g per 100 mL.</p>";
+    h += "<ul><li>Each extra CH<sub>2</sub> adds 8 electrons, so London forces grow, but they are London forces that water cannot match.</li><li>From 4 to 8 carbons the solubility drops by more than a factor of 100, roughly a factor of 3 to 4 per carbon.</li><li>The opposite trend holds in hexane: longer-chain alcohols mix with hexane more easily than methanol does.</li></ul>";
+    h += "<p><b>AP answer:</b> as the nonpolar hydrocarbon chain gets longer, a larger part of the molecule interacts with water only through weak London forces, so solubility in water decreases even though every alcohol has one −OH group that hydrogen-bonds.</p>";
+    document.getElementById("story-b").innerHTML = h;
+  }
+  document.getElementById("s-c").addEventListener("input", function (e) { B.n = parseInt(e.target.value, 10); renderB(); });
+  renderB();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Which of the following is most soluble in hexane, C₆H₁₄?",
+      o: ["NaCl", "I₂", "C₆H₁₂O₆ (glucose)", "KNO₃"], c: 1,
+      w: "I₂ is nonpolar, so its London dispersion attractions to hexane are similar to those in pure I₂ and pure hexane. The two salts need ion–dipole attractions, which hexane cannot provide, and glucose is held together by hydrogen bonds that hexane cannot replace." },
+    { s: "Which pair of liquids is miscible?",
+      o: ["Water and octane", "Water and carbon tetrachloride", "Water and ethanol", "Water and 1-octanol"], c: 2,
+      w: "Ethanol's −OH group hydrogen-bonds with water and its nonpolar part is small, so they mix in all proportions. Octane and CCl₄ are nonpolar. 1-Octanol has an −OH, but its eight-carbon chain makes it nearly insoluble." },
+    { s: "Which statement best explains why NaCl does not dissolve in hexane?",
+      o: ["Hexane molecules are too large to fit between the Na⁺ and Cl⁻ ions", "Na⁺ and Cl⁻ react with hexane", "The ionic bonds in NaCl are weaker than the London forces in hexane", "The attractions between the ions and hexane molecules are much weaker than the attractions between Na⁺ and Cl⁻ in the solid"], c: 3,
+      w: "Hexane has no dipole, so it can offer ions only weak ion–induced dipole attractions. Those cannot make up for the strong Coulombic attractions in the crystal. Choice C has the comparison backward." },
+    { s: "Methanol, CH₃OH, is miscible with water, but 1-butanol, CH₃(CH₂)₃OH, dissolves only to about 7 g per 100 mL. Which is the best explanation?",
+      o: ["1-Butanol has a larger nonpolar hydrocarbon region, which interacts with water only through weak London forces", "1-Butanol cannot form hydrogen bonds", "Methanol has more −OH groups than 1-butanol", "1-Butanol has weaker London dispersion forces than methanol"], c: 0,
+      w: "Both have one −OH, so both hydrogen-bond (ruling out B and C). The longer chain of 1-butanol disrupts water's hydrogen bonding without offering comparable attractions, so solubility drops. D is backward: 1-butanol has more electrons and stronger London forces." },
+    { s: "Solid I₂ dissolves in liquid CCl₄. Which describes the attractions broken and formed?",
+      o: ["Covalent I–I bonds break; I⁻ ions form ion–dipole attractions with CCl₄", "London forces between I₂ molecules and between CCl₄ molecules are replaced by London forces between I₂ and CCl₄", "Dipole–dipole forces in CCl₄ are replaced by hydrogen bonds to I₂", "Hydrogen bonds in CCl₄ are replaced by London forces"], c: 1,
+      w: "Both substances are nonpolar, so all of the attractions involved are London dispersion forces, and they are similar in strength. No covalent bonds break (A), CCl₄ has no net dipole (C), and neither substance hydrogen-bonds (D)." },
+    { s: "Naphthalene, C₁₀H₈, is a nonpolar solid. In which solvent would it be most soluble?",
+      o: ["Water", "Methanol", "Hexane", "Aqueous NaCl"], c: 2,
+      w: "Naphthalene has only London dispersion forces, so it dissolves best in a nonpolar solvent with the same kind of attractions. Water, methanol and salt water are polar and strongly hydrogen-bonded (or ionic), and naphthalene cannot replace those attractions." },
+    { s: "Which compound is the most soluble in water?",
+      o: ["CH₃CH₂CH₂CH₃ (butane)", "CH₃CH₂CH₂Cl (1-chloropropane)", "CH₃CH₂OCH₂CH₃ (diethyl ether)", "CH₃CH₂CH₂OH (1-propanol)"], c: 3,
+      w: "1-Propanol can both donate and accept hydrogen bonds with water through its −OH group, and its chain is short: it is miscible. Diethyl ether can only accept hydrogen bonds and is much less soluble. 1-Chloropropane is weakly polar and butane is nonpolar." },
+    { s: "Water and hexane are shaken in a test tube and allowed to separate. A small crystal of I₂ is added and the tube is shaken again. Where is the violet color, and why?",
+      o: ["In the top layer, because I₂ is nonpolar and dissolves in the hexane, which is less dense than water", "In the bottom layer, because I₂ is dense and sinks", "In the bottom layer, because I₂ dissolves in water by hydrogen bonding", "Evenly in both layers, because shaking mixes the liquids"], c: 0,
+      w: "I₂ dissolves in hexane, where London forces match, and barely in water. Hexane (0.66 g/mL) floats on water (1.00 g/mL), so the violet layer is on top. I₂ cannot hydrogen-bond (C), and the liquids separate again after shaking (D)." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("3.10");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [3], topic: "3.10", compact: true, storageKey: "topic-3.10" });</script>
+</body>
+</html>

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Separation of Solutions and Mixtures Study Lab</title>
+<meta name="description" content="Run a chromatography plate, change the solvent, measure Rf values, and distill two-liquid mixtures to see how differences in intermolecular forces separate the parts of a mixture.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.side .controls { grid-template-columns: 1fr; }
+.legend .l-1 { color: var(--c1); } .legend .l-2 { color: var(--c2); } .legend .l-3 { color: var(--c3); } .legend .l-4 { color: var(--c4); } .legend .l-acc { color: var(--accent); }
+.rf-list { display: grid; gap: 2px; font-size: .9rem; font-family: var(--mono); }
+.sub-h { font-family: var(--display); font-size: 1.25rem; margin-top: 10px; }
+svg.mini { width: 100%; height: auto; display: block; }
+#plate text, #dist text, 
+#plate text.lbl, #dist text.lbl, #pots text.lbl { font-size: 12.5px; }
+@media (max-width: 520px) { #plate text, #dist text, #pots text { font-size: 14px; } #plate text.lbl, #dist text.lbl, #pots text.lbl { font-size: 14.5px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 3 · Topic 3.9</span>
+  <h1>Separation of Solutions and Mixtures Study Lab</h1>
+  <p class="lede">The parts of a mixture can be separated because they are attracted to their surroundings by intermolecular forces of different strengths. In chromatography, a component that sticks more strongly to the stationary phase moves more slowly. In distillation, the component with weaker intermolecular forces boils first. Run a plate and a distillation and explain each result with IMFs.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Chromatography and distillation bench</h2>
+    <p>Part A is thin-layer (or paper) chromatography on a polar stationary phase. Spot a mixture and its pure components on the baseline, pick a solvent, and run the plate. The compounds and solvent behaviour are illustrative, chosen to show the trends the AP exam tests; real Rf values depend on the exact plate and solvent.</p>
+  </div>
+
+  <h3 class="sub-h">A. Thin-layer chromatography</h3>
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>The plate <small>polar stationary phase (silica or paper)</small></h3>
+      <svg class="chart" id="plate" role="img" aria-label="Chromatography plate showing the spots for a mixture and its pure components, the baseline and the solvent front"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Sample</div>
+        <div class="scenarios" id="sc-sample"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Solvent scenarios</div>
+        <div class="scenarios" id="sc-solv"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-m">Mobile phase <output id="o-m"></output></label>
+          <input type="range" id="s-m" min="0" max="100" step="5">
+          <span class="hint" id="h-m">Percent ethyl acetate (polar) in hexane (nonpolar)</span>
+        </div>
+        <div class="ctl">
+          <label for="s-t">Solvent front <output id="o-t"></output></label>
+          <input type="range" id="s-t" min="0" max="8" step="0.1">
+          <span class="hint">Distance the solvent has climbed above the baseline</span>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap"><button type="button" class="primary" id="run">Run the plate</button><button type="button" id="reset-a">Reset</button></div>
+    </div>
+  </div>
+
+  <div class="lab-bar"><div class="legend" id="legend-a"></div></div>
+  <div class="readout">
+    <div class="stat"><div class="k">Solvent front</div><div class="v" id="ra-f">0</div><div class="sub">above the baseline</div></div>
+    <div class="stat" style="grid-column: span 2"><div class="k">R<sub>f</sub> = spot distance ÷ solvent-front distance</div><div class="v rf-list" id="ra-rf"></div></div>
+    <div class="stat"><div class="k">Separation</div><div class="v" id="ra-sep"></div><div class="sub" id="ra-sep2"></div></div>
+  </div>
+  <div class="story" id="story" aria-live="polite"></div>
+
+  <h3 class="sub-h">B. Distillation of two liquids</h3>
+  <p style="color:var(--muted); max-width:70ch">Heat 100 mL of a 50 : 50 mixture and record the temperature of the vapor at the top of the column as distillate collects. The curve is idealized (an efficient fractionating column); boiling points are real values at 1 atm.</p>
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Vapor temperature <small>vs. volume collected</small></h3>
+      <svg class="chart" id="dist" role="img" aria-label="Graph of vapor temperature against volume of distillate collected, showing two plateaus"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Mixture</div>
+        <div class="scenarios" id="sc-mix"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-v">Distillate collected <output id="o-v"></output></label>
+          <input type="range" id="s-v" min="0" max="100" step="1">
+          <span class="hint">Slide to follow the distillation</span>
+        </div>
+      </div>
+      <svg class="mini" id="pots" role="img" aria-label="Composition of the liquid left in the flask and of the distillate"></svg>
+      <div><button type="button" id="run-b">Distill it</button></div>
+    </div>
+  </div>
+  <div class="readout">
+    <div class="stat"><div class="k">Vapor temperature</div><div class="v" id="rb-t">0</div><div class="sub" id="rb-t2"></div></div>
+    <div class="stat"><div class="k">Now distilling</div><div class="v" id="rb-now" style="font-size:1rem"></div><div class="sub" id="rb-now2"></div></div>
+    <div class="stat"><div class="k">In the receiver</div><div class="v" id="rb-rec" style="font-size:.95rem"></div><div class="sub">distillate collected so far</div></div>
+    <div class="stat"><div class="k">Left in the flask</div><div class="v" id="rb-pot" style="font-size:.95rem"></div><div class="sub">still to boil off</div></div>
+  </div>
+  <div class="story" id="story-b" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Two phases</span><h3>How chromatography works</h3><p>A mobile phase (the solvent) flows past a stationary phase (paper, silica, a packed column). Each component is attracted to both. The stronger its attraction to the stationary phase compared with the mobile phase, the more time it spends stuck and the shorter the distance it moves.</p></div>
+    <div class="card"><span class="tag">Polar stationary phase</span><h3>Polar sticks, nonpolar runs</h3><p>Paper and silica are covered in −OH groups. Components that can hydrogen-bond or have strong dipoles are held tightly and stay near the baseline. Nonpolar components, with only London dispersion forces, are carried along near the solvent front.</p></div>
+    <div class="card"><span class="tag">R<sub>f</sub></span><h3>Retention factor</h3><p>R<sub>f</sub> = distance traveled by the component ÷ distance traveled by the solvent front, both measured from the baseline. It has no units and is between 0 and 1. A small R<sub>f</sub> means strong attraction to the stationary phase.</p></div>
+    <div class="card"><span class="tag">Solvent choice</span><h3>A more polar solvent moves everything</h3><p>On a polar plate, a more polar mobile phase competes better for the components, so every R<sub>f</sub> rises. The order of the spots does not change. Too polar and everything rides near the front; too nonpolar and everything stays near the baseline.</p></div>
+    <div class="card"><span class="tag">Column</span><h3>Column chromatography</h3><p>The same idea in a tube. Solvent carries the mixture down through the stationary phase, and components come out (elute) in order: the one least attracted to the stationary phase first.</p></div>
+    <div class="card"><span class="tag">Distillation</span><h3>Weaker IMFs boil first</h3><p>When a liquid mixture is heated, the component with weaker intermolecular forces has the higher vapor pressure and lower boiling point, so its vapor reaches the condenser first. Separation works best when the boiling points are far apart.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Separation methods cheat sheet</h2>
+    <p>Match the method to the property that differs between the components.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Method</th><th>Separates</th><th>Based on</th><th>Which comes out first / moves farthest</th></tr></thead>
+    <tbody>
+      <tr><td><b>Paper or thin-layer chromatography</b></td><td>Dissolved components (dyes, pigments, organic compounds)</td><td>Relative attraction to the stationary phase vs. the mobile phase (IMFs)</td><td>On a polar plate: the least polar component (largest R<sub>f</sub>)</td></tr>
+      <tr><td><b>Column chromatography</b></td><td>Larger amounts of dissolved components</td><td>Same as above</td><td>The component least attracted to the column packing elutes first</td></tr>
+      <tr><td><b>Distillation</b></td><td>Liquids with different boiling points; a liquid from dissolved solids</td><td>Strength of IMFs → vapor pressure → boiling point</td><td>The component with weaker IMFs (lower boiling point)</td></tr>
+      <tr><td><b>Filtration</b></td><td>An undissolved solid from a liquid (a heterogeneous mixture)</td><td>Particle size</td><td>The liquid and anything dissolved in it pass through; the solid stays on the filter</td></tr>
+      <tr><td><b>Evaporation</b></td><td>A dissolved nonvolatile solid from its solvent</td><td>Volatility</td><td>The solvent leaves; the solid remains</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Explaining it on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Name the specific IMFs: "compound Z has an −OH group, so it forms hydrogen bonds with the −OH groups of the silica."</li>
+        <li>Compare attractions to <b>both</b> phases: the component more strongly attracted to the stationary phase travels a shorter distance.</li>
+        <li>Calculate R<sub>f</sub> from the baseline, not from the bottom edge of the plate, and give it without units.</li>
+        <li>Identify an unknown by matching its R<sub>f</sub> (and color) with a standard run on the same plate with the same solvent.</li>
+        <li>For distillation, connect weaker IMFs → higher vapor pressure → lower boiling point → collected first.</li>
+        <li>When comparing London dispersion forces, cite the number of electrons (polarizability) or the contact surface area.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying a component moves farther because it is lighter. Mass is not the reason; attraction to the two phases is.</li>
+        <li>Measuring spot distances from the bottom of the paper instead of the pencil baseline.</li>
+        <li>Thinking a more polar solvent reverses the order of spots on a polar plate. It raises all R<sub>f</sub> values.</li>
+        <li>Drawing the baseline in ink. Ink dissolves and runs as its own set of spots; use pencil.</li>
+        <li>Saying the component with stronger IMFs boils first. Stronger IMFs mean a higher boiling point.</li>
+        <li>Saying covalent bonds break in distillation. Only intermolecular attractions are overcome.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 3.9. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-3.html">Unit 3 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = Lab.el, f2 = function (v) { return v.toFixed(2); };
+
+  // ================= Part A: chromatography =================
+  // Illustrative model: log K = 6p − 4m − 1, Rf = 1 / (1 + e^(log K)).
+  // p = polarity of the component (0–1); m = polarity of the mobile phase (0 for hexane, 0.8 for pure ethyl acetate).
+  // K is the ratio of time spent on the stationary phase to time in the mobile phase.
+  var SAMPLES = [
+    { name: "Three IMF types", comps: [
+      { id: "X", p: 0.15, col: "var(--c1)", desc: "a hydrocarbon (London dispersion forces only)" },
+      { id: "Y", p: 0.45, col: "var(--c3)", desc: "a ketone (dipole–dipole and London forces, no O–H)" },
+      { id: "Z", p: 0.75, col: "var(--c2)", desc: "an alcohol (−OH group: hydrogen bonding)" } ] },
+    { name: "Black ink (three dyes)", comps: [
+      { id: "Dye 1", p: 0.30, col: "var(--c3)", desc: "the least polar dye" },
+      { id: "Dye 2", p: 0.50, col: "var(--c4)", desc: "a moderately polar dye" },
+      { id: "Dye 3", p: 0.62, col: "var(--accent)", desc: "the most polar dye" } ] },
+    { name: "Two look-alike compounds", comps: [
+      { id: "P", p: 0.50, col: "var(--c1)", desc: "a compound with one polar group" },
+      { id: "Q", p: 0.56, col: "var(--c2)", desc: "a nearly identical compound, slightly more polar" } ] }
+  ];
+  var SOLV = [
+    { name: "Pure hexane", m: 0, why: "Hexane is nonpolar. It cannot compete with the polar plate for polar compounds, so they barely leave the baseline." },
+    { name: "25% ethyl acetate", m: 25, why: "A mostly nonpolar solvent with a little polar ethyl acetate: a typical starting point." },
+    { name: "60% ethyl acetate", m: 60, why: "A more polar mobile phase. It dissolves polar compounds better and competes with the plate for them, so every spot moves farther." },
+    { name: "Pure ethyl acetate", m: 100, why: "The most polar solvent here. Spots crowd toward the solvent front and separation suffers." }
+  ];
+  var FRONT_MAX = 8.0;
+  var A = { s: 0, m: 25, t: 8.0, solvKey: 1 };
+  function rfOf(p, mPct) { var m = 0.8 * mPct / 100, lk = 6 * p - 4 * m - 1; return 1 / (1 + Math.exp(lk)); }
+  function solvName(mPct) { return mPct === 0 ? "pure hexane" : mPct === 100 ? "pure ethyl acetate" : mPct + "% ethyl acetate"; }
+  function polarityWord(mPct) { return mPct < 15 ? "very nonpolar" : mPct < 45 ? "mostly nonpolar" : mPct < 80 ? "moderately polar" : "fairly polar"; }
+
+  var plate = document.getElementById("plate");
+  function drawPlate() {
+    var W = 440, H = 340, smp = SAMPLES[A.s], comps = smp.comps;
+    plate.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (plate.firstChild) plate.removeChild(plate.firstChild);
+    var x0 = 80, x1 = 400, base = 278, top = 26, cm = (base - top - 10) / FRONT_MAX;   // px per cm
+    var y = function (d) { return base - d * cm; };
+    // solvent pool and plate
+    el("rect", { x: x0 - 16, y: base + 32, width: x1 - x0 + 32, height: 24, fill: "var(--accent)", opacity: 0.18 }, plate);
+    el("rect", { x: x0, y: top - 12, width: x1 - x0, height: base - top + 50, rx: 3, fill: "var(--surface)", stroke: "var(--ink)", "stroke-width": 1.4 }, plate);
+    // wetted region
+    if (A.t > 0) el("rect", { x: x0 + 1, y: y(A.t), width: x1 - x0 - 2, height: base + 37 - y(A.t), fill: "var(--accent)", opacity: 0.08 }, plate);
+    // ruler
+    for (var c = 0; c <= FRONT_MAX; c++) {
+      el("line", { x1: x0 - 22, x2: x0 - 14, y1: y(c), y2: y(c), stroke: "var(--muted)" }, plate);
+      el("text", { x: x0 - 26, y: y(c) + 4, "text-anchor": "end" }, plate, c ? c + " cm" : "baseline");
+    }
+    el("line", { x1: x0 - 18, x2: x0 - 18, y1: y(0), y2: y(FRONT_MAX), stroke: "var(--muted)" }, plate);
+    // baseline (pencil) and front
+    el("line", { x1: x0 + 4, x2: x1 - 4, y1: base, y2: base, stroke: "var(--muted)", "stroke-width": 1.2, "stroke-dasharray": "4 3" }, plate);
+    if (A.t > 0.05) {
+      el("line", { x1: x0 + 2, x2: x1 - 2, y1: y(A.t), y2: y(A.t), stroke: "var(--accent)", "stroke-width": 2 }, plate);
+      el("text", { x: x1 - 6, y: y(A.t) - 5, "text-anchor": "end", "class": "lbl", style: "fill:var(--accent)" }, plate, "solvent front " + A.t.toFixed(1) + " cm");
+    }
+    // lanes: mixture + each pure standard
+    var lanes = [{ name: "Mix", comps: comps }].concat(comps.map(function (k) { return { name: k.id, comps: [k] }; }));
+    var lw = (x1 - x0) / (lanes.length + 0.3);
+    lanes.forEach(function (ln, i) {
+      var lx = x0 + lw * (i + 0.65);
+      el("text", { x: lx, y: base + 22, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, plate, ln.name);
+      ln.comps.forEach(function (k) {
+        var d = rfOf(k.p, A.m) * A.t, rad = 6 + 0.55 * d;
+        el("ellipse", { cx: lx, cy: y(d), rx: rad * 1.15, ry: rad * 0.8, fill: k.col, opacity: 0.8 }, plate);
+      });
+    });
+  }
+  function storyA() {
+    var smp = SAMPLES[A.s], comps = smp.comps.slice();
+    // shown Rf uses the distance rounded to 0.1 cm, so the readout arithmetic checks out
+    var rf = comps.map(function (k) { var t = rfOf(k.p, A.m), d = Math.round(t * A.t * 10) / 10; return { k: k, rf: A.t >= 1 ? d / A.t : t, d: d, rfTrue: t }; });
+    document.getElementById("o-m").textContent = solvName(A.m);
+    document.getElementById("o-t").textContent = A.t.toFixed(1) + " cm";
+    document.getElementById("ra-f").textContent = A.t.toFixed(1) + " cm";
+    document.getElementById("ra-rf").innerHTML = rf.map(function (r) {
+      var d = r.d;
+      return '<span><b style="color:' + r.k.col + '">' + r.k.id + "</b> " + (A.t > 0.05 ? d.toFixed(1) + " cm ÷ " + A.t.toFixed(1) + " cm = " + f2(r.rf) : "—") + "</span>";
+    }).join("");
+    document.getElementById("legend-a").innerHTML = comps.map(function (k, i) { return '<span style="color:' + k.col + '">' + k.id + ": " + k.desc + "</span>"; }).join("");
+    // closest pair, in cm on the plate
+    var sorted = rf.slice().sort(function (a, b) { return b.rfTrue - a.rfTrue; }), gap = 99, gp = null;
+    for (var i = 0; i < sorted.length - 1; i++) { var g = (sorted[i].rfTrue - sorted[i + 1].rfTrue) * A.t; if (g < gap) { gap = g; gp = [sorted[i], sorted[i + 1]]; } }
+    var resolved = gap >= 0.9, sep = document.getElementById("ra-sep"), sep2 = document.getElementById("ra-sep2");
+    if (A.t < 0.05) { sep.innerHTML = '<span class="pill rec">Not run</span>'; sep2.textContent = "press Run the plate"; }
+    else if (resolved) { sep.innerHTML = '<span class="pill lr">Resolved</span>'; sep2.textContent = "closest spots " + gap.toFixed(1) + " cm apart"; }
+    else { sep.innerHTML = '<span class="pill infl">Overlapping</span>'; sep2.textContent = gp[0].k.id + " and " + gp[1].k.id + " only " + gap.toFixed(1) + " cm apart"; }
+    var h = "";
+    var sc = A.solvKey != null ? SOLV[A.solvKey] : null;
+    h += "<p><b>" + smp.name + " in " + solvName(A.m) + ".</b> " + (sc ? sc.why : "The mobile phase is " + polarityWord(A.m) + ".") + "</p>";
+    if (A.t < 0.05) { h += "<p>The spots sit on the baseline. Press <b>Run the plate</b> to let the solvent climb by capillary action.</p><p><b>AP answer:</b> R<sub>f</sub> = distance traveled by the spot ÷ distance traveled by the solvent front.</p>"; document.getElementById("story").innerHTML = h; return; }
+    h += "<ul>";
+    h += "<li>Farthest: <b>" + sorted[0].k.id + "</b> (R<sub>f</sub> = " + f2(sorted[0].rf) + "), " + sorted[0].k.desc + ". It has the weakest attraction to the polar −OH groups of the stationary phase, so it spends the most time dissolved in the moving solvent.</li>";
+    h += "<li>Nearest the baseline: <b>" + sorted[sorted.length - 1].k.id + "</b> (R<sub>f</sub> = " + f2(sorted[sorted.length - 1].rf) + "), " + sorted[sorted.length - 1].k.desc + ". " + (/hydrogen/.test(sorted[sorted.length - 1].k.desc) ? "It hydrogen-bonds to the stationary phase" : "Its stronger polar attractions hold it to the stationary phase") + ", so it moves the shortest distance.</li>";
+    h += "<li>Each spot in the Mix lane lines up with a pure-component lane: matching R<sub>f</sub> on the same plate is how you identify a component.</li>";
+    if (!resolved) h += "<li><b>" + gp[0].k.id + " and " + gp[1].k.id + " overlap.</b> " + (A.t < 6 ? "Let the solvent run farther, or " : "To fix it, ") + (sorted[sorted.length - 1].rf > 0.6 ? "use a less polar solvent so the spots move into the middle of the plate, where they spread apart." : sorted[0].rf < 0.3 ? "use a more polar solvent so the spots leave the baseline and spread apart." : "try a solvent that puts their R<sub>f</sub> values near the middle of the plate. Very similar compounds may need a longer plate or a column.") + "</li>";
+    h += "</ul>";
+    h += "<p><b>AP answer:</b> the component with the stronger attraction to the polar stationary phase (relative to the mobile phase) travels a shorter distance and has the smaller R<sub>f</sub>. Making the solvent more polar raises every R<sub>f</sub> but keeps the order.</p>";
+    document.getElementById("story").innerHTML = h;
+  }
+  var sampleBtns = [], solvBtns = [];
+  var elM = document.getElementById("s-m"), elT = document.getElementById("s-t");
+  function renderA() {
+    elM.value = A.m; elT.value = A.t;
+    sampleBtns.forEach(function (b, i) { b.setAttribute("aria-pressed", A.s === i ? "true" : "false"); });
+    solvBtns.forEach(function (b, i) { b.setAttribute("aria-pressed", A.solvKey === i ? "true" : "false"); });
+    drawPlate(); storyA();
+  }
+  var stopA = function () {};
+  function run() {
+    stopA(); A.t = 0; renderA();
+    stopA = Lab.animate(1800, function (t) { A.t = Math.round(FRONT_MAX * t * 100) / 100; drawPlate(); }, function () { A.t = FRONT_MAX; renderA(); });
+  }
+  SAMPLES.forEach(function (s, i) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = s.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { stopA(); A.s = i; renderA(); });
+    document.getElementById("sc-sample").appendChild(b); sampleBtns.push(b);
+  });
+  SOLV.forEach(function (s, i) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = s.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { A.m = s.m; A.solvKey = i; run(); });
+    document.getElementById("sc-solv").appendChild(b); solvBtns.push(b);
+  });
+  elM.addEventListener("input", function () { stopA(); A.m = parseInt(elM.value, 10); A.solvKey = null; SOLV.forEach(function (s, i) { if (s.m === A.m) A.solvKey = i; }); renderA(); });
+  elT.addEventListener("input", function () { stopA(); A.t = parseFloat(elT.value); renderA(); });
+  document.getElementById("run").addEventListener("click", run);
+  document.getElementById("reset-a").addEventListener("click", function () { stopA(); A = { s: 0, m: 25, t: 8.0, solvKey: 1 }; renderA(); });
+  renderA();
+
+  // ================= Part B: distillation =================
+  var MIX = [
+    { name: "Pentane + hexane", a: { f: "pentane, C₅H₁₂", bp: 36.1, col: "var(--c1)" }, b: { f: "hexane, C₆H₁₄", bp: 68.7, col: "var(--c3)" },
+      why: "Both are nonpolar, so both have only London dispersion forces. Hexane has more electrons (50 vs. 42) and a larger surface for contact, so its dispersion forces are stronger and its boiling point is higher. Pentane distills first." },
+    { name: "Acetone + water", a: { f: "acetone, (CH₃)₂CO", bp: 56.1, col: "var(--c1)" }, b: { f: "water, H₂O", bp: 100.0, col: "var(--accent)" },
+      why: "Acetone molecules attract each other by dipole–dipole and London forces, but acetone has no H bonded to O, so it cannot hydrogen-bond to another acetone molecule. Water molecules form an extensive hydrogen-bond network. Acetone's weaker IMFs give it the lower boiling point, so it distills first." },
+    { name: "Methanol + water", a: { f: "methanol, CH₃OH", bp: 64.7, col: "var(--c2)" }, b: { f: "water, H₂O", bp: 100.0, col: "var(--accent)" },
+      why: "Both hydrogen-bond. A water molecule has two O–H hydrogens and two lone pairs, so it can form more hydrogen bonds per molecule than methanol, which has only one O–H. Water's IMFs are stronger overall, so methanol distills first." }
+  ];
+  var B = { k: 0, v: 0 };
+  // fraction of what is distilling at volume v that is the higher-boiling liquid (idealized transition near 50 mL)
+  function sw(v) { return 1 / (1 + Math.exp(-(v - 50) / 2.2)); }
+  function collected(v) {   // mL of A and B in the receiver after v mL
+    var a = 0, b = 0, n = 200;
+    for (var i = 0; i < n; i++) { var x = (i + 0.5) * v / n, s = sw(x); a += (1 - s) * v / n; b += s * v / n; }
+    return { a: a, b: b };
+  }
+  function tempAt(mx, v) { return mx.a.bp + (mx.b.bp - mx.a.bp) * sw(v); }
+  var dist = document.getElementById("dist"), pots = document.getElementById("pots");
+  function drawB() {
+    var mx = MIX[B.k];
+    var F = Lab.frame(dist, { x: [0, 100], y: [20, 110], xLabel: "Distillate collected (mL)", yLabel: "Vapor temperature (°C)",
+      xTicks: [0, 20, 40, 60, 80, 100], yTicks: [20, 40, 60, 80, 100], fmtX: String, fmtY: String, width: 440, height: 320 });
+    Lab.hline(F, mx.a.bp, mx.a.col, 1, "4 4"); Lab.hline(F, mx.b.bp, mx.b.col, 1, "4 4");
+    Lab.tag(F, 2, mx.a.bp + 3, "b.p. " + mx.a.f.split(",")[0] + " " + mx.a.bp.toFixed(1) + " °C", mx.a.col);
+    Lab.tag(F, 98, mx.b.bp - (mx.b.bp > 100 ? 0 : 0) + 3, "b.p. " + mx.b.f.split(",")[0] + " " + mx.b.bp.toFixed(1) + " °C", mx.b.col, "end");
+    Lab.fn(F, function (v) { return tempAt(mx, v); }, "var(--ghost)", 2, "5 4", 120);
+    var pts = []; for (var i = 0; i <= 120; i++) { var v = B.v * i / 120; pts.push([v, tempAt(mx, v)]); }
+    if (B.v > 0) Lab.line(F, pts, "var(--ink)", 3);
+    Lab.dot(F, B.v, tempAt(mx, B.v), "var(--c4)", true);
+    // pots
+    var c = collected(B.v), potA = 50 - c.a, potB = 50 - c.b;
+    pots.setAttribute("viewBox", "0 0 440 150");
+    while (pots.firstChild) pots.removeChild(pots.firstChild);
+    // liquids are fully mixed (one phase), so draw molecules as dots: one dot per 2 mL
+    var GRID = []; (function () { var r = 7; for (var row = 0; row < 10; row++) for (var col = 0; col < 10; col++) { r = (r * 9301 + 49297) % 233280; GRID.push([col, row, r / 233280]); } })();
+    function beaker(x, label, a, b) {
+      var hgt = 90, wdt = 110, top = 22;
+      var na = Math.round(a / 2), nb = Math.round(b / 2), n = na + nb, rows = Math.ceil(n / 10);
+      var lvl = top + hgt - hgt * (a + b) / 100;
+      if (n > 0) el("rect", { x: x + 1.5, y: lvl, width: wdt - 3, height: top + hgt - lvl, fill: "var(--accent)", opacity: 0.06 }, pots);
+      // interleave the two kinds so the mixture looks uniform
+      var kinds = []; for (var i = 0; i < n; i++) kinds.push(Math.floor((i + 1) * na / n) > Math.floor(i * na / n) ? "a" : "b");
+      for (var j = 0; j < n; j++) {
+        var g = GRID[j], cx = x + 8 + g[0] * 10.4 + (g[2] - 0.5) * 3, cy = top + hgt - 5 - g[1] * 9 + (g[2] - 0.5) * 2;
+        el("circle", { cx: cx, cy: cy, r: 3.6, fill: kinds[j] === "a" ? mx.a.col : mx.b.col }, pots);
+      }
+      el("path", { d: "M" + x + " " + top + " L" + x + " " + (top + hgt) + " L" + (x + wdt) + " " + (top + hgt) + " L" + (x + wdt) + " " + top, fill: "none", stroke: "var(--ink)", "stroke-width": 1.5 }, pots);
+      el("text", { x: x + wdt / 2, y: 14, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, pots, label);
+      el("text", { x: x + wdt / 2, y: top + hgt + 18, "text-anchor": "middle" }, pots, (a + b).toFixed(0) + " mL");
+    }
+    beaker(30, "Flask", Math.max(0, potA), Math.max(0, potB));
+    beaker(300, "Receiver", c.a, c.b);
+    el("path", { d: "M156 70 L286 70", stroke: "var(--muted)", "stroke-width": 2 }, pots);
+    el("path", { d: "M292 70 l-8 -5 v10 z", fill: "var(--muted)" }, pots);
+    el("text", { x: 220, y: 60, "text-anchor": "middle" }, pots, "vapor → condenser");
+    el("text", { x: 220, y: 92, "text-anchor": "middle" }, pots, "1 dot = 2 mL");
+    return { c: c, potA: potA, potB: potB, T: tempAt(mx, B.v) };
+  }
+  var mixBtns = [], elV = document.getElementById("s-v");
+  function renderB() {
+    var mx = MIX[B.k], r = drawB(), s = sw(B.v);
+    elV.value = B.v; document.getElementById("o-v").textContent = B.v.toFixed(0) + " mL";
+    mixBtns.forEach(function (b, i) { b.setAttribute("aria-pressed", B.k === i ? "true" : "false"); });
+    var nm = function (x) { return x.f.split(",")[0]; };
+    document.getElementById("rb-t").textContent = r.T.toFixed(1) + " °C";
+    document.getElementById("rb-t2").textContent = s < 0.1 ? "plateau at " + nm(mx.a) + "'s b.p." : s > 0.9 ? "plateau at " + nm(mx.b) + "'s b.p." : "rising: the changeover";
+    document.getElementById("rb-now").textContent = B.v >= 100 ? "Done" : s < 0.1 ? nm(mx.a) : s > 0.9 ? nm(mx.b) : "a mix of both";
+    document.getElementById("rb-now2").textContent = B.v >= 100 ? "the flask is empty" : s < 0.1 ? "weaker IMFs, lower b.p." : s > 0.9 ? "the first liquid is gone" : "collect this in a separate flask";
+    var line = function (a, b) { return '<span style="color:' + mx.a.col + '">' + a.toFixed(0) + " mL " + nm(mx.a) + '</span><br><span style="color:' + mx.b.col + '">' + b.toFixed(0) + " mL " + nm(mx.b) + "</span>"; };
+    document.getElementById("rb-rec").innerHTML = line(r.c.a, r.c.b);
+    document.getElementById("rb-pot").innerHTML = line(Math.max(0, r.potA), Math.max(0, r.potB));
+    var h = "<p><b>" + mx.name + ".</b> " + mx.why + "</p><ul>";
+    if (B.v < 1) h += "<li>Heat the flask. The temperature of the vapor climbs until the first liquid begins to boil off, at about " + mx.a.bp.toFixed(1) + " °C.</li>";
+    else if (s < 0.1) h += "<li>The vapor temperature holds near " + mx.a.bp.toFixed(1) + " °C while " + nm(mx.a) + " boils off. The receiver is collecting nearly pure " + nm(mx.a) + ".</li>";
+    else if (s <= 0.9) h += "<li>Almost all the " + nm(mx.a) + " is gone, so the temperature rises. Distillate collected now is a mixture; a chemist switches receivers here.</li>";
+    else h += "<li>The temperature has reached " + mx.b.bp.toFixed(1) + " °C: now " + nm(mx.b) + " is boiling off. The first receiver should already have been swapped out.</li>";
+    h += "<li>The plateau temperatures are the boiling points. The bigger the gap between them, the cleaner the separation.</li></ul>";
+    h += "<p><b>AP answer:</b> " + nm(mx.a) + " has weaker intermolecular forces than " + nm(mx.b) + ", so it has a higher vapor pressure and a lower boiling point and is collected first.</p>";
+    document.getElementById("story-b").innerHTML = h;
+  }
+  var stopB = function () {};
+  MIX.forEach(function (m, i) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = m.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { stopB(); B.k = i; renderB(); });
+    document.getElementById("sc-mix").appendChild(b); mixBtns.push(b);
+  });
+  elV.addEventListener("input", function () { stopB(); B.v = parseFloat(elV.value); renderB(); });
+  document.getElementById("run-b").addEventListener("click", function () {
+    stopB(); B.v = 0; renderB();
+    stopB = Lab.animate(3000, function (t) { B.v = Math.round(100 * t); renderB(); }, function () { B.v = 100; renderB(); });
+  });
+  B.v = 30;
+  renderB();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "On a chromatogram, the solvent front is 8.0 cm above the baseline and a spot is 3.2 cm above the baseline. What is the Rf of the spot?",
+      o: ["0.60", "0.40", "2.5", "4.8"], c: 1,
+      w: "Rf = distance traveled by the spot ÷ distance traveled by the solvent front = 3.2 cm ÷ 8.0 cm = 0.40. Choice C is the ratio upside down; an Rf can never exceed 1. Choice A is 1 − 0.40." },
+    { s: "A mixture of a nonpolar hydrocarbon and a polar alcohol is separated by paper chromatography using a nonpolar solvent. Which result and reason are correct?",
+      o: ["The alcohol has the larger Rf, because it has the larger molar mass", "The alcohol has the larger Rf, because it forms hydrogen bonds with the solvent", "The hydrocarbon has the larger Rf, because it is attracted more strongly to the nonpolar solvent than to the polar paper", "Both have the same Rf, because both dissolve in the solvent"], c: 2,
+      w: "Paper (cellulose) is polar and covered in −OH groups. The alcohol hydrogen-bonds to the paper and is held back; the hydrocarbon has only London forces, is attracted more to the nonpolar solvent, and travels farther. Molar mass (choice A) is not the reason, and a nonpolar solvent cannot hydrogen-bond (choice B)." },
+    { s: "A TLC plate (polar silica) is first run in hexane. A second plate of the same mixture is run in a more polar hexane–ethyl acetate solvent. How do the results compare?",
+      o: ["All Rf values increase, and the order of the spots stays the same", "All Rf values decrease, and the order stays the same", "The order of the spots reverses", "The Rf values do not change, because Rf depends only on the compounds"], c: 0,
+      w: "A more polar mobile phase competes better with the polar silica for the components, so each component spends more time moving and every Rf rises. Their relative attraction to silica is unchanged, so the order is the same. Rf depends on the solvent and stationary phase, which rules out D." },
+    { s: "A mixture of two compounds is poured onto a column packed with polar silica and washed through with a nonpolar solvent. Compound 1 is nonpolar and compound 2 contains −OH groups. Which statement is correct?",
+      o: ["Compound 2 comes out first, because it dissolves better in the solvent", "Compound 1 comes out first, because it is attracted less strongly to the silica", "Both come out together, because they are in the same solvent", "Compound 2 comes out first, because hydrogen bonds break easily"], c: 1,
+      w: "The −OH compound hydrogen-bonds to the silica's −OH groups and is held back. The nonpolar compound interacts weakly with silica and is carried through first. A is backward: a polar compound dissolves less well in a nonpolar solvent." },
+    { s: "A mixture of pentane (C₅H₁₂) and hexane (C₆H₁₄) is distilled. Which liquid is collected first, and why?",
+      o: ["Hexane, because its larger molecules move faster", "Hexane, because it has stronger London dispersion forces", "Pentane, because it has weaker London dispersion forces, so it has a higher vapor pressure", "Pentane, because its covalent bonds are weaker and break more easily"], c: 2,
+      w: "Both are nonpolar. Pentane has fewer electrons and less surface area, so its London dispersion forces are weaker; it has the higher vapor pressure and lower boiling point (36 °C vs. 69 °C) and distills first. Choice D is a classic error: boiling overcomes intermolecular forces, not covalent bonds." },
+    { s: "Acetone, (CH₃)₂CO, boils at 56 °C and water boils at 100 °C. Which statement best explains why acetone can be separated from water by distillation, with acetone collected first?",
+      o: ["Acetone molecules cannot hydrogen-bond to each other, so the attractions among acetone molecules are weaker than the hydrogen bonds among water molecules", "Acetone is nonpolar, so it has only London dispersion forces", "Acetone has a greater molar mass, so it vaporizes more easily", "The C=O bond in acetone breaks at a lower temperature than the O–H bonds in water"], c: 0,
+      w: "Acetone is polar (dipole–dipole forces) but has no H bonded to O, N or F, so pure acetone has no hydrogen bonding. Water's hydrogen-bond network is stronger, so water has the higher boiling point. B is false: acetone has a significant dipole. C points the wrong way: larger molar mass usually means stronger dispersion forces." },
+    { s: "Which property of the components is the main basis for separation by chromatography?",
+      o: ["Differences in density", "Differences in the strength of their attractions to the stationary and mobile phases", "Differences in molar mass", "Differences in the number of covalent bonds"], c: 1,
+      w: "Chromatography separates components by how strongly each is attracted, through intermolecular forces, to the stationary phase relative to the mobile phase. Density and molar mass are not what determine the distance a spot travels." },
+    { s: "On one plate, a food dye gives a single spot 2.1 cm above the baseline when the solvent front is 6.0 cm above the baseline. Standards run on the same plate give: Red 40, Rf = 0.62; Yellow 5, Rf = 0.35; Blue 1, Rf = 0.20. The dye is most likely:",
+      o: ["Red 40", "Blue 1", "A mixture of Yellow 5 and Blue 1", "Yellow 5"], c: 3,
+      w: "Rf = 2.1 cm ÷ 6.0 cm = 0.35, which matches Yellow 5 run under the same conditions. A mixture of two dyes with different Rf values would give two spots, not one. (The Rf values here are illustrative.)" }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("3.9");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [3], topic: "3.9", compact: true, storageKey: "topic-3.9" });</script>
+</body>
+</html>

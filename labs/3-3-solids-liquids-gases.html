@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solids, Liquids, and Gases Study Lab</title>
+<meta name="description" content="Heat and cool water, ethanol, and diethyl ether in a particle-level model to see how solids, liquids, and gases differ, then compare their vapor pressures in a sealed flask and connect them to intermolecular forces.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.part { font-size: 1.25rem; margin-top: 6px; }
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"], .chips button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { padding: 4px 12px; font-size: .86rem; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 18px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 14px; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v.txt { font-family: var(--body); font-size: 1.02rem; font-weight: 600; }
+.legend .l-c2 { color: var(--c2); }
+.legend .l-ref { color: var(--muted); }
+.legend .l-ref::before { background: none; border-top: 2px dashed currentColor; height: 0; }
+.ctlcard { display: grid; gap: 14px; }
+.ctlcard .controls { grid-template-columns: 1fr; }
+@media (max-width: 520px) {
+  svg.chart text { font-size: 14px; }
+  svg.chart .lbl { font-size: 14px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 3 · Topic 3.3</span>
+  <h1>Solids, Liquids, and Gases Study Lab</h1>
+  <p class="lede">The three phases differ in how close the particles are and how freely they move, and the strength of the intermolecular forces decides which phase a substance is in at a given temperature. Use Part A to heat and cool three liquids at the particle level, then use Part B to compare their vapor pressures in a sealed flask.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Phases at the particle level</h2>
+    <p>All three substances are shown at 1 atm. Melting and boiling points are measured values. The particle model is a two-dimensional cartoon: each circle is one molecule, and in a real gas the molecules would be much farther apart than the box can show (about ten molecule-widths apart at room conditions).</p>
+  </div>
+
+  <h3 class="part" id="pa-h">Part A: Heat it, cool it</h3>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Particle view <small id="pa-sub"></small></h3>
+      <svg class="chart" id="box" role="img" aria-label="Animated particle model of the selected substance as a solid, liquid, or gas"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Scenarios</div>
+        <div class="scenarios" id="sc-a"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Substance</div>
+        <div class="chips" id="sub-a" role="group" aria-label="Substance for Part A"></div>
+      </div>
+      <div class="ctl">
+        <label for="s-ta">Temperature <output id="o-ta"></output></label>
+        <input type="range" id="s-ta" min="-150" max="150" step="1">
+        <span class="hint" id="h-ta"></span>
+      </div>
+      <div class="group">
+        <span style="font-size:.86rem; font-weight:500;" id="arr-lbl">How the solid is arranged</span>
+        <div class="seg" role="group" aria-labelledby="arr-lbl">
+          <button type="button" id="ar-c" aria-pressed="true">Crystalline</button>
+          <button type="button" id="ar-a" aria-pressed="false">Amorphous</button>
+        </div>
+        <span class="hint" style="font-size:.76rem; color:var(--muted);">Applies when the substance is a solid. Ice, frozen ethanol, and frozen ether are crystalline; "amorphous" shows what a glassy solid would look like.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Phase at 1 atm</div><div class="v txt" id="ra-ph"></div><div class="sub" id="ra-ph2"></div></div>
+    <div class="stat"><div class="k">Arrangement</div><div class="v txt" id="ra-ar"></div><div class="sub" id="ra-ar2"></div></div>
+    <div class="stat"><div class="k">Motion</div><div class="v txt" id="ra-mo"></div><div class="sub" id="ra-mo2"></div></div>
+    <div class="stat"><div class="k">Volume of 1 mol</div><div class="v" id="ra-v"></div><div class="sub" id="ra-v2"></div></div>
+  </div>
+
+  <div class="story" id="story-a" aria-live="polite"></div>
+
+  <h3 class="part" id="pb-h">Part B: Vapor pressure in a sealed flask</h3>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Sealed flask <small id="pb-sub"></small></h3>
+      <svg class="chart" id="flask" role="img" aria-label="Sealed flask with liquid at the bottom and vapor molecules above it"></svg>
+    </div>
+    <div class="card graph-card">
+      <h3>Vapor pressure vs. temperature <small>measured-data fits</small></h3>
+      <svg class="chart" id="vp" role="img" aria-label="Vapor pressure curves for diethyl ether, ethanol, and water with the 760 torr line"></svg>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-c1">Diethyl ether</span><span class="l-c2">Ethanol</span><span class="l-ad">Water</span><span class="l-ref">1 atm = 760 torr</span></div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <div class="tag">Scenarios</div>
+      <div class="scenarios" id="sc-b"></div>
+    </div>
+    <div class="group">
+      <div class="tag">Liquid in the flask</div>
+      <div class="chips" id="sub-b" role="group" aria-label="Liquid for Part B"></div>
+    </div>
+    <div class="controls">
+      <div class="ctl">
+        <label for="s-tb">Temperature <output id="o-tb"></output></label>
+        <input type="range" id="s-tb" min="0" max="100" step="1">
+        <span class="hint">Each vapor dot stands for about 25 torr of pressure</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Vapor pressure</div><div class="v" id="rb-p"></div><div class="sub" id="rb-p2"></div></div>
+    <div class="stat"><div class="k">Normal boiling point</div><div class="v" id="rb-bp"></div><div class="sub">where vapor pressure = 760 torr</div></div>
+    <div class="stat"><div class="k">Strongest IMF</div><div class="v txt" id="rb-imf"></div><div class="sub" id="rb-imf2"></div></div>
+    <div class="stat"><div class="k">Ranking at this temperature</div><div class="v txt" id="rb-rk"></div><div class="sub">highest to lowest vapor pressure</div></div>
+  </div>
+
+  <div class="story" id="story-b" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Solid</span><h3>Fixed positions</h3><p>Particles are in contact and held in place by attractions. They vibrate but do not move past each other, so a solid keeps its shape and volume. In a <b>crystalline</b> solid the particles form a repeating pattern; in an <b>amorphous</b> solid (glass, many plastics) they do not.</p></div>
+    <div class="card"><span class="tag">Liquid</span><h3>Close, but mobile</h3><p>Particles are still in contact, so a liquid's volume is nearly the same as the solid's. They have enough energy to slide past each other, so a liquid flows and takes the shape of its container. There is no long-range order.</p></div>
+    <div class="card"><span class="tag">Gas</span><h3>Far apart and fast</h3><p>Particles are far apart compared with their size and move freely in straight lines between collisions. A gas fills its container and is easy to compress. A mole of gas takes up roughly a thousand times the volume of a mole of the liquid.</p></div>
+    <div class="card"><span class="tag">IMF decides the phase</span><h3>Melting and boiling points</h3><p>To melt or boil, particles need enough kinetic energy to overcome the attractions holding them together. Stronger intermolecular forces mean higher melting and boiling points. Molecules stay intact; only the forces between them are overcome.</p></div>
+    <div class="card"><span class="tag">Vapor pressure</span><h3>Escaping the liquid</h3><p>In a sealed container, molecules at the surface with enough energy escape into the vapor while others condense back. At equilibrium the two rates are equal, and the pressure of the vapor is the vapor pressure. Weaker IMFs mean higher vapor pressure.</p></div>
+    <div class="card"><span class="tag">Boiling</span><h3>When vapor pressure reaches the outside pressure</h3><p>A liquid boils when its vapor pressure equals the pressure above it. The normal boiling point is the temperature where the vapor pressure is 760 torr (1 atm). Lower the outside pressure, as on a mountain, and the liquid boils at a lower temperature.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Phase and liquid cheat sheet</h2>
+    <p>Part A compares phases; Part B compares liquids. Data are at 1 atm. Vapor pressures at 25 °C are rounded measured values.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Phase</th><th>Particle spacing</th><th>Particle motion</th><th>Shape and volume</th><th>Compressible?</th></tr></thead>
+    <tbody>
+      <tr><td><b>Solid</b> (crystalline or amorphous)</td><td>In contact</td><td>Vibrate in fixed positions</td><td>Fixed shape, fixed volume</td><td>Almost not</td></tr>
+      <tr><td><b>Liquid</b></td><td>In contact</td><td>Slide past each other</td><td>Takes container's shape, fixed volume</td><td>Almost not</td></tr>
+      <tr><td><b>Gas</b></td><td>Far apart</td><td>Fast, random, straight lines between collisions</td><td>Fills the container</td><td>Yes</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Liquid</th><th>Strongest IMF</th><th>Vapor pressure at 25 °C</th><th>Normal boiling point</th><th>Melting point</th></tr></thead>
+    <tbody>
+      <tr><td>Diethyl ether, (C<sub>2</sub>H<sub>5</sub>)<sub>2</sub>O</td><td>Dipole–dipole (no O–H, so no hydrogen bonding between molecules)</td><td>about 530 torr</td><td>34.6 °C</td><td>−116 °C</td></tr>
+      <tr><td>Ethanol, C<sub>2</sub>H<sub>5</sub>OH</td><td>Hydrogen bonding (one O–H per molecule)</td><td>about 59 torr</td><td>78.4 °C</td><td>−114 °C</td></tr>
+      <tr><td>Water, H<sub>2</sub>O</td><td>Hydrogen bonding (two O–H and two lone pairs per molecule)</td><td>about 24 torr</td><td>100.0 °C</td><td>0.0 °C</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Phases on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points</h3>
+      <ul>
+        <li>In a particle diagram of a solid or liquid, draw particles <b>touching</b>; for a gas, draw them far apart. Keep the number of particles the same when a substance changes phase.</li>
+        <li>Draw a crystalline solid as a regular pattern; a liquid as touching particles with no pattern.</li>
+        <li>Draw whole molecules in every phase. Boiling water gives H<sub>2</sub>O molecules in the gas, not H<sub>2</sub> and O<sub>2</sub>.</li>
+        <li>Rank vapor pressure in the opposite order from IMF strength, and name the IMF: "ether has the highest vapor pressure because it cannot hydrogen bond with itself."</li>
+        <li>Explain vapor pressure with energy: a larger fraction of surface molecules have enough kinetic energy to overcome the attractions.</li>
+        <li>For boiling, compare vapor pressure with the external pressure, not just with a temperature.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Drawing liquid particles spread far apart. Liquids are nearly as dense as solids.</li>
+        <li>Saying covalent bonds break when a molecular substance melts or boils. Only intermolecular forces are overcome.</li>
+        <li>Saying more liquid or a bigger container raises the vapor pressure. It depends only on the substance and the temperature.</li>
+        <li>Saying a liquid with a high vapor pressure has strong IMFs. It is the reverse.</li>
+        <li>Saying boiling happens at 100 °C for every liquid, or at every pressure. Water boils at about 95 °C where the air pressure is 630 torr.</li>
+        <li>Thinking ice is denser than water. Hydrogen bonds hold ice in an open pattern, so ice floats; for most other substances the solid is denser than the liquid.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 3.3. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-3.html">Unit 3 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var R = Lab.CONST.R;
+  // Measured data at 1 atm. Antoine constants (log10 P/torr = A − B/(C + t°C)) fit measured vapor pressures.
+  var SUBS = {
+    water:   { name: "Water", f: "H₂O", mp: 0, bp: 100, M: 18.02, rho: 0.997, A: 8.07131, B: 1730.63, C: 233.426, col: "var(--accent)",
+               imf: "Hydrogen bonding", imf2: "two O–H bonds and two lone pairs per molecule" },
+    ethanol: { name: "Ethanol", f: "C₂H₅OH", mp: -114, bp: 78.4, M: 46.07, rho: 0.789, A: 8.20417, B: 1642.89, C: 230.300, col: "var(--c2)",
+               imf: "Hydrogen bonding", imf2: "one O–H bond per molecule, plus a larger dispersion force" },
+    ether:   { name: "Diethyl ether", f: "(C₂H₅)₂O", mp: -116, bp: 34.6, M: 74.12, rho: 0.713, A: 6.92032, B: 1064.07, C: 228.800, col: "var(--c1)",
+               imf: "Dipole–dipole", imf2: "no O–H bond, so no hydrogen bonding between molecules" }
+  };
+  var ORDER = ["ether", "ethanol", "water"];
+  function vp(k, t) { var s = SUBS[k]; return Math.pow(10, s.A - s.B / (s.C + t)); }
+  function phaseOf(k, t) { var s = SUBS[k]; return t < s.mp ? "solid" : t < s.bp ? "liquid" : "gas"; }
+  var el = function (id) { return document.getElementById(id); };
+  function deg(t) { return String(t).replace("-", "−"); }
+  function torr(p) { return p >= 100 ? Math.round(p).toLocaleString("en-US") : p.toFixed(1); }
+
+  /* =========================== Part A =========================== */
+  var A = { k: "water", t: 25, amorph: false }, keyA = "liq";
+  var svg = el("box"), W = 440, H = 260, X0 = 14, X1 = 426, Y0 = 14, Y1 = 246, RAD = 9, NP = 40;
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  Lab.el("rect", { x: X0 - 2, y: Y0 - 2, width: X1 - X0 + 4, height: Y1 - Y0 + 4, fill: "var(--paper)", stroke: "var(--ink)", "stroke-width": 2.5, rx: 4 }, svg);
+  var g = Lab.el("g", {}, svg);
+  var lab = Lab.el("text", { x: W / 2, y: 34, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, svg, "");
+  var seed = 3;
+  function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+  var P = [];
+  for (var i = 0; i < NP; i++) {
+    var c = Lab.el("g", {}, g);
+    Lab.el("circle", { r: RAD, fill: "var(--accent)", opacity: 0.9 }, c);
+    P.push({ x: X0 + RAD + rnd() * (X1 - X0 - 2 * RAD), y: Y1 - RAD - rnd() * 80, vx: 0, vy: 0, ph: rnd() * 6.28, ph2: rnd() * 6.28, el: c });
+  }
+  // lattice sites: compact hexagonal (normal solid), open (ice), or random close packing (amorphous)
+  function sites(kind) {
+    var out = [];
+    if (kind === "amorph") {
+      // random deposition: each particle drops at a random x and sticks where it first touches; touching but no pattern
+      var rs = 77, rr = function () { rs = (rs * 16807) % 2147483647; return (rs - 1) / 2147483646; };
+      for (var i = 0; i < NP; i++) {
+        var best = null;
+        for (var tr = 0; tr < 40; tr++) {   // try several drop spots and keep the lowest, so the pile is dense
+          var x = W / 2 - 100 + rr() * 200, y = Y1 - RAD - 1;
+          out.forEach(function (q) { var dx = Math.abs(q[0] - x); if (dx < 2 * RAD) y = Math.min(y, q[1] - Math.sqrt(4 * RAD * RAD - dx * dx)); });
+          if (!best || y > best[1]) best = [x, y];
+        }
+        out.push(best);
+      }
+      return out;
+    }
+    var ice = kind === "ice", per = ice ? 8 : 10, dx = ice ? 2 * RAD + 7 : 2 * RAD + 1, dy = ice ? dx * 0.87 : dx * 0.87;
+    for (var n = 0; n < NP; n++) {
+      var row = Math.floor(n / per), col = n % per;
+      var w = (per - 1) * dx + dx / 2;
+      out.push([W / 2 - w / 2 + col * dx + (row % 2 ? dx / 2 : 0), Y1 - RAD - 1 - row * dy]);
+    }
+    return out;
+  }
+  var SITES = { compact: sites("compact"), ice: sites("ice"), amorph: sites("amorph") };
+  function curSites() { return A.amorph ? SITES.amorph : A.k === "water" ? SITES.ice : SITES.compact; }
+
+  var clock = 0, vis = true;
+  function step(h) {
+    var ph = phaseOf(A.k, A.t), TK = A.t + 273;
+    if (ph === "solid") {
+      var st = curSites(), amp = 0.6 + 2.6 * TK / (SUBS[A.k].mp + 273);
+      P.forEach(function (p, i) {
+        var tx = st[i][0] + amp * Math.sin(clock * 9 + p.ph), ty = st[i][1] + amp * Math.sin(clock * 11 + p.ph2);
+        var k = Math.min(1, 6 * h);
+        p.vx = (tx - p.x) / h * k * 0.3; p.vy = (ty - p.y) / h * k * 0.3;
+        p.x += (tx - p.x) * k; p.y += (ty - p.y) * k;
+      });
+      return;
+    }
+    var gas = ph === "gas", gr = gas ? 0 : 900, target = gas ? 90 + 0.45 * TK : 18 + 0.08 * TK;
+    P.forEach(function (p) {
+      p.vy += gr * h;
+      // small random kicks keep the liquid jostling
+      if (!gas) { p.vx += (rnd() - 0.5) * 30; p.vy += (rnd() - 0.5) * 30; }
+      p.x += p.vx * h; p.y += p.vy * h;
+      if (p.x < X0 + RAD) { p.x = X0 + RAD; p.vx = Math.abs(p.vx); } if (p.x > X1 - RAD) { p.x = X1 - RAD; p.vx = -Math.abs(p.vx); }
+      if (p.y < Y0 + RAD) { p.y = Y0 + RAD; p.vy = Math.abs(p.vy); } if (p.y > Y1 - RAD) { p.y = Y1 - RAD; p.vy = -Math.abs(p.vy); }
+    });
+    for (var a = 0; a < NP; a++) for (var b = a + 1; b < NP; b++) {
+      var p = P[a], q = P[b], dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy);
+      if (!gas && d >= 2 * RAD && d < 2.9 * RAD) {   // liquid: short-range attraction (the IMF) keeps neighbors touching
+        var pull = 0.12 * (d - 2 * RAD) / d;
+        p.x += dx * pull; p.y += dy * pull; q.x -= dx * pull; q.y -= dy * pull;
+      }
+      if (d < 2 * RAD && d > 0.001) {
+        var nx = dx / d, ny = dy / d, ov = (2 * RAD - d) / 2;
+        p.x -= nx * ov; p.y -= ny * ov; q.x += nx * ov; q.y += ny * ov;
+        var rel = (q.vx - p.vx) * nx + (q.vy - p.vy) * ny;
+        if (rel < 0) { p.vx += rel * nx; p.vy += rel * ny; q.vx -= rel * nx; q.vy -= rel * ny; }
+      }
+    }
+    var sp = 0; P.forEach(function (p) { sp += Math.hypot(p.vx, p.vy); }); sp /= NP;
+    var f = 1 + (target / Math.max(sp, 1) - 1) * 0.08;
+    P.forEach(function (p) { p.vx *= f; p.vy *= f; });
+  }
+  function drawA() { P.forEach(function (p) { p.el.setAttribute("transform", "translate(" + p.x.toFixed(1) + " " + p.y.toFixed(1) + ")"); }); }
+  function settle(n) { for (var i = 0; i < n; i++) { clock += 1 / 120; step(1 / 120); } drawA(); }
+
+  function phaseText(k, t) {
+    var ph = phaseOf(k, t), s = SUBS[k];
+    var info = {
+      solid: { ar: A.amorph ? "Touching, no pattern" : "Touching, regular pattern", ar2: A.amorph ? "amorphous: no long-range order" : (k === "water" ? "ice: an open, hydrogen-bonded pattern" : "crystalline lattice"),
+               mo: "Vibrate in place", mo2: "particles do not move past each other" },
+      liquid: { ar: "Touching, no pattern", ar2: "close together, constantly rearranging", mo: "Slide past each other", mo2: "enough energy to move, not to escape" },
+      gas: { ar: "Far apart", ar2: "much farther apart than the box can show", mo: "Fast, straight lines", mo2: "between collisions with walls and each other" }
+    }[ph];
+    var vol, vol2;
+    if (ph === "gas") { vol = Lab.sig(R * (t + 273), 3) + " L"; vol2 = "ideal gas at 1 atm: V = RT/P, about " + Math.round(R * (t + 273) * 1000 / (s.M / s.rho)).toLocaleString("en-US") + " × the liquid"; }
+    else if (ph === "liquid") { vol = Lab.sig(s.M / s.rho, 3) + " mL"; vol2 = "M ÷ density of the liquid at 25 °C"; }
+    else if (k === "water") { vol = "19.7 mL"; vol2 = "ice (density 0.917 g/mL), more than liquid water's 18.1 mL"; }
+    else { vol = "< " + Lab.sig(s.M / s.rho, 3) + " mL"; vol2 = "a little less than the liquid, as for most substances"; }
+    return { ph: ph, info: info, vol: vol, vol2: vol2 };
+  }
+
+  function storyA(k, t, x) {
+    var s = SUBS[k], ph = x.ph, html = "", li = [];
+    html += "<p><b>" + s.name + " at " + deg(t) + " °C is a " + ph + ".</b> It melts at " + deg(s.mp) + " °C and boils at " + s.bp + " °C at 1 atm.</p>";
+    if (ph === "solid") {
+      li.push("The molecules have too little kinetic energy to overcome the attractions holding them in place, so they only vibrate. Warming the solid makes the vibrations larger until, at " + s.mp + " °C, molecules can start to slide past each other.");
+      if (A.amorph) li.push("<b>Amorphous</b>: the particles touch but have no repeating pattern. Some attractions are stronger than others, so an amorphous solid like glass softens over a range of temperatures instead of melting sharply.");
+      else if (k === "water") li.push("<b>Ice is unusual.</b> Each molecule is hydrogen-bonded to four neighbors in an open pattern, so ice takes up more space than liquid water and floats on it. For most substances, including ethanol and ether, the solid is denser than the liquid.");
+      else li.push("<b>Crystalline</b>: the molecules sit in a regular, repeating pattern, which gives a sharp melting point.");
+    } else if (ph === "liquid") {
+      li.push("The molecules are still touching, so 1 mol takes up only " + x.vol + ", close to the solid. They have enough energy to slide past one another, so the liquid flows and takes the shape of the bottom of the box.");
+      li.push("Each molecule is still held by " + s.imf.toLowerCase() + " (" + s.imf2 + "). Heating to " + s.bp + " °C gives enough molecules enough energy to break free into the gas.");
+    } else {
+      li.push("The molecules have enough kinetic energy to overcome the intermolecular attractions. They move fast and independently, filling the whole container.");
+      li.push("One mole now occupies about " + x.vol + " at 1 atm, roughly " + Math.round(R * (t + 273) * 1000 / (s.M / s.rho)).toLocaleString("en-US") + " times the volume of the same mole as a liquid. The box cannot show that spacing; real gas molecules would be far more spread out.");
+      li.push("Only the forces <b>between</b> molecules were overcome. Each " + s.f + " molecule is still intact; no covalent bonds broke.");
+    }
+    if (k !== "water" || ph !== "liquid") {
+      var cmp = ORDER.map(function (q) { return SUBS[q].name.toLowerCase() + " is a " + phaseOf(q, t); }).join(", ");
+      li.push("At " + deg(t) + " °C: " + cmp + ". Water, with the most hydrogen bonding, holds together to the highest temperature; ether, with no hydrogen bonding between its molecules, boils first.");
+    } else li.push("Compare: at " + deg(t) + " °C, ethanol is " + phaseOf("ethanol", t) + " and diethyl ether is " + phaseOf("ether", t) + ". Water's extensive hydrogen bonding gives it the highest boiling point of the three.");
+    html += "<ul>" + li.map(function (q) { return "<li>" + q + "</li>"; }).join("") + "</ul>";
+    var end = ph === "solid" ? "in a solid, particles are in contact and vibrate about fixed positions; a crystalline solid has a regular repeating arrangement and an amorphous solid does not."
+      : ph === "liquid" ? "in a liquid, particles are in contact (so the molar volume is similar to the solid) but can move past each other, so there is no long-range order."
+      : "in a gas, particles are far apart and move rapidly and independently, so the molar volume is much larger than in the liquid or solid.";
+    html += "<p><b>AP answer:</b> " + end.charAt(0).toUpperCase() + end.slice(1) + "</p>";
+    return html;
+  }
+
+  var chipsA = {}, scA = {};
+  var sTa = el("s-ta");
+  function renderA(full) {
+    var s = SUBS[A.k], x = phaseText(A.k, A.t);
+    sTa.value = A.t;
+    el("o-ta").textContent = deg(A.t) + " °C (" + (A.t + 273) + " K)";
+    el("h-ta").textContent = "melts at " + deg(s.mp) + " °C, boils at " + s.bp + " °C";
+    el("pa-sub").textContent = s.name + " (" + s.f + ") at " + deg(A.t) + " °C";
+    lab.textContent = x.ph.charAt(0).toUpperCase() + x.ph.slice(1) + (x.ph === "solid" ? (A.amorph ? " (amorphous)" : " (crystalline)") : "");
+    P.forEach(function (p) { p.el.firstChild.setAttribute("fill", s.col); });
+    el("ar-c").setAttribute("aria-pressed", A.amorph ? "false" : "true");
+    el("ar-a").setAttribute("aria-pressed", A.amorph ? "true" : "false");
+    Object.keys(chipsA).forEach(function (k) { chipsA[k].setAttribute("aria-pressed", A.k === k ? "true" : "false"); });
+    Object.keys(scA).forEach(function (k) { scA[k].setAttribute("aria-pressed", keyA === k ? "true" : "false"); });
+    el("ra-ph").textContent = x.ph.charAt(0).toUpperCase() + x.ph.slice(1);
+    el("ra-ph2").textContent = x.ph === "solid" ? "below the melting point" : x.ph === "liquid" ? "between melting and boiling points" : "above the boiling point";
+    el("ra-ar").textContent = x.info.ar; el("ra-ar2").textContent = x.info.ar2;
+    el("ra-mo").textContent = x.info.mo; el("ra-mo2").textContent = x.info.mo2;
+    el("ra-v").textContent = x.vol; el("ra-v2").textContent = x.vol2;
+    if (full !== false) el("story-a").innerHTML = storyA(A.k, A.t, x);
+    if (Lab.reduceMotion) settle(240);
+  }
+  ORDER.slice().reverse().forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SUBS[k].name;
+    b.addEventListener("click", function () { A.k = k; keyA = null; renderA(); });
+    el("sub-a").appendChild(b); chipsA[k] = b;
+  });
+  var SCA = {
+    ice: { name: "Ice at −10 °C", k: "water", t: -10, am: false },
+    liq: { name: "Liquid water at 25 °C", k: "water", t: 25, am: false },
+    steam: { name: "Steam at 120 °C", k: "water", t: 120, am: false },
+    ether: { name: "Ether at 50 °C", k: "ether", t: 50, am: false },
+    glass: { name: "Amorphous solid", k: "ethanol", t: -140, am: true }
+  };
+  var stopA = function () {};
+  Object.keys(SCA).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SCA[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () {
+      var x = SCA[k]; keyA = k; A.k = x.k; A.amorph = x.am; stopA();
+      var t0 = A.t;
+      stopA = Lab.animate(900, function (u) { A.t = Math.round(t0 + (x.t - t0) * u); renderA(false); }, function () { A.t = x.t; renderA(); });
+    });
+    el("sc-a").appendChild(b); scA[k] = b;
+  });
+  sTa.addEventListener("input", function () { stopA(); A.t = +sTa.value; keyA = null; renderA(); });
+  el("ar-c").addEventListener("click", function () { A.amorph = false; keyA = null; renderA(); });
+  el("ar-a").addEventListener("click", function () { A.amorph = true; keyA = null; renderA(); });
+
+  /* =========================== Part B =========================== */
+  var B = { k: "water", t: 25 }, keyB = null;
+  var fl = el("flask"), FW = 300, FH = 300;
+  fl.setAttribute("viewBox", "0 0 " + FW + " " + FH);
+  var FX0 = 40, FX1 = 260, FY0 = 50, FY1 = 280, LIQ = 200;  // liquid surface at y = LIQ
+  Lab.el("path", { d: "M" + (FX0 + 70) + " 20 V" + FY0 + " H" + FX0 + " V" + FY1 + " H" + FX1 + " V" + FY0 + " H" + (FX1 - 70) + " V20", fill: "none", stroke: "var(--ink)", "stroke-width": 3, "stroke-linejoin": "round" }, fl);
+  Lab.el("rect", { x: FX0 + 64, y: 10, width: FX1 - FX0 - 128, height: 14, fill: "var(--muted)", rx: 3 }, fl);
+  Lab.el("text", { x: FW / 2, y: 21, "text-anchor": "middle", style: "fill:var(--surface); font-size:10px; font-weight:600" }, fl, "sealed");
+  var liqRect = Lab.el("rect", { x: FX0 + 2, y: LIQ, width: FX1 - FX0 - 4, height: FY1 - LIQ - 2, opacity: 0.18 }, fl);
+  var fg = Lab.el("g", {}, fl);
+  var vpText = Lab.el("text", { x: FW / 2, y: FY0 + 22, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, fl, "");
+  var LP = [], VP = [], fr = 1;
+  (function () {
+    var per = 13, dx = (FX1 - FX0 - 16) / per;
+    for (var i = 0; i < 52; i++) {
+      var row = Math.floor(i / per), col = i % per;
+      var sx = FX0 + 10 + col * dx + (row % 2 ? dx / 2 : 0), sy = FY1 - 10 - row * 18;
+      LP.push({ sx: sx, sy: sy, x: sx, y: sy, el: Lab.el("circle", { r: 7, cx: sx, cy: sy }, fg) });
+    }
+    for (var j = 0; j < 48; j++) {
+      var a = rnd() * 6.283;
+      VP.push({ x: FX0 + 10 + rnd() * (FX1 - FX0 - 20), y: FY0 + 34 + rnd() * (LIQ - FY0 - 44), dx: Math.cos(a), dy: Math.sin(a), el: Lab.el("circle", { r: 0 }, fg) });
+    }
+  })();
+  var nVap = 0;
+  function stepB(h) {
+    var sp = 40 * Math.sqrt((B.t + 273) / 300);
+    VP.forEach(function (p, i) {
+      if (i >= nVap) return;
+      p.x += p.dx * sp * h * 1.6; p.y += p.dy * sp * h * 1.6;
+      if (p.x < FX0 + 8) { p.x = FX0 + 8; p.dx = Math.abs(p.dx); } if (p.x > FX1 - 8) { p.x = FX1 - 8; p.dx = -Math.abs(p.dx); }
+      if (p.y < FY0 + 8) { p.y = FY0 + 8; p.dy = Math.abs(p.dy); } if (p.y > LIQ - 8) { p.y = LIQ - 8; p.dy = -Math.abs(p.dy); }
+    });
+    LP.forEach(function (p) { p.x = p.sx + Math.sin(clock * 7 + p.sx) * 1.8; p.y = p.sy + Math.cos(clock * 8 + p.sy) * 1.5; });
+  }
+  function drawB() {
+    VP.forEach(function (p, i) { p.el.setAttribute("cx", p.x.toFixed(1)); p.el.setAttribute("cy", p.y.toFixed(1)); p.el.setAttribute("r", i < nVap ? 6 : 0); });
+    LP.forEach(function (p) { p.el.setAttribute("cx", p.x.toFixed(1)); p.el.setAttribute("cy", p.y.toFixed(1)); });
+  }
+
+  var vsvg = el("vp");
+  function drawVP() {
+    var F = Lab.frame(vsvg, { x: [0, 100], y: [0, 1000], xLabel: "Temperature (°C)", yLabel: "Vapor pressure (torr)", xTicks: [0, 20, 40, 60, 80, 100], yTicks: [0, 200, 400, 600, 800, 1000], fmtX: String, fmtY: String, width: 440, height: 320 });
+    Lab.hline(F, 760, "var(--muted)", 1.6, "7 5");
+    Lab.tag(F, 41, 712, "760 torr = 1 atm", "var(--muted)");
+    ORDER.forEach(function (k) {
+      var s = SUBS[k], on = k === B.k;
+      Lab.fn(F, function (t) { return vp(k, t); }, s.col, on ? 3.5 : 2, null, 120);
+      Lab.line(F, [[s.bp, 0], [s.bp, 760]], s.col, 1, "3 3");
+      Lab.el("circle", { cx: F.sx(s.bp), cy: F.sy(760), r: 3.5, fill: s.col }, F.g);
+    });
+    Lab.tag(F, 22, 930, "ether", "var(--c1)", "start");
+    Lab.tag(F, 66, 380, "ethanol", "var(--c2)", "end");
+    Lab.tag(F, 90, 330, "water", "var(--accent)", "start");
+    var p = vp(B.k, B.t);
+    if (p <= 1000) Lab.dot(F, B.t, p, "var(--c4)", true);
+    else { Lab.vline(F, B.t, "var(--c4)", 1.5, "4 4"); Lab.tag(F, B.t + (B.t > 60 ? -2 : 2), 975, Math.round(p).toLocaleString("en-US") + " torr ↑", "var(--c4)", B.t > 60 ? "end" : "start"); }
+  }
+  function storyB() {
+    var s = SUBS[B.k], p = vp(B.k, B.t), html = "", li = [];
+    html += "<p><b>" + s.name + " at " + B.t + " °C: vapor pressure " + torr(p) + " torr (" + (p / 760).toFixed(3) + " atm).</b></p>";
+    li.push("Molecules at the surface that happen to have enough kinetic energy escape into the space above; vapor molecules that hit the surface are recaptured. In the sealed flask these two rates become equal, and the pressure of the vapor at that point is the vapor pressure.");
+    var rk = ORDER.map(function (k) { return { k: k, p: vp(k, B.t) }; }).sort(function (a, b) { return b.p - a.p; });
+    li.push("At " + B.t + " °C: " + rk.map(function (r) { return SUBS[r.k].name.toLowerCase() + " " + torr(r.p) + " torr"; }).join(" > ") + ". The order never changes with temperature: ether has no hydrogen bonding between its molecules, ethanol has one O–H per molecule, and water has two O–H bonds and two lone pairs per molecule, the most extensive hydrogen bonding. <b>Weaker IMFs, higher vapor pressure.</b>");
+    if (p >= 760) li.push("The vapor pressure is at or above 760 torr. In an open container at 1 atm, " + s.name.toLowerCase() + " would <b>boil</b>: bubbles of vapor can form inside the liquid because their pressure can push back the atmosphere. Sealed, the flask simply holds vapor above 1 atm.");
+    else li.push("Heating raises the vapor pressure steeply, because a larger fraction of molecules has enough energy to escape. " + s.name + " reaches 760 torr, its normal boiling point, at " + s.bp + " °C.");
+    if (B.k === "water" && B.t === 95) li.push("At 95 °C water's vapor pressure is about 634 torr. Where the air pressure is about 630 torr (around 1,600 m altitude), water boils at about 95 °C.");
+    html += "<ul>" + li.map(function (q) { return "<li>" + q + "</li>"; }).join("") + "</ul>";
+    html += "<p><b>AP answer:</b> The liquid with the weakest intermolecular forces has the highest vapor pressure and lowest boiling point. Vapor pressure increases with temperature because more molecules have enough kinetic energy to overcome the attractions; a liquid boils when its vapor pressure equals the external pressure.</p>";
+    return html;
+  }
+  var chipsB = {}, scB = {}, sTb = el("s-tb");
+  function renderB() {
+    var s = SUBS[B.k], p = vp(B.k, B.t);
+    nVap = Math.min(48, Math.round(p / 25));
+    LP.forEach(function (q) { q.el.setAttribute("fill", s.col); });
+    VP.forEach(function (q) { q.el.setAttribute("fill", s.col); });
+    liqRect.setAttribute("fill", s.col);
+    vpText.textContent = "vapor pressure " + torr(p) + " torr" + (p / 25 > 48 ? " (not all dots shown)" : "");
+    sTb.value = B.t;
+    el("o-tb").textContent = B.t + " °C";
+    el("pb-sub").textContent = s.name + " at " + B.t + " °C";
+    Object.keys(chipsB).forEach(function (k) { chipsB[k].setAttribute("aria-pressed", B.k === k ? "true" : "false"); });
+    Object.keys(scB).forEach(function (k) { scB[k].setAttribute("aria-pressed", keyB === k ? "true" : "false"); });
+    drawVP(); drawB();
+    el("rb-p").textContent = torr(p) + " torr";
+    el("rb-p2").textContent = (p / 760).toFixed(3) + " atm" + (p >= 760 ? ": would boil if open at 1 atm" : "");
+    el("rb-bp").textContent = s.bp + " °C";
+    el("rb-imf").textContent = s.imf;
+    el("rb-imf2").textContent = s.imf2;
+    el("rb-rk").textContent = ORDER.map(function (k) { return { k: k, p: vp(k, B.t) }; }).sort(function (a, b) { return b.p - a.p; }).map(function (r) { return SUBS[r.k].name.replace("Diethyl ether", "Ether"); }).join(" > ");
+    el("story-b").innerHTML = storyB();
+  }
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SUBS[k].name;
+    b.addEventListener("click", function () { B.k = k; keyB = null; renderB(); });
+    el("sub-b").appendChild(b); chipsB[k] = b;
+  });
+  var SCB = {
+    room: { name: "Compare at 25 °C: ether", k: "ether", t: 25 },
+    room2: { name: "Compare at 25 °C: water", k: "water", t: 25 },
+    eth: { name: "Ethanol at its boiling point", k: "ethanol", t: 78 },
+    body: { name: "Ether at body temperature (37 °C)", k: "ether", t: 37 },
+    alt: { name: "Water at 95 °C (high altitude)", k: "water", t: 95 }
+  };
+  Object.keys(SCB).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SCB[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { keyB = k; B.k = SCB[k].k; B.t = SCB[k].t; renderB(); });
+    el("sc-b").appendChild(b); scB[k] = b;
+  });
+  sTb.addEventListener("input", function () { B.t = +sTb.value; keyB = null; renderB(); });
+
+  /* ---------- animation loop for both parts ---------- */
+  var visA = true, visB = true, last = null;
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (es) { visA = es[0].isIntersecting; }).observe(svg);
+    new IntersectionObserver(function (es) { visB = es[0].isIntersecting; }).observe(fl);
+  }
+  function loop(t) {
+    if (last != null) {
+      var dt = Math.min(0.04, (t - last) / 1000), n = 3;
+      for (var i = 0; i < n; i++) { clock += dt / n; if (visA) step(dt / n); if (visB) stepB(dt / n); }
+      if (visA) drawA(); if (visB) drawB();
+    }
+    last = t; requestAnimationFrame(loop);
+  }
+  renderA(); settle(400); renderB();
+  if (!Lab.reduceMotion) requestAnimationFrame(loop);
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Which statement best describes the particles in a liquid?",
+      o: ["They vibrate about fixed positions in a regular pattern", "They are in contact with each other but can move past one another", "They are far apart and move independently in straight lines", "They are in contact and arranged in a repeating three-dimensional pattern"], c: 1,
+      w: "Liquid particles touch, which is why a liquid's volume is close to the solid's, but they have enough energy to slide past each other. Choices A and D describe a crystalline solid; choice C describes a gas." },
+    { s: "The molar volumes of a substance as a solid and as a liquid are similar, but its molar volume as a gas is about 1,000 times larger. Which statement explains this?",
+      o: ["Gas particles are much larger than liquid particles", "Molecules break apart into atoms when a liquid boils", "Gas particles have stronger intermolecular forces", "Particles in the solid and liquid are in contact, while particles in a gas are far apart"], c: 3,
+      w: "The particles themselves do not change size or break apart. In condensed phases they touch; in a gas the space between them is vastly larger than the particles. Choice B confuses a physical change with a chemical change." },
+    { s: "At 25 °C the vapor pressures are: diethyl ether 534 torr, ethanol 59 torr, water 24 torr. Which liquid has the strongest intermolecular forces?",
+      o: ["Diethyl ether", "Ethanol", "Water", "All three are equal at the same temperature"], c: 2,
+      w: "The lower the vapor pressure, the fewer molecules can escape, so the stronger the attractions. Water's extensive hydrogen bonding gives the lowest vapor pressure. Choice A reverses the relationship." },
+    { s: "Why does the vapor pressure of a liquid increase as the temperature increases?",
+      o: ["A larger fraction of the molecules have enough kinetic energy to overcome the intermolecular attractions", "The intermolecular forces become weaker as the molecules heat up", "The volume of the liquid increases, so more molecules are at the surface", "Covalent bonds in the molecules break, producing more gas particles"], c: 0,
+      w: "Heating shifts the distribution of kinetic energies so more surface molecules have enough energy to escape, raising the rate of evaporation and the equilibrium vapor pressure. The attractions themselves (choice B) do not change; no covalent bonds break (choice D)." },
+    { s: "A sealed flask contains liquid water in equilibrium with water vapor at 25 °C. More liquid water at 25 °C is injected without changing the temperature. After equilibrium is restored, what is true of the vapor pressure?",
+      o: ["It increases, because there is more liquid to evaporate", "It decreases, because there is less space for the vapor", "It is unchanged, because vapor pressure depends only on the substance and the temperature", "It drops to zero until the new water warms up"], c: 2,
+      w: "Vapor pressure is set by the balance between evaporation and condensation at the surface, which depends on the identity of the liquid and its temperature, not on the amount of liquid or the size of the vapor space. Choice A is the most common trap." },
+    { s: "Ice floats on liquid water. Which particle-level explanation is correct?",
+      o: ["Ice contains air bubbles that make it less dense", "Molecules in ice move faster than molecules in liquid water", "Ice molecules are larger than liquid water molecules", "Hydrogen bonds hold the molecules in ice in an open pattern, so they are farther apart on average than in the liquid"], c: 3,
+      w: "In ice, each molecule is hydrogen-bonded to four neighbors in an open hexagonal pattern. When ice melts, the pattern collapses and the molecules pack more closely, so liquid water is denser. Molecules do not change size (choice C), and ice molecules are slower, not faster (choice B)." },
+    { s: "In a mountain town the air pressure is 630 torr. The vapor pressure of water is 634 torr at 95 °C. What happens to water heated in an open pot there?",
+      o: ["It boils at 100 °C, as at sea level", "It boils at about 95 °C", "It boils at about 105 °C", "It cannot boil until the pressure reaches 760 torr"], c: 1,
+      w: "A liquid boils when its vapor pressure equals the external pressure. The vapor pressure of water reaches about 630 torr near 95 °C, so it boils at that lower temperature. The normal boiling point of 100 °C applies only at 760 torr (choice A)." },
+    { s: "Glass softens gradually over a range of temperatures, while ice melts sharply at 0 °C. Which statement best explains the difference?",
+      o: ["Glass is amorphous, so the attractions between its particles vary in strength; ice is crystalline, so its attractions are uniform", "Glass is a liquid at room temperature", "Ice is held together by covalent bonds, which break at one temperature", "Glass particles do not vibrate"], c: 0,
+      w: "In a crystalline solid every particle sits in an identical environment, so the attractions all give way at one temperature. In an amorphous solid the environments vary, so different regions soften at different temperatures. Melting ice overcomes hydrogen bonds, not covalent bonds (choice C)." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("3.3");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [3], topic: "3.3", compact: true, storageKey: "topic-3.3" });</script>
+</body>
+</html>

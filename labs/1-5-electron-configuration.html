@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atomic Structure and Electron Configuration Study Lab</title>
+<meta name="description" content="Pick any element up to krypton, make ions, and see its electron configuration, orbital diagram, and shell model; then use a Coulomb's law explorer to explain why some electrons are held more tightly than others.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.part { font-size: 1.25rem; margin-top: 6px; }
+.graph-card { align-content: start; }
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 11px; font-size: .86rem; font-family: var(--mono); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.seg button:disabled { opacity: .35; cursor: default; }
+.cfg { font-family: var(--mono); font-size: 1.02rem; line-height: 1.7; background: var(--accent-soft); border-radius: 8px; padding: 8px 12px; overflow-wrap: anywhere; }
+.cfg .k { display: block; font-family: var(--body); font-size: .74rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.orbs { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; }
+.sub { display: grid; gap: 3px; justify-items: center; }
+.sub .bx { display: flex; }
+.sub .bx span { width: 30px; height: 34px; border: 1.5px solid var(--ink); margin-left: -1.5px; display: grid; place-items: center; font-size: 1.05rem; line-height: 1; letter-spacing: -1px; color: var(--accent); font-weight: 600; }
+.sub .bx span:first-child { margin-left: 0; }
+.sub.val .bx span { color: var(--c1); }
+.sub .nm { font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+.stat .sub2 { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+#shell .core { fill: var(--muted); } #shell .val { fill: var(--c1); }
+#shell .ring { fill: none; stroke: var(--rule); stroke-width: 1.5; }
+#shell .nuc { fill: var(--accent); }
+#shell .nuct { fill: var(--surface); font-weight: 600; font-size: 13px; }
+#shell .rl { font-size: 11px; fill: var(--muted); }
+#coul .q { stroke: var(--surface); stroke-width: 2; }
+#coul .qt { fill: var(--surface); font-weight: 600; font-size: 14px; }
+.legend .l-val { color: var(--c1); } .legend .l-core { color: var(--muted); } .legend .l-pos { color: var(--c4); } .legend .l-neg { color: var(--c2); }
+.cstory { border-left-color: var(--c3); }
+.side .controls { grid-template-columns: 1fr; }
+@media (max-width: 520px) { .sub .bx span { width: 24px; height: 30px; font-size: .9rem; } .readout { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 1 · Topic 1.5</span>
+  <h1>Atomic Structure and Electron Configuration Study Lab</h1>
+  <p class="lede">Electrons fill shells and subshells in a predictable order, and Coulomb's law explains why: electrons closer to a more highly charged nucleus are held more tightly. Pick an element or ion to see its configuration three ways, then use the Coulomb's law explorer to reason about attractions the way the AP exam asks.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Configuration builder and Coulomb's law</h2>
+    <p>Part A covers hydrogen through krypton. Orange marks valence electrons (the outermost shell); grey marks core electrons. Part B shows how the force between two charges depends on their charges and distance.</p>
+  </div>
+
+  <h3 class="part">Part A: Electron configuration</h3>
+  <div class="lab">
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Pick an element</div>
+        <div id="pt"></div>
+      </div>
+      <div class="group">
+        <span class="tag" id="ch-lbl">Charge (make an ion)</span>
+        <div class="seg" role="group" aria-labelledby="ch-lbl" id="charges"></div>
+      </div>
+      <div class="cfg" id="cfg-full"></div>
+      <div class="cfg" id="cfg-short"></div>
+    </div>
+    <div class="card graph-card">
+      <h3>Shell model <small id="shell-sub"></small></h3>
+      <svg class="chart" id="shell" role="img" aria-label="Shell model: nucleus with its charge and electrons in shells n = 1 to 4"></svg>
+    </div>
+  </div>
+
+  <div class="card graph-card">
+    <h3>Orbital diagram <small>each box is one orbital; ↑↓ are electrons with opposite spin</small></h3>
+    <div class="orbs" id="orbs" aria-live="polite"></div>
+  </div>
+
+  <div class="card group">
+    <div class="tag">Exam-style cases</div>
+    <div class="scenarios" id="sc"></div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-ad">Nucleus</span><span class="l-val">Outermost-shell (valence) electrons</span><span class="l-core">Core electrons</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Protons / electrons</div><div class="v" id="r-pe"></div><div class="sub2" id="r-pe2"></div></div>
+    <div class="stat"><div class="k">Outermost-shell (valence) electrons</div><div class="v" id="r-v"></div><div class="sub2" id="r-v2"></div></div>
+    <div class="stat"><div class="k">Core electrons</div><div class="v" id="r-c"></div><div class="sub2" id="r-c2"></div></div>
+    <div class="stat"><div class="k">Unpaired electrons</div><div class="v" id="r-u"></div><div class="sub2" id="r-u2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+
+  <h3 class="part">Part B: Coulomb's law explorer</h3>
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Two charged particles <small>F ∝ q₁q₂ / r²</small></h3>
+      <svg class="chart" id="coul" role="img" aria-label="Two charged particles with force arrows and a bar comparing the force with a reference pair"></svg>
+    </div>
+    <div class="card side">
+      <div class="controls">
+        <div class="ctl">
+          <label for="c-q1">Charge q₁ <output id="o-q1"></output></label>
+          <input type="range" id="c-q1" min="-3" max="3" step="1">
+        </div>
+        <div class="ctl">
+          <label for="c-q2">Charge q₂ <output id="o-q2"></output></label>
+          <input type="range" id="c-q2" min="-3" max="3" step="1">
+        </div>
+        <div class="ctl">
+          <label for="c-r">Distance r <output id="o-r"></output></label>
+          <input type="range" id="c-r" min="1" max="4" step="0.25">
+          <span class="hint">In units of the reference distance</span>
+        </div>
+      </div>
+      <div class="group">
+        <div class="tag">Compare</div>
+        <div class="scenarios" id="csc"></div>
+      </div>
+    </div>
+  </div>
+  <div class="lab-bar">
+    <div class="legend"><span class="l-pos">Positive charge</span><span class="l-neg">Negative charge</span><span class="l-ghost">Dashed mark: strength of +1 and −1 at r = 1</span></div>
+  </div>
+  <div class="story cstory" id="c-story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">F ∝ q₁q₂ / r²</span><h3>Coulomb's law</h3><p>The attraction between the nucleus and an electron grows with the nuclear charge and falls quickly with distance. Double the distance and the force drops to one quarter. Opposite charges attract; like charges repel.</p></div>
+    <div class="card"><span class="tag">Aufbau order</span><h3>Filling order</h3><p>Electrons fill the lowest-energy subshells first: 1s 2s 2p 3s 3p 4s 3d 4p. Each s subshell holds 2 electrons, each p holds 6 (3 orbitals), and each d holds 10 (5 orbitals).</p></div>
+    <div class="card"><span class="tag">Pauli and Hund</span><h3>Filling orbitals</h3><p>An orbital holds at most two electrons, with opposite spins (Pauli). In a set of equal-energy orbitals, electrons go in one per orbital before any pair up (Hund), which is why N has three unpaired 2p electrons.</p></div>
+    <div class="card"><span class="tag">Core vs. valence</span><h3>Shielding</h3><p>Core electrons sit closer to the nucleus and shield the outer electrons from part of its charge. Valence electrons are farther away and feel less attraction, so they are the ones involved in bonding and the easiest to remove.</p></div>
+    <div class="card"><span class="tag">4s out first</span><h3>Ions</h3><p>Cations lose electrons from the highest n first, so transition metals lose 4s electrons before 3d: Fe is [Ar] 4s² 3d⁶ and Fe²⁺ is [Ar] 3d⁶. Anions add electrons to the next open subshell: Cl⁻ is [Ar], isoelectronic with argon.</p></div>
+    <div class="card"><span class="tag">Not tested</span><h3>Cr and Cu</h3><p>Chromium ([Ar] 4s¹ 3d⁵) and copper ([Ar] 4s¹ 3d¹⁰) break the Aufbau pattern. The CED says configurations of these exceptions are not assessed on the exam, but it is useful to recognize them.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Configuration cheat sheet</h2>
+    <p>Read configurations straight off the periodic table: the s block is groups 1–2, the p block is groups 13–18, and the d block is groups 3–12, one period behind (3d fills in period 4).</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Species</th><th>Full configuration</th><th>Noble-gas shorthand</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>O</td><td>1s² 2s² 2p⁴</td><td>[He] 2s² 2p⁴</td><td>6 valence electrons; 2 unpaired 2p electrons</td></tr>
+      <tr><td>Na</td><td>1s² 2s² 2p⁶ 3s¹</td><td>[Ne] 3s¹</td><td>1 valence electron, in n = 3, shielded by 10 core electrons</td></tr>
+      <tr><td>Na⁺</td><td>1s² 2s² 2p⁶</td><td>[Ne]</td><td>Lost the 3s electron; isoelectronic with Ne</td></tr>
+      <tr><td>Cl⁻</td><td>1s² 2s² 2p⁶ 3s² 3p⁶</td><td>[Ar]</td><td>Gained one 3p electron; isoelectronic with Ar</td></tr>
+      <tr><td>Ca</td><td>1s² 2s² 2p⁶ 3s² 3p⁶ 4s²</td><td>[Ar] 4s²</td><td>4s fills before 3d</td></tr>
+      <tr><td>Fe</td><td>… 3p⁶ 4s² 3d⁶</td><td>[Ar] 4s² 3d⁶</td><td>4 unpaired 3d electrons</td></tr>
+      <tr><td>Fe³⁺</td><td>… 3p⁶ 3d⁵</td><td>[Ar] 3d⁵</td><td><b>4s electrons leave first</b>, then one 3d</td></tr>
+      <tr><td>Zn²⁺</td><td>… 3p⁶ 3d¹⁰</td><td>[Ar] 3d¹⁰</td><td>Loses both 4s electrons</td></tr>
+      <tr><td>Br</td><td>… 4s² 3d¹⁰ 4p⁵</td><td>[Ar] 4s² 3d¹⁰ 4p⁵</td><td>7 valence electrons (4s² 4p⁵); the 3d¹⁰ is not valence</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Configurations and Coulomb's law on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write the complete configuration when asked for it (1s² 2s² …); use noble-gas shorthand only when the question allows it.</li>
+        <li>For a Coulomb's law explanation, name both factors: the <b>charge</b> (number of protons, or ion charge) and the <b>distance</b> (which shell the electron is in).</li>
+        <li>Compare the two species directly: "Mg has more protons than Na, and its valence electrons are in the same shell (n = 3), so they are attracted more strongly."</li>
+        <li>Mention shielding by core electrons when the electrons being compared are in different shells.</li>
+        <li>For transition-metal cations, show the 4s electrons removed first.</li>
+        <li>Use "isoelectronic" correctly: same number of electrons, same configuration (O²⁻, F⁻, Ne, Na⁺, Mg²⁺).</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Removing 3d electrons before 4s when forming a transition-metal cation.</li>
+        <li>Pairing electrons in a p or d subshell before each orbital has one (breaking Hund's rule).</li>
+        <li>Counting the 3d¹⁰ electrons of Ga–Kr as valence electrons. Valence electrons are in the highest n shell.</li>
+        <li>Saying "the electrons are more stable" or "the atom wants a full octet" instead of using charge and distance.</li>
+        <li>Using only "more shielding" to explain a trend within a period. Across a period the shielding by core electrons stays about the same; the nuclear charge increases.</li>
+        <li>Forgetting that force falls with the square of the distance: doubling r cuts the force to ¼, not ½.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 1.5. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-1.html">Unit 1 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var CAPO = { s: 1, p: 3, d: 5, f: 7 };
+  var COMMON = { 1: [1, -1], 3: [1], 4: [2], 7: [-3], 8: [-2], 9: [-1], 11: [1], 12: [2], 13: [3], 15: [-3], 16: [-2], 17: [-1], 19: [1], 20: [2], 21: [3], 24: [2, 3], 25: [2], 26: [2, 3], 27: [2, 3], 28: [2], 29: [1, 2], 30: [2], 31: [3], 34: [-2], 35: [-1] };
+  var NOBLE = { 2: "He", 10: "Ne", 18: "Ar", 36: "Kr" };
+  var SUPS = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "+": "⁺", "-": "⁻" };
+  function chargeSup(q) { return q === 0 ? "" : ((Math.abs(q) > 1 ? String(Math.abs(q)) : "") + (q > 0 ? "+" : "-")).split("").map(function (c) { return SUPS[c]; }).join(""); }
+  function name(z, q) { return Lab.ELEMENTS[z].s + chargeSup(q); }
+
+  var S = { z: 26, q: 0, key: null };
+  var SC = [
+    { key: "n", name: "Nitrogen: Hund's rule", z: 7, q: 0 },
+    { key: "na", name: "Na and Na⁺", z: 11, q: 1 },
+    { key: "cl", name: "Cl⁻: gains an electron", z: 17, q: -1 },
+    { key: "k", name: "Potassium: 4s before 3d", z: 19, q: 0 },
+    { key: "fe3", name: "Fe³⁺: 4s leaves first", z: 26, q: 3 },
+    { key: "cr", name: "Chromium exception", z: 24, q: 0 },
+    { key: "br", name: "Bromine: valence vs. 3d", z: 35, q: 0 }
+  ];
+
+  function model(s) {
+    var e = Lab.ELEMENTS[s.z], ne = s.z - s.q;
+    var cfg = ne > 0 ? Lab.config(s.z, { charge: s.q }) : [];
+    var shells = {}; cfg.forEach(function (x) { shells[x.n] = (shells[x.n] || 0) + x.e; });
+    var nMax = cfg.reduce(function (a, x) { return Math.max(a, x.n); }, 0);
+    var valence = shells[nMax] || 0;
+    var unpaired = cfg.reduce(function (a, x) { var k = CAPO[x.l]; return a + (x.e <= k ? x.e : 2 * k - x.e); }, 0);
+    var tm = e.g >= 3 && e.g <= 12;
+    var dCount = cfg.filter(function (x) { return x.l === "d"; }).reduce(function (a, x) { return a + x.e; }, 0);
+    return { e: e, ne: ne, cfg: cfg, shells: shells, nMax: nMax, valence: valence, core: ne - valence, unpaired: unpaired, tm: tm, dCount: dCount };
+  }
+
+  // ---------- Orbital diagram ----------
+  function orbHTML(m) {
+    if (!m.cfg.length) return '<p style="color:var(--muted)">No electrons left: H⁺ is a bare proton.</p>';
+    return m.cfg.map(function (x) {
+      var k = CAPO[x.l], boxes = [];
+      for (var i = 0; i < k; i++) { var n = (x.e > i ? 1 : 0) + (x.e > k + i ? 1 : 0); boxes.push("<span>" + (n === 2 ? "↑↓" : n === 1 ? "↑" : "") + "</span>"); }
+      return '<div class="sub' + (x.n === m.nMax ? " val" : "") + '"><div class="bx" aria-label="' + x.n + x.l + " with " + x.e + ' electrons">' + boxes.join("") + '</div><span class="nm">' + x.n + x.l + "<sup>" + x.e + "</sup></span></div>";
+    }).join("");
+  }
+
+  // ---------- Shell model ----------
+  var shellSvg = document.getElementById("shell");
+  function drawShell(m, s) {
+    var W = 360, H = 360, cx = 180, cy = 180;
+    shellSvg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (shellSvg.firstChild) shellSvg.removeChild(shellSvg.firstChild);
+    var g = Lab.el("g", {}, shellSvg);
+    var R = [0, 52, 88, 124, 160];
+    for (var n = 1; n <= 4; n++) {
+      if (!m.shells[n] && n > m.nMax) continue;
+      Lab.el("circle", { cx: cx, cy: cy, r: R[n], "class": "ring" }, g);
+      Lab.el("text", { x: cx + R[n] * 0.71 + 4, y: cy - R[n] * 0.71 - 4, "class": "rl" }, g, "n=" + n);
+    }
+    Lab.el("circle", { cx: cx, cy: cy, r: 26, "class": "nuc" }, g);
+    Lab.el("text", { x: cx, y: cy + 5, "text-anchor": "middle", "class": "nuct" }, g, "+" + s.z);
+    Object.keys(m.shells).forEach(function (k) {
+      var n = +k, cnt = m.shells[n], r = R[n];
+      for (var i = 0; i < cnt; i++) {
+        var a = -Math.PI / 2 + 2 * Math.PI * i / cnt + n * 0.35;
+        Lab.el("circle", { cx: cx + r * Math.cos(a), cy: cy + r * Math.sin(a), r: n === 1 ? 6 : 5.5, "class": n === m.nMax ? "val" : "core", stroke: "var(--surface)", "stroke-width": 1.5 }, g);
+      }
+    });
+  }
+
+  // ---------- Story ----------
+  function li(a) { return "<ul>" + a.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>"; }
+  function story(m, s) {
+    var e = m.e, nm = name(s.z, s.q), L = [], h = "";
+    var noble = NOBLE[m.ne];
+    if (s.q === 0) h += "<p><b>" + e.n + " (Z = " + s.z + ")</b> has " + s.z + " protons and " + s.z + " electrons, filled in Aufbau order. Its last electron goes into " + (m.cfg.length ? m.cfg[m.cfg.length - 1].n + m.cfg[m.cfg.length - 1].l : "") + ", which matches its place in the " + (m.tm ? "d" : e.g <= 2 ? "s" : "p") + " block of period " + e.p + ".</p>";
+    else h += "<p><b>" + nm + "</b> has " + s.z + " protons and " + m.ne + " electrons. " + (s.q > 0 ? "A cation loses electrons from the highest shell (largest n) first." : "An anion adds electrons to the next open orbitals.") + (noble ? " With " + m.ne + " electrons it is <b>isoelectronic with " + noble + "</b>." : "") + "</p>";
+    if (s.q !== 0 && COMMON[s.z] && COMMON[s.z].indexOf(s.q) < 0) L.push(nm + " is not a common ion; " + (COMMON[s.z].length ? "the usual charge" + (COMMON[s.z].length > 1 ? "s are " : " is ") + COMMON[s.z].map(function (q) { return name(s.z, q); }).join(" and ") : "it is shown for practice") + ".");
+    if (s.q !== 0 && !COMMON[s.z]) L.push(e.n + " does not commonly form simple ions in AP problems; this one is shown for practice.");
+    if (s.z === 24 && s.q === 0 || s.z === 29 && s.q === 0) L.push("<b>Exception.</b> The measured configuration is [Ar] 4s¹ 3d" + (s.z === 24 ? "⁵" : "¹⁰") + ", not the Aufbau prediction [Ar] 4s² 3d" + (s.z === 24 ? "⁴" : "⁹") + ". The CED does not assess these exceptions.");
+    if (m.tm && s.q > 0 && m.cfg.every(function (x) { return !(x.n === 4 && x.l === "s"); })) L.push("The 4s electrons left before any 3d electrons, even though 4s filled first. In the ion the 3d electrons are lower in energy than 4s.");
+    if (m.tm && s.q === 0) L.push("The 3d electrons sit in shell n = 3, inside the 4s electrons, so the 4s electrons are the outermost and the first removed.");
+    if (m.unpaired > 0 && m.cfg.some(function (x) { return (x.l === "p" || x.l === "d") && x.e > 1 && x.e < 2 * CAPO[x.l]; })) L.push("Hund's rule: within a p or d subshell, electrons occupy separate orbitals before pairing, giving " + m.unpaired + " unpaired electron" + (m.unpaired > 1 ? "s" : "") + ".");
+    if (m.ne > 0) L.push("Coulomb's law: the " + m.valence + " valence electron" + (m.valence !== 1 ? "s" : "") + " in n = " + m.nMax + " are the farthest from the +" + s.z + " nucleus and are shielded by " + m.core + " core electron" + (m.core !== 1 ? "s" : "") + ", so they feel the weakest attraction and are the easiest to remove. The " + (m.shells[1] || 0) + " electron" + ((m.shells[1] || 0) !== 1 ? "s" : "") + " in n = 1 are closest and most strongly held.");
+    if (s.z >= 31 && s.z <= 36 && s.q <= 0) L.push("The filled 3d¹⁰ subshell is part of the core here: only the " + m.valence + " electrons in n = 4 are valence electrons.");
+    h += li(L);
+    h += "<p><b>AP answer:</b> " + (s.q > 0 && m.tm ? "for a transition-metal cation, remove the 4s electrons before the 3d electrons." : "fill subshells in order of increasing energy (1s 2s 2p 3s 3p 4s 3d 4p), with at most two electrons per orbital and one per orbital before pairing; electrons closer to the nucleus and less shielded are held more strongly (Coulomb's law).") + "</p>";
+    return h;
+  }
+
+  // ---------- Render A ----------
+  var chBtns = [];
+  var PT = Lab.periodicTable(document.getElementById("pt"), { maxZ: 36, selected: S.z, ariaLabel: "Periodic table, hydrogen to krypton", onPick: function (e) { S.z = e.z; S.q = 0; S.key = null; render(); } });
+  [-3, -2, -1, 0, 1, 2, 3].forEach(function (q) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = q > 0 ? "+" + q : q < 0 ? "−" + (-q) : "0";
+    b.setAttribute("aria-label", "charge " + q);
+    b.addEventListener("click", function () { S.q = q; S.key = null; render(); });
+    document.getElementById("charges").appendChild(b); chBtns.push({ b: b, q: q });
+  });
+  function render() {
+    var m = model(S), nm = name(S.z, S.q);
+    PT.select(S.z);
+    chBtns.forEach(function (x) { x.b.setAttribute("aria-pressed", x.q === S.q ? "true" : "false"); x.b.disabled = S.z - x.q < 0 || S.z - x.q > 36; });
+    var full = m.ne > 0 ? Lab.configText(S.z, { charge: S.q }) : "(no electrons)";
+    var short = m.ne > 0 ? Lab.configText(S.z, { charge: S.q, short: true }) : "(no electrons)";
+    document.getElementById("cfg-full").innerHTML = '<span class="k">' + nm + " full configuration</span>" + full;
+    document.getElementById("cfg-short").innerHTML = '<span class="k">Noble-gas shorthand</span>' + short;
+    document.getElementById("orbs").innerHTML = orbHTML(m);
+    document.getElementById("shell-sub").textContent = nm + ": " + Object.keys(m.shells).map(function (k) { return m.shells[k]; }).join(", ") + " by shell";
+    drawShell(m, S);
+    document.getElementById("r-pe").textContent = S.z + " / " + m.ne;
+    document.getElementById("r-pe2").textContent = S.q === 0 ? "neutral atom" : "charge " + (S.q > 0 ? "+" : "−") + Math.abs(S.q);
+    document.getElementById("r-v").textContent = m.ne ? m.valence : "0";
+    document.getElementById("r-v2").textContent = m.ne ? "in n = " + m.nMax + (m.tm && S.q === 0 ? " (plus " + m.dCount + " 3d)" : "") : "";
+    document.getElementById("r-c").textContent = m.core;
+    document.getElementById("r-c2").textContent = "inner shells";
+    document.getElementById("r-u").textContent = m.unpaired;
+    document.getElementById("r-u2").textContent = m.unpaired ? "Hund's rule" : "all paired";
+    SC.forEach(function (x) { x.b.setAttribute("aria-pressed", S.key === x.key ? "true" : "false"); });
+    document.getElementById("story").innerHTML = story(m, S);
+  }
+  SC.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S.z = x.z; S.q = x.q; S.key = x.key; render(); });
+    document.getElementById("sc").appendChild(b); x.b = b;
+  });
+  render();
+
+  // ---------- Part B: Coulomb ----------
+  var C = { q1: 1, q2: -1, r: 1, key: "ref" };
+  var CSC = [
+    { key: "ref", name: "Reference: +1 and −1", q1: 1, q2: -1, r: 1 },
+    { key: "r2", name: "Double the distance", q1: 1, q2: -1, r: 2 },
+    { key: "q2", name: "Double one charge", q1: 2, q2: -1, r: 1 },
+    { key: "mgo", name: "Na⁺Cl⁻ vs. Mg²⁺O²⁻ (charges ×2)", q1: 2, q2: -2, r: 1 },
+    { key: "both", name: "Double charges and distance", q1: 2, q2: -2, r: 2 },
+    { key: "rep", name: "Like charges", q1: 1, q2: 1, r: 1.5 }
+  ];
+  var coul = document.getElementById("coul");
+  function drawCoul() {
+    var nw = coul.getBoundingClientRect().width > 0 && coul.getBoundingClientRect().width < 430;
+    var W = nw ? 340 : 460, H = 190, F = C.q1 * C.q2 / (C.r * C.r), mid = W / 2, k = nw ? 36 : 48;
+    coul.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (coul.firstChild) coul.removeChild(coul.firstChild);
+    var g = Lab.el("g", {}, coul), cy = 52;
+    var x1 = mid - C.r * k, x2 = mid + C.r * k;
+    Lab.el("line", { x1: x1, x2: x2, y1: cy + 46, y2: cy + 46, stroke: "var(--muted)", "stroke-width": 1 }, g);
+    Lab.el("line", { x1: x1, x2: x1, y1: cy + 40, y2: cy + 52, stroke: "var(--muted)" }, g);
+    Lab.el("line", { x1: x2, x2: x2, y1: cy + 40, y2: cy + 52, stroke: "var(--muted)" }, g);
+    Lab.el("text", { x: mid, y: cy + 62, "text-anchor": "middle" }, g, "r = " + C.r);
+    function ball(x, q) {
+      var rr = 14 + Math.abs(q) * 5, col = q > 0 ? "var(--c4)" : q < 0 ? "var(--c2)" : "var(--ghost)";
+      Lab.el("circle", { cx: x, cy: cy, r: rr, fill: col, "class": "q" }, g);
+      Lab.el("text", { x: x, y: cy + 5, "text-anchor": "middle", "class": "qt" }, g, q > 0 ? "+" + q : q < 0 ? "−" + (-q) : "0");
+      return rr;
+    }
+    // arrows (length grows with |F|; square-root scale so small forces stay visible)
+    var L = F === 0 ? 0 : 10 + 30 * Math.sqrt(Math.abs(F));
+    var r1 = 14 + Math.abs(C.q1) * 5, r2 = 14 + Math.abs(C.q2) * 5;
+    function arrow(xa, dir, len) {
+      var xb = xa + dir * len, col = "var(--ink)";
+      Lab.el("path", { d: "M" + xa + " " + cy + " L" + (xb - dir * 6) + " " + cy, stroke: col, "stroke-width": 3 }, g);
+      Lab.el("path", { d: "M" + xb + " " + cy + " L" + (xb - dir * 10) + " " + (cy - 6) + " L" + (xb - dir * 10) + " " + (cy + 6) + " Z", fill: col }, g);
+    }
+    if (F < 0) { var len = Math.min(L, (x2 - x1) / 2 - Math.max(r1, r2) - 4); if (len > 12) { arrow(x1 + r1, 1, len); arrow(x2 - r2, -1, len); } }
+    else if (F > 0) { arrow(x1 - r1, -1, Math.min(L, x1 - r1 - 6)); arrow(x2 + r2, 1, Math.min(L, W - x2 - r2 - 6)); }
+    ball(x1, C.q1); ball(x2, C.q2);
+    // force meter
+    var mx0 = 20, mx1 = W - 20, my = 150, maxF = 9;
+    Lab.el("text", { x: mx0, y: my - 14 }, g, "Force compared with the reference (scale 0 to 9×)");
+    Lab.el("rect", { x: mx0, y: my - 8, width: mx1 - mx0, height: 16, rx: 4, fill: "var(--grid)" }, g);
+    Lab.el("rect", { x: mx0, y: my - 8, width: (mx1 - mx0) * Math.min(Math.abs(F), maxF) / maxF, height: 16, rx: 4, fill: F < 0 ? "var(--accent)" : F > 0 ? "var(--bad)" : "var(--ghost)" }, g);
+    var rx = mx0 + (mx1 - mx0) / maxF;
+    Lab.el("line", { x1: rx, x2: rx, y1: my - 12, y2: my + 12, stroke: "var(--ink)", "stroke-width": 2, "stroke-dasharray": "3 2" }, g);
+    Lab.el("text", { x: rx, y: my + 24, "text-anchor": "middle" }, g, "reference = 1");
+    Lab.el("text", { x: mx1, y: my + 24, "text-anchor": "end", style: "fill:var(--ink); font-weight:600" }, g, (Math.abs(F) < 0.01 ? "0" : Lab.fmt(Math.abs(F), Math.abs(F) < 1 ? 3 : 2)) + "× " + (F < 0 ? "attraction" : F > 0 ? "repulsion" : ""));
+    return F;
+  }
+  function frac(v) {
+    var fr = [[1, 16], [1, 9], [1, 4], [4, 9], [9, 16], [1, 2], [16, 9], [9, 4], [4, 1]];
+    for (var i = 0; i < fr.length; i++) if (Math.abs(v - fr[i][0] / fr[i][1]) < 1e-6 && fr[i][1] !== 1) return fr[i][0] + "/" + fr[i][1];
+    return Lab.fmt(v, v < 1 ? 3 : 2).replace(/\.?0+$/, "");
+  }
+  function cStory(F) {
+    var sc = CSC.filter(function (x) { return x.key === C.key; })[0], L = [], h = "";
+    var mag = Math.abs(F);
+    function sg(v) { return v < 0 ? "−" + (-v) : String(v); }
+    h += "<p><b>" + (sc ? sc.name : "Your charges") + ".</b> q₁q₂ / r² = (" + sg(C.q1) + ")(" + sg(C.q2) + ") / (" + C.r + ")² = " + (F === 0 ? "0" : (F < 0 ? "−" : "") + frac(mag)) + ". The reference pair gives −1, so this force is " + (F === 0 ? "zero" : Math.abs(mag - 1) < 1e-9 ? "exactly as strong as the reference" : frac(mag) + " times as strong as the reference") + ". " + (F < 0 ? "The negative sign means the charges are opposite, so they <b>attract</b>." : F > 0 ? "The positive sign means like charges, so they <b>repel</b>." : "A neutral particle feels no Coulomb force.") + "</p>";
+    if (C.key === "r2") L.push("Doubling the distance divides the force by 2² = 4. This is why an electron in a higher shell (farther out) is held much less tightly.");
+    if (C.key === "q2") L.push("Doubling one charge doubles the force. A nucleus with more protons pulls harder on electrons at the same distance.");
+    if (C.key === "mgo") L.push("Mg²⁺ and O²⁻ have charges twice as large as Na⁺ and Cl⁻, so at the same distance the attraction is 2 × 2 = 4 times stronger. (The real Mg–O distance is also shorter, which makes it stronger still.) This is why MgO has a much higher melting point than NaCl.");
+    if (C.key === "both") L.push("The charges multiply the force by 4 and the doubled distance divides it by 4, so the force is unchanged. Always check both factors.");
+    if (C.key === "rep") L.push("Electron–electron repulsion is also a Coulomb force. It is one reason paired electrons in the same orbital are a little easier to remove.");
+    L.push("For an atom: q₁ is the nuclear charge (number of protons) and q₂ is an electron (−1). More protons → stronger attraction; larger distance (higher n) → weaker attraction; core electrons shield part of the nuclear charge.");
+    h += li(L) + "<p><b>AP answer:</b> justify with both factors in Coulomb's law: greater charge magnitudes increase the attraction, and greater distance decreases it.</p>";
+    return h;
+  }
+  var cIn = { q1: document.getElementById("c-q1"), q2: document.getElementById("c-q2"), r: document.getElementById("c-r") };
+  var cBtns = {};
+  function renderC() {
+    var F = drawCoul();
+    cIn.q1.value = C.q1; cIn.q2.value = C.q2; cIn.r.value = C.r;
+    document.getElementById("o-q1").textContent = C.q1 > 0 ? "+" + C.q1 : C.q1 < 0 ? "−" + (-C.q1) : "0";
+    document.getElementById("o-q2").textContent = C.q2 > 0 ? "+" + C.q2 : C.q2 < 0 ? "−" + (-C.q2) : "0";
+    document.getElementById("o-r").textContent = C.r.toFixed(2);
+    Object.keys(cBtns).forEach(function (k) { cBtns[k].setAttribute("aria-pressed", C.key === k ? "true" : "false"); });
+    document.getElementById("c-story").innerHTML = cStory(F);
+  }
+  CSC.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { C = { q1: x.q1, q2: x.q2, r: x.r, key: x.key }; renderC(); });
+    document.getElementById("csc").appendChild(b); cBtns[x.key] = b;
+  });
+  ["q1", "q2", "r"].forEach(function (k) { cIn[k].addEventListener("input", function () { C[k] = parseFloat(cIn[k].value); C.key = null; renderC(); }); });
+  renderC();
+  var wasN = null;
+  window.addEventListener("resize", function () { var n = coul.getBoundingClientRect().width < 430; if (n !== wasN) { wasN = n; renderC(); } });
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Which of the following is the ground-state electron configuration of a sulfur atom?",
+      o: ["1s² 2s² 2p⁶ 3s² 3p⁶", "1s² 2s² 2p⁶ 3s² 3p⁴", "1s² 2s² 2p⁶ 3s² 3p² 4s²", "1s² 2s² 2p⁶ 3p⁶"], c: 1,
+      w: "Sulfur has 16 electrons: 2 + 2 + 6 + 2 + 4 = 16. Choice A has 18 electrons, which is S²⁻ (or Ar). Choice C puts electrons in 4s before 3p is full, and choice D skips the 3s subshell." },
+    { s: "Which is the electron configuration of the Fe²⁺ ion?",
+      o: ["[Ar] 4s² 3d⁴", "[Ar] 4s² 3d⁶", "[Ar] 4s¹ 3d⁵", "[Ar] 3d⁶"], c: 3,
+      w: "Fe is [Ar] 4s² 3d⁶. A cation loses electrons from the highest n first, so both 4s electrons go: [Ar] 3d⁶. Choice A removes 3d electrons instead, the most common trap. Choice B is the neutral atom." },
+    { s: "Which species is isoelectronic with a neon atom?",
+      o: ["Na", "Cl⁻", "Mg²⁺", "K⁺"], c: 2,
+      w: "Ne has 10 electrons. Mg has 12 electrons, so Mg²⁺ has 10, with the configuration 1s² 2s² 2p⁶. Na has 11, Cl⁻ has 18, and K⁺ has 18 (isoelectronic with Ar)." },
+    { s: "More energy is needed to remove a 1s electron from a sodium atom than to remove its 3s electron. Which statement best explains this using Coulomb's law?",
+      o: ["The 1s electron is closer to the nucleus and is not shielded by other electrons, so it is attracted more strongly.", "The 1s electron has a greater charge than the 3s electron.", "The 3s electron is attracted by more protons than the 1s electron.", "The 1s subshell is full, and full subshells are stable."], c: 0,
+      w: "Both electrons feel the same 11 protons, and all electrons have the same charge, so choices B and C are wrong. The difference is distance and shielding: the 1s electron is much closer to the nucleus and has no inner electrons shielding it. Choice D names no force and earns no credit on an FRQ." },
+    { s: "How many unpaired electrons does a ground-state nitrogen atom have?",
+      o: ["0", "1", "5", "3"], c: 3,
+      w: "N is 1s² 2s² 2p³. By Hund's rule the three 2p electrons occupy separate p orbitals with parallel spins, giving 3 unpaired electrons. Choice C counts all 5 valence electrons, but the two 2s electrons are paired." },
+    { s: "The charge on each of two ions is doubled, and the distance between them is also doubled. How does the force of attraction between them change?",
+      o: ["It becomes 4 times larger.", "It stays the same.", "It becomes 2 times larger.", "It becomes 16 times larger."], c: 1,
+      w: "F ∝ q₁q₂/r². Doubling both charges multiplies the numerator by 2 × 2 = 4. Doubling the distance multiplies the denominator by 2² = 4. The net change is 4/4 = 1, so the force is unchanged." },
+    { s: "An atom in its ground state has the valence configuration 3s² 3p³. Which element is it?",
+      o: ["Aluminum", "Silicon", "Sulfur", "Phosphorus"], c: 3,
+      w: "Five electrons in n = 3 (3s² 3p³) puts the element in period 3, group 15: phosphorus. Nitrogen is also in group 15, but its valence electrons are 2s² 2p³. Silicon is 3s² 3p² and sulfur is 3s² 3p⁴." },
+    { s: "Which statement about a potassium atom is correct?",
+      o: ["Its valence electron is in a 3d orbital, because 3d is lower in energy than 4s.", "It has 19 valence electrons.", "Its 4s electron is farther from the nucleus and more shielded than its 3p electrons, so the 4s electron is the easiest to remove.", "Its 4s electron and 3p electrons experience equal attraction to the nucleus."], c: 2,
+      w: "K is [Ar] 4s¹. The 4s electron is in the highest shell, farthest from the nucleus and shielded by 18 core electrons, so it is held most weakly. For K the 4s subshell fills before 3d, so choice A is wrong, and only 1 of its 19 electrons is a valence electron." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("1.5");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [1], topic: "1.5", compact: true, storageKey: "topic-1.5" });</script>
+</body>
+</html>

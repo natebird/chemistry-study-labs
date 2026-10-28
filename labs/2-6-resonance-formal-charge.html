@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resonance and Formal Charge Study Lab</title>
+<meta name="description" content="Flip between resonance structures of ozone, nitrate, carbonate, and benzene and see the resonance hybrid they average to, then use a live formal-charge calculator to pick the best Lewis diagram for CO2, OCN-, and N2O and see where the Lewis model breaks down.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.how { font-size: .86rem; color: var(--muted); }
+svg .hit { cursor: pointer; outline: none; }
+svg .hit-b { stroke: var(--accent); stroke-opacity: 0; }
+svg .hit-a { fill: var(--accent); fill-opacity: 0; }
+svg .hit-b:hover, svg .hit-b:focus-visible { stroke-opacity: .18; }
+svg .hit-a:hover, svg .hit-a:focus-visible { fill-opacity: .14; }
+.fct { width: 100%; min-width: 0; border-collapse: collapse; font-size: .86rem; border: 0; }
+.fct th, .fct td { padding: 4px 6px; text-align: center; border-bottom: 1px dashed var(--rule); font-variant-numeric: tabular-nums; }
+.fct th { background: none; font-size: .7rem; }
+.fct td:first-child, .fct th:first-child { text-align: left; }
+.fct td.pos { color: var(--accent); font-weight: 600; } .fct td.neg { color: var(--c4); font-weight: 600; }
+.fct tr:last-child td { border-bottom: 0; }
+.legend .l-pos { color: var(--accent); } .legend .l-neg { color: var(--c4); } .legend .l-bad { color: var(--bad); }
+.legend .l-part::before { background: none; border-top: 2px dashed currentColor; height: 0; }
+.legend .l-part { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 2 · Topic 2.6</span>
+  <h1>Resonance and Formal Charge Study Lab</h1>
+  <p class="lede">Sometimes one Lewis diagram is not enough. When several equivalent diagrams fit, the real particle is a blend of them, a resonance hybrid. When several different diagrams fit, formal charge picks the best one. Flip through resonance structures, see the hybrid, and check every formal charge with a live calculator.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Resonance and formal charge explorer</h2>
+    <p>Choose a species, then switch between its structures. Every diagram is editable: <b>click a bond</b> to change its order and <b>click an atom</b> to add a lone pair. The formal-charge table updates with every change. Formal charge = valence electrons − nonbonding electrons − ½ bonding electrons.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3><span id="sp-title"></span> <small id="sp-sub"></small></h3>
+      <svg class="chart" id="lewis" role="group" aria-label="Lewis diagram with formal charges. Bonds and atoms are buttons."></svg>
+      <div class="seg" role="group" aria-label="Which structure to show" id="tabs"></div>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Equivalent resonance structures</div>
+        <div class="scenarios" id="g-res"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Pick the best structure</div>
+        <div class="scenarios" id="g-best"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Where the model breaks</div>
+        <div class="scenarios" id="g-lim"></div>
+      </div>
+      <div class="group">
+        <div class="tag" id="fc-tag">Formal charge calculator</div>
+        <table class="fct" id="fct"></table>
+      </div>
+      <span class="how">Edits change the diagram on the left. Pick a structure tab to go back to a stored structure.</span>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-pos">Positive formal charge</span><span class="l-neg">Negative formal charge</span><span class="l-part">Partial bond (hybrid)</span><span class="l-bad">Atom without a correct electron count</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Valence electrons</div><div class="v" id="r-tot"></div><div class="sub" id="r-tot2"></div></div>
+    <div class="stat"><div class="k">Sum of formal charges</div><div class="v" id="r-sum"></div><div class="sub" id="r-sum2"></div></div>
+    <div class="stat"><div class="k">Total |formal charge|</div><div class="v" id="r-abs"></div><div class="sub" id="r-abs2"></div></div>
+    <div class="stat"><div class="k">Verdict</div><div class="v" id="r-v"></div><div class="sub" id="r-v2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Resonance</span><h3>One particle, several diagrams</h3><p>When two or more Lewis diagrams differ only in where the electrons (multiple bonds and lone pairs) are placed, and the atoms stay in the same positions, they are resonance structures. Draw them all with double-headed arrows (↔) between them.</p></div>
+    <div class="card"><span class="tag">Hybrid</span><h3>The real structure is an average</h3><p>The molecule does not flip between the structures. Its electrons are delocalized, so the actual structure is a single resonance hybrid. In NO<sub>3</sub><sup>−</sup> all three N–O bonds are identical, with a bond order of 1⅓ and a length between a single and a double bond.</p></div>
+    <div class="card"><span class="tag">Bookkeeping</span><h3>Formal charge</h3><p>Formal charge = (valence electrons) − (nonbonding electrons) − ½(bonding electrons). It assigns each atom all of its lone-pair electrons and half of its shared ones. The formal charges always add up to the charge of the species.</p></div>
+    <div class="card"><span class="tag">Choosing</span><h3>Rules for the best diagram</h3><p>Prefer the diagram whose formal charges are closest to zero (smallest total |FC|). If some negative formal charge is needed, it should be on the more electronegative atom. Avoid like charges on neighboring atoms.</p></div>
+    <div class="card"><span class="tag">Skeletons</span><h3>Formal charge picks atom arrangements too</h3><p>N<sub>2</sub>O is N–N–O, not N–O–N. The N–O–N arrangement forces a +2 formal charge onto oxygen, the most electronegative atom, so it is a poor model. Formal charge helps decide both bonding and connectivity.</p></div>
+    <div class="card"><span class="tag">Limits</span><h3>Where Lewis diagrams fail</h3><p>Lewis diagrams are a model. They cannot give every atom an octet when the total number of valence electrons is odd (NO, NO<sub>2</sub>), and a single diagram cannot show delocalized electrons; that takes resonance.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Resonance and formal charge cheat sheet</h2>
+    <p>Average bond order = (total bonds between the central atom and the equivalent outer atoms) ÷ (number of those bonds). Bond lengths shown are typical experimental values.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Species</th><th>Resonance structures</th><th>Average bond order</th><th>Formal charges in the hybrid</th><th>What it predicts</th></tr></thead>
+    <tbody>
+      <tr><td><b>O<sub>3</sub></b></td><td>2 equivalent</td><td>O–O: 1½</td><td>Center +1, each end −½</td><td>Both O–O bonds 128 pm, between O–O (148) and O=O (121)</td></tr>
+      <tr><td><b>NO<sub>2</sub><sup>−</sup></b></td><td>2 equivalent</td><td>N–O: 1½</td><td>N 0, each O −½</td><td>Two identical N–O bonds</td></tr>
+      <tr><td><b>NO<sub>3</sub><sup>−</sup></b></td><td>3 equivalent</td><td>N–O: 1⅓</td><td>N +1, each O −⅔</td><td>Three identical N–O bonds; trigonal planar</td></tr>
+      <tr><td><b>CO<sub>3</sub><sup>2−</sup></b></td><td>3 equivalent</td><td>C–O: 1⅓</td><td>C 0, each O −⅔</td><td>Three identical C–O bonds</td></tr>
+      <tr><td><b>C<sub>6</sub>H<sub>6</sub></b> (benzene)</td><td>2 equivalent</td><td>C–C: 1½</td><td>All 0</td><td>Six identical C–C bonds of about 140 pm, between C–C (154) and C=C (134)</td></tr>
+      <tr><td><b>OCN<sup>−</sup></b></td><td>3 nonequivalent</td><td>—</td><td>Best: [O–C≡N]<sup>−</sup> with −1 on O</td><td>Negative charge on the most electronegative atom</td></tr>
+      <tr><td><b>N<sub>2</sub>O</b></td><td>3 nonequivalent (N–N–O)</td><td>—</td><td>Best: N≡N–O with −1 on O</td><td>N–O–N would need +2 on O, so the skeleton is N–N–O</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Writing it on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>When asked for "all resonance structures," draw each one completely, with every lone pair, connected by double-headed arrows.</li>
+        <li>Show the formal charge calculation for the atom in question: valence − nonbonding − ½ bonding, with numbers.</li>
+        <li>Justify the best structure with formal charge: "all formal charges are zero" or "the −1 formal charge is on O, the most electronegative atom."</li>
+        <li>Use resonance to explain equal bond lengths: "the electrons are delocalized, so all three bonds are identical and intermediate between single and double."</li>
+        <li>State the average bond order as a fraction (1⅓ for NO<sub>3</sub><sup>−</sup>, 1½ for O<sub>3</sub>).</li>
+        <li>Check that the formal charges add up to the overall charge.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying the molecule switches back and forth between resonance structures. It is always the hybrid.</li>
+        <li>Moving atoms between "resonance structures." If the atoms move, the diagrams are different molecules (isomers), not resonance structures.</li>
+        <li>Predicting one short double bond and two long single bonds in NO<sub>3</sub><sup>−</sup>. All three bonds have the same length.</li>
+        <li>Counting all the bonding electrons instead of half when calculating formal charge.</li>
+        <li>Confusing formal charge with oxidation number. Formal charge splits bonding electrons evenly; oxidation number gives them all to the more electronegative atom.</li>
+        <li>Choosing a structure with a negative formal charge on the less electronegative atom when a structure with it on the more electronegative atom exists.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 2.6. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-2.html">Unit 2 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = Lab.el;
+
+  // ================= Lewis engine (inline; same engine as the 2.5 lab, plus unpaired electrons) =================
+  var VAL = { H: 1, Be: 2, B: 3, C: 4, N: 5, O: 6, F: 7, Si: 4, P: 5, S: 6, Cl: 7, Br: 7, I: 7, Xe: 8 };
+  var PER = { H: 1, Be: 2, B: 2, C: 2, N: 2, O: 2, F: 2, Si: 3, P: 3, S: 3, Cl: 3, Br: 4, I: 5, Xe: 5 };
+  var EN = { H: 2.20, Be: 1.57, B: 2.04, C: 2.55, N: 3.04, O: 3.44, F: 3.98, Si: 1.90, P: 2.19, S: 2.58, Cl: 3.16, Br: 2.96, I: 2.66, Xe: 2.60 };
+  function totalE(m) { return m.atoms.reduce(function (t, a) { return t + VAL[a.s]; }, 0) - (m.charge || 0); }
+  function bondSum(m, st, i) { var t = 0; m.bonds.forEach(function (b, k) { if (b[0] === i || b[1] === i) t += st.o[k]; }); return t; }
+  function degree(m, i) { return m.bonds.filter(function (b) { return b[0] === i || b[1] === i; }).length; }
+  function nbrs(m, i) { var r = []; m.bonds.forEach(function (b, k) { if (b[0] === i) r.push({ j: b[1], k: k }); else if (b[1] === i) r.push({ j: b[0], k: k }); }); return r; }
+  function countE(m, st, i) { return 2 * bondSum(m, st, i) + 2 * st.lp[i] + (st.rad ? st.rad[i] : 0); }
+  function fc(m, st, i) { return VAL[m.atoms[i].s] - 2 * st.lp[i] - (st.rad ? st.rad[i] : 0) - bondSum(m, st, i); }
+  function maxLP(m, i) { var s = m.atoms[i].s; return s === "H" ? 0 : PER[s] >= 3 ? 4 : 3; }
+  function analyze(m, st) {
+    var tot = totalE(m), used = 0, info = [], nOk = 0, sumAbs = 0, sumFc = 0;
+    st.o.forEach(function (o) { used += 2 * o; });
+    st.lp.forEach(function (l) { used += 2 * l; });
+    if (st.rad) st.rad.forEach(function (r) { used += r; });
+    m.atoms.forEach(function (a, i) {
+      var c = countE(m, st, i), f = fc(m, st, i), ok = true, note = "";
+      if (a.s === "H") { ok = c === 2; if (!ok) note = "H must have exactly 2 electrons (one single bond, no lone pairs)"; }
+      else if (a.s === "B" || a.s === "Be") { ok = c <= 8 && c >= (a.s === "B" ? 6 : 4); note = !ok ? a.s + " has " + c + " electrons" : c < 8 ? "incomplete octet (" + c + " electrons), allowed for " + a.s : ""; }
+      else if (PER[a.s] === 2) { ok = c === 8; if (c < 8) note = a.s + " has only " + c + " electrons; it needs 8"; if (c > 8) note = a.s + " has " + c + " electrons; period 2 atoms cannot exceed 8"; }
+      else { ok = c >= 8 && c <= 12; note = c < 8 ? a.s + " has only " + c + " electrons; it needs at least 8" : c > 12 ? a.s + " has " + c + " electrons, too many" : c > 8 ? "expanded octet (" + c + " electrons), allowed for period " + PER[a.s] : ""; }
+      if (ok) nOk++;
+      sumAbs += Math.abs(f); sumFc += f;
+      info.push({ c: c, fc: f, ok: ok, note: note });
+    });
+    return { tot: tot, used: used, info: info, nOk: nOk, sumAbs: sumAbs, sumFc: sumFc, valid: used === tot && nOk === m.atoms.length };
+  }
+  function cloneSt(st) { return { o: st.o.slice(), lp: st.lp.slice(), rad: st.rad ? st.rad.slice() : null }; }
+  /* The textbook procedure, recorded one step at a time. */
+  function solve(m) {
+    var n = m.atoms.length, steps = [], tot = totalE(m);
+    var st = { o: m.bonds.map(function () { return 0; }), lp: m.atoms.map(function () { return 0; }) };
+    var parts = m.atoms.map(function (a) { return a.s + " " + VAL[a.s]; });
+    var sumV = m.atoms.reduce(function (t, a) { return t + VAL[a.s]; }, 0);
+    steps.push({ st: cloneSt(st), t: "Count the valence electrons", d: "Add up the valence electrons: " + groupCounts(m) + " = " + sumV + (m.charge ? (m.charge < 0 ? ", plus " + (-m.charge) + " for the " + m.charge + " charge" : ", minus " + m.charge + " for the +" + m.charge + " charge") + " = " + tot : "") + ". The finished diagram must contain exactly <b>" + tot + "</b> electrons." });
+    st.o = st.o.map(function () { return 1; });
+    var left = tot - 2 * m.bonds.length;
+    steps.push({ st: cloneSt(st), t: "Connect the atoms with single bonds", d: "Draw " + m.bonds.length + " single bond" + (m.bonds.length > 1 ? "s" : "") + " (" + 2 * m.bonds.length + " electrons). " + left + " electrons are left to place." + (m.center != null ? " " + m.atoms[m.center].s + " goes in the center because " + centerWhy(m) + "." : "") });
+    var term = [], cen = [];
+    for (var i = 0; i < n; i++) { if (m.atoms[i].s === "H") continue; if (degree(m, i) === 1) term.push(i); else cen.push(i); }
+    term.sort(function (a, b) { return EN[m.atoms[b].s] - EN[m.atoms[a].s]; });
+    if (term.length) {
+      var placed = 0;
+      term.forEach(function (i) { while (countE(m, st, i) < 8 && left >= 2) { st.lp[i]++; left -= 2; placed += 2; } });
+      if (placed) steps.push({ st: cloneSt(st), t: "Complete the octets of the outer atoms", d: "Add lone pairs to the terminal atoms until each has 8 electrons (H already has its 2). That uses " + placed + " electrons; " + left + " remain." });
+    }
+    if (left > 0) {
+      var placed2 = 0, pool = cen.length ? cen : m.atoms.map(function (a, k) { return k; }).filter(function (k) { return m.atoms[k].s !== "H"; });
+      while (left >= 2) {
+        var best = null;
+        pool.forEach(function (i) { var c = countE(m, st, i); if (c < 8 && (best == null || c < countE(m, st, best))) best = i; });
+        if (best == null) pool.forEach(function (i) { if (best == null && PER[m.atoms[i].s] >= 3) best = i; });
+        if (best == null) best = pool[0];
+        st.lp[best]++; left -= 2; placed2 += 2;
+      }
+      var who = {}; pool.forEach(function (i) { if (st.lp[i]) who[m.atoms[i].s] = 1; });
+      steps.push({ st: cloneSt(st), t: "Put the leftover electrons on the central atom", d: "The remaining " + placed2 + " electrons go on " + (cen.length > 1 ? "the inner atoms" : "the central atom") + " as lone pairs." + (cen.some(function (i) { return countE(m, st, i) > 8; }) ? " That gives the central atom <b>more than 8</b> electrons, which is allowed because it is in period 3 or below (expanded octet)." : "") });
+    } else steps.push({ st: cloneSt(st), t: "Check the central atom", d: "No electrons are left over for the central atom." });
+    var guard = 0, made = 0;
+    while (guard++ < 12) {
+      var needy = null;
+      for (var a = 0; a < n; a++) { var s = m.atoms[a].s; if (s === "H" || s === "B" || s === "Be") continue; if (countE(m, st, a) < 8) { needy = a; break; } }
+      if (needy == null) break;
+      var cand = nbrs(m, needy).filter(function (x) { return m.atoms[x.j].s !== "H" && st.lp[x.j] > 0; });
+      if (!cand.length) break;
+      cand.sort(function (p, q) { return (st.lp[q.j] - st.lp[p.j]) || (EN[m.atoms[p.j].s] - EN[m.atoms[q.j].s]); });
+      var c0 = cand[0];
+      st.lp[c0.j]--; st.o[c0.k]++; made++;
+      var oname = ["", "single", "double", "triple"][st.o[c0.k]];
+      steps.push({ st: cloneSt(st), t: "Make a multiple bond", d: m.atoms[needy].s + " has only " + (countE(m, st, needy) - 2) + " electrons, so move one lone pair from " + m.atoms[c0.j].s + " into the bond between them. It becomes a <b>" + oname + " bond</b>. The total number of electrons does not change." });
+    }
+    var hasB = m.atoms.some(function (a, k) { return (a.s === "B" || a.s === "Be") && countE(m, st, k) < 8; });
+    var fin = analyze(m, st);
+    steps.push({ st: cloneSt(st), t: "Check the finished diagram", d: "Electrons used: " + fin.used + " of " + fin.tot + ". " + (hasB ? "Boron keeps an incomplete octet of 6: forming a double bond to B would put a + formal charge on the more electronegative F. " : "") + "Every atom has the right count" + (made === 0 && !hasB ? ", with no multiple bonds needed" : "") + "." });
+    return steps;
+  }
+  function groupCounts(m) {
+    var c = {}, order = [];
+    m.atoms.forEach(function (a) { if (!c[a.s]) { c[a.s] = 0; order.push(a.s); } c[a.s]++; });
+    return order.map(function (s) { return (c[s] > 1 ? c[s] + " " + s + " × " + VAL[s] : s + " " + VAL[s]); }).join(" + ");
+  }
+  function centerWhy(m) {
+    var s = m.atoms[m.center].s;
+    var others = m.atoms.filter(function (a, k) { return k !== m.center && a.s !== "H"; }).map(function (a) { return a.s; });
+    if (!others.length) return "H can form only one bond and must be on the outside";
+    if (others.every(function (o) { return o === s; })) return "it is the atom bonded to both of the others";
+    var lower = others.every(function (o) { return EN[s] <= EN[o]; });
+    return lower ? "it is the least electronegative atom other than H" : "it can form the most bonds";
+  }
+  /* Drawing. Lone pairs go in the directions farthest from bonds and other lone pairs. */
+  var CH = { "-": "−" };
+  function drawLewis(svg, m, st, opts) {
+    var W = 440, H = 300;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var A = m.atoms, info = opts.info;
+    // bonds
+    m.bonds.forEach(function (b, k) {
+      var p = A[b[0]], q = A[b[1]], dx = q.x - p.x, dy = q.y - p.y, L = Math.sqrt(dx * dx + dy * dy), ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
+      var o = st.o[k], offs = o === 1 ? [0] : o === 2 ? [-4, 4] : o === 3 ? [-6.5, 0, 6.5] : [];
+      var x1 = p.x + ux * 15, y1 = p.y + uy * 15, x2 = q.x - ux * 15, y2 = q.y - uy * 15;
+      if (o === 0) el("line", { x1: x1, y1: y1, x2: x2, y2: y2, stroke: "var(--ghost)", "stroke-width": 1.5, "stroke-dasharray": "3 4" }, svg);
+      offs.forEach(function (d) { el("line", { x1: x1 + nx * d, y1: y1 + ny * d, x2: x2 + nx * d, y2: y2 + ny * d, stroke: "var(--ink)", "stroke-width": 2.4, "stroke-linecap": "round" }, svg); });
+      if (opts.hybridPartial && opts.hybridPartial[k]) {
+        var d2 = 4;
+        el("line", { x1: x1 + nx * d2, y1: y1 + ny * d2, x2: x2 + nx * d2, y2: y2 + ny * d2, stroke: "var(--ink)", "stroke-width": 2.2, "stroke-dasharray": "4 4" }, svg);
+      }
+      if (opts.editable && !(p.s === "H" || q.s === "H")) {
+        var h = el("line", { x1: x1, y1: y1, x2: x2, y2: y2, "class": "hit hit-b", "stroke-width": 20, "pointer-events": "stroke", tabindex: 0, role: "button", "aria-label": p.s + "–" + q.s + " bond, " + ["no", "single", "double", "triple"][o] + " bond. Activate to change." }, svg);
+        h.addEventListener("click", function () { opts.onBond(k); });
+        h.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); opts.onBond(k); } });
+      }
+    });
+    // atoms, lone pairs, formal charges
+    A.forEach(function (a, i) {
+      var dirs = nbrs(m, i).map(function (x) { return Math.atan2(A[x.j].y - a.y, A[x.j].x - a.x); });
+      var taken = dirs.slice(), lpDirs = [];
+      var nl = opts.hideLP ? 0 : st.lp[i];
+      for (var l = 0; l < nl; l++) {
+        var best = null, bestD = -1;
+        for (var c = 0; c < 16; c++) {
+          var ang = -Math.PI / 2 + c * Math.PI / 8, dmin = 9;
+          taken.forEach(function (t) { var d = Math.abs(Math.atan2(Math.sin(ang - t), Math.cos(ang - t))); if (d < dmin) dmin = d; });
+          if (dmin > bestD + 1e-6) { bestD = dmin; best = ang; }
+        }
+        taken.push(best); lpDirs.push(best);
+      }
+      var radDirs = [];
+      for (var rr = 0; rr < (st.rad ? st.rad[i] : 0); rr++) {
+        var bestR = null, bestRD = -1;
+        for (var cr = 0; cr < 16; cr++) {
+          var angR = -Math.PI / 2 + cr * Math.PI / 8, dR = 9;
+          taken.forEach(function (t) { var d = Math.abs(Math.atan2(Math.sin(angR - t), Math.cos(angR - t))); if (d < dR) dR = d; });
+          if (dR > bestRD + 1e-6) { bestRD = dR; bestR = angR; }
+        }
+        taken.push(bestR); radDirs.push(bestR);
+      }
+      radDirs.forEach(function (ang) { el("circle", { cx: a.x + Math.cos(ang) * 19, cy: a.y + Math.sin(ang) * 19, r: 2.8, fill: "var(--c1)" }, svg); });
+      var bad = info && !info[i].ok;
+      if (bad) el("circle", { cx: a.x, cy: a.y, r: 17, fill: "var(--bad)", "fill-opacity": 0.12, stroke: "var(--bad)", "stroke-width": 1.5 }, svg);
+      el("text", { x: a.x, y: a.y + 8, "text-anchor": "middle", style: "fill:var(--ink); font-size:23px; font-weight:600; font-family:var(--body)" }, svg, a.s);
+      lpDirs.forEach(function (ang) {
+        var cx = a.x + Math.cos(ang) * 19, cy = a.y + Math.sin(ang) * 19, px = -Math.sin(ang) * 4.6, py = Math.cos(ang) * 4.6;
+        el("circle", { cx: cx + px, cy: cy + py, r: 2.6, fill: "var(--ink)" }, svg);
+        el("circle", { cx: cx - px, cy: cy - py, r: 2.6, fill: "var(--ink)" }, svg);
+      });
+      var f = opts.fcText ? opts.fcText[i] : opts.showFC ? fc(m, st, i) : 0;
+      if (f && f !== "0") {
+        var txt = typeof f === "string" ? f : (f > 0 ? "+" + f : "−" + (-f));
+        var neg = typeof f === "string" ? f.charAt(0) === "−" : f < 0;
+        // place the charge label in the open direction nearest the upper right
+        var ang2 = -Math.PI / 4, bestD2 = -1;
+        for (var c2 = 0; c2 < 16; c2++) {
+          var an = -Math.PI / 2 + c2 * Math.PI / 8, dm = 9;
+          taken.forEach(function (t) { var d = Math.abs(Math.atan2(Math.sin(an - t), Math.cos(an - t))); if (d < dm) dm = d; });
+          var score = dm - 0.15 * Math.abs(Math.atan2(Math.sin(an + Math.PI / 4), Math.cos(an + Math.PI / 4)));
+          if (score > bestD2) { bestD2 = score; ang2 = an; }
+        }
+        var fx = a.x + Math.cos(ang2) * 27, fy = a.y + Math.sin(ang2) * 27;
+        el("circle", { cx: fx, cy: fy, r: txt.length > 2 ? 13 : 10, fill: "var(--surface)", stroke: neg ? "var(--c4)" : "var(--accent)", "stroke-width": 1.5 }, svg);
+        el("text", { x: fx, y: fy + 4, "text-anchor": "middle", style: "font-size:11px; font-weight:700; fill:" + (neg ? "var(--c4)" : "var(--accent)") }, svg, txt);
+      }
+      if (opts.editable && a.s !== "H") {
+        var hc = el("circle", { cx: a.x, cy: a.y, r: 17, "class": "hit hit-a", "pointer-events": "all", tabindex: 0, role: "button", "aria-label": a.s + " atom with " + st.lp[i] + " lone pairs. Activate to add a lone pair." }, svg);
+        hc.addEventListener("click", function () { opts.onAtom(i); });
+        hc.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); opts.onAtom(i); } });
+      }
+    });
+    if (m.charge) {
+      var xs = A.map(function (a) { return a.x; }), ys = A.map(function (a) { return a.y; });
+      var x0 = Math.min.apply(null, xs) - 42, x1b = Math.max.apply(null, xs) + 42, y0 = Math.min.apply(null, ys) - 40, y1b = Math.max.apply(null, ys) + 40;
+      el("path", { d: "M" + (x0 + 9) + " " + y0 + " H" + x0 + " V" + y1b + " H" + (x0 + 9) + " M" + (x1b - 9) + " " + y0 + " H" + x1b + " V" + y1b + " H" + (x1b - 9), fill: "none", stroke: "var(--ink)", "stroke-width": 2 }, svg);
+      var q = Math.abs(m.charge);
+      el("text", { x: x1b + 4, y: y0 + 8, style: "fill:var(--ink); font-size:16px; font-weight:600" }, svg, (q > 1 ? q : "") + (m.charge > 0 ? "+" : "−"));
+    }
+  }
+  function polygon(cx, cy, r, n, start) { var p = []; for (var i = 0; i < n; i++) { var a = (start + i * 360 / n) * Math.PI / 180; p.push([Math.round(cx + r * Math.cos(a)), Math.round(cy - r * Math.sin(a))]); } return p; }
+  function star(center, outer, r, angles, charge, extra) {
+    var atoms = [{ s: center, x: 220, y: 150 }], bonds = [];
+    outer.forEach(function (s, i) { var a = angles[i] * Math.PI / 180; atoms.push({ s: s, x: Math.round(220 + r * Math.cos(a)), y: Math.round(150 - r * Math.sin(a)) }); bonds.push([0, i + 1]); });
+    var m = { atoms: atoms, bonds: bonds, charge: charge || 0, center: 0 };
+    for (var k in extra) m[k] = extra[k];
+    return m;
+  }
+  // ================= end engine =================
+
+
+  // ---------- Species ----------
+  function tri(center, outer, charge, extra) { return star(center, outer, 80, [90, 210, 330], charge, extra); }
+  var O3m = { atoms: [{ s: "O", x: 140, y: 175 }, { s: "O", x: 220, y: 125 }, { s: "O", x: 300, y: 175 }], bonds: [[1, 0], [1, 2]], charge: 0 };
+  var NO3m = tri("N", ["O", "O", "O"], -1, {});
+  var CO3m = tri("C", ["O", "O", "O"], -2, {});
+  var NO2m = { atoms: [{ s: "N", x: 220, y: 125 }, { s: "O", x: 140, y: 175 }, { s: "O", x: 300, y: 175 }], bonds: [[0, 1], [0, 2]], charge: -1 };
+  var ring = polygon(220, 150, 58, 6, 90), ringH = polygon(220, 150, 108, 6, 90);
+  var BZ = { atoms: ring.map(function (p) { return { s: "C", x: p[0], y: p[1] }; }).concat(ringH.map(function (p) { return { s: "H", x: p[0], y: p[1] }; })), bonds: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0], [0, 6], [1, 7], [2, 8], [3, 9], [4, 10], [5, 11]], charge: 0 };
+  var LIN = function (a, b, c, charge) { return { atoms: [{ s: a, x: 130, y: 150 }, { s: b, x: 220, y: 150 }, { s: c, x: 310, y: 150 }], bonds: [[1, 0], [1, 2]], charge: charge }; };
+  var NO2rad = { atoms: [{ s: "N", x: 220, y: 125 }, { s: "O", x: 140, y: 175 }, { s: "O", x: 300, y: 175 }], bonds: [[0, 1], [0, 2]], charge: 0 };
+  function T(m, o, lp, label, rad) { return { m: m, st: { o: o, lp: lp, rad: rad || null }, label: label }; }
+  var SP = {
+    O3: { f: "O3", name: "Ozone", g: "res", kind: "eq", structs: [T(O3m, [2, 1], [2, 1, 3], "Structure 1"), T(O3m, [1, 2], [3, 1, 2], "Structure 2")] },
+    NO2m: { f: "NO2^-", name: "Nitrite ion", g: "res", kind: "eq", structs: [T(NO2m, [2, 1], [1, 2, 3], "Structure 1"), T(NO2m, [1, 2], [1, 3, 2], "Structure 2")] },
+    NO3: { f: "NO3^-", name: "Nitrate ion", g: "res", kind: "eq", structs: [T(NO3m, [2, 1, 1], [0, 2, 3, 3], "Structure 1"), T(NO3m, [1, 2, 1], [0, 3, 2, 3], "Structure 2"), T(NO3m, [1, 1, 2], [0, 3, 3, 2], "Structure 3")] },
+    CO3: { f: "CO3^2-", name: "Carbonate ion", g: "res", kind: "eq", structs: [T(CO3m, [2, 1, 1], [0, 2, 3, 3], "Structure 1"), T(CO3m, [1, 2, 1], [0, 3, 2, 3], "Structure 2"), T(CO3m, [1, 1, 2], [0, 3, 3, 2], "Structure 3")] },
+    C6H6: { f: "C6H6", name: "Benzene", g: "res", kind: "eq", structs: [T(BZ, [2, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Structure 1"), T(BZ, [1, 2, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Structure 2")] },
+    CO2: { f: "CO2", name: "Carbon dioxide", g: "best", kind: "cmp", structs: [T(LIN("O", "C", "O", 0), [2, 2], [2, 0, 2], "O=C=O"), T(LIN("O", "C", "O", 0), [3, 1], [1, 0, 3], "O≡C–O")] },
+    OCN: { f: "OCN^-", name: "Cyanate ion", g: "best", kind: "cmp", structs: [T(LIN("O", "C", "N", -1), [1, 3], [3, 0, 1], "[O–C≡N]⁻"), T(LIN("O", "C", "N", -1), [2, 2], [2, 0, 2], "[O=C=N]⁻"), T(LIN("O", "C", "N", -1), [3, 1], [1, 0, 3], "[O≡C–N]⁻")] },
+    N2O: { f: "N2O", name: "Dinitrogen monoxide", g: "best", kind: "cmp", structs: [T(LIN("N", "N", "O", 0), [3, 1], [1, 0, 3], "N≡N–O"), T(LIN("N", "N", "O", 0), [2, 2], [2, 0, 2], "N=N=O"), T(LIN("N", "N", "O", 0), [1, 3], [3, 0, 1], "N–N≡O"), T(LIN("N", "O", "N", 0), [2, 2], [2, 0, 2], "N=O=N (other skeleton)")] },
+    NO2: { f: "NO2", name: "Nitrogen dioxide (17 electrons)", g: "lim", kind: "odd", structs: [T(NO2rad, [2, 1], [0, 2, 3], "Structure 1", [1, 0, 0]), T(NO2rad, [1, 2], [0, 3, 2], "Structure 2", [1, 0, 0])] }
+  };
+  // Best total |FC| for each species, and the preferred structure(s).
+  Object.keys(SP).forEach(function (k) {
+    var sp = SP[k];
+    sp.structs.forEach(function (x) { x.an = analyze(x.m, x.st); });
+    sp.best = Math.min.apply(null, sp.structs.map(function (x) { return x.an.sumAbs; }));
+  });
+  var STORY = {
+    O3: "Ozone needs a double bond to give the central O an octet, and either end O can supply it. The two structures differ only in where that double bond and the lone pairs are, so they are resonance structures. Both O–O bonds in real ozone are 128 pm, between a single bond (148 pm) and a double bond (121 pm).",
+    NO2m: "The double bond can be to either O, giving two equivalent structures. In the hybrid each N–O bond has a bond order of 1½ and each O carries half of the −1 charge.",
+    NO3: "The double bond can be to any of the three O atoms, giving three equivalent structures. The hybrid has three identical N–O bonds with a bond order of 4 bonds ÷ 3 = 1⅓, and each O carries ⅔ of a negative charge.",
+    CO3: "Like nitrate, carbonate has three equivalent structures. Each C–O bond in the hybrid has a bond order of 1⅓, and the 2− charge is spread over the three O atoms (−⅔ each).",
+    C6H6: "The three C=C double bonds can sit in two different sets of positions around the ring. Real benzene has six identical C–C bonds of about 140 pm, between C–C (154 pm) and C=C (134 pm), because the π electrons are delocalized around the ring.",
+    CO2: "Both diagrams use 16 electrons and give every atom an octet, so formal charge decides. O=C=O has every formal charge equal to zero; O≡C–O puts +1 on one O and −1 on the other. O=C=O is the best diagram, and experiment agrees: both C–O bonds in CO₂ are identical.",
+    OCN: "Three valid diagrams. [O≡C–N]⁻ has a total |FC| of 3 (+1 on O, −2 on N), so it is the poorest. The other two each have a total of 1, so use the second rule: the −1 formal charge belongs on the most electronegative atom. O is more electronegative than N, so [O–C≡N]⁻ is the best diagram.",
+    N2O: "With the skeleton N–N–O, three diagrams are valid. N–N≡O needs −2 on an N, so it is poor. N=N=O and N≡N–O both have a total |FC| of 2; N≡N–O puts the −1 on O, the more electronegative atom, so it is preferred (both contribute to the real hybrid). The other skeleton, N–O–N, forces +2 onto O, so N₂O is N–N–O.",
+    NO2: "NO₂ has 5 + 2 × 6 = 17 valence electrons, an odd number. Electrons in a Lewis diagram come in pairs, so at least one atom must have an unpaired electron and fewer than 8 electrons. Here N has 7. No Lewis diagram can give every atom an octet; this is a limitation of the Lewis model, not a mistake in the drawing."
+  };
+
+  // ---------- State ----------
+  var S = { key: "NO3", view: 0, st: null, edited: false };
+  var svg = document.getElementById("lewis");
+  function cur() { var sp = SP[S.key]; return S.view === "hybrid" ? sp.structs[0] : sp.structs[S.view]; }
+  function load(k, v) { S.key = k; S.view = v; S.edited = false; if (v !== "hybrid") S.st = cloneSt(SP[k].structs[v].st); }
+  function fracStr(v) {
+    var sign = v < 0 ? "−" : v > 0 ? "+" : "", a = Math.abs(v), w = Math.floor(a + 1e-9), r = a - w;
+    var F = Math.abs(r - 1 / 3) < 1e-6 ? "⅓" : Math.abs(r - 2 / 3) < 1e-6 ? "⅔" : Math.abs(r - 0.5) < 1e-6 ? "½" : r < 1e-6 ? "" : r.toFixed(2).slice(1);
+    if (a < 1e-9) return "0";
+    return sign + (w ? w : "") + F;
+  }
+  function hybrid(sp) {
+    var n = sp.structs.length, m = sp.structs[0].m;
+    var o = m.bonds.map(function (b, k) { return sp.structs.reduce(function (t, x) { return t + x.st.o[k]; }, 0) / n; });
+    var f = m.atoms.map(function (a, i) { return sp.structs.reduce(function (t, x) { return t + fc(x.m, x.st, i); }, 0) / n; });
+    return { o: o, f: f };
+  }
+  function render() {
+    var sp = SP[S.key], m = cur().m, hy = S.view === "hybrid";
+    var st, an;
+    if (hy) {
+      var h = hybrid(sp);
+      st = { o: h.o.map(function (v) { return Math.floor(v + 1e-9); }), lp: m.atoms.map(function () { return 0; }) };
+      drawLewis(svg, m, st, { hideLP: true, hybridPartial: h.o.map(function (v) { return Math.abs(v - Math.round(v)) > 1e-6; }), fcText: h.f.map(function (v) { return fracStr(v); }) });
+      m.bonds.forEach(function (b, k) {
+        if (Math.abs(h.o[k] - Math.round(h.o[k])) < 1e-6) return;
+        var p = m.atoms[b[0]], q = m.atoms[b[1]], dx = q.x - p.x, dy = q.y - p.y, L = Math.sqrt(dx * dx + dy * dy);
+        var mx = (p.x + q.x) / 2 - dy / L * 16, my = (p.y + q.y) / 2 + dx / L * 16;
+        if (S.key === "C6H6") { mx = (p.x + q.x) / 2 + ((p.x + q.x) / 2 - 220) * 0.32; my = (p.y + q.y) / 2 + ((p.y + q.y) / 2 - 150) * 0.32; mx = 220 + (mx - 220) * 0.55; my = 150 + (my - 150) * 0.55; }
+        el("text", { x: mx, y: my + 4, "text-anchor": "middle", style: "font-size:12px; font-weight:700; fill:var(--c1)" }, svg, fracStr(h.o[k]).replace("+", ""));
+      });
+      an = null;
+    } else {
+      st = S.st; an = analyze(m, st);
+      drawLewis(svg, m, st, { editable: true, info: an.info, showFC: true, onBond: onBond, onAtom: onAtom });
+    }
+    // tabs
+    var tabs = document.getElementById("tabs"); tabs.innerHTML = "";
+    sp.structs.forEach(function (x, i) {
+      var b = document.createElement("button"); b.type = "button"; b.textContent = x.label;
+      b.setAttribute("aria-pressed", !S.edited && S.view === i ? "true" : "false");
+      b.addEventListener("click", function () { load(S.key, i); render(); });
+      tabs.appendChild(b);
+    });
+    if (sp.kind === "eq") {
+      var hb = document.createElement("button"); hb.type = "button"; hb.textContent = "Resonance hybrid";
+      hb.setAttribute("aria-pressed", hy ? "true" : "false");
+      hb.addEventListener("click", function () { S.view = "hybrid"; S.edited = false; render(); });
+      tabs.appendChild(hb);
+    }
+    document.getElementById("sp-title").innerHTML = Lab.fmla(sp.f);
+    document.getElementById("sp-sub").textContent = sp.name + (hy ? " · resonance hybrid" : S.edited ? " · your edit" : " · " + cur().label);
+    // formal charge table
+    var tb = "<thead><tr><th>Atom</th><th>Valence</th><th>Nonbonding</th><th>½ bonding</th><th>FC</th></tr></thead><tbody>";
+    var seen = {};
+    var hf = hy ? hybrid(sp).f : null;
+    m.atoms.forEach(function (a, i) {
+      if (a.s === "H") return;
+      var lab = a.s + (m.atoms.filter(function (x) { return x.s === a.s; }).length > 1 ? subscriptIndex(m, i) : "");
+      if (hy) {
+        tb += "<tr><td>" + lab + "</td><td>" + VAL[a.s] + "</td><td colspan='2'>average of " + sp.structs.length + " structures</td><td class='" + (hf[i] > 1e-6 ? "pos" : hf[i] < -1e-6 ? "neg" : "") + "'>" + fracStr(hf[i]) + "</td></tr>";
+      } else {
+        var nb = 2 * st.lp[i] + (st.rad ? st.rad[i] : 0), bs = bondSum(m, st, i), f = fc(m, st, i);
+        tb += "<tr><td>" + lab + "</td><td>" + VAL[a.s] + "</td><td>− " + nb + "</td><td>− " + bs + "</td><td class='" + (f > 0 ? "pos" : f < 0 ? "neg" : "") + "'>" + (f > 0 ? "+" + f : f < 0 ? "−" + (-f) : "0") + "</td></tr>";
+      }
+    });
+    if (S.key === "C6H6") tb += "<tr><td>each H</td><td>1</td><td>− 0</td><td>− 1</td><td>0</td></tr>";
+    document.getElementById("fct").innerHTML = tb + "</tbody>";
+    // readouts
+    var tot = totalE(m);
+    document.getElementById("r-tot").textContent = tot;
+    document.getElementById("r-tot2").textContent = hy ? "same in every structure" : (an.used === tot ? "all placed" : an.used < tot ? (tot - an.used) + " not yet placed" : (an.used - tot) + " too many in the diagram");
+    var sumF = hy ? hf.reduce(function (t, v) { return t + v; }, 0) : an.sumFc;
+    document.getElementById("r-sum").textContent = fracStr(Math.round(sumF * 1000) / 1000);
+    document.getElementById("r-sum2").textContent = "charge of the species: " + (m.charge ? (m.charge > 0 ? "+" : "−") + Math.abs(m.charge) : "0");
+    var abs = hy ? hf.reduce(function (t, v) { return t + Math.abs(v); }, 0) : an.sumAbs;
+    document.getElementById("r-abs").textContent = hy ? fracStr(Math.round(abs * 1000) / 1000).replace("+", "") : abs;
+    document.getElementById("r-abs2").textContent = "smallest possible: " + sp.best;
+    var v = verdict(sp, an, hy);
+    document.getElementById("r-v").innerHTML = '<span class="pill ' + v.pill + '">' + v.t + "</span>";
+    document.getElementById("r-v2").textContent = v.s;
+    document.getElementById("story").innerHTML = story(sp, an, hy, v);
+    Object.keys(btns).forEach(function (k) { btns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+  }
+  function subscriptIndex(m, i) {
+    var n = 0; for (var j = 0; j <= i; j++) if (m.atoms[j].s === m.atoms[i].s) n++;
+    var pos = m.atoms[i];
+    if (m.bonds.length === 2 && m.atoms.length === 3) return degree(m, i) === 2 ? " (center)" : pos.x < 220 ? " (left)" : " (right)";
+    if (degree(m, i) >= 3 && m.atoms[i].s !== "C") return " (center)";
+    return " #" + n;
+  }
+  function matchStruct(sp, m, st) {
+    for (var i = 0; i < sp.structs.length; i++) {
+      var x = sp.structs[i];
+      if (x.m !== m) continue;
+      if (x.st.o.join() === st.o.join() && x.st.lp.join() === st.lp.join()) return i;
+    }
+    return -1;
+  }
+  function verdict(sp, an, hy) {
+    if (hy) return { t: "Real structure", pill: "lr", s: "average of the resonance structures" };
+    if (sp.kind === "odd") return { t: "Odd electrons", pill: "infl", s: "no all-octet diagram exists" };
+    if (!an.valid) return { t: an.used !== an.tot ? "Electron count off" : "Octet problem", pill: "infl", s: an.used !== an.tot ? "must use " + an.tot + " electrons" : "an atom has the wrong count" };
+    if (an.sumAbs > sp.best) return { t: "Valid, not best", pill: "rec", s: "formal charges can be smaller" };
+    if (sp.kind === "eq") return { t: "Resonance form", pill: "lr", s: "equivalent to the others" };
+    // compare kind: among minimal structures, prefer negative FC on the more electronegative atom
+    var m = cur().m, st = S.st, negOn = null;
+    m.atoms.forEach(function (a, i) { if (fc(m, st, i) < 0) negOn = a.s; });
+    var bestEN = null;
+    sp.structs.forEach(function (x) { if (x.an.sumAbs === sp.best) x.m.atoms.forEach(function (a, i) { if (fc(x.m, x.st, i) < 0 && (bestEN == null || EN[a.s] > EN[bestEN])) bestEN = a.s; }); });
+    if (negOn && bestEN && EN[negOn] < EN[bestEN]) return { t: "Good, not best", pill: "rec", s: "put the − charge on " + bestEN };
+    return { t: "Best structure", pill: "lr", s: an.sumAbs === 0 ? "all formal charges zero" : "− charge on the most electronegative atom" };
+  }
+  function story(sp, an, hy, v) {
+    var html = "<p><b>" + sp.name + ".</b> " + STORY[S.key] + "</p>", li = [], end;
+    if (hy) {
+      li.push("Dashed lines show partial bonds; the orange numbers are average bond orders. Formal charges are averages over the structures.");
+      li.push("Lone pairs are left off the hybrid because the electrons involved in the multiple bonds are spread (delocalized) over several atoms.");
+      end = "<b>AP answer:</b> the actual structure is a resonance hybrid of the equivalent structures, so all the equivalent bonds have the same length and strength, intermediate between single and double bonds.";
+    } else {
+      var m = cur().m, st = S.st;
+      if (S.edited) {
+        var k = matchStruct(sp, m, st);
+        li.push(k >= 0 ? "Your edit matches <b>" + sp.structs[k].label + "</b>." : "Your edit is not one of the stored structures.");
+      }
+      if (!an.valid && sp.kind !== "odd") {
+        if (an.used !== an.tot) li.push("The diagram has " + an.used + " electrons but " + Lab.fmla(sp.f) + " has " + an.tot + ".");
+        an.info.forEach(function (x, i) { if (!x.ok) li.push(m.atoms[i].s + ": " + x.note + "."); });
+      }
+      var fcs = m.atoms.map(function (a, i) { return { s: a.s, f: fc(m, st, i) }; }).filter(function (x) { return x.f !== 0 && x.s !== "H"; });
+      li.push(fcs.length ? "Nonzero formal charges: " + fcs.map(function (x) { return x.s + " " + (x.f > 0 ? "+" + x.f : "−" + (-x.f)); }).join(", ") + ". They add up to " + (an.sumFc > 0 ? "+" : an.sumFc < 0 ? "−" : "") + Math.abs(an.sumFc) + ", the charge of the species." : "Every formal charge is zero.");
+      if (sp.kind === "eq") end = "<b>AP answer:</b> " + sp.structs.length + " equivalent resonance structures can be drawn; the real " + (m.charge ? "ion" : "molecule") + " is their hybrid, not any single structure.";
+      else if (sp.kind === "odd") end = "<b>AP answer:</b> with an odd number of valence electrons, no Lewis diagram can give every atom an octet, which is a limitation of the Lewis model.";
+      else end = "<b>AP answer:</b> the best Lewis diagram has formal charges closest to zero, with any negative formal charge on the most electronegative atom.";
+    }
+    return html + "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul><p>" + end + "</p>";
+  }
+  function onBond(k) { S.st.o[k] = S.st.o[k] >= 3 ? 1 : S.st.o[k] + 1; S.edited = true; render(); }
+  function onAtom(i) { var m = cur().m; S.st.lp[i] = S.st.lp[i] >= maxLP(m, i) ? 0 : S.st.lp[i] + 1; S.edited = true; render(); }
+  var btns = {};
+  Object.keys(SP).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.innerHTML = Lab.fmla(SP[k].f); b.title = SP[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { load(k, 0); render(); });
+    document.getElementById("g-" + SP[k].g).appendChild(b); btns[k] = b;
+  });
+  load("NO3", 0); render();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "What is the formal charge on the nitrogen atom in any one of the resonance structures of the nitrate ion, NO₃⁻?",
+      o: ["−1", "0", "+1", "+2"], c: 2,
+      w: "N has 5 valence electrons, no lone pairs, and four bonds (one double, two single), so 8 bonding electrons: FC = 5 − 0 − ½(8) = +1. The two singly bonded O atoms are −1 each and the doubly bonded O is 0, for a total of −1, the charge of the ion. Choice D comes from counting all bonding electrons minus valence the wrong way." },
+    { s: "Which statement best describes the three N–O bonds in the nitrate ion?",
+      o: ["All three bonds have the same length, between that of an N–O single bond and an N=O double bond.", "One bond is shorter than the other two, because one bond is a double bond.", "The bonds rapidly switch between single and double, so their lengths change over time.", "All three bonds are double bonds."], c: 0,
+      w: "The three resonance structures are equivalent, so the real ion is a hybrid in which each N–O bond has a bond order of 1⅓. All three are identical and intermediate in length. Choice C is the classic misconception that the ion flips between resonance structures." },
+    { s: "Three Lewis diagrams can be drawn for the cyanate ion, OCN⁻ (C in the center). Which diagram is the best model?",
+      o: ["[O≡C–N]⁻, with formal charges +1 on O and −2 on N", "[O=C=N]⁻, with a formal charge of −1 on N", "[O–C–N]⁻, with single bonds and lone pairs only", "[O–C≡N]⁻, with a formal charge of −1 on O"], c: 3,
+      w: "[O–C≡N]⁻ and [O=C=N]⁻ both have the smallest total formal charge (1), but the negative formal charge should be on the most electronegative atom, O. Choice A has larger formal charges, and choice C leaves C without an octet." },
+    { s: "A student says that ozone, O₃, spends half its time as O=O–O and half as O–O=O. Which response is correct?",
+      o: ["The student is correct; the molecule alternates between the two structures.", "The student is incorrect; ozone is a single resonance hybrid whose two O–O bonds are identical, each with a bond order of 1½.", "The student is incorrect; ozone exists only as O=O–O, because that structure is drawn first.", "The student is incorrect; ozone has two double bonds."], c: 1,
+      w: "Resonance structures are different drawings of one particle, not different particles. The real ozone molecule always has two identical O–O bonds (128 pm) with a bond order of 1½. Two double bonds (choice D) would give the central O 10 electrons." },
+    { s: "What is the average N–O bond order in the nitrite ion, NO₂⁻?",
+      o: ["1", "1⅓", "1½", "2"], c: 2,
+      w: "Each resonance structure of NO₂⁻ has one N=O and one N–O: 3 bonds shared over 2 N–O positions, so the average bond order is 3 ÷ 2 = 1½. Choice B is the nitrate value (4 bonds over 3 positions)." },
+    { s: "In the resonance hybrid of the carbonate ion, CO₃²⁻, what is the average formal charge on each oxygen atom?",
+      o: ["−⅔", "−1", "−2", "0"], c: 0,
+      w: "In each resonance structure, two O atoms are −1 and one is 0, for a total of −2. Spread equally over three O atoms in the hybrid, each carries −2 ÷ 3 = −⅔. The C atom has a formal charge of 0 in every structure." },
+    { s: "Which feature of NO₂ shows a limitation of the Lewis model?",
+      o: ["NO₂ has resonance structures.", "The N atom has a positive formal charge.", "NO₂ has a double bond.", "NO₂ has an odd number of valence electrons, so no Lewis diagram can give every atom an octet."], c: 3,
+      w: "NO₂ has 5 + 2 × 6 = 17 valence electrons. Electrons in Lewis diagrams are placed in pairs, so one electron is always unpaired and at least one atom (N) ends up with fewer than 8. Resonance (choice A) and formal charges (choice B) are handled fine by the model." },
+    { s: "Which arrangement of atoms is more reasonable for N₂O, and why?",
+      o: ["N–O–N, because O is the most electronegative atom and belongs in the center", "N–N–O, because N–O–N would require a +2 formal charge on the O atom", "N–O–N, because it makes the molecule symmetrical", "N–N–O, because N–N–O has no formal charges at all"], c: 1,
+      w: "The best N–O–N diagram (N=O=N) puts +2 on O and −1 on each N. The N–N–O skeleton allows N≡N–O with formal charges 0, +1, −1, much closer to zero, with the negative charge on O. Choice D is wrong: every valid N–N–O diagram has some nonzero formal charges." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("2.6");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [2], topic: "2.6", compact: true, storageKey: "topic-2.6" });</script>
+</body>
+</html>

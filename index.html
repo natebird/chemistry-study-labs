@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lab.css?v=1">
+<script src="assets/prefs.js?v=1"></script>
+<title>AP Chemistry Study Labs</title>
+<meta name="description" content="Interactive study labs and terminology guides for AP Chemistry.">
+<style>
+.labs { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.lab-card { display: grid; gap: 8px; text-decoration: none; color: var(--ink); align-content: start; }
+.lab-card:hover { border-color: var(--accent); }
+.lab-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.lab-card .num, .unit-head .num { font-family: var(--mono); font-size: .8rem; color: var(--accent); }
+.lab-card p { color: var(--muted); font-size: .94rem; }
+.lab-card .go { color: var(--accent); font-weight: 500; font-size: .9rem; }
+.unit-head { display: grid; gap: 4px; border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
+.unit-head .meta { font-size: .88rem; color: var(--muted); }
+.unit-head a, .soon a, .jump a { color: var(--accent); }
+.soon { color: var(--muted); }
+.jump { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: .92rem; }
+.unit { scroll-margin-top: 16px; }
+footer { color: var(--muted); font-size: .86rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <span class="kicker">AP Chemistry</span>
+  <h1>AP Chemistry Study Labs</h1>
+  <p class="lede">Interactive study labs for the AP Chemistry course, one for each topic. Each lab has a hands-on model or calculator, a running explanation of what changed and why, a reference table, FRQ tips, common mistakes, practice questions, and the key terms for that topic.</p>
+  <nav class="jump" aria-label="Jump to a unit"><a href="#unit-1">Unit 1</a> <a href="#unit-2">Unit 2</a> <a href="#unit-3">Unit 3</a> <a href="#unit-4">Unit 4</a> <a href="#unit-5">Unit 5</a> <a href="#unit-6">Unit 6</a> <a href="#unit-7">Unit 7</a> <a href="#unit-8">Unit 8</a> <a href="#unit-9">Unit 9</a> <a href="terms/index.html">All terms</a></nav>
+</header>
+
+<section aria-labelledby="terms-h">
+  <div style="display:grid; gap:6px;">
+    <h2 id="terms-h" style="font-size:1.3rem;">Terminology guides</h2>
+    <p style="color:var(--muted); max-width:70ch;">Every key term in the course, with search, flashcards, and a self-quiz.</p>
+  </div>
+  <div class="unit-cards">
+    <a class="card" href="terms/index.html"><span class="num">All units</span><b>Master terminology guide</b><span class="meta">Search and study every term in the course</span></a>
+    <a class="card" href="terms/unit-1.html"><span class="num">Unit 1</span><b>Atomic Structure and Properties</b></a>
+    <a class="card" href="terms/unit-2.html"><span class="num">Unit 2</span><b>Compound Structure and Properties</b></a>
+    <a class="card" href="terms/unit-3.html"><span class="num">Unit 3</span><b>Properties of Substances and Mixtures</b></a>
+    <a class="card" href="terms/unit-4.html"><span class="num">Unit 4</span><b>Chemical Reactions</b></a>
+    <a class="card" href="terms/unit-5.html"><span class="num">Unit 5</span><b>Kinetics</b></a>
+    <a class="card" href="terms/unit-6.html"><span class="num">Unit 6</span><b>Thermochemistry</b></a>
+    <a class="card" href="terms/unit-7.html"><span class="num">Unit 7</span><b>Equilibrium</b></a>
+    <a class="card" href="terms/unit-8.html"><span class="num">Unit 8</span><b>Acids and Bases</b></a>
+    <a class="card" href="terms/unit-9.html"><span class="num">Unit 9</span><b>Thermodynamics and Electrochemistry</b></a>
+  </div>
+</section>
+
+<section aria-labelledby="unit-1" class="unit">
+  <div class="unit-head">
+    <h2 id="unit-1" style="font-size:1.4rem;"><span class="num">Unit 1</span> Atomic Structure and Properties</h2>
+    <span class="meta">7–9% of the multiple-choice section · <a href="terms/unit-1.html">Unit 1 terms</a></span>
+  </div>
+  <div class="labs">
+    <a class="card lab-card" href="labs/1-1-moles-molar-mass.html"><span class="num">Topic 1.1</span><h3>Moles and Molar Mass</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/1-2-mass-spectra.html"><span class="num">Topic 1.2</span><h3>Mass Spectra of Elements</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/1-3-elemental-composition.html"><span class="num">Topic 1.3</span><h3>Elemental Composition of Pure Substances</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/1-4-composition-of-mixtures.html"><span class="num">Topic 1.4</span><h3>Composition of Mixtures</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/1-5-electron-configuration.html"><span class="num">Topic 1.5</span><h3>Atomic Structure and Electron Configuration</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/1-6-photoelectron-spectroscopy.html"><span class="num">Topic 1.6</span><h3>Photoelectron Spectroscopy</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/1-7-periodic-trends.html"><span class="num">Topic 1.7</span><h3>Periodic Trends</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/1-8-valence-electrons-ionic-compounds.html"><span class="num">Topic 1.8</span><h3>Valence Electrons and Ionic Compounds</h3><p></p><span class="go">Open lab →</span></a>
+  </div>
+</section>
+<section aria-labelledby="unit-2" class="unit">
+  <div class="unit-head">
+    <h2 id="unit-2" style="font-size:1.4rem;"><span class="num">Unit 2</span> Compound Structure and Properties</h2>
+    <span class="meta">7–9% of the multiple-choice section · <a href="terms/unit-2.html">Unit 2 terms</a></span>
+  </div>
+  <div class="labs">
+    <a class="card lab-card" href="labs/2-1-types-of-bonds.html"><span class="num">Topic 2.1</span><h3>Types of Chemical Bonds</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/2-2-potential-energy-bonding.html"><span class="num">Topic 2.2</span><h3>Intramolecular Force and Potential Energy</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/2-3-ionic-solids.html"><span class="num">Topic 2.3</span><h3>Structure of Ionic Solids</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/2-4-metals-alloys.html"><span class="num">Topic 2.4</span><h3>Structure of Metals and Alloys</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/2-5-lewis-diagrams.html"><span class="num">Topic 2.5</span><h3>Lewis Diagrams</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/2-6-resonance-formal-charge.html"><span class="num">Topic 2.6</span><h3>Resonance and Formal Charge</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/2-7-vsepr-hybridization.html"><span class="num">Topic 2.7</span><h3>VSEPR and Hybridization</h3><p></p><span class="go">Open lab →</span></a>
+  </div>
+</section>
+<section aria-labelledby="unit-3" class="unit">
+  <div class="unit-head">
+    <h2 id="unit-3" style="font-size:1.4rem;"><span class="num">Unit 3</span> Properties of Substances and Mixtures</h2>
+    <span class="meta">18–22% of the multiple-choice section · <a href="terms/unit-3.html">Unit 3 terms</a></span>
+  </div>
+  <div class="labs">
+    <a class="card lab-card" href="labs/3-1-intermolecular-forces.html"><span class="num">Topic 3.1</span><h3>Intermolecular and Interparticle Forces</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/3-2-properties-of-solids.html"><span class="num">Topic 3.2</span><h3>Properties of Solids</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/3-3-solids-liquids-gases.html"><span class="num">Topic 3.3</span><h3>Solids, Liquids, and Gases</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/3-4-ideal-gas-law.html"><span class="num">Topic 3.4</span><h3>Ideal Gas Law</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/3-5-kinetic-molecular-theory.html"><span class="num">Topic 3.5</span><h3>Kinetic Molecular Theory</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/3-6-deviation-from-ideal.html"><span class="num">Topic 3.6</span><h3>Deviation from Ideal Gas Law</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/3-7-solutions-mixtures.html"><span class="num">Topic 3.7</span><h3>Solutions and Mixtures</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/3-8-representations-of-solutions.html"><span class="num">Topic 3.8</span><h3>Representations of Solutions</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/3-9-separation-of-mixtures.html"><span class="num">Topic 3.9</span><h3>Separation of Solutions and Mixtures</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/3-10-solubility.html"><span class="num">Topic 3.10</span><h3>Solubility</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/3-11-spectroscopy.html"><span class="num">Topic 3.11</span><h3>Spectroscopy and the Electromagnetic Spectrum</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/3-12-properties-of-photons.html"><span class="num">Topic 3.12</span><h3>Properties of Photons</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/3-13-beer-lambert-law.html"><span class="num">Topic 3.13</span><h3>Beer–Lambert Law</h3><p></p><span class="go">Open lab →</span></a>
+  </div>
+</section>
+<section aria-labelledby="unit-4" class="unit">
+  <div class="unit-head">
+    <h2 id="unit-4" style="font-size:1.4rem;"><span class="num">Unit 4</span> Chemical Reactions</h2>
+    <span class="meta">7–9% of the multiple-choice section · <a href="terms/unit-4.html">Unit 4 terms</a></span>
+  </div>
+  <div class="labs">
+    <a class="card lab-card" href="labs/4-1-introduction-to-reactions.html"><span class="num">Topic 4.1</span><h3>Introduction for Reactions</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/4-2-net-ionic-equations.html"><span class="num">Topic 4.2</span><h3>Net Ionic Equations</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/4-3-representations-of-reactions.html"><span class="num">Topic 4.3</span><h3>Representations of Reactions</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/4-4-physical-chemical-changes.html"><span class="num">Topic 4.4</span><h3>Physical and Chemical Changes</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/4-5-stoichiometry.html"><span class="num">Topic 4.5</span><h3>Stoichiometry</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/4-6-titration.html"><span class="num">Topic 4.6</span><h3>Introduction to Titration</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/4-7-types-of-reactions.html"><span class="num">Topic 4.7</span><h3>Types of Chemical Reactions</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/4-8-acid-base-reactions.html"><span class="num">Topic 4.8</span><h3>Introduction to Acid–Base Reactions</h3><p></p><span class="go">Open lab →</span></a>
+    <a class="card lab-card" href="labs/4-9-redox-reactions.html"><span class="num">Topic 4.9</span><h3>Oxidation–Reduction (Redox) Reactions</h3><p></p><span class="go">Open lab →</span></a>
+  </div>
+</section>
+<section aria-labelledby="unit-5" class="unit">
+  <div class="unit-head">
+    <h2 id="unit-5" style="font-size:1.4rem;"><span class="num">Unit 5</span> Kinetics</h2>
+    <span class="meta">7–9% of the multiple-choice section · <a href="terms/unit-5.html">Unit 5 terms</a></span>
+  </div>
+  <p class="soon">Labs for this unit are on the way (5.1 Reaction Rates · 5.2 Introduction to Rate Law · 5.3 Concentration Changes Over Time · 5.4 Elementary Reactions · 5.5 Collision Model · 5.6 Reaction Energy Profile · 5.7 Introduction to Reaction Mechanisms · 5.8 Reaction Mechanism and Rate Law · 5.9 Pre-Equilibrium Approximation · 5.10 Multistep Reaction Energy Profile · 5.11 Catalysis). The <a href="terms/unit-5.html">Unit 5 terminology guide</a> is ready now.</p>
+</section>
+<section aria-labelledby="unit-6" class="unit">
+  <div class="unit-head">
+    <h2 id="unit-6" style="font-size:1.4rem;"><span class="num">Unit 6</span> Thermochemistry</h2>
+    <span class="meta">7–9% of the multiple-choice section · <a href="terms/unit-6.html">Unit 6 terms</a></span>
+  </div>
+  <p class="soon">Labs for this unit are on the way (6.1 Endothermic and Exothermic Processes · 6.2 Energy Diagrams · 6.3 Heat Transfer and Thermal Equilibrium · 6.4 Heat Capacity and Calorimetry · 6.5 Energy of Phase Changes · 6.6 Introduction to Enthalpy of Reaction · 6.7 Bond Enthalpies · 6.8 Enthalpy of Formation · 6.9 Hess’s Law). The <a href="terms/unit-6.html">Unit 6 terminology guide</a> is ready now.</p>
+</section>
+<section aria-labelledby="unit-7" class="unit">
+  <div class="unit-head">
+    <h2 id="unit-7" style="font-size:1.4rem;"><span class="num">Unit 7</span> Equilibrium</h2>
+    <span class="meta">7–9% of the multiple-choice section · <a href="terms/unit-7.html">Unit 7 terms</a></span>
+  </div>
+  <p class="soon">Labs for this unit are on the way (7.1 Introduction to Equilibrium · 7.2 Direction of Reversible Reactions · 7.3 Reaction Quotient and Equilibrium Constant · 7.4 Calculating the Equilibrium Constant · 7.5 Magnitude of the Equilibrium Constant · 7.6 Properties of the Equilibrium Constant · 7.7 Calculating Equilibrium Concentrations · 7.8 Representations of Equilibrium · 7.9 Introduction to Le Châtelier’s Principle · 7.10 Reaction Quotient and Le Châtelier’s Principle · 7.11 Introduction to Solubility Equilibria · 7.12 Common-Ion Effect). The <a href="terms/unit-7.html">Unit 7 terminology guide</a> is ready now.</p>
+</section>
+<section aria-labelledby="unit-8" class="unit">
+  <div class="unit-head">
+    <h2 id="unit-8" style="font-size:1.4rem;"><span class="num">Unit 8</span> Acids and Bases</h2>
+    <span class="meta">11–15% of the multiple-choice section · <a href="terms/unit-8.html">Unit 8 terms</a></span>
+  </div>
+  <p class="soon">Labs for this unit are on the way (8.1 Introduction to Acids and Bases · 8.2 pH and pOH of Strong Acids and Bases · 8.3 Weak Acid and Base Equilibria · 8.4 Acid–Base Reactions and Buffers · 8.5 Acid–Base Titrations · 8.6 Molecular Structure of Acids and Bases · 8.7 pH and pKa · 8.8 Properties of Buffers · 8.9 Henderson–Hasselbalch Equation · 8.10 Buffer Capacity · 8.11 pH and Solubility). The <a href="terms/unit-8.html">Unit 8 terminology guide</a> is ready now.</p>
+</section>
+<section aria-labelledby="unit-9" class="unit">
+  <div class="unit-head">
+    <h2 id="unit-9" style="font-size:1.4rem;"><span class="num">Unit 9</span> Thermodynamics and Electrochemistry</h2>
+    <span class="meta">7–9% of the multiple-choice section · <a href="terms/unit-9.html">Unit 9 terms</a></span>
+  </div>
+  <p class="soon">Labs for this unit are on the way (9.1 Introduction to Entropy · 9.2 Absolute Entropy and Entropy Change · 9.3 Gibbs Free Energy and Thermodynamic Favorability · 9.4 Thermodynamic and Kinetic Control · 9.5 Free Energy and Equilibrium · 9.6 Free Energy of Dissolution · 9.7 Coupled Reactions · 9.8 Galvanic (Voltaic) and Electrolytic Cells · 9.9 Cell Potential and Free Energy · 9.10 Cell Potential Under Nonstandard Conditions · 9.11 Electrolysis and Faraday’s Law). The <a href="terms/unit-9.html">Unit 9 terminology guide</a> is ready now.</p>
+</section>
+
+<footer>Topics follow the College Board AP Chemistry Course and Exam Description (fall 2024 revision). Simulations use simplified teaching models; constants and molar masses match the AP reference sheet. 37 of 91 labs are live.</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Properties of Solids Study Lab</title>
+<meta name="description" content="Run melting, hammer, conductivity, and solubility tests on mystery solids, classify each one as ionic, molecular, covalent network, or metallic, and stress, melt, and electrify a particle model to see why each type behaves as it does.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.part { font-size: 1.25rem; margin-top: 6px; }
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"], .chips button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { padding: 4px 11px; font-size: .84rem; }
+.chips button.done-ok { border-color: var(--good); }
+.chips button.done-bad { border-color: var(--bad); }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 18px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 13px; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.btnrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.check { display: flex; gap: 8px; align-items: center; font-size: .9rem; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v.txt { font-family: var(--body); font-size: 1.02rem; font-weight: 600; }
+.tests { width: 100%; border-collapse: collapse; min-width: 0; border: 0; background: none; }
+.tests td, .tests th { padding: 6px 8px; font-size: .88rem; border-bottom: 1px dashed var(--rule); }
+.tests th { background: none; font-size: .72rem; }
+.tests td:first-child { font-weight: 500; white-space: nowrap; width: 1%; }
+.tests td.pending { color: var(--muted); font-style: italic; }
+.classify button { font-weight: 500; }
+.classify button.right { background: var(--good-soft); border-color: var(--good); color: var(--good); font-weight: 600; }
+.classify button.wrong { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+@media (max-width: 520px) {
+  svg.chart text { font-size: 13px; }
+  .tests td:first-child { white-space: normal; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 3 · Topic 3.2</span>
+  <h1>Properties of Solids Study Lab</h1>
+  <p class="lede">What a solid is made of (ions, molecules, a network of atoms, or metal atoms in a sea of electrons) and what holds it together decide its melting point, hardness, and conductivity. In Part A you run lab tests on mystery solids and classify them. In Part B you push, melt, and wire up a particle model to see the reasons.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Identify the solid, then explain it</h2>
+    <p>Test results are real properties of these substances at 1 atm (melting points rounded). Run any tests you want, then classify the sample. Mystery mode hides the names so you have to use the evidence.</p>
+  </div>
+
+  <h3 class="part">Part A: Test and classify</h3>
+
+  <div class="lab">
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Pick a sample</div>
+        <div class="chips" id="samples" role="group" aria-label="Samples"></div>
+        <label class="check" for="mystery"><input type="checkbox" id="mystery" checked> Mystery mode (hide names until classified)</label>
+      </div>
+      <div class="group">
+        <div class="tag">Run tests</div>
+        <div class="scenarios" id="testbtns"></div>
+      </div>
+    </div>
+    <div class="card graph-card">
+      <h3 id="s-title">Sample 1 <small id="s-sub"></small></h3>
+      <table class="tests" aria-label="Test results">
+        <thead><tr><th>Test</th><th>Result</th></tr></thead>
+        <tbody id="results"></tbody>
+      </table>
+      <div class="group" style="margin-top:6px;">
+        <div class="tag">What type of solid is it?</div>
+        <div class="scenarios classify" id="classify"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Tests run</div><div class="v" id="r-n"></div><div class="sub" id="r-n2"></div></div>
+    <div class="stat"><div class="k">Your classification</div><div class="v txt" id="r-c"></div><div class="sub" id="r-c2"></div></div>
+    <div class="stat"><div class="k">Particles and attractions</div><div class="v txt" id="r-p"></div><div class="sub" id="r-p2"></div></div>
+    <div class="stat"><div class="k">Score (first tries)</div><div class="v" id="r-s"></div><div class="sub" id="r-s2"></div></div>
+  </div>
+
+  <div class="story" id="story-a" aria-live="polite"></div>
+
+  <h3 class="part">Part B: The particle model</h3>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Particle model <small id="m-sub"></small></h3>
+      <svg class="chart" id="model" role="img" aria-label="Particle model of the selected type of solid, responding to force, heat, and voltage"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Type of solid</div>
+        <div class="seg" role="group" aria-label="Type of solid">
+          <button type="button" data-t="ionic">Ionic</button>
+          <button type="button" data-t="molecular">Molecular</button>
+          <button type="button" data-t="network">Network</button>
+          <button type="button" data-t="graphite">Graphite</button>
+          <button type="button" data-t="metallic">Metallic</button>
+        </div>
+      </div>
+      <div class="group">
+        <div class="tag">Do something to it</div>
+        <div class="scenarios" id="acts">
+          <button type="button" id="a-force" aria-pressed="false">Apply force</button>
+          <button type="button" id="a-melt" aria-pressed="false">Melt it</button>
+          <button type="button" id="a-volt" aria-pressed="false">Connect a battery</button>
+          <button type="button" id="a-reset">Reset model</button>
+        </div>
+      </div>
+      <div class="legend" id="m-legend" style="display:grid; gap:6px;"></div>
+    </div>
+  </div>
+
+  <div class="story" id="story-b" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Ionic solids</span><h3>Ions in a lattice</h3><p>Cations and anions held by strong Coulombic attractions. High melting points, hard but <b>brittle</b>: shifting a layer lines up like charges, which repel. They conduct only when melted or dissolved, when the ions are free to move. Higher charges and smaller ions give higher melting points (MgO vs. NaCl).</p></div>
+    <div class="card"><span class="tag">Molecular solids</span><h3>Molecules held by IMFs</h3><p>Discrete molecules held to each other by intermolecular forces (dispersion, dipole–dipole, hydrogen bonding). Melting overcomes only these weak forces, so melting points are low and the solids are soft. No charged particles move, so they do not conduct in any phase.</p></div>
+    <div class="card"><span class="tag">Covalent network solids</span><h3>One giant molecule</h3><p>Atoms covalently bonded to neighbors in three dimensions (diamond, SiO<sub>2</sub>, Si). Melting means breaking covalent bonds, so melting points are extremely high and the solids are very hard. Most do not conduct. Graphite is the exception: its layers have delocalized electrons and slide past each other.</p></div>
+    <div class="card"><span class="tag">Metallic solids</span><h3>Cations in an electron sea</h3><p>Metal cations surrounded by delocalized valence electrons. The electrons move freely, so metals conduct as solids and liquids. Layers of cations can slide without breaking the bonding, so metals are <b>malleable and ductile</b>. Melting points vary widely (Na 98 °C, Cu 1,085 °C).</p></div>
+    <div class="card"><span class="tag">Conductivity</span><h3>Something charged has to move</h3><p>Conduction needs mobile charged particles. Metals and graphite have mobile electrons. Ionic compounds have mobile ions only when molten or dissolved. Molecular and most network solids have neither.</p></div>
+    <div class="card"><span class="tag">Melting point</span><h3>What must be overcome</h3><p>Molecular: intermolecular forces (low). Ionic: ionic bonds (high). Network: covalent bonds (very high). Metallic: metallic bonding (wide range). On the exam, always say <b>which</b> attraction is overcome.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Types of solids cheat sheet</h2>
+    <p>Use the conductivity columns first: they separate the four types fastest.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Type</th><th>Particles</th><th>Held together by</th><th>Melting point</th><th>Mechanical</th><th>Conducts as solid?</th><th>Conducts melted?</th><th>Examples</th></tr></thead>
+    <tbody>
+      <tr><td><b>Ionic</b></td><td>Cations and anions</td><td>Ionic bonds (Coulombic)</td><td>High</td><td>Hard, brittle</td><td>No</td><td>Yes (also in water)</td><td>NaCl, MgO, CaF<sub>2</sub></td></tr>
+      <tr><td><b>Molecular</b></td><td>Molecules</td><td>Intermolecular forces</td><td>Low</td><td>Soft</td><td>No</td><td>No</td><td>I<sub>2</sub>, ice, sucrose, CO<sub>2</sub></td></tr>
+      <tr><td><b>Covalent network</b></td><td>Atoms</td><td>Covalent bonds throughout</td><td>Very high</td><td>Very hard (graphite: soft, slippery)</td><td>No (graphite: yes)</td><td>No</td><td>Diamond, SiO<sub>2</sub>, Si, graphite</td></tr>
+      <tr><td><b>Metallic</b></td><td>Metal cations + delocalized electrons</td><td>Metallic bonding</td><td>Low to very high</td><td>Malleable, ductile</td><td>Yes</td><td>Yes</td><td>Cu, Fe, Na, alloys</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Solids on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points</h3>
+      <ul>
+        <li>Name the particles <b>and</b> the attraction: "NaCl is made of Na<sup>+</sup> and Cl<sup>−</sup> ions held by strong Coulombic attractions."</li>
+        <li>For conductivity, say what is mobile: "In molten NaCl the ions are free to move and carry charge; in the solid they are held in fixed positions."</li>
+        <li>For a melting-point comparison between molecular and network solids, contrast IMFs with covalent bonds: "melting SiO<sub>2</sub> requires breaking covalent bonds; melting CO<sub>2</sub> only overcomes dispersion forces."</li>
+        <li>For brittleness, describe the shift: like-charged ions are brought next to each other and repel.</li>
+        <li>For malleability, say the delocalized electrons keep holding the cations together as layers slide.</li>
+        <li>For comparisons of ionic solids, use Coulomb's law: larger charges and smaller ions mean stronger attraction and a higher melting point.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying solid NaCl conducts because it "has ions." The ions must be free to move.</li>
+        <li>Saying covalent bonds break when a molecular solid melts. Only intermolecular forces are overcome.</li>
+        <li>Calling SiO<sub>2</sub> a molecular solid because its formula looks like CO<sub>2</sub>. SiO<sub>2</sub> is a network; CO<sub>2</sub> is molecular.</li>
+        <li>Saying all metals have very high melting points. Sodium melts at 98 °C and mercury is a liquid.</li>
+        <li>Saying sugar water conducts because sugar dissolves. Dissolving molecules does not make ions.</li>
+        <li>Saying sodium "dissolves" in water. It reacts to form H<sub>2</sub> and NaOH, a chemical change.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 3.2. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-3.html">Unit 3 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = function (id) { return document.getElementById(id); };
+  var TYPES = { ionic: "Ionic", molecular: "Molecular", network: "Covalent network", metallic: "Metallic" };
+  var TESTS = [
+    { k: "mp", n: "Heat it", row: "Melting point" },
+    { k: "ham", n: "Hit it with a hammer", row: "Hammer" },
+    { k: "cs", n: "Conductivity as a solid", row: "Conducts (solid)" },
+    { k: "cl", n: "Conductivity when melted", row: "Conducts (melted)" },
+    { k: "aq", n: "Add water", row: "In water" }
+  ];
+  // Real properties at 1 atm. Mixed order so the list does not give the answer away.
+  var SAMPLES = [
+    { n: "Copper", f: "Cu", t: "metallic", model: "metallic", parts: "copper cations in a sea of delocalized valence electrons", att: "metallic bonding",
+      mp: "1,085 °C (high)", ham: "Bends and flattens without breaking (malleable)", cs: "Conducts", cl: "Conducts", aq: "Does not dissolve" },
+    { n: "Sodium chloride", f: "NaCl", t: "ionic", model: "ionic", parts: "Na⁺ and Cl⁻ ions", att: "ionic bonds (Coulombic attraction)",
+      mp: "801 °C (high)", ham: "Shatters into pieces (brittle)", cs: "Does not conduct", cl: "Conducts", aq: "Dissolves; the solution conducts" },
+    { n: "Iodine", f: "I₂", t: "molecular", model: "molecular", parts: "I₂ molecules", att: "London dispersion forces between molecules",
+      mp: "114 °C (low); turns to vapor easily", ham: "Crumbles; soft crystals", cs: "Does not conduct", cl: "Does not conduct", aq: "Barely dissolves (dissolves well in nonpolar solvents)" },
+    { n: "Quartz", f: "SiO₂", t: "network", model: "network", parts: "Si and O atoms", att: "covalent Si–O bonds in all three dimensions",
+      mp: "About 1,700 °C (very high)", ham: "Very hard; scratches glass; can fracture", cs: "Does not conduct", cl: "Does not conduct", aq: "Does not dissolve" },
+    { n: "Sucrose (table sugar)", f: "C₁₂H₂₂O₁₁", t: "molecular", model: "molecular", parts: "C₁₂H₂₂O₁₁ molecules", att: "hydrogen bonds and other IMFs between molecules",
+      mp: "About 186 °C (low); it also starts to decompose", ham: "Crumbles", cs: "Does not conduct", cl: "Does not conduct", aq: "Dissolves; the solution does not conduct" },
+    { n: "Sodium", f: "Na", t: "metallic", model: "metallic", parts: "Na⁺ cations in a sea of delocalized electrons", att: "metallic bonding (weak for a metal: one valence electron, large atoms)",
+      mp: "98 °C (low for a metal)", ham: "Soft enough to cut with a knife; flattens", cs: "Conducts", cl: "Conducts", aq: "Reacts vigorously, giving H₂ gas and NaOH (a chemical change, not dissolving)" },
+    { n: "Graphite", f: "C", t: "network", model: "graphite", parts: "C atoms in flat sheets", att: "covalent C–C bonds within each sheet; dispersion forces between sheets",
+      mp: "Does not melt at 1 atm; turns to vapor above about 3,600 °C", ham: "Soft and slippery; flakes off in layers", cs: "Conducts (along its layers)", cl: "Cannot be melted at 1 atm", aq: "Does not dissolve" },
+    { n: "Magnesium oxide", f: "MgO", t: "ionic", model: "ionic", parts: "Mg²⁺ and O²⁻ ions", att: "ionic bonds (stronger than in NaCl: 2+ and 2− charges, smaller ions)",
+      mp: "2,852 °C (very high)", ham: "Hard but shatters (brittle)", cs: "Does not conduct", cl: "Conducts", aq: "Practically insoluble" },
+    { n: "Ice", f: "H₂O", t: "molecular", model: "molecular", parts: "H₂O molecules", att: "hydrogen bonds between molecules",
+      mp: "0 °C (low)", ham: "Shatters into chips", cs: "Does not conduct", cl: "Pure water barely conducts", aq: "Melts into the liquid; it is the same substance" },
+    { n: "Diamond", f: "C", t: "network", model: "network", parts: "C atoms", att: "covalent C–C bonds in all three dimensions",
+      mp: "Above 3,500 °C (extremely high)", ham: "Hardest natural material; scratches everything else here", cs: "Does not conduct", cl: "Cannot be melted under ordinary conditions", aq: "Does not dissolve" }
+  ];
+  var A = { i: 0, mystery: true, done: [] };
+  SAMPLES.forEach(function (s) { s.run = {}; s.guess = null; s.first = null; });
+
+  // ---------- Part A ----------
+  function label(i) { var s = SAMPLES[i]; return A.mystery && !s.first ? "Sample " + (i + 1) : s.n; }
+  var chips = [];
+  SAMPLES.forEach(function (s, i) {
+    var b = document.createElement("button"); b.type = "button";
+    b.addEventListener("click", function () { A.i = i; renderA(); });
+    el("samples").appendChild(b); chips.push(b);
+  });
+  TESTS.forEach(function (t) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = t.n; b.dataset.k = t.k;
+    b.addEventListener("click", function () { SAMPLES[A.i].run[t.k] = true; renderA(); });
+    el("testbtns").appendChild(b);
+  });
+  var allBtn = document.createElement("button"); allBtn.type = "button"; allBtn.textContent = "Run all tests";
+  allBtn.addEventListener("click", function () { TESTS.forEach(function (t) { SAMPLES[A.i].run[t.k] = true; }); renderA(); });
+  el("testbtns").appendChild(allBtn);
+  var clsBtns = {};
+  Object.keys(TYPES).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = TYPES[k];
+    b.addEventListener("click", function () {
+      var s = SAMPLES[A.i];
+      s.guess = k; if (!s.first) s.first = k;
+      if (k === s.t) setModel(s.model);
+      renderA();
+    });
+    el("classify").appendChild(b); clsBtns[k] = b;
+  });
+  el("mystery").addEventListener("change", function () { A.mystery = el("mystery").checked; renderA(); });
+
+  function evidence(s) {
+    var r = s.run, out = [];
+    if (r.cs) out.push(/^Conducts/.test(s.cs) ? "It conducts as a solid, so it has mobile electrons: a metal, or graphite." : "It does not conduct as a solid, so no charged particles are free to move: not a metal.");
+    if (r.cl) out.push(/^Conducts/.test(s.cl) && !/^Conducts/.test(s.cs) ? "It conducts only when melted: the ions are freed when the lattice breaks down. That is the signature of an ionic solid." :
+      /^Conducts/.test(s.cl) ? "It still conducts when melted: the electron sea remains in the liquid." :
+      /Cannot/.test(s.cl) ? "It cannot be melted under ordinary conditions, which points to extremely strong bonding throughout." :
+      "It does not conduct even when melted, so there are no ions: molecular or covalent network.");
+    if (r.mp) out.push(/low/.test(s.mp) && s.t !== "metallic" ? "Low melting point: only weak forces hold the particles together, typical of a molecular solid." :
+      /low for a metal/.test(s.mp) ? "Low melting point, but combined with conductivity this is a soft metal with weak metallic bonding." :
+      /very high|extremely|Does not melt/.test(s.mp) ? "Very high melting point: strong bonds (ionic or covalent) run through the whole solid." :
+      "High melting point: strong attractions throughout the solid (ionic, metallic, or network).");
+    if (r.ham) out.push(/brittle|Shatters|shatters/.test(s.ham) ? (s.t === "molecular" ? "It breaks apart easily: the weak forces between molecules give way." : "Brittle: typical of ionic solids, where shifting a layer brings like charges together.") :
+      /malleable|flattens/.test(s.ham) ? "It bends or flattens instead of breaking: malleable, a metallic property." :
+      /slippery/.test(s.ham) ? "Soft and slippery in layers: sheets held by weak forces slide past each other." :
+      /Hardest|Very hard/.test(s.ham) ? "Very hard: every atom is locked in place by covalent bonds." : "It crumbles: weak forces between particles.");
+    if (r.aq) out.push(/solution conducts/.test(s.aq) ? "Its water solution conducts, so it releases ions: ionic." :
+      /does not conduct/.test(s.aq) ? "It dissolves but the solution does not conduct: molecules dissolve intact, so it is molecular." :
+      /Reacts/.test(s.aq) ? "It reacts with water rather than dissolving, which is a reactive metal's behavior." : "Solubility here is not decisive by itself.");
+    return out;
+  }
+  function storyA() {
+    var s = SAMPLES[A.i], ev = evidence(s), html = "";
+    var n = Object.keys(s.run).length;
+    html += "<p><b>" + label(A.i) + (A.mystery && !s.first ? "" : " (" + s.f + ")") + ".</b> " + (n ? "What the tests tell you:" : "Run a test. Conductivity tests are the fastest way to narrow it down.") + "</p>";
+    if (ev.length) html += "<ul>" + ev.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
+    if (s.guess) {
+      if (s.guess === s.t) html += "<p><b style='color:var(--good)'>Correct: " + TYPES[s.t].toLowerCase() + " solid.</b> " + s.n + " is made of " + s.parts + ", held by " + s.att + ". Part B now shows its particle model.</p>";
+      else html += "<p><b style='color:var(--bad)'>Not " + TYPES[s.guess].toLowerCase() + ".</b> " + (n < 3 ? "Run more tests and look again." : "Check the conductivity results against the cheat sheet below, then try again.") + "</p>";
+    }
+    var end = s.guess === s.t ? {
+      ionic: "ionic solids have high melting points and are brittle; they conduct only when melted or dissolved, because then the ions can move.",
+      molecular: "molecular solids have low melting points and do not conduct, because melting overcomes only intermolecular forces and there are no free charged particles.",
+      network: s.model === "graphite" ? "graphite is a covalent network of layers; delocalized electrons within the layers let it conduct, and weak forces between the layers let them slide." : "covalent network solids have very high melting points and are very hard, because melting requires breaking covalent bonds; they do not conduct.",
+      metallic: "metals conduct as solids and liquids because delocalized electrons are mobile, and they are malleable because the electron sea keeps holding cations together as layers slide."
+    }[s.t] : "conductivity as a solid identifies metals (and graphite); conductivity only when melted identifies ionic solids; no conductivity plus a low melting point means molecular; no conductivity plus a very high melting point means covalent network.";
+    html += "<p><b>AP answer:</b> " + end.charAt(0).toUpperCase() + end.slice(1) + "</p>";
+    return html;
+  }
+  function renderA() {
+    var s = SAMPLES[A.i];
+    chips.forEach(function (b, i) {
+      var x = SAMPLES[i];
+      b.textContent = label(i);
+      b.setAttribute("aria-pressed", i === A.i ? "true" : "false");
+      b.classList.toggle("done-ok", !!x.guess && x.guess === x.t);
+      b.classList.toggle("done-bad", !!x.guess && x.guess !== x.t);
+    });
+    el("s-title").firstChild.textContent = label(A.i) + " ";
+    el("s-sub").textContent = A.mystery && !s.first ? "identity hidden" : s.f;
+    el("results").innerHTML = TESTS.map(function (t) {
+      return "<tr><td>" + t.row + "</td>" + (s.run[t.k] ? "<td>" + s[t.k] + "</td>" : '<td class="pending">not run yet</td>') + "</tr>";
+    }).join("");
+    Array.prototype.forEach.call(el("testbtns").children, function (b) { if (b.dataset.k) b.setAttribute("aria-pressed", s.run[b.dataset.k] ? "true" : "false"); });
+    Object.keys(clsBtns).forEach(function (k) {
+      clsBtns[k].classList.toggle("right", s.guess === k && k === s.t);
+      clsBtns[k].classList.toggle("wrong", s.guess === k && k !== s.t);
+    });
+    var n = Object.keys(s.run).length;
+    el("r-n").textContent = n + " of 5"; el("r-n2").textContent = n ? "on this sample" : "start with conductivity";
+    el("r-c").textContent = s.guess ? TYPES[s.guess] : "—";
+    el("r-c2").textContent = !s.guess ? "pick one of the four types" : s.guess === s.t ? "correct" : "not this one; try again";
+    var solved = s.guess === s.t;
+    el("r-p").textContent = solved ? s.parts.charAt(0).toUpperCase() + s.parts.slice(1) : "?";
+    el("r-p2").textContent = solved ? "held by " + s.att : "revealed when you classify it correctly";
+    var tried = SAMPLES.filter(function (x) { return x.first; }), ok = tried.filter(function (x) { return x.first === x.t; });
+    el("r-s").textContent = ok.length + " / " + tried.length;
+    el("r-s2").textContent = SAMPLES.length - tried.length + " samples left to try";
+    el("story-a").innerHTML = storyA();
+  }
+
+  // ---------- Part B: particle model ----------
+  var svg = el("model"), W = 440, H = 300;
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  var M = { type: "ionic", force: 0, melt: 0, volt: false, forceOn: false, meltOn: false };
+  var clock = 0;
+  function sr(s) { return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+  var rj = sr(41), JIT = []; for (var i = 0; i < 120; i++) JIT.push([rj() * 2 - 1, rj() * 2 - 1, rj() * 6.28, rj() * 2 - 1]);
+  var re = sr(9), ELEC = []; for (var j = 0; j < 46; j++) ELEC.push([60 + re() * 320, 64 + re() * 192, re() * 6.28]);
+  var C = 8, RW = 5, SP = 40, GX = 80, GY = 72;
+  function E(tag, at, txt) { return Lab.el(tag, at, svg, txt); }
+  function circ(x, y, r, fill, txt, tfill) {
+    E("circle", { cx: x.toFixed(1), cy: y.toFixed(1), r: r, fill: fill, stroke: "var(--surface)", "stroke-width": 1.2 });
+    if (txt) E("text", { x: x.toFixed(1), y: (y + 4.5).toFixed(1), "text-anchor": "middle", style: "fill:" + (tfill || "var(--surface)") + "; font-size:13px; font-weight:700" }, txt);
+  }
+  function caption(t, color) {
+    var lines = [t];
+    if (t.length > 44) {   // split long captions into two lines at the space nearest the middle
+      var mid = t.length / 2, best = -1;
+      for (var i = 0; i < t.length; i++) if (t[i] === " " && (best < 0 || Math.abs(i - mid) < Math.abs(best - mid))) best = i;
+      if (best > 0) lines = [t.slice(0, best), t.slice(best + 1)];
+    }
+    lines.forEach(function (ln, n) { E("text", { x: W / 2, y: H - 8 - (lines.length - 1 - n) * 16, "text-anchor": "middle", "class": "lbl", style: "fill:" + (color || "var(--ink)") }, ln); });
+  }
+  function battery() {
+    E("rect", { x: 14, y: 56, width: 10, height: 200, fill: "var(--c4)", rx: 2 });
+    E("rect", { x: W - 24, y: 56, width: 10, height: 200, fill: "var(--c4)", rx: 2 });
+    E("text", { x: 19, y: 50, "text-anchor": "middle", "class": "lbl", style: "fill:var(--c4)" }, "−");
+    E("text", { x: W - 19, y: 50, "text-anchor": "middle", "class": "lbl", style: "fill:var(--c4)" }, "+");
+    E("path", { d: "M19 40 V22 H200 M240 22 H" + (W - 19) + " V40", stroke: "var(--c4)", "stroke-width": 2, fill: "none" });
+    E("line", { x1: 200, x2: 200, y1: 12, y2: 32, stroke: "var(--c4)", "stroke-width": 2 });
+    E("line", { x1: 212, x2: 212, y1: 16, y2: 28, stroke: "var(--c4)", "stroke-width": 4 });
+    E("line", { x1: 228, x2: 228, y1: 12, y2: 32, stroke: "var(--c4)", "stroke-width": 2 });
+    E("line", { x1: 240, x2: 240, y1: 16, y2: 28, stroke: "var(--c4)", "stroke-width": 4 });
+  }
+  function draw() {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var t = M.type, f = M.force, m = M.melt, k = 0;
+    if (M.volt) battery();
+    var vib = 1.2 + m * 2.5;
+    function jig(n) { var q = JIT[n % JIT.length]; return [Math.sin(clock * 8 + q[2]) * vib, Math.cos(clock * 9 + q[2]) * vib]; }
+    function melted(n) { var q = JIT[n % JIT.length], amp = t === "molecular" || t === "network" ? 15 : 7; return [q[0] * amp * m, q[1] * amp * m]; }
+
+    if (t === "ionic") {
+      var drift = M.volt && m > 0.5 ? (clock % 3) / 3 * 26 : 0;
+      for (var r = 0; r < RW; r++) for (var c = 0; c < C; c++, k++) {
+        var cat = (r + c) % 2 === 0, x = GX + c * SP, y = GY + r * SP;
+        if (r < 2) { x += f * SP; y -= Math.max(0, f - 0.5) * 50; }
+        var d = melted(k), jg = jig(k); x += d[0] + jg[0]; y += d[1] + jg[1];
+        if (drift) x += cat ? -drift : drift;
+        circ(x, y, cat ? 11 : 16, cat ? "var(--c3)" : "var(--c2)", cat ? "+" : "−");
+      }
+      if (f > 0.55) {
+        var lift = Math.max(0, f - 0.5) * 50, yy = GY + 1.5 * SP - lift / 2, half = Math.max(4, (SP + lift - 32) / 2 - 3);
+        E("line", { x1: GX - 30, x2: GX + C * SP + 30, y1: yy, y2: yy, stroke: "var(--bad)", "stroke-width": 1.5, "stroke-dasharray": "6 4" });
+        for (var c2 = 1; c2 < C; c2++) {
+          var xx = GX + c2 * SP;
+          E("path", { d: "M" + xx + " " + (yy - 3) + " V" + (yy - half) + " m-4 5 l4 -5 l4 5 M" + xx + " " + (yy + 3) + " V" + (yy + half) + " m-4 -5 l4 5 l4 -5", stroke: "var(--bad)", "stroke-width": 2, fill: "none" });
+        }
+      }
+      caption(f > 0.55 ? "Like charges now face each other and repel: the crystal shatters" :
+        M.volt ? (m > 0.5 ? "Molten: cations move to −, anions move to +, so current flows" : "Solid: ions locked in place, so no current flows") :
+        m > 0.5 ? "Molten: ions free to move, still attracted to each other" : "Alternating cations (+) and anions (−) in a lattice", f > 0.55 ? "var(--bad)" : null);
+    } else if (t === "metallic") {
+      for (var r3 = 0; r3 < RW; r3++) for (var c3 = 0; c3 < C; c3++, k++) {
+        var x3 = GX + c3 * SP, y3 = GY + r3 * SP;
+        if (r3 < 2) x3 += f * SP;
+        var d3 = melted(k), j3 = jig(k);
+        circ(x3 + d3[0] + j3[0], y3 + d3[1] + j3[1], 14, "var(--c1)", "+");
+      }
+      ELEC.forEach(function (e, n) {
+        var x = e[0] + Math.sin(clock * 3 + e[2]) * 10 + (M.volt ? clock * 38 : 0), y = e[1] + Math.cos(clock * 2.6 + e[2]) * 10;
+        x = 60 + ((x - 60) % 320 + 320) % 320;
+        E("circle", { cx: x.toFixed(1), cy: y.toFixed(1), r: 3.4, fill: "var(--accent)" });
+      });
+      caption(f > 0.55 ? "Layers slid, but the electron sea still holds them: malleable" :
+        M.volt ? "Delocalized electrons drift toward +: metals conduct" + (m > 0.5 ? " even when molten" : "") :
+        m > 0.5 ? "Molten metal: cations disordered, electrons still mobile" : "Metal cations (+) in a sea of delocalized electrons (dots)", f > 0.55 ? "var(--good)" : null);
+    } else if (t === "molecular") {
+      for (var r4 = 0; r4 < 4; r4++) for (var c4 = 0; c4 < 5; c4++, k++) {
+        var x4 = 90 + c4 * 66, y4 = 82 + r4 * 50;
+        if (r4 < 2) x4 += f * 66;
+        var d4 = melted(k), j4 = jig(k), q = JIT[k];
+        var ang = (r4 % 2 ? 0.5 : -0.5) + q[3] * 1.6 * m + (m > 0.5 ? Math.sin(clock * 2 + q[2]) * 0.5 * m : 0);
+        var cx = x4 + d4[0] * 1.6 + j4[0], cy = y4 + d4[1] * 1.4 + j4[1], dx = Math.cos(ang) * 10, dy = Math.sin(ang) * 10;
+        E("line", { x1: cx - dx, y1: cy - dy, x2: cx + dx, y2: cy + dy, stroke: "var(--ink)", "stroke-width": 4 });
+        circ(cx - dx, cy - dy, 11, "var(--c3)"); circ(cx + dx, cy + dy, 11, "var(--c3)");
+      }
+      caption(M.volt ? "Neutral molecules, no free charges: no current" :
+        f > 0.55 ? "Weak forces between molecules give way easily: soft, crumbly" :
+        m > 0.5 ? "Melted: molecules move apart, but each I₂ molecule stays intact" : "Separate I₂ molecules held by weak dispersion forces");
+    } else if (t === "network") {
+      var pos = [];
+      for (var r5 = 0; r5 < RW; r5++) for (var c5 = 0; c5 < C; c5++, k++) {
+        var d5 = melted(k), j5 = jig(k);
+        pos.push([GX + c5 * SP + (r5 % 2 ? SP / 2 : 0) - 10 + d5[0] * 0.8 + j5[0], GY + r5 * SP * 0.95 + d5[1] * 0.8 + j5[1]]);
+      }
+      var broke = sr(5);
+      function bond(a, b) {
+        if (!a || !b) return;
+        var br = m > 0.5 && broke() < 0.35;
+        E("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: br ? "var(--bad)" : "var(--muted)", "stroke-width": br ? 1.5 : 3, "stroke-dasharray": br ? "3 4" : null });
+      }
+      for (var r6 = 0; r6 < RW; r6++) for (var c6 = 0; c6 < C; c6++) {
+        var i6 = r6 * C + c6;
+        if (c6 < C - 1) bond(pos[i6], pos[i6 + 1]);
+        if (r6 < RW - 1) { bond(pos[i6], pos[i6 + C]); var dn = r6 % 2 ? i6 + C + 1 : i6 + C - 1; if (dn >= (r6 + 1) * C && dn < (r6 + 2) * C) bond(pos[i6], pos[dn]); }
+      }
+      pos.forEach(function (p) { circ(p[0], p[1], 9, "var(--ink)"); });
+      if (f > 0.55) E("text", { x: W / 2, y: 50, "text-anchor": "middle", "class": "lbl", style: "fill:var(--good)" }, "nothing moves");
+      caption(M.volt ? "Electrons locked in localized covalent bonds: no current" :
+        f > 0.55 ? "Every atom is held by covalent bonds: very hard, does not bend" :
+        m > 0.5 ? "Melting breaks covalent bonds (dashed): needs very high temperatures" : "Atoms covalently bonded to neighbors in every direction");
+    } else if (t === "graphite") {
+      for (var L = 0; L < 3; L++) {
+        var y7 = 86 + L * 72, shift = L === 0 ? f * 60 : 0, prev = null;
+        for (var n7 = 0; n7 < 11; n7++, k++) {
+          var j7 = jig(k), x7 = 56 + n7 * 32 + shift + (L % 2 ? 16 : 0) + j7[0], yy7 = y7 + (n7 % 2 ? 9 : -9) + j7[1] * 0.5;
+          if (prev) E("line", { x1: prev[0], y1: prev[1], x2: x7, y2: yy7, stroke: "var(--muted)", "stroke-width": 3 });
+          prev = [x7, yy7]; circ(x7, yy7, 8, "var(--ink)");
+        }
+        if (L < 2) for (var g = 0; g < 4; g++) E("line", { x1: 100 + g * 80, x2: 100 + g * 80, y1: y7 + 18, y2: y7 + 54, stroke: "var(--ghost)", "stroke-width": 1.5, "stroke-dasharray": "3 4" });
+        if (M.volt) for (var e8 = 0; e8 < 6; e8++) {
+          var xe = 60 + ((e8 * 55 + clock * 40) % 320);
+          E("circle", { cx: xe.toFixed(1), cy: y7 - 18, r: 3.4, fill: "var(--accent)" });
+        }
+      }
+      caption(M.volt ? "Delocalized electrons move along each layer: graphite conducts" :
+        f > 0.55 ? "The top layer slides over weak forces between layers: slippery" :
+        m > 0.5 ? "Does not melt at 1 atm: C–C bonds must break (above 3,600 °C)" : "Covalently bonded sheets; weak forces between sheets (dashed)");
+    }
+  }
+  var mLegend = {
+    ionic: '<span class="l-c3">Cation (+)</span><span class="l-c2">Anion (−)</span>',
+    metallic: '<span class="l-c1">Metal cation</span><span class="l-ad">Delocalized electron</span>',
+    molecular: '<span class="l-c3">Atom in an I₂ molecule</span><span>Covalent bond inside the molecule</span>',
+    network: '<span>Atom</span><span class="l-ghost">Covalent bond</span>',
+    graphite: '<span>C atom and C–C bond</span><span class="l-ghost">Weak forces between layers</span><span class="l-ad">Mobile electron</span>'
+  };
+  function storyB() {
+    var t = M.type, html = "", li = [];
+    var intro = {
+      ionic: "Ions of opposite charge alternate in a lattice. Each ion is attracted to all its oppositely charged neighbors.",
+      molecular: "The covalent bonds inside each I₂ molecule are strong, but the forces between molecules are weak dispersion forces.",
+      network: "There are no separate molecules: every atom is covalently bonded to its neighbors, so the whole crystal is one giant molecule (diamond, SiO₂).",
+      graphite: "Graphite is a covalent network built in flat sheets. Within a sheet each C atom bonds to three others and one electron per atom is delocalized across the sheet.",
+      metallic: "Metal atoms give up their valence electrons to a shared, delocalized sea that holds the cations together."
+    }[t];
+    html += "<p><b>" + (t === "graphite" ? "Graphite (covalent network)" : TYPES[t] + " solid") + ".</b> " + intro + "</p>";
+    if (M.forceOn) li.push({ ionic: "<b>Force:</b> sliding the top layers one ion over puts + next to + and − next to −. The repulsions push the layers apart and the crystal cracks. That is why ionic solids are brittle.",
+      metallic: "<b>Force:</b> the layers slide, but every cation is still surrounded by the electron sea, so the bonding is not disrupted. Metals bend and flatten instead of breaking: malleable and ductile.",
+      molecular: "<b>Force:</b> only weak intermolecular forces resist, so molecular solids are soft and crumble easily.",
+      network: "<b>Force:</b> moving any atom means breaking covalent bonds, so nothing gives. Network solids are very hard.",
+      graphite: "<b>Force:</b> the sheets slide over each other because only weak dispersion forces hold them together. That is why graphite works as pencil lead and as a lubricant." }[t]);
+    if (M.meltOn) li.push({ ionic: "<b>Melting:</b> the lattice breaks down and the ions can move past each other. Ionic bonds are strong, so this takes a high temperature (801 °C for NaCl).",
+      metallic: "<b>Melting:</b> the cations lose their ordered positions, but the electron sea remains, so liquid metals still conduct.",
+      molecular: "<b>Melting:</b> molecules move apart and tumble, but no I₂ molecule breaks. Only intermolecular forces are overcome, which takes little energy: a low melting point.",
+      network: "<b>Melting:</b> covalent bonds have to break (dashed red), which takes a lot of energy. Quartz melts around 1,700 °C and diamond above 3,500 °C.",
+      graphite: "<b>Heating:</b> at 1 atm graphite does not melt; above about 3,600 °C its covalent bonds break and it turns directly to vapor." }[t]);
+    if (M.volt) li.push({ ionic: M.meltOn ? "<b>Battery:</b> in the melt, cations move toward the negative electrode and anions toward the positive one. Moving ions carry the current." : "<b>Battery:</b> nothing moves. The ions are charged but locked in place, so the solid does not conduct. Melt it (or dissolve it) and try again.",
+      metallic: "<b>Battery:</b> the delocalized electrons drift toward the positive terminal. Metals conduct as solids and as liquids.",
+      molecular: "<b>Battery:</b> there are no ions and no delocalized electrons, so there is no current, solid or melted.",
+      network: "<b>Battery:</b> each electron is held in a bond between two specific atoms, so there is no current.",
+      graphite: "<b>Battery:</b> the delocalized electrons in each sheet carry a current along the layers. Graphite is the network solid that conducts." }[t]);
+    if (!li.length) li.push("Use the buttons to apply force, melt it, or connect a battery. Combine them: try the battery on solid and then melted ionic compounds.");
+    html += "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
+    var end = { ionic: "brittle because a shift brings like charges together; conducts only when molten or dissolved because only then can the ions move.",
+      metallic: "malleable because the delocalized electrons hold the cations together as layers slide; conducts because the electrons are mobile.",
+      molecular: "low melting point and soft because only weak intermolecular forces are overcome; no conductivity because there are no mobile charged particles.",
+      network: "very high melting point and very hard because covalent bonds must be broken; no conductivity because the electrons are localized in bonds.",
+      graphite: "layers of covalently bonded atoms with delocalized electrons: conducts along the layers and is slippery because the layers are held together only by weak forces." }[t];
+    html += "<p><b>AP answer:</b> " + (t === "graphite" ? "Graphite: " : TYPES[t] + " solid: ") + end + "</p>";
+    return html;
+  }
+  var segBtns = svg.ownerDocument.querySelectorAll(".seg button[data-t]");
+  var stopF = function () {}, stopM = function () {};
+  function setModel(t) { stopF(); stopM(); M.type = t; M.force = 0; M.melt = 0; M.forceOn = false; M.meltOn = false; M.volt = false; renderB(); }
+  Array.prototype.forEach.call(segBtns, function (b) { b.addEventListener("click", function () { setModel(b.dataset.t); }); });
+  el("a-force").addEventListener("click", function () {
+    M.forceOn = !M.forceOn; stopF();
+    var a = M.force, b = M.forceOn ? 1 : 0;
+    stopF = Lab.animate(900, function (u) { M.force = a + (b - a) * u; draw(); }, function () { M.force = b; renderB(); });
+    renderB();
+  });
+  el("a-melt").addEventListener("click", function () {
+    M.meltOn = !M.meltOn; stopM();
+    var a = M.melt, b = M.meltOn ? 1 : 0;
+    stopM = Lab.animate(900, function (u) { M.melt = a + (b - a) * u; draw(); }, function () { M.melt = b; renderB(); });
+    renderB();
+  });
+  el("a-volt").addEventListener("click", function () { M.volt = !M.volt; renderB(); });
+  el("a-reset").addEventListener("click", function () { setModel(M.type); });
+  function renderB() {
+    Array.prototype.forEach.call(segBtns, function (b) { b.setAttribute("aria-pressed", b.dataset.t === M.type ? "true" : "false"); });
+    el("a-force").setAttribute("aria-pressed", M.forceOn ? "true" : "false");
+    el("a-melt").setAttribute("aria-pressed", M.meltOn ? "true" : "false");
+    el("a-melt").textContent = M.type === "graphite" ? (M.meltOn ? "Cool it" : "Heat it") : (M.meltOn ? "Freeze it" : "Melt it");
+    el("a-force").textContent = M.forceOn ? "Undo force" : "Apply force";
+    el("a-volt").setAttribute("aria-pressed", M.volt ? "true" : "false");
+    el("a-volt").textContent = M.volt ? "Disconnect battery" : "Connect a battery";
+    el("m-sub").textContent = { ionic: "e.g. NaCl", molecular: "e.g. I₂", network: "e.g. diamond, SiO₂", graphite: "layers of C", metallic: "e.g. Cu, Na" }[M.type] + (M.meltOn ? " · melted" : "");
+    el("m-legend").innerHTML = mLegend[M.type];
+    draw();
+    el("story-b").innerHTML = storyB();
+  }
+  var visible = true, last = null;
+  if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { visible = es[0].isIntersecting; }).observe(svg);
+  function loop(ts) {
+    if (last != null && visible) { clock += Math.min(0.05, (ts - last) / 1000); draw(); }
+    last = ts; requestAnimationFrame(loop);
+  }
+  renderA(); renderB();
+  if (!Lab.reduceMotion) requestAnimationFrame(loop);
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "A solid has a melting point of 1,450 °C, does not conduct electricity as a solid, and conducts when melted. What type of solid is it most likely to be?",
+      o: ["Molecular", "Metallic", "Ionic", "Covalent network"], c: 2,
+      w: "Conducting only when melted means the solid contains ions that become mobile in the liquid, and the high melting point fits strong ionic bonds. A metal (B) would conduct as a solid; a network solid (D) would not conduct even when melted." },
+    { s: "Which statement best explains why solid NaCl does not conduct electricity but molten NaCl does?",
+      o: ["Solid NaCl contains neutral atoms, which become ions when it melts", "In the solid the ions are held in fixed positions; in the liquid they are free to move", "Electrons are delocalized in the liquid but not in the solid", "Covalent bonds in NaCl break when it melts, releasing charged particles"], c: 1,
+      w: "NaCl is made of ions in both phases. Conduction needs charged particles that can move, and the ions only move once the lattice breaks down. Choice A is wrong because the ions exist in the solid too." },
+    { s: "SiO₂ melts at about 1,700 °C, while CO₂ sublimes at −78 °C. Which explanation is correct?",
+      o: ["Melting SiO₂ requires breaking covalent bonds in a network; CO₂ molecules are held to each other only by weak dispersion forces", "Si–O bonds are ionic while C=O bonds are covalent", "SiO₂ molecules are much heavier than CO₂ molecules, so they have stronger dispersion forces", "CO₂ is polar, and polar substances have low melting points"], c: 0,
+      w: "SiO₂ is a covalent network solid with no separate molecules; melting it breaks Si–O covalent bonds. Solid CO₂ is molecular, and only intermolecular forces are overcome. Choice C treats SiO₂ as if it were made of small molecules." },
+    { s: "When a metal is hammered into a thin sheet, it bends rather than shatters. Which particle-level explanation is best?",
+      o: ["The metal atoms are held by strong covalent bonds that flex", "Metal cations repel each other when layers shift", "Metals have low melting points, so hammering partly melts them", "Layers of cations can slide while the delocalized electrons continue to hold them together"], c: 3,
+      w: "In a metal the bonding comes from the electron sea surrounding all the cations, so shifting layers does not bring repelling charges together and does not break the bonding. Choice B describes what happens in an ionic solid, which is why those are brittle." },
+    { s: "Which solid is expected to have the highest melting point?",
+      o: ["NaF", "KCl", "MgO", "NaCl"], c: 2,
+      w: "All four are ionic. MgO has ions with 2+ and 2− charges and small radii, so by Coulomb's law its attractions are the strongest (it melts at 2,852 °C vs. 801 °C for NaCl). The others all have 1+ and 1− ions." },
+    { s: "A white crystalline solid melts at 146 °C, dissolves in water, and its water solution does not conduct electricity. What type of solid is it?",
+      o: ["Ionic", "Metallic", "Covalent network", "Molecular"], c: 3,
+      w: "A low melting point and a non-conducting solution mean the solid is made of molecules that dissolve intact without forming ions. An ionic solid (A) would have a high melting point and give a conducting solution." },
+    { s: "Graphite conducts electricity, but diamond does not, even though both are pure carbon. Which statement explains this?",
+      o: ["Graphite contains carbon ions, and diamond contains carbon atoms", "Graphite has delocalized electrons within its layers; in diamond every valence electron is in a localized C–C bond", "Diamond has a higher melting point, so its electrons cannot move", "Graphite is a metal, and diamond is a covalent network"], c: 1,
+      w: "In graphite each C atom bonds to three others in a sheet, leaving electrons delocalized across the sheet, which can carry a current. In diamond each C bonds to four others and all electrons are localized. Both are covalent network solids; graphite is not a metal (choice D)." },
+    { s: "A student draws a particle diagram of molten KBr as K atoms and Br₂ molecules moving freely. What is wrong with the diagram?",
+      o: ["Molten KBr should be drawn as K⁺ and Br⁻ ions moving freely", "Molten KBr should be drawn as a rigid lattice of ions", "Molten KBr should be drawn as KBr molecules", "Nothing; melting converts ions back into atoms and molecules"], c: 0,
+      w: "Melting is a physical change: the ions do not change identity. Molten KBr is K⁺ and Br⁻ ions that are no longer locked in place, which is why it conducts. Choice B describes the solid; choice C treats an ionic compound as if it were molecular." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("3.2");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [3], topic: "3.2", compact: true, storageKey: "topic-3.2" });</script>
+</body>
+</html>

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elemental Composition of Pure Substances Study Lab</title>
+<meta name="description" content="See why a pure compound always has the same percent composition, then turn percent or mass data into an empirical and molecular formula one step at a time.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.part { font-size: 1.25rem; margin-top: 6px; }
+.graph-card { align-content: start; }
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"], .subs button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.subs { display: flex; flex-wrap: wrap; gap: 6px; }
+.subs button { padding: 4px 11px; font-size: .86rem; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.side .controls { grid-template-columns: 1fr; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.ins { display: grid; gap: 8px; }
+.ins .r { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.ins select, .ins input, .mm-in input { font: inherit; font-size: .92rem; padding: 6px 8px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); min-width: 0; width: 100%; }
+.ins input, .mm-in input { font-family: var(--mono); }
+.ins .unit { font-size: .82rem; color: var(--muted); width: 2.2em; }
+.mm-in { display: grid; gap: 4px; font-size: .86rem; font-weight: 500; }
+.mm-in .hint { font-size: .76rem; color: var(--muted); font-weight: 400; }
+.ef table { min-width: 620px; }
+.ef td, .ef th { font-variant-numeric: tabular-nums; }
+.ef td.n, .ef th.n { text-align: right; font-family: var(--mono); font-size: .88rem; }
+.ef td.n.fin { color: var(--accent); font-weight: 600; }
+.big { font-family: var(--mono); font-size: 1.15rem; }
+#bars .seglbl { font-size: 12px; font-weight: 600; fill: var(--surface); }
+#bars .rowlbl { font-size: 12px; font-weight: 600; fill: var(--ink); }
+.legend .l-e0 { color: var(--accent); } .legend .l-e1 { color: var(--c1); } .legend .l-e2 { color: var(--c2); } .legend .l-e3 { color: var(--c3); }
+.astory { border-left-color: var(--c2); }
+@media (max-width: 520px) { .readout { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 1 · Topic 1.3</span>
+  <h1>Elemental Composition of Pure Substances Study Lab</h1>
+  <p class="lede">A pure compound always contains its elements in the same proportion by mass, no matter how big the sample or where it came from. That fixed composition lets you work backward from lab data to a formula. Part A shows the fixed proportions; Part B turns percent or mass data into an empirical formula and, with a molar mass, a molecular formula.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Composition lab</h2>
+    <p>All molar masses come from the AP periodic table. Percent compositions are computed from the formula, not measured.</p>
+  </div>
+
+  <h3 class="part" id="pa-h">Part A: Percent composition and the law of definite proportions</h3>
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Mass of each element <small id="a-sub"></small></h3>
+      <svg class="chart" id="bars" role="img" aria-label="Bars showing the mass of each element in your sample and in 100 grams of the compound"></svg>
+      <div class="legend" id="a-legend"></div>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Compound</div>
+        <div class="subs" id="a-subs"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="a-mass">Sample mass <output id="o-a-mass"></output></label>
+          <input type="range" id="a-mass" min="1" max="100" step="1">
+          <span class="hint">Change the size of the sample. Watch what stays the same.</span>
+        </div>
+      </div>
+      <div class="readout" style="grid-template-columns: 1fr 1fr;">
+        <div class="stat"><div class="k">Molar mass</div><div class="v" id="a-r1"></div></div>
+        <div class="stat"><div class="k" id="a-r2k">Mass ratio</div><div class="v" id="a-r2"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="story astory" id="a-story" aria-live="polite"></div>
+
+  <h3 class="part" id="pb-h">Part B: Empirical formula from data</h3>
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Mole ratio <small>moles ÷ smallest, then × multiplier</small></h3>
+      <svg class="chart" id="ratio" role="img" aria-label="Bar chart of the mole ratio of each element compared with whole numbers"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <span class="tag" id="mode-lbl">Data given as</span>
+        <div class="seg" role="group" aria-labelledby="mode-lbl">
+          <button type="button" id="m-pct" aria-pressed="true">Percent by mass</button>
+          <button type="button" id="m-g" aria-pressed="false">Grams of each element</button>
+        </div>
+      </div>
+      <div class="ins" id="ins"></div>
+      <label class="mm-in" for="b-mm">Molar mass of the compound (optional)
+        <input id="b-mm" type="text" inputmode="decimal" autocomplete="off">
+        <span class="hint">Give it to find the molecular formula.</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="card group">
+    <div class="tag">Exam-style data sets</div>
+    <div class="scenarios" id="sc"></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Empirical formula</div><div class="v" id="r-ef"></div><div class="sub" id="r-ef2"></div></div>
+    <div class="stat"><div class="k">Empirical formula mass</div><div class="v" id="r-em"></div><div class="sub" id="r-em2"></div></div>
+    <div class="stat"><div class="k">Molar mass ÷ empirical mass</div><div class="v" id="r-n"></div><div class="sub" id="r-n2"></div></div>
+    <div class="stat"><div class="k">Molecular formula</div><div class="v" id="r-mf"></div><div class="sub" id="r-mf2"></div></div>
+  </div>
+
+  <div class="tbl-wrap ef"><table id="ef-tbl"></table></div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Fixed ratio</span><h3>Law of definite proportions</h3><p>A pure compound always has the same elements in the same proportion by mass. Pure water is always 11.2% hydrogen and 88.8% oxygen by mass, whether it is a drop or a lake. This is what makes a compound a pure substance.</p></div>
+    <div class="card"><span class="tag">mass of element ÷ mass of compound</span><h3>Percent composition</h3><p>Percent by mass of an element = (mass of that element in one mole ÷ molar mass) × 100. For H₂O: 2(1.008) ÷ 18.02 × 100 = 11.2% H. The percents of all the elements add to 100.</p></div>
+    <div class="card"><span class="tag">Simplest whole-number ratio</span><h3>Empirical formula</h3><p>The empirical formula gives the lowest whole-number ratio of atoms. Glucose, C₆H₁₂O₆, has the empirical formula CH₂O. Ionic compounds are always written as empirical formulas (NaCl, Fe₂O₃).</p></div>
+    <div class="card"><span class="tag">Percent → grams → moles</span><h3>From data to formula</h3><p>Assume a 100 g sample so percents become grams. Convert each mass to moles. Divide every mole value by the smallest. If a ratio ends in about .5, .33, or .25, multiply all of them by 2, 3, or 4.</p></div>
+    <div class="card"><span class="tag">n = M ÷ empirical mass</span><h3>Molecular formula</h3><p>The molecular formula is a whole-number multiple of the empirical formula. Divide the compound's molar mass by the empirical formula mass to get that multiple, then multiply every subscript by it.</p></div>
+    <div class="card"><span class="tag">Same ratio, different compounds</span><h3>What composition cannot tell you</h3><p>Compounds with the same empirical formula have the same percent composition. C₂H₂ and C₆H₆ are both 92.3% C. To tell them apart you need more information, such as the molar mass.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Empirical formula worked examples</h2>
+    <p>Each row follows the same four steps: grams, moles, divide by the smallest, multiply to whole numbers. Cover the last two columns and try them.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Data</th><th>Moles (per 100 g or per sample)</th><th>Ratio ÷ smallest</th><th>Empirical formula</th><th>Molecular formula</th></tr></thead>
+    <tbody>
+      <tr><td>40.0% C, 6.7% H, 53.3% O; M = 180.16 g/mol</td><td>C 3.33, H 6.65, O 3.33</td><td>1 : 2.00 : 1</td><td><b>CH₂O</b> (30.03 g/mol)</td><td>180.16 ÷ 30.03 = 6 → C₆H₁₂O₆</td></tr>
+      <tr><td>69.94% Fe, 30.06% O</td><td>Fe 1.252, O 1.879</td><td>1 : 1.50 → × 2 = 2 : 3</td><td><b>Fe₂O₃</b></td><td>Ionic: the empirical formula is the formula</td></tr>
+      <tr><td>30.4% N, 69.6% O; M = 92.0 g/mol</td><td>N 2.17, O 4.35</td><td>1 : 2.00</td><td><b>NO₂</b> (46.01 g/mol)</td><td>92.0 ÷ 46.01 = 2 → N₂O₄</td></tr>
+      <tr><td>2.50 g Mg burns to give 4.15 g of oxide</td><td>Mg 0.103, O (4.15 − 2.50 = 1.65 g) 0.103</td><td>1 : 1.00</td><td><b>MgO</b></td><td>Ionic</td></tr>
+      <tr><td>40.92% C, 4.58% H, 54.50% O; M = 176.12 g/mol</td><td>C 3.407, H 4.54, O 3.406</td><td>1 : 1.33 : 1 → × 3 = 3 : 4 : 3</td><td><b>C₃H₄O₃</b> (88.06 g/mol)</td><td>176.12 ÷ 88.06 = 2 → C₆H₈O₆ (vitamin C)</td></tr>
+      <tr><td>Percent composition of H₂O vs. H₂O₂</td><td colspan="2">H₂O: 11.2% H, 88.8% O. H₂O₂: 5.9% H, 94.1% O.</td><td colspan="2">Different compounds of the same elements have different, but each fixed, compositions.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Composition on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Show each mass-to-moles conversion with its molar mass, e.g. 40.0 g C × (1 mol / 12.01 g) = 3.33 mol C.</li>
+        <li>Show the division by the smallest number of moles and the resulting ratio before writing the formula.</li>
+        <li>When a ratio is near 1.5 or 1.33, state the multiplier you used ("multiply by 2 to get whole numbers").</li>
+        <li>For mass-change data (a metal heated in air, a hydrate heated), find the mass of the second element by subtraction and say so.</li>
+        <li>For the molecular formula, show molar mass ÷ empirical formula mass = a whole number.</li>
+        <li>To justify that a sample is a pure compound, compare its measured percent composition with the value calculated from the formula.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Dividing the percents by each other instead of converting to moles first. Formulas are mole ratios, not mass ratios.</li>
+        <li>Rounding 1.5 to 2 (or 1.33 to 1). Only round ratios that are within about 0.1 of a whole number.</li>
+        <li>Rounding moles too early. Keep three or four significant figures until the ratio step.</li>
+        <li>Using the mass of the product (the oxide) as the mass of oxygen. Subtract the metal's mass first.</li>
+        <li>Using the atomic number instead of the molar mass to convert grams to moles.</li>
+        <li>Reducing an ionic formula that is already empirical, or reducing a molecular formula when the question asks for the molecular formula.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 1.3. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-1.html">Unit 1 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  function narrow(svg) { var w = svg.getBoundingClientRect().width; return w > 0 && w < 430; }
+  var COLS = ["var(--accent)", "var(--c1)", "var(--c2)", "var(--c3)"];
+  function counts(f) { return Lab.parseFormula(f); }
+  function am(m) { return m < 10 ? m.toFixed(3) : m.toFixed(2); }
+
+  // ================= Part A =================
+  var A = { f: "H2O", mass: 50 };
+  var ASUBS = [["H2O", "water"], ["H2O2", "hydrogen peroxide"], ["CO", "carbon monoxide"], ["CO2", "carbon dioxide"], ["NaCl", "sodium chloride"], ["Fe2O3", "iron(III) oxide"], ["C6H12O6", "glucose"], ["NH3", "ammonia"]];
+  var aBtns = [];
+  var barsSvg = document.getElementById("bars");
+  function comp(f) {
+    var c = counts(f), M = Lab.molarMass(c);
+    return { c: c, M: M, parts: Object.keys(c).map(function (k, i) { var m = Lab.BY_SYMBOL[k].m * c[k]; return { s: k, n: c[k], m: m, frac: m / M, col: COLS[i % 4] }; }) };
+  }
+  function drawBars(C, mass) {
+    var nw = narrow(barsSvg), W = nw ? 340 : 460, H = 210, L = nw ? 80 : 96, R = 16, bw = W - L - R;
+    barsSvg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (barsSvg.firstChild) barsSvg.removeChild(barsSvg.firstChild);
+    function row(y, total, label, sub, scaleMax) {
+      Lab.el("text", { x: L - 10, y: y + 15, "text-anchor": "end", "class": "rowlbl" }, barsSvg, label);
+      Lab.el("text", { x: L - 10, y: y + 30, "text-anchor": "end" }, barsSvg, sub);
+      Lab.el("rect", { x: L, y: y, width: bw, height: 38, fill: "var(--grid)", rx: 4 }, barsSvg);
+      var x = L;
+      C.parts.forEach(function (p) {
+        var w = bw * (total * p.frac) / scaleMax;
+        Lab.el("rect", { x: x, y: y, width: Math.max(0, w), height: 38, fill: p.col }, barsSvg);
+        var txt = p.s + " " + (scaleMax === 100 && total === 100 ? (p.frac * 100).toFixed(1) + "%" : Lab.sig(total * p.frac, 3) + " g");
+        if (w > txt.length * 7 + 8) Lab.el("text", { x: x + w / 2, y: y + 24, "text-anchor": "middle", "class": "seglbl" }, barsSvg, txt);
+        else if (w > 18) Lab.el("text", { x: x + w / 2, y: y + 24, "text-anchor": "middle", "class": "seglbl" }, barsSvg, p.s);
+        x += w;
+      });
+    }
+    row(18, mass, "Your sample", mass + " g", 100);
+    row(92, 100, "Per 100 g", "= percent", 100);
+    // scale ticks
+    [0, 25, 50, 75, 100].forEach(function (v) {
+      var x = L + bw * v / 100;
+      Lab.el("line", { x1: x, x2: x, y1: 140, y2: 146, stroke: "var(--muted)" }, barsSvg);
+      Lab.el("text", { x: x, y: 160, "text-anchor": "middle" }, barsSvg, v + " g");
+    });
+    Lab.el("text", { x: L + bw / 2, y: 182, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, barsSvg, "Mass (g)");
+    Lab.el("text", { x: L + bw / 2, y: 202, "text-anchor": "middle" }, barsSvg, "Small labels: the mass of each element in the sample");
+  }
+  function renderA() {
+    var C = comp(A.f), F = Lab.fmla(A.f);
+    drawBars(C, A.mass);
+    document.getElementById("a-sub").innerHTML = F;
+    document.getElementById("o-a-mass").textContent = A.mass + " g";
+    document.getElementById("a-mass").value = A.mass;
+    aBtns.forEach(function (x) { x.b.setAttribute("aria-pressed", x.f === A.f ? "true" : "false"); });
+    document.getElementById("a-legend").innerHTML = C.parts.map(function (p, i) { return '<span class="l-e' + (i % 4) + '">' + Lab.BY_SYMBOL[p.s].n + " " + (p.frac * 100).toFixed(1) + "%</span>"; }).join("");
+    document.getElementById("a-r1").textContent = C.M.toFixed(2) + " g/mol";
+    var p0 = C.parts[0], p1 = C.parts[1];
+    document.getElementById("a-r2k").textContent = "Mass " + p1.s + " : mass " + p0.s;
+    document.getElementById("a-r2").textContent = (p1.m / p0.m).toFixed(2) + " : 1";
+    var li = C.parts.map(function (p) { return "%" + p.s + " = " + (p.n > 1 ? p.n + " × " : "") + am(Lab.BY_SYMBOL[p.s].m) + " ÷ " + C.M.toFixed(2) + " × 100 = <b>" + (p.frac * 100).toFixed(1) + "%</b>, so a " + A.mass + " g sample holds " + Lab.sig(A.mass * p.frac, 3) + " g of " + p.s + "."; });
+    var h = "<p><b>" + F + " has a fixed composition.</b> Slide the sample mass: the grams of each element change, but every sample of pure " + F + " has the same percent by mass and the same mass ratio, " + (p1.m / p0.m).toFixed(2) + " g of " + p1.s + " for every 1 g of " + p0.s + ".</p><ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
+    if (A.f === "H2O2" || A.f === "H2O") h += "<p>Compare H₂O (11.2% H) with H₂O₂ (5.9% H). Same elements, different compounds, and each has its own fixed composition. A sample of water that measured 5.9% H would not be pure water.</p>";
+    if (A.f === "CO" || A.f === "CO2") h += "<p>CO is 42.9% C and CO₂ is 27.3% C. A measured percent composition tells you which compound you have, because each pure compound has only one.</p>";
+    h += "<p><b>AP answer:</b> by the law of definite proportions, the percent by mass of each element in a pure compound is constant, so it can be calculated from the formula and used to identify the compound or test its purity.</p>";
+    document.getElementById("a-story").innerHTML = h;
+  }
+  ASUBS.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.innerHTML = Lab.fmla(x[0]); b.title = x[1]; b.setAttribute("aria-label", x[1]);
+    b.addEventListener("click", function () { A.f = x[0]; renderA(); });
+    document.getElementById("a-subs").appendChild(b); aBtns.push({ b: b, f: x[0] });
+  });
+  document.getElementById("a-mass").addEventListener("input", function (e) { A.mass = +e.target.value; renderA(); });
+  renderA();
+
+  // ================= Part B =================
+  var SYMS = Object.keys(Lab.ELEMENTS).map(Number).sort(function (a, b) { return a - b; }).map(function (z) { return Lab.ELEMENTS[z].s; });
+  var SC = [
+    { key: "glu", name: "40.0% C, 6.7% H, 53.3% O; M = 180.16", mode: "pct", rows: [["C", "40.0"], ["H", "6.7"], ["O", "53.3"]], mm: "180.16" },
+    { key: "fe", name: "69.94% Fe, 30.06% O", mode: "pct", rows: [["Fe", "69.94"], ["O", "30.06"]], mm: "" },
+    { key: "no2", name: "30.4% N, 69.6% O; M = 92.0", mode: "pct", rows: [["N", "30.4"], ["O", "69.6"]], mm: "92.0" },
+    { key: "mgo", name: "2.50 g Mg burns to 4.15 g oxide", mode: "g", rows: [["Mg", "2.50"], ["O", "1.65"]], mm: "" },
+    { key: "vitc", name: "Vitamin C: 40.92% C, 4.58% H, 54.50% O; M = 176.12", mode: "pct", rows: [["C", "40.92"], ["H", "4.58"], ["O", "54.50"]], mm: "176.12" },
+    { key: "p", name: "43.6% P, 56.4% O; M = 283.9", mode: "pct", rows: [["P", "43.6"], ["O", "56.4"]], mm: "283.9" },
+    { key: "c4", name: "85.6% C, 14.4% H; M = 56.1", mode: "pct", rows: [["C", "85.6"], ["H", "14.4"]], mm: "56.1" }
+  ];
+  var B = { mode: "pct", rows: SC[0].rows.map(function (r) { return r.slice(); }), mm: "180.16", key: "glu", note: "" };
+  var NROWS = 4;
+  var ins = document.getElementById("ins");
+  var rowEls = [];
+  for (var i = 0; i < NROWS; i++) {
+    var r = document.createElement("div"); r.className = "r";
+    var sel = document.createElement("select"); sel.setAttribute("aria-label", "Element " + (i + 1));
+    sel.innerHTML = '<option value="">(none)</option>' + SYMS.map(function (s) { return '<option value="' + s + '">' + s + " – " + Lab.BY_SYMBOL[s].n + "</option>"; }).join("");
+    var inp = document.createElement("input"); inp.type = "text"; inp.inputMode = "decimal"; inp.setAttribute("aria-label", "Amount of element " + (i + 1));
+    var un = document.createElement("span"); un.className = "unit";
+    r.appendChild(sel); r.appendChild(inp); r.appendChild(un); ins.appendChild(r);
+    rowEls.push({ sel: sel, inp: inp, un: un });
+    (function (k) {
+      sel.addEventListener("change", function () { readRows(); B.key = null; renderB(); });
+      inp.addEventListener("input", function () { readRows(); B.key = null; renderB(); });
+    })(i);
+  }
+  function readRows() {
+    B.rows = rowEls.map(function (x) { return [x.sel.value, x.inp.value]; }).filter(function (r) { return r[0]; });
+  }
+  function writeRows() {
+    rowEls.forEach(function (x, i) { var r = B.rows[i]; x.sel.value = r ? r[0] : ""; x.inp.value = r ? r[1] : ""; x.un.textContent = B.mode === "pct" ? "%" : "g"; });
+    document.getElementById("b-mm").value = B.mm;
+  }
+
+  function solve() {
+    var rows = B.rows.map(function (r) { return { s: r[0], v: parseFloat(r[1]), raw: String(r[1]).trim() }; }).filter(function (r) { return r.s && r.v > 0; });
+    var seen = {}, dup = false; rows.forEach(function (r) { if (seen[r.s]) dup = true; seen[r.s] = 1; });
+    if (rows.length < 2) return { err: "Enter at least two elements with positive amounts." };
+    if (dup) return { err: "Each element should appear only once." };
+    var total = rows.reduce(function (a, r) { return a + r.v; }, 0);
+    rows.forEach(function (r) { r.M = Lab.BY_SYMBOL[r.s].m; r.mol = r.v / r.M; });
+    var min = Math.min.apply(null, rows.map(function (r) { return r.mol; }));
+    rows.forEach(function (r) { r.ratio = r.mol / min; });
+    var k = null;
+    for (var t = 1; t <= 8; t++) {
+      if (rows.every(function (r) { var x = r.ratio * t; return Math.abs(x - Math.round(x)) <= 0.1; })) { k = t; break; }
+    }
+    var res = { rows: rows, total: total, k: k, min: min };
+    if (k) {
+      rows.forEach(function (r) { r.sub = Math.round(r.ratio * k); });
+      res.ef = rows.map(function (r) { return r.s + (r.sub > 1 ? r.sub : ""); }).join("");
+      res.em = rows.reduce(function (a, r) { return a + r.sub * r.M; }, 0);
+      var M = parseFloat(B.mm);
+      if (M > 0) {
+        res.M = M; res.nRaw = M / res.em; res.n = Math.round(res.nRaw);
+        res.nOk = res.n >= 1 && Math.abs(res.nRaw - res.n) <= 0.1;
+        if (res.nOk) res.mf = rows.map(function (r) { var s = r.sub * res.n; return r.s + (s > 1 ? s : ""); }).join("");
+      }
+    }
+    return res;
+  }
+
+  var ratioSvg = document.getElementById("ratio");
+  function drawRatio(res) {
+    var rows = res.rows || [];
+    var k = res.k || 1;
+    var ymax = Math.max(3, Math.ceil(Math.max.apply(null, rows.map(function (r) { return r.ratio * k; }).concat([1])) + 0.6));
+    var yt = []; for (var v = 0; v <= ymax; v++) if (ymax <= 10 || v % 2 === 0) yt.push(v);
+    var n = Math.max(rows.length, 1);
+    var F = Lab.frame(ratioSvg, { x: [0, n * 2], y: [0, ymax], xLabel: "Element", yLabel: "Atoms in the formula (ratio)", yTicks: yt, fmtY: function (v) { return v; }, width: narrow(ratioSvg) ? 340 : 460, height: narrow(ratioSvg) ? 280 : 300 });
+    for (var w = 1; w <= ymax; w++) Lab.line(F, [[0, w], [n * 2, w]], "var(--ghost)", 1, "4 4");
+    rows.forEach(function (r, i) {
+      var cx = i * 2 + 1, col = COLS[i % 4];
+      Lab.rect(F, cx - 0.55, 0, cx - 0.05, r.ratio, col, 0.35);
+      Lab.rect(F, cx + 0.05, 0, cx + 0.55, r.ratio * k, col, 1);
+      Lab.tag(F, cx - 0.3, r.ratio + ymax * 0.03, r.ratio.toFixed(2), "var(--muted)", "middle");
+      Lab.tag(F, cx + 0.3, r.ratio * k + ymax * 0.03, res.k ? String(r.sub) : (r.ratio * k).toFixed(2), col, "middle");
+      Lab.el("text", { x: F.sx(cx), y: F.H - F.M.b + 16, "text-anchor": "middle", style: "fill:var(--ink); font-weight:600" }, F.svg, r.s);
+    });
+    Lab.el("text", { x: F.W - F.M.r, y: F.M.t + 12, "text-anchor": "end" }, F.svg, "pale: ÷ smallest, solid: × " + k);
+  }
+
+  function tableHTML(res) {
+    var p = B.mode === "pct";
+    var head = "<thead><tr><th>Element</th><th class=\"n\">" + (p ? "Percent → grams in 100 g" : "Grams") + "</th><th class=\"n\">÷ molar mass</th><th class=\"n\">= moles</th><th class=\"n\">÷ smallest (" + Lab.sig(res.min, 3) + ")</th><th class=\"n\">× " + (res.k || "?") + "</th><th class=\"n\">Subscript</th></tr></thead>";
+    var body = res.rows.map(function (r) {
+      return "<tr><td>" + Lab.BY_SYMBOL[r.s].n + " (" + r.s + ")</td><td class=\"n\">" + r.raw + " g</td><td class=\"n\">" + am(r.M) + " g/mol</td><td class=\"n\">" + Lab.sig(r.mol, 4) + " mol</td><td class=\"n\">" + r.ratio.toFixed(3) + "</td><td class=\"n\">" + (res.k ? (r.ratio * res.k).toFixed(2) : "—") + "</td><td class=\"n fin\">" + (res.k ? r.sub : "—") + "</td></tr>";
+    }).join("");
+    return head + "<tbody>" + body + "</tbody>";
+  }
+  function li(a) { return "<ul>" + a.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>"; }
+  function storyB(res) {
+    if (res.err) return "<p>" + res.err + "</p><p><b>AP answer:</b> convert each mass to moles, divide by the smallest, and multiply to whole numbers.</p>";
+    var h = "", L = [], p = B.mode === "pct";
+    if (p) {
+      L.push("Assume a 100 g sample, so each percent becomes grams: " + res.rows.map(function (r) { return r.raw + " g " + r.s; }).join(", ") + ".");
+      if (Math.abs(res.total - 100) > 0.6) L.push("<b>Check the data:</b> the percents add to " + res.total.toFixed(1) + "%, not 100%. Is an element missing?");
+    } else if (B.note) L.push(B.note);
+    L.push("Convert to moles with each molar mass: " + res.rows.map(function (r) { return Lab.sig(r.mol, 4) + " mol " + r.s; }).join(", ") + ".");
+    L.push("Divide by the smallest (" + Lab.sig(res.min, 4) + " mol): " + res.rows.map(function (r) { return r.s + " " + r.ratio.toFixed(2); }).join(", ") + ".");
+    if (!res.k) {
+      L.push("These ratios do not come within 0.1 of whole numbers even after multiplying by up to 8. Check the data for a typo.");
+      h += li(L) + "<p><b>AP answer:</b> an empirical formula must be a whole-number ratio, so a multiplier is needed only when the ratios are near simple fractions such as 1.5, 1.33, or 1.25.</p>";
+      return h;
+    }
+    if (res.k > 1) {
+      var frac = res.rows.filter(function (r) { return Math.abs(r.ratio - Math.round(r.ratio)) > 0.1; })[0];
+      L.push("A ratio of " + (frac ? frac.ratio.toFixed(2) : "") + " is not close to a whole number, so multiply every ratio by " + res.k + ": " + res.rows.map(function (r) { return r.s + " " + (r.ratio * res.k).toFixed(2) + " → " + r.sub; }).join(", ") + ".");
+    } else L.push("All the ratios are within 0.1 of whole numbers, so round them: " + res.rows.map(function (r) { return r.s + " " + r.sub; }).join(", ") + ".");
+    L.push("Empirical formula: <b>" + Lab.fmla(res.ef) + "</b>, with an empirical formula mass of " + res.em.toFixed(2) + " g/mol.");
+    if (res.M) {
+      if (res.nOk) L.push("Molar mass ÷ empirical mass = " + res.M + " ÷ " + res.em.toFixed(2) + " = " + res.nRaw.toFixed(2) + " ≈ " + res.n + ", so the molecular formula is <b>" + Lab.fmla(res.mf) + "</b>" + (res.n === 1 ? ", the same as the empirical formula." : "."));
+      else L.push("Molar mass ÷ empirical mass = " + res.nRaw.toFixed(2) + ", which is not a whole number. Check the molar mass or the data.");
+    }
+    h += "<p><b>From data to formula.</b> A formula is a ratio of atoms, which is a ratio of moles, so every mass must be turned into moles before comparing.</p>" + li(L);
+    h += "<p><b>AP answer:</b> grams → moles (÷ molar mass) → divide by the smallest → multiply to whole numbers gives the empirical formula; molar mass ÷ empirical formula mass gives the multiple for the molecular formula.</p>";
+    return h;
+  }
+  var scBtns = {};
+  function renderB() {
+    var res = solve();
+    document.getElementById("m-pct").setAttribute("aria-pressed", B.mode === "pct" ? "true" : "false");
+    document.getElementById("m-g").setAttribute("aria-pressed", B.mode === "g" ? "true" : "false");
+    rowEls.forEach(function (x) { x.un.textContent = B.mode === "pct" ? "%" : "g"; });
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", B.key === k ? "true" : "false"); });
+    drawRatio(res);
+    function set(id, v, s) { document.getElementById(id).innerHTML = v; document.getElementById(id + "2").innerHTML = s || ""; }
+    if (res.err || !res.k) {
+      set("r-ef", "—", res.err ? "need data" : "no whole-number ratio"); set("r-em", "—"); set("r-n", "—"); set("r-mf", "—");
+      document.getElementById("ef-tbl").innerHTML = res.err ? "" : tableHTML(res);
+    } else {
+      set("r-ef", Lab.fmla(res.ef), res.k > 1 ? "ratios × " + res.k : "ratios rounded");
+      set("r-em", res.em.toFixed(2), "g/mol");
+      set("r-n", res.M ? (res.nOk ? String(res.n) : res.nRaw.toFixed(2)) : "—", res.M ? res.M + " ÷ " + res.em.toFixed(2) : "enter a molar mass");
+      set("r-mf", res.mf ? Lab.fmla(res.mf) : "—", res.mf ? (res.n === 1 ? "same as empirical" : res.n + " × empirical") : res.M ? "check the data" : "needs molar mass");
+      document.getElementById("ef-tbl").innerHTML = tableHTML(res);
+    }
+    document.getElementById("story").innerHTML = storyB(res);
+  }
+  SC.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () {
+      B.mode = x.mode; B.rows = x.rows.map(function (r) { return r.slice(); }); B.mm = x.mm; B.key = x.key;
+      B.note = x.key === "mgo" ? "The oxide weighs 4.15 g and contains 2.50 g of Mg, so the oxygen that combined is 4.15 − 2.50 = 1.65 g." : "";
+      writeRows(); renderB();
+  var wasNarrow = narrow(barsSvg);
+  window.addEventListener("resize", function () { var n = narrow(barsSvg); if (n !== wasNarrow) { wasNarrow = n; renderA(); renderB(); } });
+    });
+    document.getElementById("sc").appendChild(b); scBtns[x.key] = b;
+  });
+  document.getElementById("m-pct").addEventListener("click", function () { B.mode = "pct"; B.key = null; renderB(); });
+  document.getElementById("m-g").addEventListener("click", function () { B.mode = "g"; B.key = null; renderB(); });
+  document.getElementById("b-mm").addEventListener("input", function (e) { B.mm = e.target.value; B.key = null; renderB(); });
+  writeRows(); renderB();
+  var wasNarrow = narrow(barsSvg);
+  window.addEventListener("resize", function () { var n = narrow(barsSvg); if (n !== wasNarrow) { wasNarrow = n; renderA(); renderB(); } });
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "What is the percent by mass of oxygen in water, H₂O?",
+      o: ["33.3%", "88.8%", "11.2%", "50.0%"], c: 1,
+      w: "%O = 16.00 ÷ 18.02 × 100 = 88.8%. Choice A is the fraction of atoms that are oxygen (1 of 3), not the fraction of mass. Choice C is the percent hydrogen." },
+    { s: "A compound contains 75.0% carbon and 25.0% hydrogen by mass. What is its empirical formula?",
+      o: ["C₃H", "CH₃", "C₂H₈", "CH₄"], c: 3,
+      w: "In 100 g: 75.0 g ÷ 12.01 g/mol = 6.24 mol C and 25.0 g ÷ 1.008 g/mol = 24.8 mol H. Dividing by 6.24 gives C 1 : H 3.97, so CH₄. Choice A divides the percents (75 ÷ 25 = 3) without converting to moles." },
+    { s: "Two samples of pure sodium chloride are analyzed. Sample 1 (5.00 g) was mined in Utah and sample 2 (50.0 g) was made in a lab from sodium and chlorine. Which statement is correct?",
+      o: ["Both samples are 60.7% chlorine by mass.", "Sample 2 has a greater percent chlorine because it has more mass.", "The samples can have different percent compositions because they came from different sources.", "Sample 1 has a greater percent sodium because natural samples contain more sodium."], c: 0,
+      w: "By the law of definite proportions, every sample of a pure compound has the same composition: %Cl = 35.45 ÷ 58.44 × 100 = 60.7%. Sample size and source do not matter. Different percents would mean a sample is not pure NaCl." },
+    { s: "A compound has the empirical formula CH₂O and a molar mass of 90.08 g/mol. What is its molecular formula?",
+      o: ["CH₂O", "C₂H₄O₂", "C₃H₆O₃", "C₆H₁₂O₆"], c: 2,
+      w: "The empirical formula mass of CH₂O is 12.01 + 2(1.008) + 16.00 = 30.03 g/mol. 90.08 ÷ 30.03 = 3.00, so multiply every subscript by 3: C₃H₆O₃. C₆H₁₂O₆ has a molar mass of 180.16 g/mol." },
+    { s: "Which pair of compounds has the same percent composition by mass?",
+      o: ["CO and CO₂", "H₂O and H₂O₂", "C₂H₄ and C₂H₆", "C₂H₂ and C₆H₆"], c: 3,
+      w: "C₂H₂ and C₆H₆ both reduce to the empirical formula CH, so both are 92.3% C by mass. Compounds with the same empirical formula have the same percent composition. The other pairs have different atom ratios, so their compositions differ." },
+    { s: "A 1.20 g sample of magnesium is heated in air until it has completely reacted, forming 2.00 g of a magnesium oxide. What is the empirical formula of the oxide?",
+      o: ["Mg₂O", "MgO", "MgO₂", "Mg₂O₃"], c: 1,
+      w: "Mass of O = 2.00 − 1.20 = 0.80 g. Moles: Mg = 1.20 ÷ 24.31 = 0.0494 mol, O = 0.80 ÷ 16.00 = 0.050 mol. The ratio is 1 : 1.01, so MgO. A common slip is to use 2.00 g as the mass of oxygen, giving 0.125 mol O and a ratio near 1 : 2.5." },
+    { s: "Which information is enough, by itself, to determine the molecular formula of a compound?",
+      o: ["Its percent composition by mass and its molar mass", "Its percent composition by mass only", "Its molar mass only", "The mass of one sample of the compound"], c: 0,
+      w: "Percent composition gives the empirical formula (the simplest ratio). The molar mass then tells how many empirical units are in one molecule. Percent composition alone cannot tell C₂H₂ from C₆H₆." },
+    { s: "A compound contains 52.2% C, 13.0% H, and 34.8% O by mass. What is its empirical formula?",
+      o: ["CH₃O", "C₂H₅O", "C₂H₆O", "C₃H₈O"], c: 2,
+      w: "Moles in 100 g: C = 52.2 ÷ 12.01 = 4.35, H = 13.0 ÷ 1.008 = 12.9, O = 34.8 ÷ 16.00 = 2.18. Dividing by 2.18: C 2.00, H 5.93, O 1. So C₂H₆O (ethanol's formula). Choice B rounds 5.93 down instead of to the nearest whole number." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("1.3");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [1], topic: "1.3", compact: true, storageKey: "topic-1.3" });</script>
+</body>
+</html>

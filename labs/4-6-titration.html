@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Introduction to Titration Study Lab</title>
+<meta name="description" content="Run a titration drop by drop: watch the indicator, track moles of analyte and titrant at the particle level, find the end point, and calculate an unknown concentration.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 12px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.ctlcard { display: grid; gap: 16px; }
+.ctlcard .controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.plegend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: .8rem; color: var(--muted); }
+.plegend span { display: inline-flex; align-items: center; gap: 5px; }
+.plegend i { display: inline-block; width: 14px; height: 10px; border-radius: 5px; }
+.plegend i.spec { background: none; border: 1.5px solid var(--muted); }
+.note { font-size: .82rem; color: var(--muted); }
+.answer { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.answer input { font: inherit; font-size: .95rem; width: 9em; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.answer input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.fb { font-size: .9rem; }
+.fb.ok { color: var(--good); } .fb.no { color: var(--bad); }
+.story ol.steps { margin-top: 2px; }
+.mystery { display: none; }
+.is-mystery .mystery { display: block; }
+.is-mystery .not-mystery { display: none; }
+@media (max-width: 860px) { .ctlcard .controls { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .ctlcard .controls { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 4 · Topic 4.6</span>
+  <h1>Introduction to Titration Study Lab</h1>
+  <p class="lede">In a titration, a solution of known concentration (the titrant) is added from a burette to a measured volume of the solution being analyzed (the analyte) until the two have reacted in exactly the stoichiometric ratio. That moment is the equivalence point. Add titrant drop by drop, watch the particles and the indicator, and use the volume at the end point to calculate an unknown concentration.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The titration bench</h2>
+    <p>Pick a reaction, then add titrant with the drop buttons or the burette slider. The particle view shows a scaled-down sample of the flask, so you can see which particles react and which are spectators. All concentrations and volumes are illustrative teaching values. Turn on <b>Unknown sample</b> to practice the real task: find the end point and calculate the analyte concentration yourself.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Burette and flask <small id="app-sub">reading to the nearest 0.05 mL</small></h3>
+      <svg class="chart" id="app" role="img" aria-label="A burette above an Erlenmeyer flask. The burette level falls as titrant is added and the flask color shows the indicator."></svg>
+    </div>
+    <div class="card graph-card">
+      <h3>Particle view <small id="part-sub">water molecules not shown</small></h3>
+      <svg class="chart particles" id="part" role="img" aria-label="Particle diagram of the ions and molecules in the flask"></svg>
+      <div class="plegend" id="plegend"></div>
+    </div>
+  </div>
+
+  <div class="card ctlcard" id="ctlcard">
+    <div class="group">
+      <div class="tag">Titration reaction</div>
+      <div class="scenarios" id="sc"></div>
+      <div class="eqn" id="eqn"></div>
+    </div>
+    <div class="group">
+      <div class="tag">Add titrant</div>
+      <div class="btnrow">
+        <button type="button" id="b-drop">+1 drop (0.05 mL)</button>
+        <button type="button" id="b-half">+0.50 mL</button>
+        <button type="button" id="b-five">+5.00 mL</button>
+        <button type="button" id="b-refill">Refill burette (start over)</button>
+        <button type="button" id="b-mystery" aria-pressed="false">Unknown sample: off</button>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="ctl" style="grid-column: 1 / -1;">
+        <label for="s-v">Burette reading (volume added) <output id="o-v"></output></label>
+        <input type="range" id="s-v" min="0" max="50" step="0.05">
+        <span class="hint">The burette holds 50.00 mL. Readings increase downward from 0.00 at the top.</span>
+      </div>
+      <div class="ctl not-mystery">
+        <label for="s-ca">Analyte concentration <output id="o-ca"></output></label>
+        <input type="range" id="s-ca" min="0.04" max="0.2" step="0.005">
+        <span class="hint">In a real titration this is the unknown</span>
+      </div>
+      <div class="ctl mystery">
+        <label>Analyte concentration <output>unknown</output></label>
+        <span class="hint">Find it from the end point.</span>
+      </div>
+      <div class="ctl">
+        <label for="s-va">Analyte volume (pipet) <output id="o-va"></output></label>
+        <input type="range" id="s-va" min="10" max="50" step="5">
+        <span class="hint">Measured with a volumetric pipet</span>
+      </div>
+      <div class="ctl">
+        <label for="s-ct">Titrant concentration <output id="o-ct"></output></label>
+        <input type="range" id="s-ct">
+        <span class="hint">Known (a standardized solution)</span>
+      </div>
+    </div>
+    <div class="mystery">
+      <div class="group">
+        <div class="tag">Your answer</div>
+        <div class="answer">
+          <label for="ans">Analyte concentration (M):</label>
+          <input id="ans" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 0.0850">
+          <button type="button" id="b-check">Check</button>
+          <button type="button" id="b-new">New unknown</button>
+        </div>
+        <div class="fb" id="fb" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Titrant added</div><div class="v" id="r-v"></div><div class="sub" id="r-v2"></div></div>
+    <div class="stat"><div class="k">Moles of titrant added</div><div class="v" id="r-nt"></div><div class="sub" id="r-nt2"></div></div>
+    <div class="stat"><div class="k">Moles of analyte left</div><div class="v" id="r-na"></div><div class="sub" id="r-na2"></div></div>
+    <div class="stat"><div class="k">Where are we?</div><div class="v" id="r-st"></div><div class="sub" id="r-st2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Known vs. unknown</span><h3>Titrant and analyte</h3><p>The <b>titrant</b> is the solution of known concentration in the burette. The <b>analyte</b> is the solution being analyzed, measured into the flask with a pipet. The goal is to find the amount (and so the concentration) of the analyte.</p></div>
+    <div class="card"><span class="tag">Stoichiometric amounts</span><h3>Equivalence point</h3><p>The equivalence point is reached when the moles of titrant added and the moles of analyte present are in the mole ratio of the balanced equation. It is not "equal moles" unless the ratio is 1 : 1, and it is not "equal volumes."</p></div>
+    <div class="card"><span class="tag">What you see</span><h3>End point and indicators</h3><p>The <b>end point</b> is where the indicator changes color and you stop. A good indicator makes the end point fall within a drop of the equivalence point. Some titrants indicate themselves: purple permanganate turns colorless as it reacts, so the first lasting pink-purple marks the end point.</p></div>
+    <div class="card"><span class="tag">The calculation</span><h3>Volume → moles → ratio → molarity</h3><p>Moles of titrant = M × V (in liters). Use the balanced equation's coefficients to convert to moles of analyte. Divide by the analyte volume in liters. Every step is just stoichiometry from topic 4.5.</p></div>
+    <div class="card"><span class="tag">Particle view</span><h3>Reactant gets used up</h3><p>Before the equivalence point, the analyte is in excess and every added titrant particle reacts. After it, the titrant is in excess and its particles pile up unreacted. Spectator ions only accumulate or stay constant.</p></div>
+    <div class="card"><span class="tag">Coming in Unit 8</span><h3>pH curves</h3><p>For acid–base titrations, pH jumps sharply near the equivalence point, which is why one drop flips the indicator. Unit 8 graphs the whole curve and explains why a weak acid's equivalence point is above pH 7. For Unit 4, focus on the mole bookkeeping.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Titration cheat sheet</h2>
+    <p>The same four steps solve every titration problem. Only the mole ratio and the end-point signal change from reaction to reaction.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Titration</th><th>Mole ratio (analyte : titrant)</th><th>End-point signal</th><th>Main solute particles at the equivalence point</th></tr></thead>
+    <tbody>
+      <tr><td>HCl (analyte) with NaOH (titrant)</td><td><b>1 : 1</b></td><td>Phenolphthalein: colorless → pink</td><td>Na<sup>+</sup>, Cl<sup>−</sup> (plus the water formed)</td></tr>
+      <tr><td>CH<sub>3</sub>COOH (analyte) with NaOH</td><td><b>1 : 1</b></td><td>Phenolphthalein: colorless → pink</td><td>Na<sup>+</sup>, CH<sub>3</sub>COO<sup>−</sup></td></tr>
+      <tr><td>Ba(OH)<sub>2</sub> (analyte) with HCl</td><td><b>1 : 2</b></td><td>Phenolphthalein: pink → colorless</td><td>Ba<sup>2+</sup>, Cl<sup>−</sup></td></tr>
+      <tr><td>H<sub>2</sub>SO<sub>4</sub> (analyte) with NaOH</td><td><b>1 : 2</b></td><td>Phenolphthalein: colorless → pink</td><td>Na<sup>+</sup>, SO<sub>4</sub><sup>2−</sup></td></tr>
+      <tr><td>Fe<sup>2+</sup> (analyte, acidified) with KMnO<sub>4</sub></td><td><b>5 : 1</b></td><td>Self-indicating: first lasting purple-pink</td><td>Fe<sup>3+</sup>, Mn<sup>2+</sup>, K<sup>+</sup></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:8px;">The four steps</h3>
+    <ol class="steps">
+      <li>Volume of titrant delivered = final burette reading − initial reading. Convert mL to L.</li>
+      <li>Moles of titrant = M<sub>titrant</sub> × V<sub>titrant</sub>.</li>
+      <li>Moles of analyte = moles of titrant × (analyte coefficient ÷ titrant coefficient).</li>
+      <li>M<sub>analyte</sub> = moles of analyte ÷ V<sub>analyte</sub> (in L). Report to the significant figures the data allow, usually four for burette and pipet volumes.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Titration on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write the balanced equation first and point to the coefficients you use for the mole ratio.</li>
+        <li>Show each step with units: "mol NaOH = (0.1000 mol/L)(0.01840 L) = 1.840 × 10<sup>−3</sup> mol." Graders want the setup, not just the answer.</li>
+        <li>Define the equivalence point in terms of moles: "moles of titrant added are stoichiometrically equivalent to the moles of analyte initially present."</li>
+        <li>Name the glassware when asked: burette for the titrant, volumetric pipet for the analyte, Erlenmeyer flask to swirl in.</li>
+        <li>For error questions, trace the effect through the math: does the mistake make the recorded titrant volume too large or too small? The calculated analyte amount moves the same way.</li>
+        <li>Keep significant figures consistent with the data (four for 25.00 mL and 0.1000 M).</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Using M<sub>1</sub>V<sub>1</sub> = M<sub>2</sub>V<sub>2</sub> when the ratio is not 1 : 1. For H<sub>2</sub>SO<sub>4</sub> with NaOH you need twice as many moles of NaOH.</li>
+        <li>Saying the equivalence point is where "the volumes are equal" or "the pH is 7." Neither is the definition.</li>
+        <li>Forgetting to convert mL to L before multiplying by molarity.</li>
+        <li>Thinking water added to the flask changes the result. It changes the concentration in the flask, not the moles of analyte, so the titrant volume needed is the same.</li>
+        <li>Overshooting the end point. The recorded volume is too large, so the calculated analyte concentration comes out too high.</li>
+        <li>Treating spectator ions as if they react. Na<sup>+</sup> and Cl<sup>−</sup> are in the flask before and after; only H<sup>+</sup> and OH<sup>−</sup> react in HCl + NaOH.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 4.6. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-4.html">Unit 4 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Scenarios ----------
+  // a, t: coefficients of analyte and titrant in the balanced equation.
+  // N: particles of analyte shown in the particle view; T: titrant particles needed at equivalence (N * t / a).
+  var SC = {
+    hcl: {
+      name: "HCl with NaOH", an: "HCl", ti: "NaOH", a: 1, t: 1, ca: 0.1000, va: 25, ct: 0.1000, ctR: [0.05, 0.2, 0.005],
+      eqn: "HCl(aq) + NaOH(aq) → NaCl(aq) + H<sub>2</sub>O(l)<br>Net ionic: H<sub>3</sub>O<sup>+</sup>(aq) + OH<sup>−</sup>(aq) → 2H<sub>2</sub>O(l)",
+      ind: "phenolphthalein", tiColor: null, N: 8, T: 8, kind: "acid"
+    },
+    hac: {
+      name: "CH₃COOH (weak acid) with NaOH", an: "CH₃COOH", ti: "NaOH", a: 1, t: 1, ca: 0.0800, va: 25, ct: 0.1000, ctR: [0.05, 0.2, 0.005],
+      eqn: "CH<sub>3</sub>COOH(aq) + NaOH(aq) → NaCH<sub>3</sub>COO(aq) + H<sub>2</sub>O(l)<br>Net ionic: CH<sub>3</sub>COOH(aq) + OH<sup>−</sup>(aq) → CH<sub>3</sub>COO<sup>−</sup>(aq) + H<sub>2</sub>O(l)",
+      ind: "phenolphthalein", tiColor: null, N: 8, T: 8, kind: "acid"
+    },
+    ba: {
+      name: "Ba(OH)₂ with HCl (1 : 2)", an: "Ba(OH)₂", ti: "HCl", a: 1, t: 2, ca: 0.0500, va: 25, ct: 0.1000, ctR: [0.05, 0.2, 0.005],
+      eqn: "Ba(OH)<sub>2</sub>(aq) + 2HCl(aq) → BaCl<sub>2</sub>(aq) + 2H<sub>2</sub>O(l)<br>Net ionic: OH<sup>−</sup>(aq) + H<sub>3</sub>O<sup>+</sup>(aq) → 2H<sub>2</sub>O(l)",
+      ind: "phenolphthalein", tiColor: null, N: 4, T: 8, kind: "base"
+    },
+    fe: {
+      name: "Fe²⁺ with KMnO₄ (redox, 5 : 1)", an: "Fe²⁺", ti: "KMnO₄", a: 5, t: 1, ca: 0.1000, va: 25, ct: 0.02000, ctR: [0.01, 0.04, 0.001],
+      eqn: "5Fe<sup>2+</sup>(aq) + MnO<sub>4</sub><sup>−</sup>(aq) + 8H<sup>+</sup>(aq) → 5Fe<sup>3+</sup>(aq) + Mn<sup>2+</sup>(aq) + 4H<sub>2</sub>O(l)",
+      ind: "none needed", tiColor: "var(--c3)", N: 15, T: 3, kind: "redox"
+    }
+  };
+  var ORDER = ["hcl", "hac", "ba", "fe"];
+
+  var S = { key: "hcl", v: 0, ca: 0.1, va: 25, ct: 0.1, mystery: false, endV: null, checked: null };
+  function sc() { return SC[S.key]; }
+
+  // ---------- Model ----------
+  var TOL_ML = 0.01;   // excess titrant (in mL) needed before the color persists
+  function model() {
+    var x = sc();
+    var nA0 = S.ca * S.va / 1000;                 // mol analyte initially
+    var nT = S.ct * S.v / 1000;                   // mol titrant added
+    var nTeq = nA0 * x.t / x.a;                   // mol titrant needed for equivalence
+    var vEq = nTeq / S.ct * 1000;                 // mL
+    var reactedT = Math.min(nT, nTeq);
+    var nAleft = nA0 - reactedT * x.a / x.t;
+    var excessT = Math.max(0, nT - nTeq);
+    var f = nTeq > 0 ? nT / nTeq : 0;
+    var dv = S.v - vEq;                           // mL past equivalence
+    var state = dv > TOL_ML ? "past" : dv > -TOL_ML ? "at" : "before";
+    return { nA0: nA0, nT: nT, nTeq: nTeq, vEq: vEq, nAleft: Math.max(0, nAleft), excessT: excessT, f: f, dv: dv, state: state, over: vEq > 50 };
+  }
+  // Indicator color: returns { color, op, word }
+  function flaskColor(m) {
+    var x = sc();
+    if (x.kind === "acid") return m.dv > TOL_ML ? { color: "var(--c4)", op: Math.min(0.62, 0.32 + 0.1 * m.dv), word: "pink" } : { color: null, op: 0, word: "colorless" };
+    if (x.kind === "base") return m.dv < -TOL_ML ? { color: "var(--c4)", op: 0.55, word: "pink" } : { color: null, op: 0, word: "colorless" };
+    // redox: Fe3+ gives a faint yellow tint; excess MnO4- gives purple-pink
+    if (m.dv > TOL_ML) return { color: "var(--c3)", op: Math.min(0.7, 0.35 + 0.12 * m.dv), word: "pink-purple" };
+    return { color: "var(--c1)", op: 0.14 * Math.min(1, m.f), word: m.f > 0.05 ? "pale yellow (Fe³⁺)" : "nearly colorless" };
+  }
+
+  // ---------- Formatting ----------
+  function mL(v) { return v.toFixed(2) + " mL"; }
+  function M(v) { return Lab.sig(v, 4) + " M"; }
+  function mol(v) { return v === 0 ? "0" : Lab.sci(v, 4, true); }
+  function molTxt(v) { return v === 0 ? "0" : Lab.sci(v, 4, true) + " mol"; }
+
+  // ---------- Apparatus SVG ----------
+  var app = document.getElementById("app");
+  var NS = "http://www.w3.org/2000/svg";
+  var BX = 104, TOP = 30, PX = 4.2;   // burette center x, y of 0.00 mL, px per mL
+  function by(v) { return TOP + v * PX; }
+  var dropAnim = null;
+  function drawApp(m) {
+    var x = sc(), E = Lab.el;
+    app.setAttribute("viewBox", "0 0 350 404");
+    while (app.firstChild) app.removeChild(app.firstChild);
+    var defs = E("defs", {}, app);
+    var cp = E("clipPath", { id: "flask-clip" }, defs);
+    var flaskD = "M" + (BX - 13) + " 300 L" + (BX - 13) + " 326 L" + (BX - 78) + " 388 Q" + (BX - 82) + " 394 " + (BX - 74) + " 394 L" + (BX + 74) + " 394 Q" + (BX + 82) + " 394 " + (BX + 78) + " 388 L" + (BX + 13) + " 326 L" + (BX + 13) + " 300 Z";
+    E("path", { d: flaskD }, cp);
+    var bcp = E("clipPath", { id: "bur-clip" }, defs);
+    E("rect", { x: BX - 10, y: 16, width: 20, height: by(50) + 14 - 16, rx: 3 }, bcp);
+
+    // stand
+    E("rect", { x: 14, y: 395, width: 200, height: 7, rx: 2, fill: "var(--ghost)" }, app);
+    E("line", { x1: 24, y1: 20, x2: 24, y2: 396, stroke: "var(--ghost)", "stroke-width": 5 }, app);
+    E("line", { x1: 24, y1: 150, x2: BX - 11, y2: 150, stroke: "var(--ghost)", "stroke-width": 4 }, app);
+
+    // burette liquid (fills from the reading down to the stopcock)
+    var liq = E("g", { "clip-path": "url(#bur-clip)" }, app);
+    var tiFill = x.tiColor || "var(--accent)";
+    var tiOp = x.tiColor ? 0.75 : 0.18;
+    E("rect", { x: BX - 10, y: by(S.v), width: 20, height: by(50) + 14 - by(S.v), fill: tiFill, opacity: tiOp }, liq);
+    // burette tube
+    E("rect", { x: BX - 10, y: 16, width: 20, height: by(50) + 14 - 16, rx: 3, fill: "none", stroke: "var(--ink)", "stroke-width": 1.5 }, app);
+    // graduations
+    for (var v = 0; v <= 50; v++) {
+      var major = v % 10 === 0, mid = v % 5 === 0;
+      E("line", { x1: BX - 10, x2: BX - 10 + (major ? 10 : mid ? 7 : 4), y1: by(v), y2: by(v), stroke: "var(--ink)", "stroke-width": major ? 1.2 : 0.7 }, app);
+      if (major) E("text", { x: BX - 14, y: by(v) + 4, "text-anchor": "end", style: "font-size:12px" }, app, String(v));
+    }
+    // meniscus marker
+    var my = by(S.v);
+    E("path", { d: "M" + (BX - 10) + " " + (my - 2) + " Q" + BX + " " + (my + 3) + " " + (BX + 10) + " " + (my - 2), fill: "none", stroke: x.tiColor ? "var(--c3)" : "var(--accent)", "stroke-width": 2 }, app);
+    E("line", { x1: BX + 12, x2: BX + 30, y1: my, y2: my, stroke: "var(--accent)", "stroke-width": 1.5 }, app);
+    E("text", { x: BX + 34, y: my + 5, "class": "lbl", style: "fill:var(--accent); font-size:14px" }, app, S.v.toFixed(2) + " mL");
+    // stopcock and tip
+    var sy0 = by(50) + 14;
+    E("rect", { x: BX - 4, y: sy0, width: 8, height: 14, fill: "var(--surface)", stroke: "var(--ink)", "stroke-width": 1.2 }, app);
+    E("rect", { x: BX - 16, y: sy0 + 4, width: 32, height: 6, rx: 3, fill: "var(--ghost)" }, app);
+    E("path", { d: "M" + (BX - 4) + " " + (sy0 + 14) + " L" + (BX - 1.5) + " " + (sy0 + 30) + " L" + (BX + 1.5) + " " + (sy0 + 30) + " L" + (BX + 4) + " " + (sy0 + 14), fill: "none", stroke: "var(--ink)", "stroke-width": 1.2 }, app);
+    E("text", { x: BX + 22, y: 24, "class": "lbl", style: "fill:var(--ink); font-size:13px" }, app, "Titrant: " + Lab.sig(S.ct, 4) + " M " + x.ti);
+    E("text", { x: BX + 22, y: 41, style: "font-size:12px" }, app, "in a 50 mL burette");
+
+    // flask liquid
+    var vTot = S.va + S.v;
+    var h = Math.min(62, 10 + vTot * 0.42);
+    var fl = E("g", { "clip-path": "url(#flask-clip)" }, app);
+    E("rect", { x: BX - 90, y: 394 - h, width: 180, height: h, fill: "var(--accent)", opacity: 0.12 }, fl);
+    var c = flaskColor(m);
+    if (c.color && c.op > 0) E("rect", { x: BX - 90, y: 394 - h, width: 180, height: h, fill: c.color, opacity: c.op }, fl);
+    E("line", { x1: BX - 90, x2: BX + 90, y1: 394 - h, y2: 394 - h, stroke: "var(--accent)", "stroke-width": 1, opacity: .5 }, fl);
+    E("path", { d: flaskD, fill: "none", stroke: "var(--ink)", "stroke-width": 1.5 }, app);
+    var lx = BX + 84, lst = "font-size:12px";
+    E("text", { x: lx, y: 318, style: "fill:var(--ink); font-weight:600; font-size:13px" }, app, "Flask: " + c.word);
+    E("text", { x: lx, y: 336, "class": "lbl", style: "fill:var(--ink); font-size:12.5px" }, app, "Analyte: " + (S.mystery ? "?" : Lab.sig(S.ca, 4)) + " M " + x.an);
+    E("text", { x: lx, y: 353, style: lst }, app, S.va.toFixed(2) + " mL by pipet" + (x.kind === "redox" ? ", acidified" : ""));
+    E("text", { x: lx, y: 370, style: lst }, app, "Indicator: " + x.ind);
+
+    // end-point flag / overflow note
+    if (m.over && !S.mystery) {
+      E("text", { x: BX + 22, y: 70, "class": "lbl", style: "fill:var(--bad); font-size:13px" }, app, "Needs " + m.vEq.toFixed(1) + " mL:");
+      E("text", { x: BX + 22, y: 86, style: "fill:var(--bad); font-size:12px" }, app, "more than one burette full");
+    }
+    if (S.endV != null) {
+      E("text", { x: BX + 22, y: by(S.endV) + 22, style: "fill:var(--good); font-weight:600; font-size:12px" }, app, "end point: " + S.endV.toFixed(2) + " mL");
+    }
+    // falling drop
+    E("circle", { id: "drop", cx: BX, cy: sy0 + 34, r: 0, fill: x.tiColor || "var(--accent)" }, app);
+  }
+  function animateDrop() {
+    var d = document.getElementById("drop"); if (!d || Lab.reduceMotion) return;
+    if (dropAnim) dropAnim();
+    var y0 = by(50) + 14 + 34, y1 = 394 - Math.min(62, 10 + (S.va + S.v) * 0.42);
+    dropAnim = Lab.animate(380, function (t) {
+      var dd = document.getElementById("drop"); if (!dd) return;
+      dd.setAttribute("r", t < 0.95 ? 3.2 : 0); dd.setAttribute("cy", y0 + (y1 - y0) * t);
+    }, function () { var dd = document.getElementById("drop"); if (dd) dd.setAttribute("r", 0); });
+  }
+
+  // "3.1 × 10<sup>−4</sup>" -> "3.1 × 10⁻⁴" for SVG text
+  function supText(h) {
+    var map = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "−": "⁻", "-": "⁻" };
+    return h.replace(/<sup>([^<]*)<\/sup>/g, function (_, e) { return e.split("").map(function (c) { return map[c] || c; }).join(""); });
+  }
+
+  // ---------- Particle view ----------
+  var part = document.getElementById("part");
+  var COLS = 6, ROWS = 7;
+  var PERM = (function () {   // fixed shuffle of slots, so particles keep their places
+    var a = [], seed = 7; for (var i = 0; i < COLS * ROWS; i++) a.push(i);
+    for (var j = a.length - 1; j > 0; j--) { seed = (seed * 9301 + 49297) % 233280; var k = Math.floor(seed / 233280 * (j + 1)); var tmp = a[j]; a[j] = a[k]; a[k] = tmp; }
+    return a;
+  })();
+  function jit(i, s) { var v = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453; return (v - Math.floor(v)) - 0.5; }
+  // particle styles
+  var P = {
+    H3O: { t: "H₃O⁺", c: "var(--c1)" }, OH: { t: "OH⁻", c: "var(--c3)" },
+    Na: { t: "Na⁺", spec: true }, Cl: { t: "Cl⁻", spec: true }, Ba: { t: "Ba²⁺", spec: true }, K: { t: "K⁺", spec: true },
+    HA: { t: "CH₃COOH", c: "var(--c2)" }, A: { t: "CH₃COO⁻", c: "var(--accent)" },
+    Fe2: { t: "Fe²⁺", c: "var(--c2)" }, Fe3: { t: "Fe³⁺", c: "var(--c1)" }, MnO4: { t: "MnO₄⁻", c: "var(--c3)" }, Mn: { t: "Mn²⁺", c: "var(--c4)" }
+  };
+  // list of [slot, styleKey]
+  function particles(m) {
+    var x = sc(), out = [], i;
+    var cap = 2 * x.T;
+    var a = Math.min(cap, Math.round(x.T * m.f));   // titrant particles added (rounded)
+    // keep the picture honest near equivalence: before it, at least one analyte-side particle is left;
+    // past it, at least one excess titrant particle shows.
+    if (m.state === "before") a = Math.min(a, x.T - 1);
+    if (m.state === "at") a = x.T;
+    if (m.state === "past") a = Math.max(a, x.T + 1);
+    var reacted = Math.min(a, x.T);
+    var excess = a - reacted;
+    if (S.key === "hcl" || S.key === "hac") {
+      // slots 0-7 analyte (H3O+ or CH3COOH/CH3COO-), 8-15 Cl- (HCl only), 16-31 Na+, 32-39 excess OH-
+      for (i = 0; i < 8; i++) {
+        if (S.key === "hcl") { if (i < 8 - reacted) out.push([i, "H3O"]); out.push([8 + i, "Cl"]); }
+        else out.push([i, i < 8 - reacted ? "HA" : "A"]);
+      }
+      for (i = 0; i < a; i++) out.push([16 + i, "Na"]);
+      for (i = 0; i < excess; i++) out.push([32 + i, "OH"]);
+    } else if (S.key === "ba") {
+      // 0-3 Ba2+, 4-11 OH-, 12-27 Cl-, 28-35 excess H3O+
+      for (i = 0; i < 4; i++) out.push([i, "Ba"]);
+      for (i = 0; i < 8 - reacted; i++) out.push([4 + i, "OH"]);
+      for (i = 0; i < a; i++) out.push([12 + i, "Cl"]);
+      for (i = 0; i < excess; i++) out.push([28 + i, "H3O"]);
+    } else {
+      // Fe: 0-14 Fe2+/Fe3+ (5 per MnO4- reacted), 15-17 Mn2+, 18-20 excess MnO4-, 21-26 K+
+      for (i = 0; i < 15; i++) out.push([i, i < 15 - 5 * reacted ? "Fe2" : "Fe3"]);
+      for (i = 0; i < reacted; i++) out.push([15 + i, "Mn"]);
+      for (i = 0; i < excess; i++) out.push([18 + i, "MnO4"]);
+      for (i = 0; i < a; i++) out.push([21 + i, "K"]);
+    }
+    return { list: out, a: a, reacted: reacted, excess: excess, capped: x.T * m.f > cap + 0.5 };
+  }
+  function drawPart(m) {
+    var E = Lab.el, x = sc();
+    part.setAttribute("viewBox", "0 0 440 330");
+    while (part.firstChild) part.removeChild(part.firstChild);
+    E("rect", { x: 4, y: 4, width: 432, height: 300, rx: 10, fill: "var(--accent)", opacity: 0.06 }, part);
+    E("rect", { x: 4, y: 4, width: 432, height: 300, rx: 10, fill: "none", stroke: "var(--rule)" }, part);
+    var pr = particles(m), used = {};
+    pr.list.forEach(function (p) {
+      var slot = PERM[p[0] % (COLS * ROWS)];
+      var col = slot % COLS, row = Math.floor(slot / COLS);
+      var cx = 46 + col * 69.5 + jit(p[0], 1) * 10, cy = 28 + row * 41 + jit(p[0], 2) * 8;
+      var st = P[p[1]]; used[p[1]] = true;
+      var w = 14 + st.t.length * 7.6;
+      var g = E("g", {}, part);
+      if (st.spec) {
+        E("rect", { x: cx - w / 2, y: cy - 12, width: w, height: 24, rx: 12, fill: "var(--surface)", stroke: "var(--muted)", "stroke-width": 1.2, "stroke-dasharray": "3 2" }, g);
+        E("text", { x: cx, y: cy + 5, "text-anchor": "middle", style: "fill:var(--muted); font-size:13px" }, g, st.t);
+      } else {
+        E("rect", { x: cx - w / 2, y: cy - 12, width: w, height: 24, rx: 12, fill: st.c }, g);
+        E("text", { x: cx, y: cy + 4, "text-anchor": "middle", style: "fill:var(--surface); font-size:13px; font-weight:600" }, g, st.t);
+      }
+    });
+    var perT = m.nTeq / x.T;
+    E("text", { x: 8, y: 324, style: "font-size:12px" }, part, "Each particle ≈ " + supText(Lab.sci(perT, 2, true)) + " mol" + (x.kind === "redox" ? ". H⁺ and SO₄²⁻ not shown." : "") + (pr.capped ? " Picture capped at 2× equivalence." : ""));
+    // legend
+    var lg = document.getElementById("plegend"), html = "";
+    Object.keys(P).forEach(function (k) {
+      if (!used[k]) return;
+      var st = P[k];
+      html += st.spec ? '<span><i class="spec"></i>' + st.t + ' (spectator)</span>' : '<span><i style="background:' + st.c + '"></i>' + st.t + "</span>";
+    });
+    lg.innerHTML = html;
+    return pr;
+  }
+
+  // ---------- Readouts ----------
+  function pill(cls, t) { return '<span class="pill ' + cls + '">' + t + "</span>"; }
+  function readouts(m) {
+    var x = sc();
+    document.getElementById("r-v").textContent = mL(S.v);
+    document.getElementById("r-v2").textContent = "of " + x.ti + " (" + (S.v / 1000).toFixed(5) + " L)";
+    document.getElementById("r-nt").innerHTML = mol(m.nT);
+    document.getElementById("r-nt2").textContent = "mol " + x.ti + " = M × V";
+    if (S.mystery) {
+      document.getElementById("r-na").textContent = "?";
+      document.getElementById("r-na2").textContent = "unknown until you find the end point";
+    } else {
+      document.getElementById("r-na").innerHTML = mol(m.nAleft);
+      document.getElementById("r-na2").innerHTML = "of " + molTxt(m.nA0) + " " + x.an + " at the start";
+    }
+    var st = document.getElementById("r-st"), st2 = document.getElementById("r-st2");
+    if (S.mystery) {
+      var col = flaskColor(m);
+      var changed = x.kind === "base" ? col.word === "colorless" : (m.dv > TOL_ML);
+      st.innerHTML = changed ? pill("lr", "Color changed") : pill("rec", "Keep going");
+      st2.textContent = S.endV != null ? "end point at " + mL(S.endV) : "flask is " + col.word;
+    } else if (m.state === "before") { st.innerHTML = pill("rec", "Before equivalence"); st2.textContent = x.an + " in excess; " + mL(Math.max(0, -m.dv)) + " to go"; }
+    else if (m.state === "at") { st.innerHTML = pill("lr", "Equivalence point"); st2.textContent = "stoichiometric amounts have reacted"; }
+    else { st.innerHTML = pill("infl", "Past equivalence"); st2.textContent = x.ti + " in excess by " + mL(m.dv); }
+  }
+
+  // ---------- Story ----------
+  function steps(vUse, label) {
+    var x = sc();
+    var nT = S.ct * vUse / 1000, nA = nT * x.a / x.t, cA = nA / (S.va / 1000);
+    var ratio = x.a === x.t ? "1 mol " + x.an + " / 1 mol " + x.ti : x.a + " mol " + x.an + " / " + x.t + " mol " + x.ti;
+    return "<ol class=\"steps\">" +
+      "<li>Volume of " + x.ti + " at the " + label + ": " + mL(vUse) + " = " + (vUse / 1000).toFixed(5) + " L.</li>" +
+      "<li>mol " + x.ti + " = (" + Lab.sig(S.ct, 4) + " mol/L)(" + (vUse / 1000).toFixed(5) + " L) = " + molTxt(nT) + ".</li>" +
+      "<li>mol " + x.an + " = " + molTxt(nT) + " × (" + ratio + ") = " + molTxt(nA) + ".</li>" +
+      "<li>[" + x.an + "] = " + molTxt(nA) + " ÷ " + (S.va / 1000).toFixed(5) + " L = <b>" + M(cA) + "</b>.</li></ol>";
+  }
+  function story(m, pr) {
+    var x = sc(), h = "";
+    var ratioWords = x.a === x.t ? "1 : 1" : x.a + " : " + x.t;
+    if (S.mystery) {
+      h += "<p><b>Unknown sample.</b> The analyte concentration is hidden. Add titrant until the color change lasts, then use the recorded end-point volume to calculate the concentration. The mole ratio is " + x.a + " mol " + x.an + " : " + x.t + " mol " + x.ti + ".</p>";
+      if (S.endV == null) {
+        h += "<ul><li>" + (S.v === 0 ? "Start with big additions (+5.00 mL) while nothing happens, then switch to single drops." : "No lasting color change yet at " + mL(S.v) + ". " + (x.kind === "redox" ? "Each drop of purple permanganate loses its color as Fe²⁺ reduces it." : "The indicator has not changed yet, so " + x.an + " is still in excess.")) + "</li>" +
+          "<li>Near the end point the color flashes where each drop lands and fades when you swirl. When it no longer fades, you are there.</li></ul>";
+        h += "<p><b>AP answer:</b> the end point is the first reading where the indicator color persists. It approximates the equivalence point, where mol " + x.ti + " added = " + (x.a === x.t ? "" : x.t + "/" + x.a + " × ") + "mol " + x.an + " present.</p>";
+      } else {
+        h += "<p>Your recorded end point is <b>" + mL(S.endV) + "</b>" + (S.v - S.endV > 0.3 ? " (you have kept adding since then; the end point is the reading to use)" : "") + ". Work it through, then type your answer above:</p>";
+        h += S.checked ? steps(S.endV, "end point") : "<ol class=\"steps\"><li>Convert the end-point volume to liters.</li><li>Multiply by the titrant molarity to get mol " + x.ti + ".</li><li>Use the " + ratioWords + " mole ratio to get mol " + x.an + ".</li><li>Divide by the analyte volume in liters.</li></ol>";
+        h += "<p><b>AP answer:</b> M<sub>analyte</sub> = (M<sub>titrant</sub> × V<sub>titrant</sub> × mole ratio) ÷ V<sub>analyte</sub>, with every volume in liters.</p>";
+      }
+      return h;
+    }
+    if (m.over) {
+      h += "<p><b>This sample needs " + mL(m.vEq) + " of titrant, more than a 50 mL burette holds.</b> In the lab you would use a more concentrated titrant or a smaller analyte sample. Raise the titrant concentration or lower the analyte volume.</p>";
+    }
+    var li = [];
+    li.push("The flask started with " + molTxt(m.nA0) + " " + x.an + " (" + Lab.sig(S.ca, 4) + " M × " + (S.va / 1000).toFixed(5) + " L). Equivalence needs " + (x.a === x.t ? "the same number of moles of " + x.ti : x.t + "/" + x.a + " as many moles of " + x.ti) + ": " + molTxt(m.nTeq) + ", which is " + mL(m.vEq) + " of " + Lab.sig(S.ct, 4) + " M " + x.ti + ".");
+    if (m.state === "before") {
+      if (S.v === 0) li.push("No titrant added yet. " + (x.kind === "base" ? "The phenolphthalein is pink because the solution is basic." : x.kind === "redox" ? "The Fe²⁺ solution is nearly colorless." : "The phenolphthalein is colorless because the solution is acidic."));
+      else li.push("Before the equivalence point, <b>" + x.an + " is in excess</b>. Every bit of " + x.ti + " added reacts: " + molTxt(m.nT) + " " + x.ti + " has used up " + molTxt(m.nT * x.a / x.t) + " " + x.an + ", leaving " + molTxt(m.nAleft) + ".");
+      if (x.key === "hac" || S.key === "hac") li.push("Acetic acid is a weak acid, so it stays mostly as CH₃COOH molecules. OH⁻ takes a proton from each molecule, turning it into CH₃COO⁻ in place.");
+      if (S.key === "fe" && S.v > 0) li.push("Each MnO₄⁻ that drips in is reduced to nearly colorless Mn²⁺ while it oxidizes five Fe²⁺ to Fe³⁺, so the purple vanishes.");
+      if (-m.dv < 0.5 && S.v > 0) li.push("You are within half a milliliter. Switch to single drops: the next few decide the end point.");
+    } else if (m.state === "at") {
+      li.push("<b>Equivalence point.</b> Moles of " + x.ti + " added (" + molTxt(m.nT) + ") are in the " + ratioWords + " ratio with the moles of " + x.an + " present at the start. Neither reactant is left over.");
+      li.push(x.kind === "base" ? "The pink has just gone: one more drop of HCl would leave the solution acidic." : x.kind === "redox" ? "One more drop of MnO₄⁻ will have no Fe²⁺ to react with, so its color will stay." : "The flask is still colorless; one more drop of NaOH leaves excess OH⁻ and the pink stays.");
+    } else {
+      li.push("<b>Past the equivalence point.</b> All the " + x.an + " is gone, so " + x.ti + " now accumulates unreacted: " + molTxt(m.excessT) + " in excess. " + (x.kind === "base" ? "The pink is gone because the solution is now acidic." : x.kind === "redox" ? "The lasting pink-purple is the color of unreacted MnO₄⁻." : "The lasting pink is the end point."));
+      if (m.dv > 0.3) li.push("If this were a real run, overshooting by " + mL(m.dv) + " would make the calculated analyte concentration too high, because the recorded volume would be too large.");
+    }
+    if (x.kind !== "redox") li.push("Spectator ions (dashed outlines) never react: they only stay constant or pile up as titrant is added.");
+    h += "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+    if (m.state !== "before" && !m.over) {
+      h += "<p><b>Working backward, as if the concentration were unknown:</b></p>" + steps(m.vEq, "equivalence point");
+    }
+    h += "<p><b>AP answer:</b> at the equivalence point, mol " + x.ti + " added = " + (x.a === x.t ? "" : "(" + x.t + "/" + x.a + ") × ") + "mol " + x.an + " initially present. " +
+      (x.a === x.t ? "Because the ratio is 1 : 1 here, M<sub>a</sub>V<sub>a</sub> = M<sub>t</sub>V<sub>t</sub> works." : "Because the ratio is " + ratioWords + ", M<sub>a</sub>V<sub>a</sub> = M<sub>t</sub>V<sub>t</sub> does not work; apply the mole ratio.") + "</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  var elV = document.getElementById("s-v"), elCa = document.getElementById("s-ca"), elVa = document.getElementById("s-va"), elCt = document.getElementById("s-ct");
+  var btnM = document.getElementById("b-mystery"), ctlcard = document.getElementById("lab-sec");
+  var scBtns = {};
+  function legend() {
+    var x = sc(), c = x.kind === "redox" ? "var(--c3)" : "var(--c4)";
+    document.getElementById("legend").innerHTML =
+      '<span class="l-ad">Titrant in burette' + (x.tiColor ? " (purple KMnO₄)" : " (colorless)") + '</span>' +
+      '<span style="color:' + c + '">' + (x.kind === "redox" ? "Excess MnO₄⁻ (end point)" : "Phenolphthalein pink (basic)") + '</span>' +
+      (S.mystery ? '<span style="color:var(--good)">Recorded end point</span>' : '');
+  }
+  function render(skipStory) {
+    var m = model(), x = sc();
+    // record the end point: first reading where the color change persists
+    if (S.endV == null && S.v > 0) {
+      if ((x.kind === "base" && m.dv > -TOL_ML) || (x.kind !== "base" && m.dv > TOL_ML)) {
+        if (S.mystery) S.endV = S.v;
+      }
+    }
+    if (S.endV != null && S.v < S.endV - 1e-9) S.endV = null;
+    drawApp(m);
+    var pr = drawPart(m);
+    elV.value = S.v; elCa.value = S.ca; elVa.value = S.va; elCt.value = S.ct;
+    document.getElementById("o-v").textContent = mL(S.v);
+    document.getElementById("o-ca").textContent = M(S.ca);
+    document.getElementById("o-va").textContent = mL(S.va);
+    document.getElementById("o-ct").textContent = M(S.ct);
+    document.getElementById("eqn").innerHTML = x.eqn;
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    btnM.setAttribute("aria-pressed", S.mystery ? "true" : "false");
+    btnM.textContent = "Unknown sample: " + (S.mystery ? "on" : "off");
+    ctlcard.classList.toggle("is-mystery", S.mystery);
+    document.getElementById("app-sub").textContent = S.mystery ? "find the end point" : "reading to the nearest 0.05 mL";
+    legend();
+    readouts(m);
+    if (!skipStory) document.getElementById("story").innerHTML = story(m, pr);
+  }
+  function setV(v, drip) {
+    S.v = Math.max(0, Math.min(50, Math.round(v * 20) / 20));
+    render();
+    if (drip) animateDrop();
+  }
+  function newUnknown() {
+    var x = sc(), tries = 0, ca;
+    do {
+      ca = Math.round((0.04 + Math.random() * 0.16) * 10000) / 10000;
+      tries++;
+    } while (tries < 50 && (ca * S.va * x.t / x.a / S.ct > 45 || ca * S.va * x.t / x.a / S.ct < 8));
+    S.ca = ca; S.v = 0; S.endV = null; S.checked = null;
+    document.getElementById("ans").value = ""; document.getElementById("fb").textContent = ""; document.getElementById("fb").className = "fb";
+  }
+  function pick(k) {
+    var x = SC[k];
+    S.key = k; S.v = 0; S.endV = null; S.checked = null;
+    S.ca = x.ca; S.va = x.va; S.ct = x.ct;
+    elCt.min = x.ctR[0]; elCt.max = x.ctR[1]; elCt.step = x.ctR[2];
+    if (S.mystery) newUnknown();
+    render();
+  }
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name;
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pick(k); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  document.getElementById("b-drop").addEventListener("click", function () { setV(S.v + 0.05, true); });
+  document.getElementById("b-half").addEventListener("click", function () { setV(S.v + 0.5, true); });
+  document.getElementById("b-five").addEventListener("click", function () { setV(S.v + 5, true); });
+  document.getElementById("b-refill").addEventListener("click", function () { S.endV = null; setV(0); });
+  elV.addEventListener("input", function () { setV(parseFloat(elV.value)); });
+  elCa.addEventListener("input", function () { S.ca = parseFloat(elCa.value); render(); });
+  elVa.addEventListener("input", function () { S.va = parseFloat(elVa.value); if (S.mystery) { S.v = 0; S.endV = null; } render(); });
+  elCt.addEventListener("input", function () { S.ct = parseFloat(elCt.value); if (S.mystery) { S.v = 0; S.endV = null; } render(); });
+  btnM.addEventListener("click", function () {
+    S.mystery = !S.mystery;
+    if (S.mystery) newUnknown(); else { S.ca = SC[S.key].ca; S.v = 0; S.endV = null; }
+    render();
+  });
+  document.getElementById("b-new").addEventListener("click", function () { newUnknown(); render(); });
+  document.getElementById("b-check").addEventListener("click", function () {
+    var fb = document.getElementById("fb"), x = sc();
+    var val = parseFloat(String(document.getElementById("ans").value).replace(/[^0-9.eE\-]/g, ""));
+    if (S.endV == null) { fb.className = "fb no"; fb.textContent = "Find the end point first: add titrant until the color change lasts."; return; }
+    if (!isFinite(val) || val <= 0) { fb.className = "fb no"; fb.textContent = "Type a concentration in mol/L, such as 0.0850."; return; }
+    var fromEnd = S.ct * S.endV / 1000 * x.a / x.t / (S.va / 1000);
+    var err = Math.abs(val - S.ca) / S.ca;
+    S.checked = true;
+    if (Math.abs(val - fromEnd) / fromEnd <= 0.01 || err <= 0.01) {
+      fb.className = "fb ok";
+      fb.innerHTML = "Correct. Your end point gives " + M(fromEnd) + "; the true value is " + M(S.ca) + " (" + (Math.abs(fromEnd - S.ca) / S.ca < 0.0005 ? "your end point landed right on the equivalence point)." : "difference " + (100 * Math.abs(fromEnd - S.ca) / S.ca).toFixed(1) + "%, because the end point is the first drop past equivalence).");
+    } else {
+      var hint = Math.abs(val - fromEnd * x.t / x.a) / fromEnd < 0.02 * x.t / x.a && x.a !== x.t ? " It looks like the mole ratio was left out." :
+        Math.abs(val * 1000 - fromEnd) / fromEnd < 0.02 || Math.abs(val / 1000 - fromEnd) / fromEnd < 0.02 ? " Check the mL to L conversion." : "";
+      fb.className = "fb no";
+      fb.innerHTML = "Not quite. From your end point the answer is " + M(fromEnd) + "." + hint + " The worked steps are below.";
+    }
+    render();
+  });
+  pick("hcl");
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "A 25.00 mL sample of HCl(aq) of unknown concentration is titrated with 0.1000 M NaOH(aq). The end point is reached after 18.40 mL of NaOH is added. What is the concentration of the HCl?",
+      o: ["0.001840 M", "0.1359 M", "0.07360 M", "0.04600 M"], c: 2,
+      w: "mol NaOH = (0.1000 mol/L)(0.01840 L) = 1.840 × 10⁻³ mol. The ratio is 1 : 1, so mol HCl = 1.840 × 10⁻³ mol, and [HCl] = 1.840 × 10⁻³ mol ÷ 0.02500 L = 0.07360 M. Choice A is the number of moles, not the molarity. Choice B swaps the two volumes." },
+    { s: "A 20.00 mL sample of H₂SO₄(aq) requires 32.00 mL of 0.1250 M NaOH(aq) to reach the equivalence point: H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O. What is the concentration of the H₂SO₄?",
+      o: ["0.1000 M", "0.2000 M", "0.07813 M", "0.05000 M"], c: 0,
+      w: "mol NaOH = (0.1250)(0.03200 L) = 4.000 × 10⁻³ mol. Each H₂SO₄ needs 2 NaOH, so mol H₂SO₄ = 2.000 × 10⁻³ mol, and 2.000 × 10⁻³ ÷ 0.02000 L = 0.1000 M. Choice B uses M₁V₁ = M₂V₂ and ignores the 1 : 2 ratio." },
+    { s: "A solution of Ba(OH)₂ is titrated with HCl: Ba(OH)₂ + 2HCl → BaCl₂ + 2H₂O. Which statement correctly describes the equivalence point?",
+      o: ["The volume of HCl added equals the volume of the Ba(OH)₂ solution.", "The moles of HCl added equal the moles of Ba(OH)₂ initially present.", "The indicator changes color, which always happens at the moment the volumes match.", "The moles of HCl added equal twice the moles of Ba(OH)₂ initially present."], c: 3,
+      w: "The equivalence point is defined by moles in the stoichiometric ratio. The equation needs 2 mol HCl for every 1 mol Ba(OH)₂. Choice B would be right only for a 1 : 1 reaction, and volumes (choices A and C) are not part of the definition." },
+    { s: "A flask initially holds HCl(aq), shown in a particle diagram as 6 H₃O⁺ and 6 Cl⁻. After some NaOH(aq) is added, the diagram shows 2 H₃O⁺, 6 Cl⁻, and 4 Na⁺ (water not shown). Which statement is correct?",
+      o: ["The titration is past the equivalence point, because Na⁺ ions are present.", "The equivalence point has not been reached; 4 OH⁻ were added and all of them reacted with H₃O⁺.", "The titration is at the equivalence point, because the numbers of Na⁺ and Cl⁻ are close.", "There is excess OH⁻ in the flask, so phenolphthalein would be pink."], c: 1,
+      w: "Each Na⁺ arrived with one OH⁻, so 4 OH⁻ were added. No OH⁻ remains and 2 of the original 6 H₃O⁺ are left, so the acid is still in excess: the equivalence point has not been reached. Na⁺ is a spectator, so its presence (choice A) says nothing about which side of equivalence you are on." },
+    { s: "A 25.00 mL sample containing Fe²⁺ is acidified and titrated with 0.02000 M KMnO₄: 5Fe²⁺ + MnO₄⁻ + 8H⁺ → 5Fe³⁺ + Mn²⁺ + 4H₂O. The first lasting pink color appears after 15.00 mL. What is [Fe²⁺]?",
+      o: ["0.01200 M", "0.06000 M", "0.002400 M", "0.03333 M"], c: 1,
+      w: "mol MnO₄⁻ = (0.02000)(0.01500 L) = 3.000 × 10⁻⁴ mol. Five Fe²⁺ react per MnO₄⁻, so mol Fe²⁺ = 1.500 × 10⁻³ mol, and ÷ 0.02500 L = 0.06000 M. Choice A leaves out the 5 : 1 ratio; choice C divides by 5 instead of multiplying." },
+    { s: "Before titrating, a student adds 20 mL of distilled water to the 25.00 mL of acid in the flask. Compared with a titration without the extra water, what volume of NaOH is needed to reach the equivalence point?",
+      o: ["More, because the total volume in the flask is larger", "Less, because the acid is now more dilute", "The same, because the number of moles of acid is unchanged", "It cannot be determined without the new acid concentration"], c: 2,
+      w: "Adding water lowers the concentration of acid in the flask but does not change the moles of acid. The equivalence point depends only on moles, so the same volume of NaOH is needed. Choice A confuses total volume with amount of acid." },
+    { s: "A student titrating vinegar with standardized NaOH adds NaOH until the solution is dark pink, well past the faint pink end point, and uses that volume in the calculation. How does this affect the calculated concentration of acetic acid?",
+      o: ["It is too high, because the recorded volume of NaOH is too large", "It is too low, because the extra NaOH dilutes the acid", "It is unaffected, because the mole ratio is still 1 : 1", "It is too low, because some NaOH did not react"], c: 0,
+      w: "Overshooting makes the recorded NaOH volume too large, so the calculated moles of NaOH, and therefore the calculated moles and concentration of acid, come out too high. Choice D describes what happened in the flask but gets the direction of the error wrong: the calculation still counts the extra NaOH as if it had reacted." },
+    { s: "Acetic acid (a weak acid) is titrated with NaOH(aq). At the equivalence point, which particles are present in the largest amounts besides water?",
+      o: ["CH₃COOH and NaOH", "Na⁺ and CH₃COO⁻", "H₃O⁺ and CH₃COO⁻", "Na⁺, OH⁻, and CH₃COOH"], c: 1,
+      w: "Each OH⁻ removes a proton from a CH₃COOH molecule, forming CH₃COO⁻ and water. At equivalence the acid and the hydroxide have both been used up, leaving Na⁺ (a spectator) and CH₃COO⁻. Choice A lists the reactants, which are gone at equivalence, and NaOH would exist as separate Na⁺ and OH⁻ ions anyway." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("4.6");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [4], topic: "4.6", compact: true, storageKey: "topic-4.6" });</script>
+</body>
+</html>

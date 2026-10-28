@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Composition of Mixtures Study Lab</title>
+<meta name="description" content="Mix two salts or test an impure sample, watch the particle picture and the percent of one element change, and work backward from elemental analysis to a mixture's composition or purity.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.ctlcard { display: grid; gap: 16px; }
+.ctlcard .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+#parts .pa { fill: var(--c1); } #parts .pb { fill: var(--c2); }
+#parts text.pl { font-size: 9.5px; font-weight: 600; fill: var(--surface); }
+#parts .box { fill: none; stroke: var(--muted); stroke-width: 1.5; }
+.legend .l-a { color: var(--c1); } .legend .l-b { color: var(--c2); } .legend .l-tg { color: var(--c4); }
+.calc .row span:last-child { font-family: var(--mono); font-size: .88rem; text-align: right; }
+.work { display: grid; gap: 10px; align-content: start; }
+@media (max-width: 860px) { .ctlcard .controls { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .calc .row { flex-direction: column; gap: 2px; } .calc .row span:last-child { text-align: left; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 1 · Topic 1.4</span>
+  <h1>Composition of Mixtures Study Lab</h1>
+  <p class="lede">A pure compound has one fixed composition, but a mixture can have any proportions of its parts. That means the percent of an element in a mixture tells you how much of each substance is in it, or how pure a sample is. Change the mixture, then use measured data to work backward to its composition.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The mixture analyzer</h2>
+    <p>The left picture shows 30 formula units drawn from the mixture. The graph shows how the percent by mass of one element depends on the mixture's makeup: a straight line from one pure substance to the other. Masses come from the AP periodic table.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Particle view <small id="pv-sub">30 formula units</small></h3>
+      <svg class="chart" id="parts" role="img" aria-label="Particle diagram of the mixture showing formula units of each substance"></svg>
+    </div>
+    <div class="card graph-card">
+      <h3 id="g-h">Percent of the element by mass <small>vs. mixture makeup</small></h3>
+      <svg class="chart" id="graph" role="img" aria-label="Line graph of percent of one element by mass against the percent by mass of the first substance in the mixture"></svg>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <span class="tag" id="pair-lbl">Mixture</span>
+      <div class="seg" role="group" aria-labelledby="pair-lbl" id="pairs"></div>
+    </div>
+    <div class="controls">
+      <div class="ctl">
+        <label for="s-w"><span id="w-lbl">Percent NaCl by mass</span> <output id="o-w"></output></label>
+        <input type="range" id="s-w" min="0" max="100" step="0.5">
+        <span class="hint" id="w-hint">The rest of the mass is the other substance</span>
+      </div>
+      <div class="ctl">
+        <label for="s-m">Sample mass <output id="o-m"></output></label>
+        <input type="range" id="s-m" min="0.5" max="10" step="0.05">
+        <span class="hint">Changes the grams of each element, not the percents</span>
+      </div>
+    </div>
+    <div class="group">
+      <div class="tag">Exam-style cases</div>
+      <div class="scenarios" id="sc"></div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k" id="r-w-k">Mass % NaCl</div><div class="v" id="r-w"></div><div class="sub" id="r-w2"></div></div>
+    <div class="stat"><div class="k" id="r-x-k">Formula units that are NaCl</div><div class="v" id="r-x"></div><div class="sub" id="r-x2"></div></div>
+    <div class="stat"><div class="k" id="r-e-k">Mass % Cl in the mixture</div><div class="v" id="r-e"></div><div class="sub" id="r-e2"></div></div>
+    <div class="stat"><div class="k" id="r-g-k">Grams of Cl in the sample</div><div class="v" id="r-g"></div><div class="sub" id="r-g2"></div></div>
+  </div>
+
+  <div class="two">
+    <div class="card work">
+      <h3>Show your work</h3>
+      <div class="calc" id="calc"></div>
+    </div>
+    <div class="story" id="story" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Variable composition</span><h3>Mixtures vs. pure substances</h3><p>A pure substance (element or compound) has a fixed composition. A mixture is two or more substances physically combined, so its proportions can vary from sample to sample: salt water can be a little salty or very salty.</p></div>
+    <div class="card"><span class="tag">Elemental analysis</span><h3>What the data measure</h3><p>An elemental analysis reports the mass of an element in a sample. In a mixture, that element may come from one substance or from several. Knowing each substance's own percent of that element lets you work out the mixture.</p></div>
+    <div class="card"><span class="tag">Between the pure values</span><h3>The weighted-average idea</h3><p>The percent of an element in a mixture of A and B is a weighted average: %X = w(%X in A) + (1 − w)(%X in B), where w is the mass fraction of A. It always lies between the values for pure A and pure B.</p></div>
+    <div class="card"><span class="tag">Only one source</span><h3>Purity of a sample</h3><p>If only the compound contains the element (calcium in limestone with sand), then purity = measured %X ÷ %X in the pure compound. A sample that is 32.0% Ca is 32.0 ÷ 40.04 = 79.9% CaCO₃.</p></div>
+    <div class="card"><span class="tag">Mass % ≠ particle %</span><h3>Count vs. mass</h3><p>A 50:50 mixture by mass of NaCl and KCl has more NaCl formula units, because each NaCl unit is lighter. To compare numbers of particles, convert each mass to moles.</p></div>
+    <div class="card"><span class="tag">Same recipe, different ratio</span><h3>Why it matters</h3><p>Two samples with different percent compositions cannot both be the same pure compound. A percent composition that does not match the formula is evidence of an impurity or a mixture.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Mixture problem patterns</h2>
+    <p>Each pattern starts by finding the percent of the element in each pure substance from its formula.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Question</th><th>Setup</th><th>Worked example</th></tr></thead>
+    <tbody>
+      <tr><td>Percent of an element in a known mixture</td><td>%X = w(%X in A) + (1 − w)(%X in B)</td><td>50.0% NaCl + 50.0% KCl: 0.500(60.66) + 0.500(47.55) = <b>54.1% Cl</b></td></tr>
+      <tr><td>Mixture makeup from a measured percent</td><td>Solve %X<sub>measured</sub> = w(%X in A) + (1 − w)(%X in B) for w</td><td>55.0% Cl: w = (55.0 − 47.55) ÷ (60.66 − 47.55) = <b>0.568, so 56.8% NaCl</b></td></tr>
+      <tr><td>Purity when only one substance has the element</td><td>purity = %X<sub>measured</sub> ÷ %X in the pure compound</td><td>0.640 g Ca in 2.00 g limestone: 32.0% Ca ÷ 40.04% = <b>79.9% CaCO₃</b></td></tr>
+      <tr><td>Mass of the compound from the mass of the element</td><td>grams of compound = grams of X ÷ (fraction X in compound)</td><td>0.640 g Ca ÷ 0.4004 = <b>1.60 g CaCO₃</b></td></tr>
+      <tr><td>Number of particles of each substance</td><td>moles = grams ÷ molar mass for each substance</td><td>5.00 g NaCl = 0.0856 mol; 5.00 g KCl = 0.0671 mol, so <b>NaCl has more units</b></td></tr>
+      <tr><td>Is it pure?</td><td>Compare the measured % with the % from the formula</td><td>"KCl" that tests 52.0% Cl is <b>not pure</b>; pure KCl is 47.55% Cl</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Mixtures on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Start by computing the percent of the element in each pure substance from its formula, and show the molar masses.</li>
+        <li>State which substance(s) contain the measured element. If only one does, the element's mass tells you that substance's mass directly.</li>
+        <li>Set up the weighted average with a variable, and show the algebra when solving for the mass fraction.</li>
+        <li>Report a percent purity or percent by mass with units and three significant figures.</li>
+        <li>For a claim about purity, compare the measured value with the theoretical value and say whether they agree.</li>
+        <li>When asked about numbers of particles, convert masses to moles before comparing.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Treating a mixture as if it had a fixed formula. A mixture has no single formula or molar mass.</li>
+        <li>Assuming 50% by mass means 50% of the particles. Lighter formula units are more numerous in the same mass.</li>
+        <li>Forgetting that both substances can contain the element (Cl in both NaCl and KCl), so the measured Cl is not all from one.</li>
+        <li>Dividing by the wrong percent: purity uses the element's percent in the pure compound, not 100%.</li>
+        <li>Getting a mixture answer outside the range of the pure values. A Cl percent above 60.66% cannot come from NaCl and KCl alone.</li>
+        <li>Mixing up the element's mass with the compound's mass when converting to moles.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 1.4. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-1.html">Unit 1 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  function pctOf(formula, el) { var c = Lab.parseFormula(formula); return 100 * Lab.BY_SYMBOL[el].m * (c[el] || 0) / Lab.molarMass(c); }
+  var PAIRS = {
+    salt: { name: "NaCl + KCl", A: "NaCl", B: "KCl", An: "sodium chloride", Bn: "potassium chloride", X: "Cl", la: "NaCl", lb: "KCl" },
+    lime: { name: "Limestone (CaCO₃) + sand (SiO₂)", A: "CaCO3", B: "SiO2", An: "calcium carbonate", Bn: "silicon dioxide (sand)", X: "Ca", la: "CaCO₃", lb: "SiO₂" }
+  };
+  Object.keys(PAIRS).forEach(function (k) {
+    var p = PAIRS[k];
+    p.MA = Lab.molarMass(p.A); p.MB = Lab.molarMass(p.B);
+    p.xA = pctOf(p.A, p.X); p.xB = pctOf(p.B, p.X);
+  });
+
+  var SC = [
+    { key: "pa", name: "Pure NaCl", pair: "salt", w: 100, m: 2 },
+    { key: "pb", name: "Pure KCl", pair: "salt", w: 0, m: 2 },
+    { key: "half", name: "50:50 by mass", pair: "salt", w: 50, m: 2 },
+    { key: "unk", name: "Unknown: the mixture is 55.0% Cl", pair: "salt", w: 20, m: 2, target: 55.0 },
+    { key: "kcl", name: "\"Pure KCl\" tests 52.0% Cl", pair: "salt", w: 0, m: 2, target: 52.0 },
+    { key: "lim", name: "Limestone purity: 0.640 g Ca in 2.00 g", pair: "lime", w: 100, m: 2, target: 32.0 }
+  ];
+
+  var S = { pair: "salt", w: 50, m: 2, target: null, key: "half" };
+
+  function model(s) {
+    var p = PAIRS[s.pair], w = s.w / 100;
+    var x = w * p.xA + (1 - w) * p.xB;
+    var nA = w * s.m / p.MA, nB = (1 - w) * s.m / p.MB;
+    var fracA = nA + nB > 0 ? nA / (nA + nB) : 0;
+    var r = { p: p, w: w, x: x, nA: nA, nB: nB, fracA: fracA, gX: x / 100 * s.m };
+    if (s.target != null) {
+      r.wt = (s.target - p.xB) / (p.xA - p.xB);
+      r.inRange = r.wt >= -1e-9 && r.wt <= 1 + 1e-9;
+    }
+    return r;
+  }
+
+  // ---------- Particle diagram ----------
+  var partsSvg = document.getElementById("parts");
+  function narrow(svg) { var w = svg.getBoundingClientRect().width; return w > 0 && w < 430; }
+  function makePos(cols, rows, dx, dy, x0, y0) {   // jittered grid slots in a fixed shuffled order
+    var pts = [], seed = 7;
+    function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+    for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) pts.push([x0 + c * dx + (rnd() - .5) * 16, y0 + r * dy + (rnd() - .5) * 12]);
+    for (var i = pts.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)); var t = pts[i]; pts[i] = pts[j]; pts[j] = t; }
+    return pts;
+  }
+  var POS_W = makePos(6, 5, 68, 56, 52, 52), POS_N = makePos(5, 6, 62, 58, 46, 46);
+  function drawParts(r) {
+    var nw = narrow(partsSvg), POS = nw ? POS_N : POS_W, W = nw ? 340 : 460, H = nw ? 384 : 320;
+    partsSvg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (partsSvg.firstChild) partsSvg.removeChild(partsSvg.firstChild);
+    var g = Lab.el("g", { "class": "particles" }, partsSvg);
+    Lab.el("rect", { x: 8, y: 10, width: W - 16, height: H - 20, rx: 12, "class": "box" }, g);
+    var nA = Math.round(r.fracA * 30);
+    POS.forEach(function (pt, i) {
+      var isA = i < nA;
+      Lab.el("circle", { cx: pt[0], cy: pt[1], r: isA ? (r.p.A === "NaCl" ? 21 : 24) : (r.p.B === "KCl" ? 24 : 21), "class": isA ? "pa" : "pb" }, g);
+      Lab.el("text", { x: pt[0], y: pt[1] + 4, "text-anchor": "middle", "class": "pl", style: nw ? "font-size:11px" : null }, g, isA ? r.p.la : r.p.lb);
+    });
+    return nA;
+  }
+
+  // ---------- Graph ----------
+  var graphSvg = document.getElementById("graph");
+  function drawGraph(r, s) {
+    var p = r.p, lo = Math.min(p.xA, p.xB), hi = Math.max(p.xA, p.xB);
+    var ymin = Math.max(0, Math.floor((lo - 6) / 10) * 10), ymax = Math.ceil((hi + 6) / 10) * 10;
+    var yt = []; for (var v = ymin; v <= ymax; v += (ymax - ymin > 40 ? 10 : 5)) yt.push(v);
+    var F = Lab.frame(graphSvg, { x: [0, 100], y: [ymin, ymax], xLabel: "Mass % " + p.la + " in the mixture", yLabel: "Mass % " + p.X, xTicks: [0, 25, 50, 75, 100], yTicks: yt, fmtX: function (v) { return v; }, fmtY: function (v) { return v; }, width: narrow(graphSvg) ? 340 : 460, height: 320 });
+    Lab.line(F, [[0, p.xB], [100, p.xA]], "var(--accent)", 3);
+    Lab.dot(F, 0, p.xB, "var(--c2)", false); Lab.dot(F, 100, p.xA, "var(--c1)", false);
+    Lab.tag(F, 3, ymax - (ymax - ymin) * 0.06, "left end, pure " + p.lb + ": " + p.xB.toFixed(2) + "%", "var(--c2)", "start");
+    Lab.tag(F, 98, p.xA + (p.xA > p.xB ? 1 : -1) * (ymax - ymin) * 0.05, "pure " + p.la + ": " + p.xA.toFixed(2) + "%", "var(--c1)", "end");
+    if (s.target != null) {
+      Lab.line(F, [[0, s.target], [100, s.target]], "var(--c4)", 2, "6 4");
+      Lab.tag(F, 50, s.target + (p.xA > p.xB ? -1 : 1) * (ymax - ymin) * 0.06 - (ymax - ymin) * 0.01, "measured " + s.target.toFixed(1) + "%", "var(--c4)", "middle");
+      if (r.inRange) Lab.dot(F, r.wt * 100, s.target, "var(--c4)", false);
+    }
+    Lab.dot(F, s.w, r.x, "var(--ink)", true);
+  }
+
+  // ---------- Text ----------
+  function calc(r, s) {
+    var p = r.p, rows = [];
+    function row(a, b) { rows.push('<div class="row"><span>' + a + "</span><span>" + b + "</span></div>"); }
+    row("%" + p.X + " in pure " + Lab.fmla(p.A), (p.xA).toFixed(2) + "%");
+    row("%" + p.X + " in pure " + Lab.fmla(p.B), (p.xB).toFixed(2) + "%");
+    row("Mixture: " + r.w.toFixed(3) + "(" + p.xA.toFixed(2) + ") + " + (1 - r.w).toFixed(3) + "(" + p.xB.toFixed(2) + ")", r.x.toFixed(2) + "% " + p.X);
+    row("Moles " + Lab.fmla(p.A) + " = " + (r.w * s.m).toFixed(3) + " g ÷ " + p.MA.toFixed(2), Lab.sig(r.nA, 3) + " mol");
+    row("Moles " + Lab.fmla(p.B) + " = " + ((1 - r.w) * s.m).toFixed(3) + " g ÷ " + p.MB.toFixed(2), Lab.sig(r.nB, 3) + " mol");
+    row("Grams of " + p.X + " = " + (r.x / 100).toFixed(4) + " × " + s.m.toFixed(2) + " g", r.gX.toFixed(3) + " g");
+    return rows.join("");
+  }
+  function story(r, s) {
+    var p = r.p, h = "", L = [], A = Lab.fmla(p.A), B = Lab.fmla(p.B);
+    var sc = SC.filter(function (x) { return x.key === S.key; })[0];
+    if (s.target != null) {
+      h += "<p><b>" + sc.name + ".</b> " + (S.key === "lim" ? "Only CaCO₃ contains calcium; sand (SiO₂) has none. The measured " + s.target.toFixed(1) + "% Ca (0.640 g ÷ 2.00 g) tells you how much of the sample is CaCO₃." : "Both NaCl and KCl contain chlorine, so the measured " + s.target.toFixed(1) + "% Cl is a weighted average of the two.") + " Drag the mixture slider until the black dot meets the magenta line.</p>";
+      if (r.inRange) {
+        if (S.key === "lim") L.push("Purity = " + s.target.toFixed(1) + "% ÷ " + p.xA.toFixed(2) + "% = <b>" + (r.wt * 100).toFixed(1) + "% CaCO₃</b> by mass. That is " + (r.wt * s.m).toFixed(2) + " g of CaCO₃ in the " + s.m.toFixed(2) + " g sample.");
+        else L.push("Solve " + s.target.toFixed(1) + " = w(" + p.xA.toFixed(2) + ") + (1 − w)(" + p.xB.toFixed(2) + "): w = (" + s.target.toFixed(1) + " − " + p.xB.toFixed(2) + ") ÷ (" + p.xA.toFixed(2) + " − " + p.xB.toFixed(2) + ") = " + r.wt.toFixed(3) + ", so the mixture is <b>" + (r.wt * 100).toFixed(1) + "% " + A + "</b> and " + ((1 - r.wt) * 100).toFixed(1) + "% " + B + " by mass.");
+        if (S.key === "kcl") L.push("Pure KCl is 47.55% Cl, so a sample at 52.0% Cl is <b>not pure KCl</b>. Its chlorine percent is too high, which fits a contaminant with a higher %Cl, such as NaCl.");
+        var off = s.w / 100 - r.wt;
+        L.push(Math.abs(off) < 0.006 ? "<b>Match.</b> Your slider gives the measured percent." : "Your mixture gives " + r.x.toFixed(2) + "% " + p.X + ". Move the slider " + ((off > 0) === (p.xA > p.xB) ? "left" : "right") + ".");
+      } else L.push("No mixture of " + A + " and " + B + " can have " + s.target.toFixed(1) + "% " + p.X + "; the value must lie between " + Math.min(p.xA, p.xB).toFixed(2) + "% and " + Math.max(p.xA, p.xB).toFixed(2) + "%.");
+    } else {
+      if (r.w === 1 || r.w === 0) {
+        var only = r.w === 1 ? A : B;
+        h += "<p><b>A pure substance.</b> This sample is all " + only + ", so its composition is fixed by its formula: " + (r.w === 1 ? p.xA : p.xB).toFixed(2) + "% " + p.X + " by mass, no matter how large the sample.</p>";
+      } else {
+        h += "<p><b>A mixture of " + A + " and " + B + ".</b> Unlike a pure compound, a mixture can have any makeup. This one is " + s.w.toFixed(1) + "% " + A + " by mass, and its " + p.X + " content, " + r.x.toFixed(2) + "%, lies between the values for the two pure substances.</p>";
+        L.push("By mass the mixture is " + s.w.toFixed(1) + "% " + A + ", but by count " + (r.fracA * 100).toFixed(1) + "% of the formula units are " + A + ". " + (Math.abs(r.fracA - r.w) > 0.005 ? (p.MA < p.MB ? A + " units are lighter (" + p.MA.toFixed(2) + " vs. " + p.MB.toFixed(2) + " g/mol), so the same mass holds more of them." : A + " units are heavier (" + p.MA.toFixed(2) + " vs. " + p.MB.toFixed(2) + " g/mol), so the same mass holds fewer of them.") : ""));
+        L.push("Changing the makeup moves the point along the straight line: more " + A + " means " + (p.xA > p.xB ? "more" : "less") + " " + p.X + " by mass.");
+      }
+      L.push("A " + s.m.toFixed(2) + " g sample contains " + r.gX.toFixed(3) + " g of " + p.X + ". Changing the sample mass changes the grams, never the percent.");
+    }
+    if (L.length) h += "<ul>" + L.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
+    h += "<p><b>AP answer:</b> " + (S.key === "lim" ? "when only one component contains the element, percent purity = measured % of the element ÷ % of the element in the pure compound." : "the mass percent of an element in a mixture is the weighted average of its mass percent in each component, so a measured value can be used to find the mixture's composition.") + "</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  var wIn = document.getElementById("s-w"), mIn = document.getElementById("s-m");
+  var pairBtns = {}, scBtns = {};
+  function render() {
+    var r = model(S), p = r.p, A = Lab.fmla(p.A), B = Lab.fmla(p.B);
+    var nA = drawParts(r); drawGraph(r, S);
+    wIn.value = S.w; mIn.value = S.m;
+    document.getElementById("w-lbl").innerHTML = "Percent " + A + " by mass";
+    document.getElementById("w-hint").innerHTML = "The rest is " + B;
+    document.getElementById("o-w").textContent = S.w.toFixed(1) + "%";
+    document.getElementById("o-m").textContent = S.m.toFixed(2) + " g";
+    document.getElementById("pv-sub").innerHTML = nA + " " + A + ", " + (30 - nA) + " " + B;
+    document.getElementById("legend").innerHTML = '<span class="l-a">' + A + " (" + p.An + ')</span><span class="l-b">' + B + " (" + p.Bn + ')</span><span class="l-ad">%' + p.X + ' for every possible mixture</span>' + (S.target != null ? '<span class="l-tg">Measured value</span>' : "");
+    Object.keys(pairBtns).forEach(function (k) { pairBtns[k].setAttribute("aria-pressed", S.pair === k ? "true" : "false"); });
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    function set(id, k, v, sub) { document.getElementById(id + "-k").innerHTML = k; document.getElementById(id).innerHTML = v; document.getElementById(id + "2").innerHTML = sub; }
+    set("r-w", "Mass % " + A, S.w.toFixed(1) + "%", (100 - S.w).toFixed(1) + "% " + B);
+    set("r-x", "Formula units that are " + A, (r.fracA * 100).toFixed(1) + "%", "from moles, not grams");
+    set("r-e", "Mass % " + p.X + " in the sample", r.x.toFixed(2) + "%", S.target != null ? "measured: " + S.target.toFixed(1) + "%" : "between " + Math.min(p.xA, p.xB).toFixed(2) + " and " + Math.max(p.xA, p.xB).toFixed(2));
+    set("r-g", "Grams of " + p.X + " in the sample", r.gX.toFixed(3) + " g", "in " + S.m.toFixed(2) + " g of sample");
+    document.getElementById("calc").innerHTML = calc(r, S);
+    document.getElementById("story").innerHTML = story(r, S);
+  }
+  Object.keys(PAIRS).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = PAIRS[k].name;
+    b.addEventListener("click", function () { S.pair = k; S.target = null; S.key = null; render(); });
+    document.getElementById("pairs").appendChild(b); pairBtns[k] = b;
+  });
+  SC.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S = { pair: x.pair, w: x.w, m: x.m, target: x.target != null ? x.target : null, key: x.key }; render(); });
+    document.getElementById("sc").appendChild(b); scBtns[x.key] = b;
+  });
+  wIn.addEventListener("input", function () { S.w = parseFloat(wIn.value); if (S.target == null) S.key = null; render(); });
+  mIn.addEventListener("input", function () { S.m = parseFloat(mIn.value); render(); });
+  render();
+  var wasNarrow = narrow(graphSvg);
+  window.addEventListener("resize", function () { var n = narrow(graphSvg); if (n !== wasNarrow) { wasNarrow = n; render(); } });
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Which observation best shows that a white powder is a mixture rather than a pure compound?",
+      o: ["The powder dissolves completely in water.", "The powder contains more than one element.", "Different samples of the powder have different percents of chlorine by mass.", "The powder has a definite mass."], c: 2,
+      w: "A pure compound has a fixed composition (law of definite proportions), so samples that differ in composition must be mixtures. Choice B is not evidence: every compound contains more than one element." },
+    { s: "A 5.00 g sample of limestone contains CaCO₃ and SiO₂ (which has no calcium). Analysis shows the sample contains 1.60 g of calcium. What is the percent by mass of CaCO₃ in the sample?",
+      o: ["32.0%", "40.0%", "20.1%", "79.9%"], c: 3,
+      w: "The sample is 1.60 ÷ 5.00 = 32.0% Ca. Pure CaCO₃ is 40.08 ÷ 100.09 = 40.04% Ca, so purity = 32.0 ÷ 40.04 = 0.799, or 79.9% CaCO₃. Choice A is the percent calcium, not the percent CaCO₃. Choice C is the percent SiO₂." },
+    { s: "A mixture is 50.0% NaCl and 50.0% KCl by mass. Which statement is correct?",
+      o: ["The mixture contains more formula units of NaCl than of KCl.", "The mixture contains equal numbers of NaCl and KCl formula units.", "The mixture contains more formula units of KCl than of NaCl.", "The number of formula units cannot be compared without the total mass."], c: 0,
+      w: "With equal masses, the substance with the smaller molar mass has more moles. NaCl (58.44 g/mol) is lighter than KCl (74.55 g/mol), so there are more NaCl units. The ratio does not depend on the total mass, so choice D is wrong." },
+    { s: "What is the percent chlorine by mass in a mixture that is 50.0% NaCl and 50.0% KCl by mass? (Pure NaCl is 60.66% Cl; pure KCl is 47.55% Cl.)",
+      o: ["50.0%", "108.2%", "47.6%", "54.1%"], c: 3,
+      w: "%Cl = 0.500(60.66) + 0.500(47.55) = 30.33 + 23.78 = 54.1%. The answer must be between the two pure values. Choice B adds the percents instead of averaging them, which gives an impossible value over 100%." },
+    { s: "A particle diagram of a mixture shows 6 formula units of NaCl (58.44 g/mol) and 4 formula units of KCl (74.55 g/mol). What is the percent NaCl by mass?",
+      o: ["60.0%", "54.0%", "46.0%", "40.0%"], c: 1,
+      w: "Mass ratio: 6 × 58.44 = 350.6 and 4 × 74.55 = 298.2, so %NaCl = 350.6 ÷ (350.6 + 298.2) = 54.0%. Choice A is the percent of formula units, which is not the same as percent by mass because the units have different masses." },
+    { s: "A student claims a white solid is pure KCl. An analysis shows the solid is 52.0% chlorine by mass. Pure KCl is 47.55% Cl and pure NaCl is 60.66% Cl. Which conclusion is best supported?",
+      o: ["The solid is pure KCl, because KCl contains chlorine.", "The solid could be pure NaCl.", "The solid is not pure KCl; it could be KCl mixed with a substance with a higher percent Cl, such as NaCl.", "The analysis must be wrong, because a mixture of salts cannot be 52.0% Cl."], c: 2,
+      w: "Pure KCl must be 47.55% Cl. A measured 52.0% means the solid is not pure KCl. It is between the KCl and NaCl values, so a KCl–NaCl mixture (about 34% NaCl by mass) fits. Pure NaCl would be 60.66% Cl, so choice B is ruled out." },
+    { s: "Which statement correctly compares a mixture with a pure compound?",
+      o: ["Both have a fixed composition by mass.", "A mixture can have a variable composition, while a compound always has the same composition by mass.", "A mixture always contains elements in a simple whole-number ratio.", "A compound can be separated into its elements by filtering."], c: 1,
+      w: "The defining difference is composition: a compound obeys the law of definite proportions, while a mixture's proportions can vary. Separating a compound into elements requires a chemical change, not filtration, so choice D is wrong." },
+    { s: "One 10.0 g sample of brass (a mixture of copper and zinc) contains 6.50 g of Cu. A second brass sample is 70.0% Cu by mass. Which statement is correct?",
+      o: ["Both are brass; mixtures such as alloys can have different compositions.", "At least one of the samples must be a pure compound.", "The second sample cannot be brass, because brass has a fixed composition of 65.0% Cu.", "Both samples must contain 6.50 g of Cu."], c: 0,
+      w: "Brass is a mixture (an alloy), so its copper percent can vary: the first sample is 6.50 ÷ 10.0 = 65.0% Cu and the second is 70.0% Cu. Choice C treats a mixture as if it obeyed the law of definite proportions." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("1.4");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [1], topic: "1.4", compact: true, storageKey: "topic-1.4" });</script>
+</body>
+</html>

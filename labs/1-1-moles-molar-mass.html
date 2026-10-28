@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moles and Molar Mass Study Lab</title>
+<meta name="description" content="Convert between grams, moles, and particles for any formula on a live mole map, with the molar mass built element by element and every step shown with significant figures.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.graph-card { align-content: start; }
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"], .subs button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.subs { display: flex; flex-wrap: wrap; gap: 6px; }
+.subs button { padding: 4px 11px; font-size: .86rem; }
+.field { display: grid; gap: 4px; font-size: .86rem; font-weight: 500; }
+.field input, .field select { font: inherit; font-size: .95rem; padding: 7px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); min-width: 0; width: 100%; }
+.field input { font-family: var(--mono); }
+.field .hint { font-size: .76rem; color: var(--muted); font-weight: 400; }
+.field.err input { border-color: var(--bad); }
+.field .msg { font-size: .78rem; color: var(--bad); font-weight: 400; min-height: 1em; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+#map .node rect { fill: var(--surface); stroke: var(--rule); stroke-width: 1.5; }
+#map .node.on rect { stroke: var(--accent); stroke-width: 2.5; fill: var(--accent-soft); }
+#map .node.given rect { stroke: var(--c1); stroke-width: 3; }
+#map .node .t { font-size: 12px; fill: var(--muted); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+#map .node .v { font-family: var(--mono); font-size: 15px; fill: var(--ink); font-weight: 500; }
+#map .node .u { font-size: 11.5px; fill: var(--muted); }
+#map .op { font-family: var(--mono); font-size: 12px; font-weight: 500; }
+.mm td, .mm th { font-variant-numeric: tabular-nums; }
+.mm td:not(:first-child), .mm th:not(:first-child) { text-align: right; }
+.mm tfoot td { font-weight: 600; border-top: 2px solid var(--ink); }
+.mm table { min-width: 0; }
+.mm th, .mm td { padding: 8px 10px; }
+.work { display: grid; gap: 10px; align-content: start; }
+.work .note { font-size: .82rem; color: var(--muted); }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v sup { font-size: .7em; }
+.legend .l-given { color: var(--c1); }
+@media (max-width: 520px) { .row2 { grid-template-columns: 1fr; } .readout { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 1 · Topic 1.1</span>
+  <h1>Moles and Molar Mass Study Lab</h1>
+  <p class="lede">Atoms are far too small to count one by one, so chemists count them in moles: 6.022 × 10<sup>23</sup> particles per mole. Molar mass connects the mole to grams you can weigh. Pick a substance, enter an amount in grams, moles, or particles, and watch the mole map convert it with every step shown.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The mole map</h2>
+    <p>Every conversion goes through moles. The orange box is the amount you entered; the highlighted arrows are the steps the calculator used. Molar masses use the values on the AP periodic table.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Grams, moles, particles <small id="map-sub">H₂O</small></h3>
+      <svg class="chart" id="map" role="img" aria-label="Mole map: mass in grams, moles, number of particles, and number of atoms of one element, with the conversion factors between them"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Substance</div>
+        <div class="subs" id="subs"></div>
+        <div class="field" id="f-formula">
+          <label for="formula">Or type any formula</label>
+          <input id="formula" type="text" autocomplete="off" spellcheck="false" value="H2O">
+          <span class="hint">Examples: C6H12O6, Ca(OH)2, CuSO4·5H2O, Al2(SO4)3</span>
+          <span class="msg" id="formula-msg" aria-live="polite"></span>
+        </div>
+      </div>
+      <div class="group">
+        <div class="tag">Amount you know</div>
+        <div class="row2">
+          <div class="field" id="f-amt">
+            <label for="amt">Value</label>
+            <input id="amt" type="text" inputmode="decimal" autocomplete="off" value="36.0">
+            <span class="hint">Sig figs are read from what you type. Use 6.02e23 or 6.02x10^23 for big numbers.</span>
+            <span class="msg" id="amt-msg" aria-live="polite"></span>
+          </div>
+          <div class="field">
+            <span id="unit-lbl">Unit</span>
+            <div class="seg" role="group" aria-labelledby="unit-lbl">
+              <button type="button" data-u="g" aria-pressed="true">grams</button>
+              <button type="button" data-u="mol" aria-pressed="false">moles</button>
+              <button type="button" data-u="N" aria-pressed="false">particles</button>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="atom-el">Count atoms of</label>
+          <select id="atom-el"></select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card group">
+    <div class="tag">Exam-style problems</div>
+    <div class="scenarios" id="sc"></div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-given">Amount you entered</span><span class="l-ad">Steps used</span><span class="l-ghost">Steps not needed</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Molar mass</div><div class="v" id="r-m"></div><div class="sub" id="r-m2"></div></div>
+    <div class="stat"><div class="k">Moles</div><div class="v" id="r-n"></div><div class="sub" id="r-n2"></div></div>
+    <div class="stat"><div class="k" id="r-N-k">Particles</div><div class="v" id="r-N"></div><div class="sub" id="r-N2"></div></div>
+    <div class="stat"><div class="k">Mass of one particle</div><div class="v" id="r-1"></div><div class="sub" id="r-12"></div></div>
+  </div>
+
+  <div class="two">
+    <div class="card work">
+      <h3>Show your work</h3>
+      <ol class="steps" id="steps"></ol>
+      <p class="note">Intermediate values keep extra digits; the final answers are rounded to the sig figs of the amount you entered (Avogadro's number and molar masses have more).</p>
+    </div>
+    <div class="card work mm">
+      <h3>Building the molar mass</h3>
+      <div class="tbl-wrap"><table id="mm-tbl"></table></div>
+    </div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">N<sub>A</sub> = 6.022 × 10²³ mol⁻¹</span><h3>The mole is a counting unit</h3><p>A mole is 6.022 × 10<sup>23</sup> particles, the same way a dozen is 12. The particles can be atoms, molecules, formula units, ions, or electrons, so always say which one you are counting.</p></div>
+    <div class="card"><span class="tag">amu ↔ g/mol</span><h3>Why molar mass works</h3><p>The mole is defined so that the average mass of one particle in atomic mass units (amu) equals the mass of one mole of those particles in grams. One H₂O molecule averages 18.02 amu, so one mole of water is 18.02 g.</p></div>
+    <div class="card"><span class="tag">n = m / M</span><h3>Grams to moles</h3><p>Divide mass by molar mass to get moles. Multiply moles by molar mass to get grams. Molar mass is the sum of the atomic masses of every atom in the formula, counting subscripts and anything in parentheses.</p></div>
+    <div class="card"><span class="tag">N = n × N<sub>A</sub></span><h3>Moles to particles</h3><p>Multiply moles by Avogadro's number to get the number of particles. Grams never convert straight to particles: you always pass through moles first.</p></div>
+    <div class="card"><span class="tag">Subscripts</span><h3>Atoms inside particles</h3><p>One molecule of C₆H₁₂O₆ holds 6 C, 12 H, and 6 O atoms. So the moles (or number) of H atoms is 12 times the moles (or number) of glucose molecules. Subscripts are mole ratios inside a formula.</p></div>
+    <div class="card"><span class="tag">Equal masses ≠ equal counts</span><h3>Same mass, different moles</h3><p>Ten grams of H₂ and ten grams of O₂ weigh the same but hold very different numbers of molecules. The substance with the smaller molar mass has more moles, and so more particles, in the same mass.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Conversion cheat sheet</h2>
+    <p>Set up each conversion so the units cancel. If the units on your answer are wrong, the setup is wrong.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>You have</th><th>You want</th><th>Do this</th><th>Example (H₂O, M = 18.02 g/mol)</th></tr></thead>
+    <tbody>
+      <tr><td>Grams</td><td>Moles</td><td><b>÷ molar mass</b></td><td>36.0 g ÷ 18.02 g/mol = 2.00 mol</td></tr>
+      <tr><td>Moles</td><td>Grams</td><td><b>× molar mass</b></td><td>0.500 mol × 18.02 g/mol = 9.01 g</td></tr>
+      <tr><td>Moles</td><td>Particles</td><td><b>× 6.022 × 10²³</b></td><td>2.00 mol × 6.022 × 10²³ mol⁻¹ = 1.20 × 10²⁴ molecules</td></tr>
+      <tr><td>Particles</td><td>Moles</td><td><b>÷ 6.022 × 10²³</b></td><td>3.011 × 10²³ molecules ÷ 6.022 × 10²³ mol⁻¹ = 0.5000 mol</td></tr>
+      <tr><td>Grams</td><td>Particles</td><td>÷ molar mass, then × 6.022 × 10²³</td><td>9.01 g → 0.500 mol → 3.01 × 10²³ molecules</td></tr>
+      <tr><td>Molecules</td><td>Atoms of one element</td><td><b>× subscript</b></td><td>1.20 × 10²⁴ molecules × 2 H per molecule = 2.41 × 10²⁴ H atoms</td></tr>
+      <tr><td>Mass of one particle</td><td>Molar mass</td><td>× 6.022 × 10²³</td><td>2.992 × 10⁻²³ g × 6.022 × 10²³ mol⁻¹ = 18.02 g/mol</td></tr>
+      <tr><td>Grams and moles of an unknown</td><td>Identity</td><td>M = m ÷ n, then match the periodic table</td><td>4.60 g ÷ 0.200 mol = 23.0 g/mol → sodium</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Mole calculations on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Show the setup with units, such as 36.0 g × (1 mol / 18.02 g). A correct number with no work often earns no credit.</li>
+        <li>Write the molar mass you used. If you add it up yourself, use the masses from the periodic table they give you.</li>
+        <li>Name the particle: "molecules of H₂O" or "atoms of H," not just "particles."</li>
+        <li>Round only at the end, to the number of significant figures in the measured data (usually three). Graders accept ±1 in the last digit.</li>
+        <li>For "identify the element," compute molar mass as grams ÷ moles and name the element whose mass is closest.</li>
+        <li>For mole comparisons ("which sample has more atoms?"), convert each sample to moles of the thing being counted before comparing.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Multiplying grams by molar mass when you should divide. Check the units: g × g/mol gives g²/mol, which is meaningless.</li>
+        <li>Forgetting the subscript outside parentheses: Ca(OH)₂ has 2 O and 2 H, so its molar mass is 74.10 g/mol, not 58.10.</li>
+        <li>Counting molecules when the question asks for atoms. One mole of CO₂ is 6.022 × 10<sup>23</sup> molecules but 1.807 × 10<sup>24</sup> atoms.</li>
+        <li>Using the mass number (12, 16) instead of the average atomic mass (12.01, 16.00) from the periodic table.</li>
+        <li>Thinking equal masses mean equal numbers of particles. Equal moles mean equal numbers of particles.</li>
+        <li>Calling 6.022 × 10<sup>23</sup> a mass. It is a count; it has units of mol⁻¹.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 1.1. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-1.html">Unit 1 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var NA = Lab.CONST.NA;
+  var NONMETALS = ["H", "He", "B", "C", "N", "O", "F", "Ne", "Si", "P", "S", "Cl", "Ar", "As", "Se", "Br", "Kr", "Te", "I", "Xe"];
+
+  var SUBS = [
+    { f: "H2O", name: "water" }, { f: "CO2", name: "carbon dioxide" }, { f: "O2", name: "oxygen gas" },
+    { f: "NaCl", name: "sodium chloride" }, { f: "C6H12O6", name: "glucose" }, { f: "CaCO3", name: "calcium carbonate" },
+    { f: "Fe", name: "iron" }, { f: "NH3", name: "ammonia" }, { f: "Al2(SO4)3", name: "aluminum sulfate" }
+  ];
+  var SC = [
+    { name: "36.0 g of water → molecules", f: "H2O", amt: "36.0", u: "g", el: "H" },
+    { name: "0.250 mol CO₂ → grams", f: "CO2", amt: "0.250", u: "mol", el: "O" },
+    { name: "1.204 × 10²⁴ Fe atoms → grams", f: "Fe", amt: "1.204e24", u: "N", el: "Fe" },
+    { name: "H atoms in 10.0 g of glucose", f: "C6H12O6", amt: "10.0", u: "g", el: "H" },
+    { name: "5.00 g NaCl → formula units", f: "NaCl", amt: "5.00", u: "g", el: "Cl" },
+    { name: "O atoms in 0.200 mol Al₂(SO₄)₃", f: "Al2(SO4)3", amt: "0.200", u: "mol", el: "O" }
+  ];
+
+  var S = { f: "H2O", amt: "36.0", u: "g", el: "H", key: 0 };
+
+  // ---------- Parsing ----------
+  function parseAmount(str) {
+    var s = String(str).replace(/\s+/g, "").replace(/,/g, "").replace(/×/g, "x").replace(/[−–]/g, "-");
+    var m = s.match(/^([0-9]*\.?[0-9]*)(?:(?:e|E)([+\-]?\d+)|(?:x|\*)10\^?([+\-]?\d+))?$/);
+    if (!m || !m[1] || m[1] === ".") return null;
+    var mant = m[1], exp = m[2] != null ? +m[2] : m[3] != null ? +m[3] : 0;
+    var v = parseFloat(mant) * Math.pow(10, exp);
+    if (!(v > 0) || !isFinite(v)) return null;
+    // significant figures in the mantissa
+    var digits = mant.replace(".", ""), sf;
+    var stripped = digits.replace(/^0+/, "");
+    if (mant.indexOf(".") >= 0) sf = stripped.length;
+    else sf = stripped.replace(/0+$/, "").length || 1;
+    return { v: v, sf: Math.max(1, Math.min(6, sf || 1)) };
+  }
+  function kindOf(counts) {
+    var els = Object.keys(counts);
+    if (els.length === 1) return counts[els[0]] === 1 ? "atom" : "molecule";
+    var metal = els.some(function (e) { return NONMETALS.indexOf(e) < 0; });
+    var nonmetal = els.some(function (e) { return NONMETALS.indexOf(e) >= 0; });
+    if (metal && nonmetal) return "fu";
+    return "molecule";
+  }
+  var WORD = { atom: ["atom", "atoms"], molecule: ["molecule", "molecules"], fu: ["formula unit", "formula units"] };
+
+  // ---------- Formatting ----------
+  var SUPD = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "-": "⁻" };
+  function sciPlain(v, n) {   // Unicode version for SVG text
+    var h = Lab.sci(v, n);
+    return h.replace(/<sup>([^<]*)<\/sup>/, function (_, e) { return e.replace("−", "-").split("").map(function (c) { return SUPD[c] || c; }).join(""); });
+  }
+  function fUni(str) {        // formula with Unicode subscripts for SVG/labels
+    var SUB = "₀₁₂₃₄₅₆₇₈₉";
+    return String(str).replace(/(\d+)/g, function (d, _, i, s) { return i > 0 && /[A-Za-z\)\]]/.test(s[i - 1]) ? d.split("").map(function (c) { return SUB[+c]; }).join("") : d; });
+  }
+  function mm2(v) { return v.toFixed(2); }
+
+  // ---------- Model ----------
+  function model(s) {
+    var counts;
+    try { counts = Lab.parseFormula(s.f); } catch (e) { return { err: e.message }; }
+    if (!Object.keys(counts).length) return { err: "Type a formula." };
+    var a = parseAmount(s.amt);
+    var M = Lab.molarMass(counts);
+    var r = { counts: counts, M: M, kind: kindOf(counts), amt: a };
+    if (!a) { r.badAmt = true; return r; }
+    r.sf = a.sf;
+    r.n = s.u === "g" ? a.v / M : s.u === "mol" ? a.v : a.v / NA;
+    r.m = r.n * M; r.N = r.n * NA;
+    var el = counts[s.el] ? s.el : Object.keys(counts)[0];
+    r.el = el; r.sub = counts[el]; r.atoms = r.N * r.sub; r.atomMol = r.n * r.sub;
+    r.showAtoms = !(r.kind === "atom");
+    return r;
+  }
+
+  // ---------- Mole map (SVG) ----------
+  var svg = document.getElementById("map");
+  var W = 520, H = 330, NW = 124, NH = 78;
+  function node(g, x, y, title, val, unit, cls) {
+    var n = Lab.el("g", { "class": "node " + (cls || "") }, g);
+    Lab.el("rect", { x: x - NW / 2, y: y - NH / 2, width: NW, height: NH, rx: 10 }, n);
+    Lab.el("text", { x: x, y: y - 18, "text-anchor": "middle", "class": "t" }, n, title);
+    Lab.el("text", { x: x, y: y + 5, "text-anchor": "middle", "class": "v" }, n, val);
+    Lab.el("text", { x: x, y: y + 25, "text-anchor": "middle", "class": "u" }, n, unit);
+  }
+  function arr(g, x1, y1, x2, y2, on) {
+    var col = on ? "var(--accent)" : "var(--ghost)";
+    var len = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / len, uy = (y2 - y1) / len, h = 9;
+    Lab.el("path", { d: "M" + x1 + " " + y1 + " L" + (x2 - ux * 6) + " " + (y2 - uy * 6), stroke: col, "stroke-width": on ? 3 : 1.6, fill: "none", "stroke-dasharray": on ? null : "5 4" }, g);
+    Lab.el("path", { d: "M" + x2 + " " + y2 + " L" + (x2 - h * ux + h * .5 * uy) + " " + (y2 - h * uy - h * .5 * ux) + " L" + (x2 - h * ux - h * .5 * uy) + " " + (y2 - h * uy + h * .5 * ux) + " Z", fill: col }, g);
+  }
+  function op(g, x, y, lines, on, anchor) {
+    lines.forEach(function (t, i) {
+      Lab.el("text", { x: x, y: y + i * 15, "text-anchor": anchor || "middle", "class": "op", style: "fill:" + (on ? "var(--accent)" : "var(--muted)") }, g, t);
+    });
+  }
+  function drawMap(r, s) {
+    var narrow = svg.getBoundingClientRect().width > 0 && svg.getBoundingClientRect().width < 430;
+    W = narrow ? 330 : 520; H = narrow ? (r && !r.err && r.showAtoms ? 490 : 360) : 330;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var g = Lab.el("g", {}, svg);
+    var ok = r && !r.err && !r.badAmt;
+    var u = s.u, Mtxt = r && !r.err ? mm2(r.M) : "M";
+    var use = {
+      m2n: ok && u === "g", n2m: ok && (u === "mol" || u === "N"),
+      n2N: ok && (u === "g" || u === "mol"), N2n: ok && u === "N",
+      N2a: ok && r.showAtoms
+    };
+    var kind = r && !r.err ? r.kind : "molecule";
+    var P;   // node centers: mass, moles, particles, atoms
+    if (!narrow) P = [[66, 96], [260, 96], [454, 96], [454, 252]];
+    else P = [[200, 48], [200, 178], [200, 308], [200, 438]];
+    function pair(a, b, fwdOn, backOn, fwdLbl, backLbl) {
+      if (!narrow) {
+        var x1 = a[0] + NW / 2, x2 = b[0] - NW / 2, y = a[1], mx = (x1 + x2) / 2;
+        arr(g, x1 + 4, y - 12, x2 - 2, y - 12, fwdOn); arr(g, x2 - 4, y + 12, x1 + 2, y + 12, backOn);
+        op(g, mx, y - 44, fwdLbl, fwdOn); op(g, mx, y + 40, backLbl, backOn);
+      } else {
+        var y1 = a[1] + NH / 2, y2 = b[1] - NH / 2, x = a[0], my = (y1 + y2) / 2;
+        arr(g, x - 14, y1 + 4, x - 14, y2 - 2, fwdOn); arr(g, x + 14, y2 - 4, x + 14, y1 + 2, backOn);
+        op(g, x - 24, my - 2, fwdLbl, fwdOn, "end"); op(g, x + 24, my - 2, backLbl, backOn, "start");
+      }
+    }
+    pair(P[0], P[1], use.m2n, use.n2m, ["÷ " + Mtxt, "g/mol"], ["× " + Mtxt, "g/mol"]);
+    pair(P[1], P[2], use.n2N, use.N2n, ["× 6.022", "× 10²³"], ["÷ 6.022", "× 10²³"]);
+    node(g, P[0][0], P[0][1], "Mass", ok ? Lab.sig(r.m, r.sf) : "—", "grams", (u === "g" ? "given " : "") + (ok ? "on" : ""));
+    node(g, P[1][0], P[1][1], "Amount", ok ? sciPlain(r.n, r.sf) : "—", "mol " + (r && !r.err ? fUni(s.f) : ""), (u === "mol" ? "given " : "") + (ok ? "on" : ""));
+    node(g, P[2][0], P[2][1], "Particles", ok ? sciPlain(r.N, r.sf) : "—", WORD[kind][1], (u === "N" ? "given " : "") + (ok ? "on" : ""));
+    if (r && !r.err && r.showAtoms) {
+      var a = P[2], b = P[3];
+      arr(g, a[0], a[1] + NH / 2 + 4, b[0], b[1] - NH / 2 - 2, use.N2a);
+      op(g, a[0] - 10, (a[1] + b[1]) / 2 - 4, ["× " + r.sub + " " + r.el + " atom" + (r.sub > 1 ? "s" : ""), "per " + WORD[kind][0]], use.N2a, "end");
+      node(g, b[0], b[1], "Atoms of " + r.el, ok ? sciPlain(r.atoms, r.sf) : "—", ok ? sciPlain(r.atomMol, r.sf) + " mol " + r.el : r.el + " atoms", ok ? "on" : "");
+    }
+    var ny = narrow ? 14 : H - 50, nx = 8;
+    op(g, nx, ny, narrow ? ["6.022 × 10²³", "per mol", "M = " + Mtxt] : ["Avogadro's number:", "6.022 × 10²³ per mol", "M(" + (r && !r.err ? fUni(s.f) : "?") + ") = " + Mtxt + " g/mol"], false, "start");
+  }
+
+  // ---------- Readouts, steps, molar mass table ----------
+  function stepList(r, s) {
+    var li = [], P = WORD[r.kind][1], f = Lab.fmla(s.f), sf = r.sf;
+    var given = s.u === "g" ? Lab.sig(r.m, sf) + " g" : s.u === "mol" ? Lab.sci(r.n, sf) + " mol" : Lab.sci(r.N, sf) + " " + P;
+    li.push("Given: " + given + " of " + f + ". Molar mass M = " + mm2(r.M) + " g/mol (from the table at right).");
+    if (s.u === "g") {
+      li.push("Moles: n = m ÷ M = " + Lab.sig(r.m, sf) + " g ÷ " + mm2(r.M) + " g/mol = <b>" + Lab.sci(r.n, sf) + " mol</b>");
+      li.push("Particles: N = n × N<sub>A</sub> = " + Lab.sci(r.n, sf + 1) + " mol × 6.022 × 10<sup>23</sup> mol<sup>−1</sup> = <b>" + Lab.sci(r.N, sf, true) + " " + P + "</b>");
+    } else if (s.u === "mol") {
+      li.push("Mass: m = n × M = " + Lab.sci(r.n, sf) + " mol × " + mm2(r.M) + " g/mol = <b>" + Lab.sig(r.m, sf) + " g</b>");
+      li.push("Particles: N = n × N<sub>A</sub> = " + Lab.sci(r.n, sf) + " mol × 6.022 × 10<sup>23</sup> mol<sup>−1</sup> = <b>" + Lab.sci(r.N, sf, true) + " " + P + "</b>");
+    } else {
+      li.push("Moles: n = N ÷ N<sub>A</sub> = " + Lab.sci(r.N, sf, true) + " ÷ 6.022 × 10<sup>23</sup> mol<sup>−1</sup> = <b>" + Lab.sci(r.n, sf) + " mol</b>");
+      li.push("Mass: m = n × M = " + Lab.sci(r.n, sf + 1) + " mol × " + mm2(r.M) + " g/mol = <b>" + Lab.sig(r.m, sf) + " g</b>");
+    }
+    if (r.showAtoms) li.push("Atoms of " + r.el + ": each " + WORD[r.kind][0] + " of " + f + " contains " + r.sub + " " + r.el + " atom" + (r.sub > 1 ? "s" : "") + ", so " + Lab.sci(r.N, sf + 1, true) + " × " + r.sub + " = <b>" + Lab.sci(r.atoms, sf, true) + " " + r.el + " atoms</b> (" + Lab.sci(r.atomMol, sf) + " mol of " + r.el + ")");
+    return li.map(function (x) { return "<li>" + x + "</li>"; }).join("");
+  }
+  function mmTable(r) {
+    var rows = Object.keys(r.counts).map(function (k) {
+      var e = Lab.BY_SYMBOL[k], c = r.counts[k];
+      return "<tr><td>" + e.n + " (" + k + ")</td><td>" + c + "</td><td>" + e.m.toFixed(2) + "</td><td>" + (e.m * c).toFixed(2) + "</td></tr>";
+    }).join("");
+    return "<thead><tr><th>Element</th><th>Atoms</th><th>g/mol each</th><th>Subtotal</th></tr></thead><tbody>" + rows +
+      "</tbody><tfoot><tr><td colspan=\"3\">Molar mass of " + Lab.fmla(S.f) + "</td><td>" + mm2(r.M) + "</td></tr></tfoot>";
+  }
+  function setStat(id, v, sub) { document.getElementById(id).innerHTML = v; document.getElementById(id + "2").innerHTML = sub || ""; }
+
+  function story(r, s) {
+    var f = Lab.fmla(s.f), P = WORD[r.kind][1], one = WORD[r.kind][0], html = "", li = [];
+    var sc = SC[S.key] || null;
+    html += "<p><b>" + (sc ? sc.name : "Your problem") + ".</b> " +
+      (s.u === "g" ? "You know the mass, so divide by molar mass to reach moles, then multiply by Avogadro's number to count " + P + "."
+        : s.u === "mol" ? "You already have moles, the hub of every conversion. Multiply by molar mass for grams and by Avogadro's number for " + P + "."
+        : "You know a count of " + P + ". Divide by Avogadro's number to get moles, then multiply by molar mass for grams.") + "</p>";
+    li.push("The molar mass of " + f + " is " + mm2(r.M) + " g/mol, so one " + one + " has an average mass of " + mm2(r.M) + " amu and one mole of them has a mass of " + mm2(r.M) + " g.");
+    li.push(Lab.sig(r.m, r.sf) + " g of " + f + " is " + Lab.sci(r.n, r.sf) + " mol, which is " + Lab.sci(r.N, r.sf, true) + " " + P + ".");
+    if (r.kind === "fu") li.push(f + " is an ionic compound, so its particles are <b>formula units</b>, not molecules. A formula unit is the smallest whole-number ratio of ions.");
+    if (r.kind === "atom") li.push(f + " is written as single atoms, so the particles are atoms.");
+    if (r.showAtoms) li.push("Each " + one + " has " + r.sub + " " + r.el + " atom" + (r.sub > 1 ? "s" : "") + ", so there are " + r.sub + " times as many " + r.el + " atoms as " + P + ": " + Lab.sci(r.atoms, r.sf, true) + ".");
+    if (r.n > 1e3) li.push("That is a lot of material: more than a thousand moles.");
+    if (r.N < 1e6 && r.N >= 0.5) li.push("A count this small is far below anything a balance can weigh: " + Lab.sci(r.m, 3, true) + " g.");
+    html += "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
+    html += "<p><b>AP answer:</b> moles are the bridge. n = m ÷ M links grams to moles, and N = n × N<sub>A</sub> links moles to particles. State which particle you counted and round to " + r.sf + " significant figure" + (r.sf > 1 ? "s" : "") + ".</p>";
+    return html;
+  }
+
+  // ---------- Render ----------
+  var fIn = document.getElementById("formula"), aIn = document.getElementById("amt"), elSel = document.getElementById("atom-el");
+  var unitBtns = Array.prototype.slice.call(document.querySelectorAll(".seg button[data-u]"));
+  var subBtns = [], scBtns = [];
+  function render() {
+    var r = model(S);
+    document.getElementById("f-formula").classList.toggle("err", !!r.err);
+    document.getElementById("formula-msg").textContent = r.err || "";
+    document.getElementById("f-amt").classList.toggle("err", !!r.badAmt);
+    document.getElementById("amt-msg").textContent = r.badAmt ? "Enter a positive number, like 36.0 or 6.02e23." : "";
+    unitBtns.forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-u") === S.u ? "true" : "false"); });
+    subBtns.forEach(function (x) { x.b.setAttribute("aria-pressed", x.f === S.f ? "true" : "false"); });
+    scBtns.forEach(function (b, i) { b.setAttribute("aria-pressed", S.key === i ? "true" : "false"); });
+    document.getElementById("map-sub").textContent = r.err ? "?" : fUni(S.f);
+    drawMap(r, S);
+    if (!r.err) {
+      var opts = Object.keys(r.counts);
+      var cur = Array.prototype.map.call(elSel.options, function (o) { return o.value; }).join(",");
+      if (cur !== opts.join(",")) elSel.innerHTML = opts.map(function (k) { return '<option value="' + k + '">' + Lab.BY_SYMBOL[k].n + " (" + k + ")</option>"; }).join("");
+      if (opts.indexOf(S.el) < 0) S.el = opts[opts.indexOf("O") >= 0 ? opts.indexOf("O") : 0];
+      elSel.value = S.el;
+      document.getElementById("mm-tbl").innerHTML = mmTable(r);
+    }
+    var ok = !r.err && !r.badAmt;
+    if (!ok) {
+      setStat("r-m", r.err ? "—" : mm2(r.M) + " g/mol", ""); setStat("r-n", "—"); setStat("r-N", "—"); setStat("r-1", r.err ? "—" : mm2(r.M) + " amu");
+      document.getElementById("steps").innerHTML = "<li>Fix the input above to see the steps.</li>";
+      document.getElementById("story").innerHTML = "<p>" + (r.err ? "That formula could not be read: " + r.err : "Enter an amount to convert.") + "</p><p><b>AP answer:</b> every mole conversion runs through moles: n = m ÷ M and N = n × N<sub>A</sub>.</p>";
+      return;
+    }
+    setStat("r-m", mm2(r.M) + " g/mol", "sum of atomic masses");
+    setStat("r-n", Lab.sci(r.n, r.sf), "mol of " + Lab.fmla(S.f));
+    document.getElementById("r-N-k").textContent = WORD[r.kind][1].charAt(0).toUpperCase() + WORD[r.kind][1].slice(1);
+    setStat("r-N", Lab.sci(r.N, r.sf, true), r.showAtoms ? Lab.sci(r.atoms, r.sf, true) + " " + r.el + " atoms" : "atoms of " + r.el);
+    setStat("r-1", mm2(r.M) + " amu", "= " + Lab.sci(r.M / NA, 4, true) + " g");
+    document.getElementById("steps").innerHTML = stepList(r, S);
+    document.getElementById("story").innerHTML = story(r, S);
+  }
+
+  SUBS.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.innerHTML = Lab.fmla(x.f); b.title = x.name;
+    b.setAttribute("aria-label", x.name);
+    b.addEventListener("click", function () { S.f = x.f; S.key = null; fIn.value = x.f; render(); });
+    document.getElementById("subs").appendChild(b); subBtns.push({ b: b, f: x.f });
+  });
+  SC.forEach(function (x, i) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S = { f: x.f, amt: x.amt, u: x.u, el: x.el, key: i }; fIn.value = x.f; aIn.value = x.amt; render(); });
+    document.getElementById("sc").appendChild(b); scBtns.push(b);
+  });
+  fIn.addEventListener("input", function () { S.f = fIn.value.trim(); S.key = null; render(); });
+  aIn.addEventListener("input", function () { S.amt = aIn.value; S.key = null; render(); });
+  elSel.addEventListener("change", function () { S.el = elSel.value; render(); });
+  unitBtns.forEach(function (b) { b.addEventListener("click", function () { S.u = b.getAttribute("data-u"); S.key = null; render(); }); });
+  render();
+  var lastNarrow = null;
+  window.addEventListener("resize", function () { var n = svg.getBoundingClientRect().width < 430; if (n !== lastNarrow) { lastNarrow = n; render(); } });
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "How many water molecules are in 9.01 g of H₂O (molar mass 18.02 g/mol)?",
+      o: ["5.43 × 10²⁴ molecules", "9.03 × 10²³ molecules", "3.01 × 10²³ molecules", "0.500 molecules"], c: 2,
+      w: "9.01 g ÷ 18.02 g/mol = 0.500 mol, and 0.500 mol × 6.022 × 10²³ mol⁻¹ = 3.01 × 10²³ molecules. Choice A multiplies grams by Avogadro's number without converting to moles first. Choice B counts atoms (3 per molecule) instead of molecules." },
+    { s: "What is the mass of 0.150 mol of calcium carbonate, CaCO₃ (molar mass 100.09 g/mol)?",
+      o: ["15.0 g", "667 g", "6.01 g", "0.00150 g"], c: 0,
+      w: "m = n × M = 0.150 mol × 100.09 g/mol = 15.0 g. Choice B divides molar mass by moles, and choice D divides moles by molar mass; neither gives units of grams. Choice C uses only the mass of calcium." },
+    { s: "Which of the following samples contains the greatest total number of atoms?",
+      o: ["1.0 mol of He", "1.0 mol of H₂O", "1.0 mol of NaCl", "1.0 mol of CH₄"], c: 3,
+      w: "Each sample has 1.0 mol of particles, so compare atoms per particle: He has 1, H₂O has 3, NaCl has 2 ions per formula unit, and CH₄ has 5. CH₄ has 5.0 mol of atoms. Choice B is the trap if you stop at the familiar formula without counting." },
+    { s: "A student has 10.0 g samples of four gases: O₂, H₂, N₂, and CO₂. Which sample contains the greatest number of molecules?",
+      o: ["CO₂, because it has the most atoms per molecule", "H₂, because it has the smallest molar mass", "O₂, because oxygen is the most abundant gas in the samples", "All four contain the same number of molecules, because the masses are equal"], c: 1,
+      w: "Moles = mass ÷ molar mass. With the same mass, the gas with the smallest molar mass (H₂, 2.016 g/mol) has the most moles: 10.0 ÷ 2.016 = 4.96 mol, compared with 0.227 mol of CO₂. Choice D confuses equal mass with equal numbers of particles." },
+    { s: "The average mass of one atom of an element is 3.82 × 10⁻²³ g. Which element is it?",
+      o: ["Neon", "Magnesium", "Sodium", "Aluminum"], c: 2,
+      w: "Molar mass = mass of one atom × N<sub>A</sub> = 3.82 × 10⁻²³ g × 6.022 × 10²³ mol⁻¹ = 23.0 g/mol, which matches sodium (22.99 g/mol). Neon (20.18) and magnesium (24.31) are close neighbors but do not match to three significant figures." },
+    { s: "One molecule of CO₂ has an average mass of 44.01 amu. Which statement about a 44.01 g sample of CO₂ is correct?",
+      o: ["It contains 6.022 × 10²³ molecules of CO₂.", "It contains 6.022 × 10²³ atoms in total.", "It contains 44.01 mol of CO₂.", "It contains 3 mol of CO₂, one for each atom in the formula."], c: 0,
+      w: "Because the mole is defined so that amu per particle equals grams per mole, 44.01 g of CO₂ is exactly 1 mol, or 6.022 × 10²³ molecules. It contains 3 × 6.022 × 10²³ = 1.807 × 10²⁴ atoms, so choice B confuses molecules with atoms." },
+    { s: "How many oxygen atoms are in 0.200 mol of aluminum sulfate, Al₂(SO₄)₃?",
+      o: ["1.20 × 10²³", "4.82 × 10²³", "2.40", "1.45 × 10²⁴"], c: 3,
+      w: "Each formula unit of Al₂(SO₄)₃ has 3 × 4 = 12 O atoms. So 0.200 mol × 12 = 2.40 mol of O atoms, and 2.40 mol × 6.022 × 10²³ mol⁻¹ = 1.45 × 10²⁴ atoms. Choice B forgets the subscript 3 outside the parentheses (only 4 O). Choice C stops at moles of O atoms. Choice A counts formula units." },
+    { s: "A 2.50 g sample of a pure metal contains 2.37 × 10²² atoms. Which metal is it?",
+      o: ["Nickel (58.69 g/mol)", "Copper (63.55 g/mol)", "Zinc (65.38 g/mol)", "Iron (55.85 g/mol)"], c: 1,
+      w: "Moles = 2.37 × 10²² ÷ 6.022 × 10²³ mol⁻¹ = 0.0394 mol. Molar mass = 2.50 g ÷ 0.0394 mol = 63.5 g/mol, which is copper. A common slip is to compute moles ÷ grams (0.0157), which has units of mol/g, not g/mol." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("1.1");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [1], topic: "1.1", compact: true, storageKey: "topic-1.1" });</script>
+</body>
+</html>

@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ideal Gas Law Study Lab</title>
+<meta name="description" content="Drive a gas cylinder with sliders for moles, temperature, volume, and pressure, watch the particles respond, and see every PV = nRT and Dalton's-law calculation worked out step by step.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.ctl[hidden] { display: none; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 18px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 14px; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.side .controls { grid-template-columns: 1fr 1fr; }
+.btnrow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.legend .l-gb::before { background: var(--c1); }
+.legend .l-gb { color: var(--muted); } .legend .l-ga { color: var(--muted); }
+.legend .l-ga::before, .legend .l-gb::before { width: 10px; height: 10px; border-radius: 50%; }
+.legend .l-ga::before { background: var(--accent); }
+.calc .row span:last-child { font-family: var(--mono); font-size: .88rem; text-align: right; }
+.calc .row span:first-child { min-width: 0; }
+.calc h3 { margin-bottom: 2px; }
+.lab-bar > * { min-width: 0; max-width: 100%; }
+#cyl .pt-a { fill: var(--accent); }
+#cyl .pt-b { fill: var(--c1); }
+@media (max-width: 520px) {
+  .side .controls { grid-template-columns: 1fr; }
+  .lab-bar .eqn { white-space: normal; }
+  #cyl text { font-size: 13px; }
+  #cyl .lbl { font-size: 13.5px; }
+  .calc .row { flex-direction: column; gap: 2px; }
+  .calc .row span:last-child { text-align: left; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 3 · Topic 3.4</span>
+  <h1>Ideal Gas Law Study Lab</h1>
+  <p class="lede">An ideal gas obeys PV = nRT: pressure, volume, moles, and kelvin temperature are tied together by one constant, R. Change one variable in the cylinder below, watch how the particles and the other variables respond, and read the worked calculation, including partial pressures for a mixture of two gases.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The gas cylinder</h2>
+    <p>The amounts, volumes, and temperatures here are teaching numbers; the constant R = 0.08206 L·atm/(mol·K) and every calculation are real. Choose a rigid box (the volume is fixed and the pressure responds) or a cylinder with a free piston (the outside pressure is fixed and the volume responds). Each scenario starts from a "before" state, shown dashed, so you can compare.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Particle view <small id="cyl-sub">rigid box</small></h3>
+      <svg class="chart" id="cyl" role="img" aria-label="Gas cylinder with moving particles, a volume scale, and a pressure bar split into partial pressures"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">What is held fixed?</div>
+        <div class="seg" role="group" aria-label="Container type">
+          <button type="button" id="m-rigid" aria-pressed="true">Rigid box: V fixed</button>
+          <button type="button" id="m-piston" aria-pressed="false">Free piston: P fixed</button>
+        </div>
+      </div>
+      <div class="group">
+        <div class="tag">Gas-law scenarios</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-na">N₂ <output id="o-na"></output></label>
+          <input type="range" id="s-na" min="0.1" max="2" step="0.05">
+          <span class="hint">Moles of gas A</span>
+        </div>
+        <div class="ctl">
+          <label for="s-nb">He <output id="o-nb"></output></label>
+          <input type="range" id="s-nb" min="0" max="2" step="0.05">
+          <span class="hint">Moles of gas B (0 = pure N₂)</span>
+        </div>
+        <div class="ctl">
+          <label for="s-t">Temperature <output id="o-t"></output></label>
+          <input type="range" id="s-t" min="100" max="600" step="1">
+          <span class="hint" id="h-t"></span>
+        </div>
+        <div class="ctl" id="ctl-v">
+          <label for="s-v">Volume <output id="o-v"></output></label>
+          <input type="range" id="s-v" min="2" max="40" step="0.5">
+          <span class="hint">Size of the rigid box</span>
+        </div>
+        <div class="ctl" id="ctl-p" hidden>
+          <label for="s-p">Outside pressure <output id="o-p"></output></label>
+          <input type="range" id="s-p" min="0.25" max="5" step="0.05">
+          <span class="hint">The piston stops where the gas pressure equals this</span>
+        </div>
+      </div>
+      <div class="btnrow">
+        <button type="button" id="btn-ref">Make this the "before" state</button>
+        <button type="button" id="btn-reset">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-ga">N₂ particle</span><span class="l-gb">He particle</span><span class="l-ad">P from N₂</span><span class="l-c1">P from He</span><span class="l-ghost">"Before" state</span></div>
+    <div class="eqn">PV = nRT &nbsp;·&nbsp; P<sub>total</sub> = P<sub>A</sub> + P<sub>B</sub> &nbsp;·&nbsp; P<sub>A</sub> = X<sub>A</sub>·P<sub>total</sub></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Total pressure</div><div class="v" id="r-p"></div><div class="sub" id="r-p2"></div></div>
+    <div class="stat"><div class="k">Volume</div><div class="v" id="r-v"></div><div class="sub" id="r-v2"></div></div>
+    <div class="stat"><div class="k">Partial pressures</div><div class="v" id="r-pp"></div><div class="sub" id="r-pp2"></div></div>
+    <div class="stat"><div class="k">Mole fraction of N₂</div><div class="v" id="r-x"></div><div class="sub" id="r-x2"></div></div>
+  </div>
+
+  <div class="card calc" id="calc" aria-live="polite"></div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">PV = nRT</span><h3>One equation, four variables</h3><p>For an ideal gas, pressure times volume equals moles times R times kelvin temperature. With R = 0.08206 L·atm/(mol·K), P must be in atm, V in liters, n in moles, and T in kelvins. If you know any three, you can find the fourth.</p></div>
+    <div class="card"><span class="tag">Kelvin only</span><h3>Temperature must be absolute</h3><p>Gas laws are proportional to <b>kelvin</b> temperature, because 0 K is where particle motion (and pressure) would bottom out. Convert with K = °C + 273. Going from 25 °C to 50 °C raises T from 298 K to 323 K, a factor of 1.08, not 2.</p></div>
+    <div class="card"><span class="tag">Particle view</span><h3>Where pressure comes from</h3><p>Pressure is the force per area from particles hitting the walls. More particles (n up) or a smaller box (V down) means more frequent hits. Higher temperature means faster particles that hit both more often and harder.</p></div>
+    <div class="card"><span class="tag">Proportional reasoning</span><h3>Hold some variables constant</h3><p>Rearrange to P<sub>1</sub>V<sub>1</sub>/(n<sub>1</sub>T<sub>1</sub>) = P<sub>2</sub>V<sub>2</sub>/(n<sub>2</sub>T<sub>2</sub>) and cancel what does not change. Constant n and T: P and V are inversely proportional. Constant n and P: V is directly proportional to T. Constant T and P: V is directly proportional to n.</p></div>
+    <div class="card"><span class="tag">Dalton's law</span><h3>Partial pressures add</h3><p>In a mixture each gas exerts the pressure it would exert alone in the same container: P<sub>A</sub> = n<sub>A</sub>RT/V. The total is the sum. The partial pressure is also the mole fraction times the total: P<sub>A</sub> = X<sub>A</sub>P<sub>total</sub>, with X<sub>A</sub> = n<sub>A</sub>/n<sub>total</sub>.</p></div>
+    <div class="card"><span class="tag">Identity doesn't matter</span><h3>Moles count, not mass</h3><p>At the same T and V, 1 mol of helium and 1 mol of nitrogen exert the same pressure. Heavier particles move slower but hit harder, and the two effects cancel. That is why 1 mol of any ideal gas fills 22.4 L at 273 K and 1 atm.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Gas-law cheat sheet</h2>
+    <p>Every row is PV = nRT with two variables held constant. You do not need the names on the exam, but you do need the relationships and the particle-level reason.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Held constant</th><th>Relationship</th><th>Equation</th><th>Particle-level reason</th></tr></thead>
+    <tbody>
+      <tr><td>n and T (Boyle's law)</td><td>P and V inversely proportional</td><td><b>P<sub>1</sub>V<sub>1</sub> = P<sub>2</sub>V<sub>2</sub></b></td><td>Halving V puts the same particles in half the space, so they hit each area of wall twice as often.</td></tr>
+      <tr><td>n and P (Charles's law)</td><td>V directly proportional to T</td><td><b>V<sub>1</sub>/T<sub>1</sub> = V<sub>2</sub>/T<sub>2</sub></b></td><td>Faster particles push harder on the piston, which moves out until the wall hits are back to the outside pressure.</td></tr>
+      <tr><td>n and V (Gay-Lussac's law)</td><td>P directly proportional to T</td><td><b>P<sub>1</sub>/T<sub>1</sub> = P<sub>2</sub>/T<sub>2</sub></b></td><td>Faster particles hit the walls more often and with more force.</td></tr>
+      <tr><td>T and P (Avogadro's law)</td><td>V directly proportional to n</td><td><b>V<sub>1</sub>/n<sub>1</sub> = V<sub>2</sub>/n<sub>2</sub></b></td><td>More particles need more room to keep the same rate of wall hits.</td></tr>
+      <tr><td>Only n (combined gas law)</td><td>All three change</td><td><b>P<sub>1</sub>V<sub>1</sub>/T<sub>1</sub> = P<sub>2</sub>V<sub>2</sub>/T<sub>2</sub></b></td><td>Use when the amount of gas is fixed but P, V, and T all change.</td></tr>
+      <tr><td>Mixture of gases (Dalton's law)</td><td>Partial pressures add</td><td><b>P<sub>total</sub> = P<sub>A</sub> + P<sub>B</sub>; P<sub>A</sub> = X<sub>A</sub>P<sub>total</sub></b></td><td>Each gas hits the walls independently; total hits are the sum.</td></tr>
+      <tr><td>Molar volume</td><td>1 mol at 273 K and 1 atm</td><td><b>V = 22.4 L</b></td><td>Same for every ideal gas, because identity does not appear in PV = nRT.</td></tr>
+      <tr><td>Density and molar mass</td><td>Substitute n = m/M</td><td><b>M = mRT/(PV) = DRT/P</b></td><td>At the same T and P, a gas with larger molar mass is denser.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Gas laws on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points</h3>
+      <ul>
+        <li>Write the equation first (PV = nRT or P<sub>A</sub> = X<sub>A</sub>P<sub>total</sub>), then substitute numbers <b>with units</b>, then give the answer with units.</li>
+        <li>Convert first: °C to K (add 273), torr or mm Hg to atm (divide by 760), mL to L (divide by 1000), grams to moles (divide by molar mass).</li>
+        <li>Match R to your units. Use 0.08206 L·atm/(mol·K) for pressure–volume problems and 8.314 J/(mol·K) only when energy in joules is involved.</li>
+        <li>For "what happens to P if…" questions, name what is constant and give the proportional reasoning ("V is halved at constant n and T, so P doubles").</li>
+        <li>Explain with particles: more frequent and/or more forceful collisions with the container walls.</li>
+        <li>Report three significant figures unless the data say otherwise; graders accept answers within rounding.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Using °C in PV = nRT. A negative or zero Celsius temperature gives nonsense; a doubled Celsius temperature is not a doubled kelvin temperature.</li>
+        <li>Mixing units: pressure in torr with R in L·atm/(mol·K), or volume in mL.</li>
+        <li>Using mass instead of moles. PV = nRT counts particles; 4 g of He and 28 g of N₂ are both 1 mol and give the same pressure.</li>
+        <li>Thinking a heavier gas exerts more pressure at the same n, V, T. It does not; the slower speed cancels the larger mass.</li>
+        <li>Finding a partial pressure with the wrong mole fraction, such as n<sub>A</sub>/n<sub>B</sub> instead of n<sub>A</sub>/n<sub>total</sub>.</li>
+        <li>Saying adding a second gas to a rigid tank changes the first gas's partial pressure. It does not; only the total changes.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 3.4. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-3.html">Unit 3 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var R = Lab.CONST.R;            // 0.08206 L·atm/(mol·K)
+  var MA = 28.02, MB = 4.00;      // N2 and He, g/mol (only used for particle speeds)
+  var VMAX = 40;                  // liters shown across the cylinder
+
+  var BASE = { mode: "rigid", nA: 1, nB: 0, T: 300, V: 24.6, P: 1 };
+  var S = Object.assign({}, BASE);
+  var REF = null;                  // "before" snapshot (derived values)
+  var key = null;                  // active scenario
+
+  function derive(s) {
+    var n = s.nA + s.nB, d = { mode: s.mode, nA: s.nA, nB: s.nB, n: n, T: s.T };
+    if (s.mode === "rigid") { d.V = s.V; d.P = n * R * s.T / s.V; }
+    else { d.P = s.P; d.V = n * R * s.T / s.P; }
+    d.PA = s.nA * R * s.T / d.V; d.PB = s.nB * R * s.T / d.V; d.XA = s.nA / n;
+    return d;
+  }
+  var sig = Lab.sig;
+  function s3(v) { return sig(v, 3); }
+  function torr(p) { return Math.round(p * 760).toLocaleString("en-US"); }
+  function near(a, b) { return Math.abs(a - b) <= 1e-6 * Math.max(1, Math.abs(a), Math.abs(b)); }
+
+  // ---------- Particles ----------
+  var svg = document.getElementById("cyl");
+  svg.setAttribute("viewBox", "0 0 440 330");
+  var X0 = 40, YT = 30, YB = 176, KX = 360 / VMAX;
+  var staticG = Lab.el("g", {}, svg), partG = Lab.el("g", {}, svg);
+  var parts = [];  // { g: "a"|"b", x: 0..1, y: 0..1, dx, dy (unit dir), el }
+  var seed = 7;
+  function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+  function syncParticles(nA, nB) {
+    var want = { a: Math.round(nA * 20), b: Math.round(nB * 20) };
+    ["a", "b"].forEach(function (g) {
+      var have = parts.filter(function (p) { return p.g === g; });
+      for (var i = have.length; i < want[g]; i++) {
+        var ang = rnd() * Math.PI * 2;
+        var p = { g: g, x: rnd(), y: rnd(), dx: Math.cos(ang), dy: Math.sin(ang) };
+        p.el = Lab.el("circle", { r: 4.2, "class": "pt-" + g }, partG);
+        parts.push(p);
+      }
+      for (var j = have.length - 1; j >= want[g]; j--) { partG.removeChild(have[j].el); parts.splice(parts.indexOf(have[j]), 1); }
+    });
+  }
+  var curW = 200;   // drawn box width in px
+  function placeParticles() {
+    var w = curW - 12, h = YB - YT - 12;
+    parts.forEach(function (p) { p.el.setAttribute("cx", (X0 + 6 + p.x * w).toFixed(1)); p.el.setAttribute("cy", (YT + 6 + p.y * h).toFixed(1)); });
+  }
+  var lastT = null, running = false, visible = true;
+  function tick(t) {
+    if (!running) return;
+    if (lastT != null && visible) {
+      var dt = Math.min(0.05, (t - lastT) / 1000);
+      var w = Math.max(20, curW - 12), h = YB - YT - 12;
+      parts.forEach(function (p) {
+        var v = 55 * Math.sqrt(S.T / 300 * 28 / (p.g === "a" ? MA : MB));   // px/s, scales as sqrt(T/M)
+        p.x += p.dx * v * dt / w; p.y += p.dy * v * dt / h;
+        if (p.x < 0) { p.x = -p.x; p.dx = Math.abs(p.dx); } if (p.x > 1) { p.x = 2 - p.x; p.dx = -Math.abs(p.dx); }
+        if (p.y < 0) { p.y = -p.y; p.dy = Math.abs(p.dy); } if (p.y > 1) { p.y = 2 - p.y; p.dy = -Math.abs(p.dy); }
+        p.x = Math.min(1, Math.max(0, p.x)); p.y = Math.min(1, Math.max(0, p.y));
+      });
+      placeParticles();
+    }
+    lastT = t;
+    requestAnimationFrame(tick);
+  }
+  if (!Lab.reduceMotion) { running = true; requestAnimationFrame(tick); }
+  if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { visible = es[0].isIntersecting; }).observe(svg);
+
+  // ---------- Static drawing ----------
+  function niceMax(p) { var steps = [1, 2, 5, 10, 20, 50, 100, 200]; for (var i = 0; i < steps.length; i++) if (p <= steps[i] * 0.96) return steps[i]; return 200; }
+  function drawStatic(d) {
+    while (staticG.firstChild) staticG.removeChild(staticG.firstChild);
+    var el = Lab.el, G = staticG;
+    var vDraw = Math.min(d.V, VMAX), off = d.V > VMAX;
+    curW = Math.max(14, vDraw * KX);
+    var xr = X0 + curW;
+    // before-state outline
+    if (REF && !near(REF.V, d.V)) {
+      var xw = X0 + Math.min(REF.V, VMAX) * KX;
+      el("rect", { x: X0, y: YT, width: xw - X0, height: YB - YT, fill: "none", stroke: "var(--ghost)", "stroke-width": 2, "stroke-dasharray": "6 5" }, G);
+    }
+    // container walls (top, bottom, left)
+    el("rect", { x: X0, y: YT, width: curW, height: YB - YT, fill: "var(--accent-soft)", opacity: 0.45 }, G);
+    el("path", { d: "M" + (xr + 2) + " " + YT + " H" + X0 + " V" + YB + " H" + (xr + 2), fill: "none", stroke: "var(--ink)", "stroke-width": 3 }, G);
+    if (d.mode === "rigid") {
+      el("line", { x1: xr, x2: xr, y1: YT, y2: YB, stroke: "var(--ink)", "stroke-width": 3 }, G);
+      el("text", { x: Math.min(xr + 6, 432), y: YT + 12, "text-anchor": xr > 380 ? "end" : "start" }, G, xr > 380 ? "" : "fixed wall");
+    } else {
+      el("rect", { x: xr - 1, y: YT + 2, width: 9, height: YB - YT - 4, fill: "var(--muted)", rx: 2 }, G);
+      if (xr + 8 < 436) el("line", { x1: xr + 8, x2: 436, y1: (YT + YB) / 2, y2: (YT + YB) / 2, stroke: "var(--muted)", "stroke-width": 5 }, G);
+      el("text", { x: 432, y: YT - 8, "text-anchor": "end", "class": "lbl", style: "fill:var(--c4)" }, G, "outside P = " + sig(d.P, 3) + " atm");
+      if (xr < 392) Lab.el("path", { d: "M" + (xr + 40) + " " + (YT + 18) + " l-22 0 m0 0 l7 -5 m-7 5 l7 5", stroke: "var(--c4)", "stroke-width": 2, fill: "none" }, G);
+    }
+    if (off) el("text", { x: 400, y: YB - 8, "text-anchor": "end", "class": "lbl", style: "fill:var(--bad)" }, G, "V = " + s3(d.V) + " L (off scale)");
+    // volume scale
+    var ys = YB + 14;
+    el("line", { x1: X0, x2: X0 + VMAX * KX, y1: ys, y2: ys, stroke: "var(--muted)" }, G);
+    for (var v = 0; v <= VMAX; v += 5) {
+      el("line", { x1: X0 + v * KX, x2: X0 + v * KX, y1: ys - 3, y2: ys + 3, stroke: "var(--muted)" }, G);
+      el("text", { x: X0 + v * KX + (v === VMAX ? 10 : 0), y: ys + 15, "text-anchor": v === VMAX ? "end" : "middle" }, G, v === VMAX ? v + " L" : String(v));
+    }
+    el("path", { d: "M" + (X0 + vDraw * KX) + " " + (ys - 2) + " l-5 -8 h10 z", fill: "var(--ink)" }, G);
+    // pressure bar
+    var pm = niceMax(Math.max(d.P, REF ? REF.P : 0)), yb = 246, bh = 22, BW = 360;
+    var px = function (p) { return X0 + Math.min(p, pm) / pm * BW; };
+    el("text", { x: X0, y: yb - 8, "class": "lbl", style: "fill:var(--ink)" }, G, "Pressure (atm)");
+    el("rect", { x: X0, y: yb, width: BW, height: bh, fill: "var(--paper)", stroke: "var(--rule)" }, G);
+    el("rect", { x: X0, y: yb, width: px(d.PA) - X0, height: bh, fill: "var(--accent)" }, G);
+    if (d.PB > 0) el("rect", { x: px(d.PA), y: yb, width: px(d.PA + d.PB) - px(d.PA), height: bh, fill: "var(--c1)" }, G);
+    if (REF && !near(REF.P, d.P)) {
+      el("line", { x1: px(REF.P), x2: px(REF.P), y1: yb - 5, y2: yb + bh + 5, stroke: "var(--ghost)", "stroke-width": 3, "stroke-dasharray": "4 3" }, G);
+    }
+    for (var i = 0; i <= 5; i++) {
+      var pv = pm * i / 5;
+      el("line", { x1: px(pv), x2: px(pv), y1: yb + bh, y2: yb + bh + 4, stroke: "var(--muted)" }, G);
+      el("text", { x: px(pv), y: yb + bh + 17, "text-anchor": "middle" }, G, String(+pv.toFixed(2)));
+    }
+    var lab = "P = " + s3(d.P) + " atm";
+    el("text", { x: Math.min(px(d.P) + 6, 400), y: yb + 15, "text-anchor": px(d.P) + 6 > 330 ? "end" : "start", "class": "lbl", style: "fill:" + (px(d.P) + 6 > 330 ? "var(--surface)" : "var(--ink)") }, G, lab);
+    el("text", { x: 220, y: 322, "text-anchor": "middle" }, G, "T = " + Math.round(d.T) + " K · n = " + sig(d.n, 3) + " mol · V = " + s3(d.V) + " L");
+    syncParticles(d.nA, d.nB);
+    placeParticles();
+  }
+
+  // ---------- Readouts, calculation, story ----------
+  function ratio(a, b) { var r = a / b; return "×" + (Math.abs(r - Math.round(r)) < 0.005 ? String(Math.round(r)) : r.toFixed(2)); }
+  function vs(cur, ref, unit, d) {
+    if (!REF || near(cur, ref)) return REF ? "same as before" : "";
+    return ratio(cur, ref) + " from " + sig(ref, d || 3) + (unit ? " " + unit : "");
+  }
+  function readouts(d) {
+    document.getElementById("r-p").textContent = s3(d.P) + " atm";
+    document.getElementById("r-p2").textContent = torr(d.P) + " torr" + (REF && !near(REF.P, d.P) ? " · " + vs(d.P, REF.P, "atm") : "");
+    document.getElementById("r-v").textContent = s3(d.V) + " L";
+    document.getElementById("r-v2").textContent = REF && !near(REF.V, d.V) ? vs(d.V, REF.V, "L") : (d.mode === "rigid" ? "set by the box" : "set by the piston");
+    document.getElementById("r-pp").innerHTML = '<span style="color:var(--accent)">' + s3(d.PA) + "</span>" + (d.nB > 0 ? ' + <span style="color:var(--c1)">' + s3(d.PB) + "</span>" : "");
+    document.getElementById("r-pp2").textContent = d.nB > 0 ? "N₂ + He, in atm" : "N₂ only (no He added)";
+    document.getElementById("r-x").textContent = d.XA.toFixed(3);
+    document.getElementById("r-x2").textContent = d.nB > 0 ? "He: " + (1 - d.XA).toFixed(3) : "pure N₂";
+  }
+  function calc(d) {
+    var h = "<h3>Worked calculation</h3>";
+    var nT = sig(d.n, 3), T = Math.round(d.T);
+    if (d.mode === "rigid") {
+      h += row("Total moles", d.nB > 0 ? sig(d.nA, 3) + " + " + sig(d.nB, 3) + " = " + nT + " mol" : nT + " mol");
+      h += row("Solve PV = nRT for P", "P = nRT / V");
+      h += row("Substitute", "(" + nT + " mol)(0.08206 L·atm/(mol·K))(" + T + " K) / (" + sig(d.V, 3) + " L)");
+    } else {
+      h += row("Total moles", d.nB > 0 ? sig(d.nA, 3) + " + " + sig(d.nB, 3) + " = " + nT + " mol" : nT + " mol");
+      h += row("Gas pressure = outside pressure at rest", "P = " + sig(d.P, 3) + " atm");
+      h += row("Solve PV = nRT for V", "V = nRT / P");
+      h += row("Substitute", "(" + nT + " mol)(0.08206 L·atm/(mol·K))(" + T + " K) / (" + sig(d.P, 3) + " atm)");
+    }
+    if (d.nB > 0) {
+      h += row("Mole fraction of N₂", "X = " + sig(d.nA, 3) + " / " + nT + " = " + d.XA.toFixed(3));
+      h += row("Partial pressure of N₂", "P(N₂) = X·P = " + d.XA.toFixed(3) + " × " + s3(d.P) + " = " + s3(d.PA) + " atm");
+      h += row("Partial pressure of He", "P(He) = " + (1 - d.XA).toFixed(3) + " × " + s3(d.P) + " = " + s3(d.PB) + " atm");
+    }
+    h += row("Answer", d.mode === "rigid" ? "P = " + s3(d.P) + " atm (" + torr(d.P) + " torr)" : "V = " + s3(d.V) + " L");
+    return h;
+    function row(a, b) { return '<div class="row"><span>' + a + "</span><span>" + b + "</span></div>"; }
+  }
+
+  function story(d) {
+    var html = "", li = [];
+    var T = Math.round(d.T), C = T - 273;
+    html += "<p><b>" + (d.mode === "rigid" ? "Rigid box." : "Free piston.") + "</b> " + sig(d.n, 3) + " mol of gas" + (d.nB > 0 ? " (" + sig(d.nA, 3) + " mol N₂ + " + sig(d.nB, 3) + " mol He)" : " (N₂)") + " at " + T + " K (" + C + " °C) " +
+      (d.mode === "rigid" ? "in a " + s3(d.V) + " L box exerts <b>" + s3(d.P) + " atm</b>." : "pushes the piston out until its pressure matches the outside " + s3(d.P) + " atm. It fills <b>" + s3(d.V) + " L</b>.") + "</p>";
+
+    var law = null;
+    if (REF) {
+      var dn = !near(REF.n, d.n), dT = !near(REF.T, d.T), dV = !near(REF.V, d.V), dP = !near(REF.P, d.P);
+      var dB = !near(REF.nB, d.nB), dA = !near(REF.nA, d.nA);
+      var mode = d.mode;
+      if (REF.mode !== mode) li.push("The container type changed since the \"before\" state, so compare with care.");
+      else if (mode === "rigid") {
+        if (dV && !dn && !dT) { law = "boyle"; li.push("<b>Only V changed</b> (n and T constant): V went " + ratio(d.V, REF.V) + ", so P went " + ratio(d.P, REF.P) + ". P and V are inversely proportional: P<sub>1</sub>V<sub>1</sub> = P<sub>2</sub>V<sub>2</sub> = " + s3(REF.P * REF.V) + " L·atm."); li.push("Particle view: the same particles at the same speed in " + (d.V < REF.V ? "less" : "more") + " space hit each part of the wall " + (d.V < REF.V ? "more" : "less") + " often."); }
+        else if (dT && !dn && !dV) { law = "gay"; li.push("<b>Only T changed</b> (n and V constant): kelvin T went " + ratio(d.T, REF.T) + ", so P went " + ratio(d.P, REF.P) + ". P is directly proportional to kelvin temperature: P<sub>1</sub>/T<sub>1</sub> = P<sub>2</sub>/T<sub>2</sub>."); li.push("Particle view: " + (d.T > REF.T ? "faster particles hit the walls more often and harder." : "slower particles hit the walls less often and less hard.")); if (Math.abs(C - (REF.T - 273)) > 0 && Math.abs((C) / (REF.T - 273) - d.T / REF.T) > 0.05 && REF.T - 273 > 0) li.push("Celsius check: in °C the temperature went from " + (REF.T - 273) + " to " + C + " °C (" + ratio(C, REF.T - 273) + "), but the pressure only went " + ratio(d.P, REF.P) + ". Only the kelvin ratio predicts the pressure."); }
+        else if (dn && !dT && !dV) {
+          if (dB && !dA) { law = "dalton"; li.push("<b>Only the He changed.</b> The partial pressure of N₂ stays at " + s3(d.PA) + " atm, because N₂ has the same moles, volume, and temperature as before. Helium " + (d.nB > REF.nB ? "adds" : "removes") + " its own " + s3(Math.abs(d.PB - REF.PB)) + " atm, and the total goes from " + s3(REF.P) + " to " + s3(d.P) + " atm."); }
+          else { law = "moles-p"; li.push("<b>Only n changed</b> (V and T constant): n went " + ratio(d.n, REF.n) + ", so P went " + ratio(d.P, REF.P) + ". At constant V and T, P is directly proportional to moles: more particles, more wall hits."); }
+        }
+        else if (dn || dT || dV) li.push("Several variables changed. Use P<sub>1</sub>V<sub>1</sub>/(n<sub>1</sub>T<sub>1</sub>) = P<sub>2</sub>V<sub>2</sub>/(n<sub>2</sub>T<sub>2</sub>): P went from " + s3(REF.P) + " to " + s3(d.P) + " atm (" + ratio(d.P, REF.P) + ").");
+      } else {
+        if (dT && !dn && !dP) { law = "charles"; li.push("<b>Only T changed</b> (n and P constant): kelvin T went " + ratio(d.T, REF.T) + ", so V went " + ratio(d.V, REF.V) + ". V is directly proportional to kelvin temperature: V<sub>1</sub>/T<sub>1</sub> = V<sub>2</sub>/T<sub>2</sub>."); li.push("Particle view: " + (d.T > REF.T ? "faster particles push harder on the piston, so it slides out until the gas pressure is back to " + s3(d.P) + " atm." : "slower particles push less on the piston, so the outside pressure pushes it in.")); }
+        else if (dn && !dT && !dP) { law = "avogadro"; li.push("<b>Only n changed</b> (T and P constant): n went " + ratio(d.n, REF.n) + ", so V went " + ratio(d.V, REF.V) + ". V is directly proportional to moles. This holds for a mixture too: adding He takes up room just like adding N₂."); }
+        else if (dP && !dn && !dT) { law = "boyle"; li.push("<b>Only the outside pressure changed</b> (n and T constant): P went " + ratio(d.P, REF.P) + ", so V went " + ratio(d.V, REF.V) + ". P<sub>1</sub>V<sub>1</sub> = P<sub>2</sub>V<sub>2</sub> = " + s3(REF.P * REF.V) + " L·atm."); }
+        else if (dn || dT || dP) li.push("Several variables changed. Use P<sub>1</sub>V<sub>1</sub>/(n<sub>1</sub>T<sub>1</sub>) = P<sub>2</sub>V<sub>2</sub>/(n<sub>2</sub>T<sub>2</sub>): V went from " + s3(REF.V) + " to " + s3(d.V) + " L (" + ratio(d.V, REF.V) + ").");
+      }
+    }
+    if (key === "stp") li.push("At 273 K and 1 atm, 1.00 mol of any ideal gas fills (1.00)(0.08206)(273)/(1.00) = <b>22.4 L</b>. Swap N₂ for He with the sliders and the volume does not change.");
+    if (d.nB > 0 && law !== "dalton") li.push("Dalton's law: the N₂ is " + (d.XA * 100).toFixed(1) + "% of the particles, so it supplies " + (d.XA * 100).toFixed(1) + "% of the pressure: " + s3(d.PA) + " of " + s3(d.P) + " atm. The He particles move faster (lighter), but each mole contributes the same pressure.");
+    if (li.length) html += "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
+
+    var end = {
+      boyle: "inversely proportional: at constant n and T, P<sub>1</sub>V<sub>1</sub> = P<sub>2</sub>V<sub>2</sub>, because the same particles hit a different wall area more or less often.",
+      gay: "at constant n and V, pressure is directly proportional to kelvin temperature, because faster particles collide with the walls more often and with more force.",
+      charles: "at constant n and P, volume is directly proportional to kelvin temperature, because faster particles push the piston out until the pressure balances again.",
+      avogadro: "at constant T and P, volume is directly proportional to the number of moles of gas, whatever the gas is.",
+      "moles-p": "at constant V and T, pressure is directly proportional to moles of gas, because more particles make more collisions with the walls.",
+      dalton: "each gas's partial pressure depends only on its own moles: P<sub>A</sub> = n<sub>A</sub>RT/V = X<sub>A</sub>P<sub>total</sub>. Adding another gas raises the total, not the partial pressures of the gases already there."
+    }[law];
+    html += "<p><b>AP answer:</b> " + (end ? end.charAt(0).toUpperCase() + end.slice(1) : "write PV = nRT, convert to atm, L, mol, and K, substitute with units, and solve: " + (d.mode === "rigid" ? "P = nRT/V = " + s3(d.P) + " atm." : "V = nRT/P = " + s3(d.V) + " L.")) + "</p>";
+    return html;
+  }
+
+  // ---------- Controls ----------
+  var el = function (id) { return document.getElementById(id); };
+  var sNa = el("s-na"), sNb = el("s-nb"), sT = el("s-t"), sV = el("s-v"), sP = el("s-p");
+  var mR = el("m-rigid"), mP = el("m-piston");
+  function render(full) {
+    var d = derive(S);
+    drawStatic(d);
+    sNa.value = S.nA; sNb.value = S.nB; sT.value = S.T; sV.value = Math.min(40, Math.max(2, S.V)); sP.value = S.P;
+    el("o-na").textContent = S.nA.toFixed(2) + " mol";
+    el("o-nb").textContent = S.nB.toFixed(2) + " mol";
+    el("o-t").textContent = Math.round(S.T) + " K";
+    el("h-t").textContent = "= " + (Math.round(S.T) - 273) + " °C (K = °C + 273)";
+    el("o-v").textContent = S.V.toFixed(1) + " L";
+    el("o-p").textContent = S.P.toFixed(2) + " atm";
+    el("ctl-v").hidden = S.mode !== "rigid"; el("ctl-p").hidden = S.mode !== "piston";
+    mR.setAttribute("aria-pressed", S.mode === "rigid" ? "true" : "false");
+    mP.setAttribute("aria-pressed", S.mode === "piston" ? "true" : "false");
+    el("cyl-sub").textContent = S.mode === "rigid" ? "rigid box: V fixed, P responds" : "free piston: P fixed, V responds";
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", key === k ? "true" : "false"); });
+    if (full !== false) { readouts(d); el("calc").innerHTML = calc(d); el("story").innerHTML = story(d); }
+  }
+
+  var SC = {
+    boyle:  { name: "Halve the volume (n, T fixed)", mode: "rigid", from: { nA: 1, nB: 0, T: 300, V: 20 }, to: { V: 10 } },
+    gay:    { name: "Heat a rigid tank", mode: "rigid", from: { nA: 1, nB: 0, T: 300, V: 10 }, to: { T: 450 } },
+    celsius:{ name: "Celsius trap: 25 °C to 50 °C", mode: "rigid", from: { nA: 1, nB: 0, T: 298, V: 10 }, to: { T: 323 } },
+    charles:{ name: "Double the kelvin temperature (piston)", mode: "piston", from: { nA: 1, nB: 0, T: 200, P: 1 }, to: { T: 400 } },
+    avog:   { name: "Double the moles (piston)", mode: "piston", from: { nA: 0.5, nB: 0, T: 300, P: 1 }, to: { nA: 1 } },
+    stp:    { name: "1 mol at 273 K and 1 atm", mode: "piston", from: { nA: 1, nB: 0, T: 273, P: 1 }, to: {} },
+    dalton: { name: "Add He to a tank of N₂", mode: "rigid", from: { nA: 0.6, nB: 0, T: 300, V: 10 }, to: { nB: 0.2 } }
+  };
+  var scBtns = {};
+  var stop = function () {};
+  function go(k) {
+    stop();
+    var sc = SC[k]; key = k;
+    S.mode = sc.mode;
+    Object.keys(sc.from).forEach(function (x) { S[x] = sc.from[x]; });
+    REF = derive(S);
+    var a = Object.assign({}, S), b = Object.assign({}, S, sc.to);
+    render();
+    if (!Object.keys(sc.to).length) return;
+    stop = Lab.animate(900, function (t) {
+      ["nA", "nB", "T", "V", "P"].forEach(function (x) { S[x] = a[x] + (b[x] - a[x]) * t; });
+      render(false);
+    }, function () { Object.assign(S, b); render(); });
+  }
+  Object.keys(SC).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { go(k); });
+    el("sc").appendChild(b); scBtns[k] = b;
+  });
+  function onSlide(prop, inp) { inp.addEventListener("input", function () { stop(); S[prop] = parseFloat(inp.value); key = null; render(); }); }
+  onSlide("nA", sNa); onSlide("nB", sNb); onSlide("T", sT); onSlide("V", sV); onSlide("P", sP);
+  function setMode(m) {
+    stop(); if (S.mode === m) return;
+    var d = derive(S);
+    S.mode = m;
+    // keep the current state continuous: carry the computed P or V over to the new control
+    if (m === "piston") S.P = Math.min(5, Math.max(0.25, Math.round(d.P * 20) / 20));
+    else S.V = Math.min(40, Math.max(2, Math.round(d.V * 2) / 2));
+    key = null; REF = null; render();
+  }
+  mR.addEventListener("click", function () { setMode("rigid"); });
+  mP.addEventListener("click", function () { setMode("piston"); });
+  el("btn-ref").addEventListener("click", function () { stop(); REF = derive(S); key = null; render(); });
+  el("btn-reset").addEventListener("click", function () { stop(); S = Object.assign({}, BASE); REF = null; key = null; render(); });
+  render();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "A 5.00 L rigid tank contains 0.250 mol of oxygen gas at 27 °C. What is the pressure in the tank?",
+      o: ["0.111 atm", "1.23 atm", "2.46 atm", "12.3 atm"], c: 1,
+      w: "Convert to kelvins first: 27 + 273 = 300 K. P = nRT/V = (0.250 mol)(0.08206 L·atm/(mol·K))(300 K)/(5.00 L) = 1.23 atm. Choice A plugs in 27 instead of 300 K." },
+    { s: "A gas occupies 4.00 L at 2.00 atm. The volume is reduced to 1.00 L at constant temperature and moles. What is the new pressure?",
+      o: ["0.500 atm", "2.00 atm", "8.00 atm", "4.00 atm"], c: 2,
+      w: "At constant n and T, P₁V₁ = P₂V₂: (2.00 atm)(4.00 L) = P₂(1.00 L), so P₂ = 8.00 atm. The volume became one-fourth as large, so the pressure became four times as large. Choice A applies the ratio in the wrong direction." },
+    { s: "A rigid container holds 0.30 mol of N₂ and 0.10 mol of O₂. The total pressure is 2.0 atm. What is the partial pressure of O₂?",
+      o: ["0.50 atm", "0.67 atm", "1.5 atm", "0.20 atm"], c: 0,
+      w: "X(O₂) = 0.10 / (0.30 + 0.10) = 0.25, so P(O₂) = 0.25 × 2.0 atm = 0.50 atm. Choice B uses 0.10/0.30, the ratio of O₂ to N₂, instead of O₂ to total moles. Choice C is the partial pressure of N₂." },
+    { s: "A sealed rigid flask of gas is warmed from 25 °C to 50 °C. What happens to the pressure?",
+      o: ["It doubles, because the temperature doubles", "It is cut in half", "It stays the same, because the volume is fixed", "It increases by a factor of about 1.08"], c: 3,
+      w: "Pressure is proportional to kelvin temperature at constant n and V. T goes from 298 K to 323 K, so P₂/P₁ = 323/298 = 1.08. Choice A is the Celsius trap: doubling the Celsius number does not double the kelvin temperature." },
+    { s: "A 1.00 g sample of an unknown noble gas occupies 0.560 L at 273 K and 1.00 atm. Which gas is it?",
+      o: ["He", "Ne", "Ar", "Kr"], c: 2,
+      w: "n = PV/RT = (1.00 atm)(0.560 L)/((0.08206 L·atm/(mol·K))(273 K)) = 0.0250 mol. M = 1.00 g / 0.0250 mol = 40.0 g/mol, which matches argon (39.95 g/mol). Choice B (Ne, 20.18 g/mol) would come from a molar mass half as large." },
+    { s: "Two identical rigid flasks at the same temperature each contain 0.10 mol of gas. Flask X contains He and flask Y contains Ar. Which statement is correct?",
+      o: ["The pressure in Y is greater because Ar atoms are heavier and hit the walls harder", "The pressures are equal because n, V, and T are the same", "The pressure in X is greater because He atoms move faster", "The pressures cannot be compared without the molar masses"], c: 1,
+      w: "PV = nRT has no term for the identity of the gas. Ar atoms are heavier but move more slowly; He atoms are lighter but move faster. The effects cancel, so the same n, V, and T give the same pressure. Choices A and C each consider only half of the trade-off." },
+    { s: "A gas is held in a cylinder with a freely moving piston at constant external pressure. Which change doubles the volume of the gas?",
+      o: ["Heating it from 100 °C to 200 °C", "Removing half of the gas", "Doubling the external pressure", "Heating it from 150 K to 300 K"], c: 3,
+      w: "At constant n and P, V is proportional to kelvin temperature, so doubling T from 150 K to 300 K doubles V. Heating from 100 °C to 200 °C is 373 K to 473 K, only a factor of 1.27. Removing half the gas or doubling the pressure would halve the volume." },
+    { s: "A mixture of helium and neon has a total pressure of 900 torr. The mole fraction of helium is 0.40. What is the partial pressure of neon?",
+      o: ["540 torr", "360 torr", "900 torr", "1500 torr"], c: 0,
+      w: "The mole fraction of neon is 1 − 0.40 = 0.60, so P(Ne) = 0.60 × 900 torr = 540 torr. Choice B is the partial pressure of helium. Choice D divides by the mole fraction instead of multiplying." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("3.4");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [3], topic: "3.4", compact: true, storageKey: "topic-3.4" });</script>
+</body>
+</html>

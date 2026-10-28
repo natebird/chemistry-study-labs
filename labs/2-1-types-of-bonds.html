@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Types of Chemical Bonds Study Lab</title>
+<meta name="description" content="Pick any two elements on a periodic table to see whether they form an ionic, polar covalent, nonpolar covalent, or metallic bond, how the electrons are shared or transferred, and why, then race through a which-bond-is-more-polar drill.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.ptable button { position: relative; }
+.ptable button[data-pick]::after { content: attr(data-pick); position: absolute; top: -6px; right: -4px; font-family: var(--mono); font-size: .62rem; line-height: 1; padding: 2px 4px; border-radius: 6px; background: var(--c1); color: var(--surface); }
+.ptable button:disabled { opacity: .35; cursor: default; }
+.pick-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.pick-note { font-size: .78rem; color: var(--muted); }
+.legend .l-pos { color: var(--accent); } .legend .l-neg { color: var(--c4); } .legend .l-e { color: var(--c2); }
+.drill { display: grid; gap: 12px; }
+.drill-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.drill-opts button { border-radius: 10px; padding: 14px 10px; font-family: var(--mono); font-size: 1.15rem; }
+.drill-opts button.right { background: var(--good-soft); border-color: var(--good); color: var(--good); font-weight: 600; }
+.drill-opts button.wrong { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+.drill-fb { font-size: .92rem; color: var(--muted); min-height: 1.5em; }
+.drill-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+@media (max-width: 520px) { .drill-opts button { font-size: 1rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 2 · Topic 2.1</span>
+  <h1>Types of Chemical Bonds Study Lab</h1>
+  <p class="lede">Whether two atoms share electrons, transfer them, or pool them depends on what kind of elements they are and how strongly each one pulls on electrons (electronegativity). Pick any two elements to see the bond they form, where the electrons end up, and the sentence an AP grader wants to read.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Bond builder</h2>
+    <p>Choose atom A and atom B on the periodic table (the small number under each symbol is its Pauling electronegativity). The picture shows where the bonding electrons are, and the scale underneath shows the electronegativity difference. Noble gases and elements without a listed electronegativity are greyed out. You do not need to memorize electronegativity values for the AP exam; you need the trends.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Where are the electrons? <small id="pic-sub">particle view</small></h3>
+      <svg class="chart" id="pic" role="img" aria-label="Particle picture of the bond between the two chosen atoms, with an electronegativity difference scale"></svg>
+    </div>
+    <div class="card side">
+      <div class="pick-row">
+        <div class="seg" role="group" aria-label="Which atom the next click sets">
+          <button type="button" id="set-a" aria-pressed="true">Set atom A</button>
+          <button type="button" id="set-b" aria-pressed="false">Set atom B</button>
+        </div>
+        <button type="button" id="swap">Swap A and B</button>
+      </div>
+      <div id="pt"></div>
+      <span class="pick-note">After you pick atom A, the next click sets atom B automatically.</span>
+      <div class="group">
+        <div class="tag">Classic exam pairs</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-pos">Partial or full positive end</span><span class="l-neg">Partial or full negative end</span><span class="l-e">Electrons</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Atom A</div><div class="v" id="r-a"></div><div class="sub" id="r-a2"></div></div>
+    <div class="stat"><div class="k">Atom B</div><div class="v" id="r-b"></div><div class="sub" id="r-b2"></div></div>
+    <div class="stat"><div class="k">Electronegativity difference</div><div class="v" id="r-d"></div><div class="sub" id="r-d2"></div></div>
+    <div class="stat"><div class="k">Bond type (AP rule)</div><div class="v" id="r-t"></div><div class="sub" id="r-t2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+
+  <div class="card drill" aria-labelledby="drill-h">
+    <div class="drill-bar">
+      <h3 id="drill-h">Quick drill: which bond is more polar?</h3>
+      <span class="score" id="drill-score">0 / 0</span>
+    </div>
+    <p style="color:var(--muted); font-size:.92rem;">Both choices are covalent bonds between nonmetals. Use periodic trends: electronegativity increases to the right across a period and up a group, and fluorine is the most electronegative element.</p>
+    <div class="drill-opts" id="drill-opts"></div>
+    <div class="drill-fb" id="drill-fb" aria-live="polite"></div>
+    <div><button type="button" id="drill-next">Next pair</button></div>
+  </div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">The pull on electrons</span><h3>Electronegativity</h3><p>Electronegativity is how strongly an atom in a bond attracts the shared electrons. It increases across a period (more protons, same shielding, so a larger effective nuclear charge) and decreases down a group (valence electrons are farther from the nucleus). F is the highest; the alkali metals at the bottom left are the lowest.</p></div>
+    <div class="card"><span class="tag">Metal + nonmetal</span><h3>Ionic bonds</h3><p>A metal with a low ionization energy gives up its valence electrons to a nonmetal with a high electronegativity. The resulting cations and anions are held together by Coulombic attraction between opposite charges. No discrete molecules form, only a lattice of ions.</p></div>
+    <div class="card"><span class="tag">Nonmetal + nonmetal, unequal</span><h3>Polar covalent bonds</h3><p>Two nonmetals share a pair of electrons, but the more electronegative atom pulls the pair closer. It carries a partial negative charge (δ−) and the other atom a partial positive charge (δ+). The bigger the electronegativity difference, the more polar the bond.</p></div>
+    <div class="card"><span class="tag">Nonmetal + nonmetal, equal</span><h3>Nonpolar covalent bonds</h3><p>Identical atoms (H–H, Cl–Cl) share electrons exactly equally. Atoms with very similar electronegativities share almost equally: the CED treats C–H bonds as effectively nonpolar even though C is slightly more electronegative than H.</p></div>
+    <div class="card"><span class="tag">Metal + metal</span><h3>Metallic bonds</h3><p>Metal atoms release their valence electrons into a "sea" of delocalized electrons shared by the whole sample. The positive metal cores sit in a lattice held together by their attraction to this sea. Mobile electrons explain conductivity and malleability (topic 2.4).</p></div>
+    <div class="card"><span class="tag">A spectrum, not boxes</span><h3>Ionic character is a continuum</h3><p>Every real bond lies somewhere between perfectly equal sharing and complete transfer. Electronegativity difference is not the only factor: the AP exam classifies by element type (metal or nonmetal), and the best evidence for the bond type is a compound's measured properties.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Bond types cheat sheet</h2>
+    <p>The electronegativity cutoffs in the last column are a common textbook rule of thumb, not an AP rule. When the cutoffs and the element types disagree, the AP exam goes by element type (and by properties when they are given).</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Bond type</th><th>Typical elements</th><th>What the electrons do</th><th>Example</th><th>Rough ΔEN guide</th></tr></thead>
+    <tbody>
+      <tr><td><b>Nonpolar covalent</b></td><td>Two identical nonmetals, or two with nearly equal electronegativity</td><td>Shared equally or almost equally</td><td>Cl–Cl, H–H, C–H</td><td>about 0 to 0.4</td></tr>
+      <tr><td><b>Polar covalent</b></td><td>Two different nonmetals</td><td>Shared unequally; δ− on the more electronegative atom</td><td>H–Cl, O–H, C–O</td><td>about 0.4 to 1.8</td></tr>
+      <tr><td><b>Ionic</b></td><td>Metal + nonmetal</td><td>Transferred from metal to nonmetal; cations and anions attract</td><td>NaCl, MgO, CaF<sub>2</sub></td><td>above about 1.8</td></tr>
+      <tr><td><b>Metallic</b></td><td>Metal + metal (one metal, or an alloy)</td><td>Delocalized in a sea around metal cations</td><td>Cu, Fe, brass (Cu + Zn)</td><td>not used</td></tr>
+      <tr><td>Watch out</td><td>Metal + nonmetal with a modest ΔEN</td><td>Ionic by the AP rule, with some covalent character</td><td>AlCl<sub>3</sub> (ΔEN 1.55)</td><td>rule of thumb says polar</td></tr>
+      <tr><td>Watch out</td><td>Polar but still covalent</td><td>Very unequal sharing, but no ions form</td><td>H–F (ΔEN 1.78)</td><td>close to the cutoff</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Writing it on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Name the bond type and justify it with the kinds of elements: "Na is a metal and Cl is a nonmetal, so the bond is ionic."</li>
+        <li>Explain electronegativity with structure: "O has more protons than N in the same shell, so O attracts the bonding electrons more strongly."</li>
+        <li>For a polar bond, say which atom carries the partial negative charge and why: "Cl is more electronegative than H, so the shared electrons are closer to Cl, giving Cl a partial negative charge."</li>
+        <li>Compare polarity with the electronegativity <b>difference</b>, not with one atom's value alone.</li>
+        <li>For ionic bonds, connect to ionization energy: the metal's low first ionization energy makes it easy to lose electrons.</li>
+        <li>For metallic bonding, use the words "delocalized" or "sea of electrons" and mention the positive metal cations.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Calling a bond "polar" because one atom has a high electronegativity. H–H and F–F are nonpolar: equal atoms share equally.</li>
+        <li>Putting δ− on the less electronegative atom. Electrons are pulled toward the more electronegative atom, so that is where δ− goes.</li>
+        <li>Saying ionic compounds "share" electrons, or describing NaCl as NaCl molecules. Ionic solids are lattices of ions.</li>
+        <li>Treating the ΔEN cutoffs as exact laws. They are guidelines; element type and measured properties decide.</li>
+        <li>Saying electronegativity increases down a group. It decreases, because the valence electrons are farther from the nucleus.</li>
+        <li>Quoting a memorized electronegativity value as the whole justification. Explain the trend in terms of nuclear charge and distance.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 2.1. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-2.html">Unit 2 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var E = Lab.BY_SYMBOL, el = Lab.el;
+  var METALLOIDS = ["B", "Si", "Ge", "As", "Sb", "Te"];
+  var NONMETALS = ["H", "C", "N", "O", "F", "P", "S", "Cl", "Se", "Br", "I"];
+  function kind(e) {
+    if (e.g === 18) return "noble";
+    if (METALLOIDS.indexOf(e.s) >= 0) return "metalloid";
+    if (NONMETALS.indexOf(e.s) >= 0) return "nonmetal";
+    return "metal";
+  }
+  function usable(e) { return e.en != null && e.g !== 18; }
+  // Typical ion charges for the AP-level main-group cases. null = varies or not a simple ion.
+  function cationCharge(e) {
+    if (e.g === 1 && e.s !== "H") return 1;
+    if (e.g === 2) return 2;
+    if (e.s === "Al" || e.s === "Ga" || e.s === "Sc") return 3;
+    if (e.s === "Zn") return 2;
+    if (e.s === "Ag") return 1;
+    return null;
+  }
+  function anionCharge(e) {
+    if (e.s === "H" || e.g === 17) return 1;
+    if (e.g === 16) return 2;
+    if (e.s === "N" || e.s === "P") return 3;
+    return null;
+  }
+  function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+  function sup(n, sign) { return (n > 1 ? n : "") + sign; }
+  function supU(n, sign) { var D = { 2: "²", 3: "³", 4: "⁴" }; return (n > 1 ? D[n] : "") + (sign === "+" ? "⁺" : "⁻"); }
+
+  // ---------- Classification ----------
+  function classify(a, b) {
+    var ka = kind(a), kb = kind(b), d = Math.abs(a.en - b.en);
+    var r = { d: d, ka: ka, kb: kb, type: "", pill: "", guide: "" };
+    r.guide = d < 0.4 ? "nonpolar" : d <= 1.8 ? "polar" : "ionic";
+    if (ka === "metal" && kb === "metal") { r.type = "metallic"; }
+    else if ((ka === "metal" && kb === "nonmetal") || (kb === "metal" && ka === "nonmetal")) { r.type = "ionic"; }
+    else if (ka === "metal" || kb === "metal") { r.type = "mixed"; }
+    else { r.type = d === 0 ? "nonpolar" : d < 0.4 ? "nonpolar" : "polar"; }
+    r.conflict = (r.type === "ionic" && r.guide !== "ionic") || ((r.type === "polar" || r.type === "nonpolar") && r.guide === "ionic");
+    return r;
+  }
+  var TYPE_NAME = { metallic: "Metallic", ionic: "Ionic", polar: "Polar covalent", nonpolar: "Nonpolar covalent", mixed: "Not a standard AP case" };
+  var TYPE_PILL = { metallic: "lr", ionic: "infl", polar: "rec", nonpolar: "rec", mixed: "rec" };
+
+  // ---------- State ----------
+  var S = { a: E.Na, b: E.Cl, target: "a", key: "nacl" };
+  var SC = [
+    { key: "nacl", a: "Na", b: "Cl", name: "Na + Cl" },
+    { key: "mgo", a: "Mg", b: "O", name: "Mg + O" },
+    { key: "hcl", a: "H", b: "Cl", name: "H + Cl" },
+    { key: "co", a: "C", b: "O", name: "C + O" },
+    { key: "ch", a: "C", b: "H", name: "C + H" },
+    { key: "clcl", a: "Cl", b: "Cl", name: "Cl + Cl" },
+    { key: "hf", a: "H", b: "F", name: "H + F" },
+    { key: "cuzn", a: "Cu", b: "Zn", name: "Cu + Zn (brass)" },
+    { key: "fefe", a: "Fe", b: "Fe", name: "Fe + Fe" },
+    { key: "alcl", a: "Al", b: "Cl", name: "Al + Cl (watch out)" },
+    { key: "sio", a: "Si", b: "O", name: "Si + O" }
+  ];
+
+  // ---------- Picture ----------
+  var svg = document.getElementById("pic");
+  var W = 440, H = 340, stopAnim = function () {};
+  function txt(x, y, s, style, anchor, parent) { return el("text", { x: x, y: y, "text-anchor": anchor || "middle", style: style || "" }, parent || svg, s); }
+  function atom(x, y, r, label, fill, fillOp) {
+    el("circle", { cx: x, cy: y, r: r, fill: fill, "fill-opacity": fillOp == null ? 0.16 : fillOp, stroke: fill, "stroke-width": 2 }, svg);
+    txt(x, y + 7, label, "fill:var(--ink); font-size:20px; font-weight:600");
+  }
+  function scale(r) {
+    var x0 = 40, x1 = 400, y = 270, max = 3.3;
+    function X(v) { return x0 + Math.min(v, max) / max * (x1 - x0); }
+    txt(W / 2, 244, "Electronegativity difference (rough guide only)", "fill:var(--ink); font-size:12px; font-weight:600");
+    var bands = [[0, 0.4, "var(--c2)", "nonpolar"], [0.4, 1.8, "var(--accent)", "polar covalent"], [1.8, 3.3, "var(--c4)", "mostly ionic"]];
+    bands.forEach(function (b) {
+      el("rect", { x: X(b[0]), y: y - 8, width: X(b[1]) - X(b[0]), height: 16, fill: b[2], opacity: 0.22 }, svg);
+      txt((X(b[0]) + X(b[1])) / 2, y + 26, b[3], "fill:" + b[2] + "; font-size:11px; font-weight:600");
+    });
+    [0, 0.4, 1, 1.8, 2, 3].forEach(function (v) { txt(X(v), y + 42, String(v), "font-size:10px"); el("line", { x1: X(v), x2: X(v), y1: y + 8, y2: y + 12, stroke: "var(--muted)" }, svg); });
+    var mx = X(r.d);
+    el("path", { d: "M" + mx + " " + (y - 10) + " l-7 -11 h14 z", fill: "var(--ink)" }, svg);
+    el("line", { x1: mx, x2: mx, y1: y - 8, y2: y + 8, stroke: "var(--ink)", "stroke-width": 2.5 }, svg);
+    txt(Math.max(60, Math.min(380, mx)), y + 62, "ΔEN = " + r.d.toFixed(2), "fill:var(--ink); font-size:13px; font-weight:700");
+  }
+  function drawCovalent(a, b, r) {
+    var xa = 150, xb = 290, y = 120, R = 62;
+    var d = r.d, k = Math.min(d / 1.8, 1);
+    var neg = a.en > b.en ? "a" : a.en < b.en ? "b" : null;
+    var defs = el("defs", {}, svg);
+    var g = el("linearGradient", { id: "cloud-g", x1: "0", x2: "1", y1: "0", y2: "0" }, defs);
+    var left = neg === "a" ? 0.5 + 0.35 * k : neg === "b" ? 0.5 - 0.35 * k : 0.5;
+    var right = 1 - left;
+    el("stop", { offset: "0", style: "stop-color:var(--c2); stop-opacity:" + (0.08 + 0.55 * left).toFixed(3) }, g);
+    el("stop", { offset: "1", style: "stop-color:var(--c2); stop-opacity:" + (0.08 + 0.55 * right).toFixed(3) }, g);
+    var shift = neg === "a" ? -28 * k : neg === "b" ? 28 * k : 0;
+    el("ellipse", { cx: 220 + shift, cy: y, rx: 140, ry: 74, fill: "url(#cloud-g)" }, svg);
+    var ca = neg === "a" ? "var(--c4)" : neg === "b" ? "var(--accent)" : "var(--ink)";
+    var cb = neg === "b" ? "var(--c4)" : neg === "a" ? "var(--accent)" : "var(--ink)";
+    atom(xa, y, R, a.s, ca, 0.08); atom(xb, y, R, b.s, cb, 0.08);
+    // shared pair, nudged toward the more electronegative atom
+    var px = 220 + shift * 1.4;
+    el("circle", { cx: px, cy: y - 9, r: 5, fill: "var(--c2)" }, svg);
+    el("circle", { cx: px, cy: y + 9, r: 5, fill: "var(--c2)" }, svg);
+    txt(px, y + 40, "shared pair", "fill:var(--c2); font-size:11px; font-weight:600");
+    if (neg) {
+      var nx = neg === "a" ? xa : xb, ppx = neg === "a" ? xb : xa;
+      txt(nx, y - R - 10, "δ−", "fill:var(--c4); font-size:20px; font-weight:700");
+      txt(ppx, y - R - 10, "δ+", "fill:var(--accent); font-size:20px; font-weight:700");
+      if (d >= 0.4) {
+        // dipole arrow: crossed tail at δ+, head at δ−
+        var x1 = ppx, x2 = nx, ay = 222, dir = x2 > x1 ? 1 : -1;
+        el("line", { x1: x1, x2: x2 - dir * 10, y1: ay, y2: ay, stroke: "var(--ink)", "stroke-width": 2 }, svg);
+        el("path", { d: "M" + x2 + " " + ay + " l" + (-dir * 12) + " -6 v12 z", fill: "var(--ink)" }, svg);
+        el("line", { x1: x1 + dir * 14, x2: x1 + dir * 14, y1: ay - 7, y2: ay + 7, stroke: "var(--ink)", "stroke-width": 2 }, svg);
+        txt((x1 + x2) / 2, ay - 8, "bond dipole", "font-size:11px");
+      } else {
+        txt(220, 222, "almost equal sharing (effectively nonpolar)", "font-size:11px");
+      }
+    } else {
+      txt(220, 222, "identical atoms share the pair equally", "font-size:11px");
+    }
+  }
+  function drawIonic(a, b, r) {
+    var m = kind(a) === "metal" ? a : b, n = m === a ? b : a;
+    var qc = cationCharge(m), qa = anionCharge(n);
+    var xc = 130, xa = 300, y = 120;
+    var cl = m.s + (qc ? supU(qc, "+") : "ⁿ⁺");
+    var an = n.s + (qa ? supU(qa, "−") : "ⁿ⁻");
+    el("circle", { cx: xc, cy: y, r: 38, fill: "var(--accent)", "fill-opacity": 0.18, stroke: "var(--accent)", "stroke-width": 2 }, svg);
+    el("circle", { cx: xa, cy: y, r: 58, fill: "var(--c4)", "fill-opacity": 0.18, stroke: "var(--c4)", "stroke-width": 2 }, svg);
+    txt(xc, y + 7, cl, "fill:var(--ink); font-size:19px; font-weight:600");
+    txt(xa, y + 7, an, "fill:var(--ink); font-size:19px; font-weight:600");
+    txt(xc, y + 62, "cation (smaller)", "font-size:11px");
+    txt(xa, y + 82, "anion (larger)", "font-size:11px");
+    // transfer arrow
+    var path = "M" + (xc + 10) + " " + (y - 40) + " Q " + ((xc + xa) / 2) + " " + (y - 110) + " " + (xa - 18) + " " + (y - 58);
+    el("path", { d: path, fill: "none", stroke: "var(--c2)", "stroke-width": 2, "stroke-dasharray": "5 4" }, svg);
+    el("path", { d: "M" + (xa - 18) + " " + (y - 58) + " l-3 -12 l11 6 z", fill: "var(--c2)" }, svg);
+    var nE = qc || 1;
+    txt((xc + xa) / 2, y - 84, (qc ? nE + " " : "") + "e⁻ transferred", "fill:var(--c2); font-size:12px; font-weight:600");
+    var dotE = el("circle", { cx: xc + 10, cy: y - 40, r: 5, fill: "var(--c2)" }, svg);
+    var P0 = [xc + 10, y - 40], P1 = [(xc + xa) / 2, y - 110], P2 = [xa - 18, y - 58];
+    stopAnim();
+    stopAnim = Lab.animate(1100, function (t) {
+      var u = 1 - t;
+      dotE.setAttribute("cx", u * u * P0[0] + 2 * u * t * P1[0] + t * t * P2[0]);
+      dotE.setAttribute("cy", u * u * P0[1] + 2 * u * t * P1[1] + t * t * P2[1]);
+    });
+    // Coulombic attraction
+    el("line", { x1: xc + 44, x2: xa - 64, y1: y, y2: y, stroke: "var(--muted)", "stroke-width": 1.5, "stroke-dasharray": "3 3" }, svg);
+    txt((xc + 44 + xa - 64) / 2, y - 6, "attract", "font-size:11px");
+    var f = "";
+    if (qc && qa) { var gg = gcd(qc, qa), nc = qa / gg, na = qc / gg; f = m.s + (nc > 1 ? "<tspan baseline-shift='sub' font-size='12'>" + nc + "</tspan>" : "") + n.s + (na > 1 ? "<tspan baseline-shift='sub' font-size='12'>" + na + "</tspan>" : ""); }
+    var t = txt(220, 222, "", "fill:var(--ink); font-size:13px; font-weight:600");
+    t.innerHTML = f ? "Formula unit: " + f + " (charges balance)" : "Charge of " + m.s + " varies; formula not shown";
+  }
+  function drawMetallic(a, b) {
+    var cols = 5, rows = 3, x0 = 80, y0 = 54, dx = 70, dy = 66, i = 0;
+    el("rect", { x: 30, y: 16, width: 380, height: 208, rx: 18, fill: "var(--c2)", opacity: 0.1 }, svg);
+    for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) {
+      var e = (a.s !== b.s && (r + c) % 2 === 1) ? b : a;
+      var x = x0 + c * dx, y = y0 + r * dy;
+      el("circle", { cx: x, cy: y, r: 23, fill: e === a ? "var(--accent)" : "var(--c1)", "fill-opacity": 0.2, stroke: e === a ? "var(--accent)" : "var(--c1)", "stroke-width": 2 }, svg);
+      txt(x, y + 5, e.s, "fill:var(--ink); font-size:13px; font-weight:600");
+      i++;
+    }
+    // sea of electrons: in the gaps between cations (fixed pseudo-random jitter)
+    var seed = 7;
+    function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+    for (var gr = 0; gr <= rows * 2; gr++) for (var gc = 0; gc <= cols * 2; gc++) {
+      if (gr % 2 === 1 && gc % 2 === 1) continue;            // cation centers
+      var ex = x0 - dx / 2 + gc * dx / 2, ey = y0 - dy / 2 + gr * dy / 2;
+      if (gr % 2 === 1 || gc % 2 === 1) { if (rnd() < 0.35) continue; }
+      el("circle", { cx: ex + (rnd() - 0.5) * 8, cy: ey + (rnd() - 0.5) * 6, r: 3.2, fill: "var(--c2)" }, svg);
+    }
+    txt(220, 250, a.s === b.s ? "Metal cations (circles) in a sea of delocalized electrons" : "Two metals (an alloy): cations in one shared electron sea", "fill:var(--ink); font-size:12px; font-weight:600");
+    txt(220, 272, "Electronegativity difference is not used for metallic bonding.", "font-size:11px");
+  }
+  function drawMixed(a, b) {
+    atom(150, 120, 60, a.s, "var(--muted)", 0.08); atom(290, 120, 60, b.s, "var(--muted)", 0.08);
+    txt(220, 212, "Metal + metalloid: bonding is in between; not tested on AP", "font-size:12px");
+  }
+  function draw(r) {
+    stopAnim(); stopAnim = function () {};
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    if (r.type === "metallic") drawMetallic(S.a, S.b);
+    else if (r.type === "ionic") drawIonic(S.a, S.b, r);
+    else if (r.type === "mixed") drawMixed(S.a, S.b);
+    else drawCovalent(S.a, S.b, r);
+    if (r.type !== "metallic") scale(r);
+    document.getElementById("pic-sub").textContent = r.type === "ionic" ? "electron transfer" : r.type === "metallic" ? "electron sea" : r.type === "mixed" ? "intermediate" : "electron sharing";
+  }
+
+  // ---------- Story ----------
+  var KIND = { metal: "a metal", nonmetal: "a nonmetal", metalloid: "a metalloid" };
+  function trendWhy(hi, lo) {
+    if (hi.p === lo.p) return hi.s + " is farther right in period " + hi.p + ", so it has more protons pulling on electrons in the same shell";
+    if (hi.g === lo.g) return hi.s + " is higher in group " + hi.g + ", so its valence electrons are closer to the nucleus";
+    return hi.s + " is closer to fluorine (up and to the right) on the periodic table";
+  }
+  function story(r) {
+    var a = S.a, b = S.b, hi = a.en >= b.en ? a : b, lo = hi === a ? b : a;
+    var html = "<p><b>" + a.s + " + " + b.s + ".</b> " + a.n + " is " + KIND[r.ka] + " (EN " + a.en.toFixed(2) + ") and " + (a === b ? "so is the other atom" : b.n.toLowerCase() + " is " + KIND[r.kb] + " (EN " + b.en.toFixed(2) + ")") + ". Electronegativity difference = |" + a.en.toFixed(2) + " − " + b.en.toFixed(2) + "| = " + r.d.toFixed(2) + ".</p>";
+    var li = [], end = "";
+    if (r.type === "metallic") {
+      li.push("Both atoms are metals with low ionization energies, so neither holds its valence electrons tightly. The valence electrons spread out over the whole sample as a <b>sea of delocalized electrons</b>.");
+      li.push("The positive metal cations are held in place by their attraction to that electron sea. This is <b>metallic bonding</b>. The electrons are not owned by any one atom, which is why metals conduct electricity.");
+      if (a !== b) li.push("A mixture of two metals bonded this way is an <b>alloy</b>. Cu and Zn have similar atomic radii, so Zn atoms replace Cu atoms in the lattice (a substitutional alloy, topic 2.4).");
+      end = "<b>AP answer:</b> both elements are metals, so they form metallic bonds: metal cations surrounded by a sea of delocalized valence electrons.";
+    } else if (r.type === "ionic") {
+      var m = r.ka === "metal" ? a : b, n = m === a ? b : a, qc = cationCharge(m), qa = anionCharge(n);
+      li.push(m.n + " is a metal with a low first ionization energy (" + m.ie + " kJ/mol), so it loses " + (qc ? (qc === 1 ? "its valence electron" : "its " + qc + " valence electrons") : "valence electrons") + " easily. " + n.n + " is a nonmetal with a high electronegativity, so it gains electrons to fill its valence shell.");
+      li.push("The result is " + (qc ? m.s + "<sup>" + sup(qc, "+") + "</sup>" : "metal cations") + " and " + (qa ? n.s + "<sup>" + sup(qa, "−") + "</sup>" : "anions") + " held together by <b>Coulombic attraction</b> between opposite charges. There are no shared electron pairs and no molecules, only a lattice of ions.");
+      if (r.conflict) li.push("<b>Watch out:</b> the rough ΔEN guide says only " + r.d.toFixed(2) + ", which would suggest polar covalent. Real " + m.s + "–" + n.s + " compounds do have noticeable covalent character, but for AP classification a metal bonded to a nonmetal is called <b>ionic</b>. If an AP question gives you properties (for example, a low melting point), use the properties.");
+      else li.push("The ΔEN of " + r.d.toFixed(2) + " is large, which agrees with the element-type rule.");
+      end = "<b>AP answer:</b> " + m.s + " is a metal and " + n.s + " is a nonmetal, so the metal transfers electrons to the nonmetal and the oppositely charged ions attract: an ionic bond.";
+    } else if (r.type === "mixed") {
+      li.push("One element is a metal and the other is a metalloid. Bonding between them is in between metallic, ionic, and covalent, and this case is outside the AP exam. Pick a nonmetal or a second metal to see a standard case.");
+      end = "<b>AP answer:</b> AP questions stick to metal + nonmetal (ionic), nonmetal + nonmetal (covalent), and metal + metal (metallic).";
+    } else if (r.d === 0) {
+      li.push("Two identical atoms have identical electronegativities, so they pull on the shared pair exactly equally. There is no δ+ or δ− end.");
+      li.push("This is a <b>nonpolar covalent</b> bond, even when the element itself is very electronegative (F–F and Cl–Cl are nonpolar).");
+      end = "<b>AP answer:</b> both atoms are " + (r.ka === "metalloid" ? "metalloids" : "nonmetals") + " with equal electronegativity, so the electrons are shared equally: a nonpolar covalent bond.";
+    } else if (r.type === "nonpolar") {
+      li.push("Both atoms are " + (r.ka === r.kb ? r.ka + "s" : "nonmetals or metalloids") + ", so they share electrons. " + hi.s + " is only slightly more electronegative than " + lo.s + " (difference " + r.d.toFixed(2) + ").");
+      li.push("The sharing is so close to equal that the bond is treated as <b>effectively nonpolar</b>. The CED uses C–H as the standard example: carbon is slightly more electronegative, but C–H bonds are considered nonpolar.");
+      end = "<b>AP answer:</b> both are nonmetals with very similar electronegativities, so the electrons are shared almost equally: a nonpolar covalent bond.";
+    } else {
+      li.push("Both atoms are " + (r.ka === r.kb ? r.ka + "s" : "nonmetals or metalloids") + ", so neither has a low enough ionization energy to give up electrons. They <b>share</b> a pair of electrons.");
+      li.push(hi.s + " is more electronegative than " + lo.s + " because " + trendWhy(hi, lo) + ". The shared electrons spend more time near " + hi.s + ", so " + hi.s + " is <b>δ−</b> and " + lo.s + " is <b>δ+</b>.");
+      if (r.conflict) li.push("<b>Watch out:</b> the ΔEN of " + r.d.toFixed(2) + " is above the rough 1.8 cutoff, but two nonmetals still share electrons. The AP exam calls this a polar covalent bond.");
+      else if (r.d > 1.5) li.push("A ΔEN of " + r.d.toFixed(2) + " makes this a <b>very polar</b> covalent bond, but the electrons are still shared, not transferred.");
+      end = "<b>AP answer:</b> " + hi.s + " is more electronegative than " + lo.s + ", so the shared electrons are pulled toward " + hi.s + ", giving " + hi.s + " a partial negative charge and " + lo.s + " a partial positive charge: a polar covalent bond.";
+    }
+    html += "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul><p>" + end + "</p>";
+    return html;
+  }
+
+  // ---------- Readouts and render ----------
+  var pt, scBtns = {};
+  function render() {
+    var r = classify(S.a, S.b);
+    draw(r);
+    document.getElementById("r-a").textContent = S.a.s + "  " + S.a.en.toFixed(2);
+    document.getElementById("r-a2").textContent = S.a.n + ", " + r.ka;
+    document.getElementById("r-b").textContent = S.b.s + "  " + S.b.en.toFixed(2);
+    document.getElementById("r-b2").textContent = S.b.n + ", " + r.kb;
+    document.getElementById("r-d").textContent = r.d.toFixed(2);
+    document.getElementById("r-d2").textContent = "rough guide: " + (r.guide === "nonpolar" ? "nonpolar" : r.guide === "polar" ? "polar covalent" : "mostly ionic");
+    document.getElementById("r-t").innerHTML = '<span class="pill ' + TYPE_PILL[r.type] + '">' + TYPE_NAME[r.type] + "</span>";
+    document.getElementById("r-t2").textContent = r.conflict ? "differs from the ΔEN guide" : r.type === "mixed" ? "outside AP scope" : "by element type";
+    document.getElementById("story").innerHTML = story(r);
+    for (var z in pt.buttons) {
+      var bt = pt.buttons[z], isA = +z === S.a.z, isB = +z === S.b.z;
+      bt.setAttribute("aria-pressed", isA || isB ? "true" : "false");
+      if (isA && isB) bt.setAttribute("data-pick", "A B"); else if (isA) bt.setAttribute("data-pick", "A"); else if (isB) bt.setAttribute("data-pick", "B"); else bt.removeAttribute("data-pick");
+    }
+    document.getElementById("set-a").setAttribute("aria-pressed", S.target === "a" ? "true" : "false");
+    document.getElementById("set-b").setAttribute("aria-pressed", S.target === "b" ? "true" : "false");
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+  }
+  pt = Lab.periodicTable(document.getElementById("pt"), {
+    maxZ: 56, ariaLabel: "Periodic table: pick atom A or atom B",
+    label: function (e) { return e.en != null && e.g !== 18 ? e.en.toFixed(2) : ""; },
+    disabled: function (e) { return !usable(e); },
+    onPick: function (e) {
+      S[S.target] = e; S.key = null;
+      S.target = S.target === "a" ? "b" : "a";
+      render();
+    }
+  });
+  document.getElementById("set-a").addEventListener("click", function () { S.target = "a"; render(); });
+  document.getElementById("set-b").addEventListener("click", function () { S.target = "b"; render(); });
+  document.getElementById("swap").addEventListener("click", function () { var t = S.a; S.a = S.b; S.b = t; S.key = null; render(); });
+  SC.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S.a = E[x.a]; S.b = E[x.b]; S.key = x.key; S.target = "a"; render(); });
+    document.getElementById("sc").appendChild(b); scBtns[x.key] = b;
+  });
+  render();
+
+  // ---------- Drill ----------
+  var BONDS = [["C", "H"], ["N", "H"], ["O", "H"], ["F", "H"], ["Cl", "H"], ["Br", "H"], ["I", "H"], ["S", "H"], ["C", "O"], ["C", "N"], ["C", "F"], ["C", "Cl"], ["C", "Br"], ["N", "O"], ["S", "O"], ["P", "Cl"], ["P", "F"], ["Si", "O"], ["B", "F"], ["O", "F"]];
+  function den(p) { return Math.abs(E[p[0]].en - E[p[1]].en); }
+  var drill = { pair: null, done: false, n: 0, right: 0 };
+  function pickPair() {
+    var p, q, tries = 0;
+    do {
+      p = BONDS[Math.floor(Math.random() * BONDS.length)];
+      q = BONDS[Math.floor(Math.random() * BONDS.length)];
+      tries++;
+    } while ((p === q || Math.abs(den(p) - den(q)) < 0.3) && tries < 200);
+    return Math.random() < 0.5 ? [p, q] : [q, p];
+  }
+  function explain(p, q) {
+    var dp = den(p), dq = den(q), win = dp > dq ? p : q, lose = win === p ? q : p;
+    var s = win.join("–") + " (ΔEN " + den(win).toFixed(2) + ") is more polar than " + lose.join("–") + " (ΔEN " + den(lose).toFixed(2) + "). ";
+    var shared = win.filter(function (x) { return lose.indexOf(x) >= 0; })[0];
+    if (shared) {
+      var o1 = E[win[0] === shared ? win[1] : win[0]], o2 = E[lose[0] === shared ? lose[1] : lose[0]], sh = E[shared];
+      s += "Both bonds include " + shared + " (EN " + sh.en.toFixed(2) + "), so compare the partners: " + o1.s + " (" + o1.en.toFixed(2) + ") is farther from " + shared + " than " + o2.s + " (" + o2.en.toFixed(2) + ") is.";
+      var hi = o1.en > o2.en ? o1 : o2, lo = hi === o1 ? o2 : o1;
+      if (o1.p === o2.p) s += " Trend: " + hi.s + " is farther right in period " + hi.p + ", so it is more electronegative than " + lo.s + ".";
+      else if (o1.g === o2.g) s += " Trend: " + hi.s + " is higher in group " + hi.g + ", so it is more electronegative than " + lo.s + ".";
+    } else {
+      s += "Look for the bond whose two atoms are farthest apart in electronegativity: one atom close to F (top right), the other farther away.";
+    }
+    return s;
+  }
+  var optsEl = document.getElementById("drill-opts"), fb = document.getElementById("drill-fb");
+  function newRound() {
+    drill.pair = pickPair(); drill.done = false; fb.textContent = "";
+    optsEl.innerHTML = "";
+    drill.pair.forEach(function (p, i) {
+      var b = document.createElement("button"); b.type = "button"; b.textContent = p[0] + "–" + p[1];
+      b.addEventListener("click", function () {
+        if (drill.done) return;
+        drill.done = true; drill.n++;
+        var other = drill.pair[1 - i], ok = den(p) > den(other);
+        if (ok) drill.right++;
+        var btns = optsEl.querySelectorAll("button");
+        btns.forEach(function (x, j) { x.disabled = true; if (den(drill.pair[j]) > den(drill.pair[1 - j])) x.classList.add("right"); });
+        if (!ok) b.classList.add("wrong");
+        fb.innerHTML = (ok ? "<b style='color:var(--good)'>Correct.</b> " : "<b style='color:var(--bad)'>Not quite.</b> ") + explain(drill.pair[0], drill.pair[1]);
+        document.getElementById("drill-score").textContent = drill.right + " / " + drill.n;
+      });
+      optsEl.appendChild(b);
+    });
+  }
+  document.getElementById("drill-next").addEventListener("click", newRound);
+  newRound();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Which pair of elements is most likely to form an ionic bond?",
+      o: ["C and O", "K and Br", "N and H", "Cu and Zn"], c: 1,
+      w: "K is a metal with a very low first ionization energy and Br is a nonmetal with a high electronegativity, so K transfers an electron to Br and K⁺ and Br⁻ attract. C–O and N–H are bonds between two nonmetals (covalent). Cu and Zn are both metals, so they form metallic bonds, not ionic ones." },
+    { s: "Which of the following bonds is the most polar?",
+      o: ["C–I", "C–Br", "C–Cl", "C–F"], c: 3,
+      w: "All four bonds contain carbon, so compare the halogens. Electronegativity increases up group 17, and F is the most electronegative element, so C–F has the largest electronegativity difference. Choice A is the trap for students who think bigger atoms pull harder; larger atoms hold bonding electrons less tightly." },
+    { s: "Which statement best describes the bond in a molecule of HCl?",
+      o: ["The electrons are shared equally because both atoms need one more electron.", "H transfers its electron completely to Cl, forming H⁺ and Cl⁻ ions.", "The electrons are shared unequally, and Cl carries a partial negative charge.", "The electrons are shared unequally, and H carries a partial negative charge."], c: 2,
+      w: "H and Cl are both nonmetals, so they share a pair of electrons. Cl is more electronegative than H, so the shared pair is pulled toward Cl, making Cl δ− and H δ+. Choice B describes ionic bonding, which happens between a metal and a nonmetal; choice D puts the partial negative charge on the wrong atom." },
+    { s: "Carbon (electronegativity 2.55) is slightly more electronegative than hydrogen (2.20). How are the C–H bonds in methane, CH₄, usually classified?",
+      o: ["Nonpolar covalent, because the electronegativity difference is very small", "Ionic, because carbon gains electrons from hydrogen", "Polar covalent, with hydrogen carrying the partial negative charge", "Metallic, because the electrons are delocalized over the molecule"], c: 0,
+      w: "A difference of 0.35 means the electrons are shared almost equally, so C–H bonds are treated as effectively nonpolar (this is the CED's own example). Choice C has the direction wrong as well: if anything, carbon would be the slightly negative end." },
+    { s: "Which list ranks the bonds in order of increasing polarity?",
+      o: ["O–H < N–H < C–H", "C–H < O–H < N–H", "N–H < C–H < O–H", "C–H < N–H < O–H"], c: 3,
+      w: "Each bond contains H, so compare C, N, and O. Electronegativity increases from left to right across period 2 (C < N < O), so the difference from H, and the polarity, increases in the same order: C–H < N–H < O–H. Choice A is the same list reversed (decreasing polarity)." },
+    { s: "A student claims that because fluorine is the most electronegative element, the bond in F₂ must be highly polar. Which response is correct?",
+      o: ["The claim is correct, because each F atom pulls strongly on the shared electrons.", "The claim is incorrect, because both atoms have the same electronegativity and pull equally on the shared electrons.", "The claim is incorrect, because F₂ has an ionic bond.", "The claim is correct, because F₂ has a large electronegativity difference."], c: 1,
+      w: "Bond polarity depends on the difference in electronegativity. Two identical atoms pull equally, so the difference is zero and the electrons are shared equally: F–F is nonpolar covalent. Choice A is the tempting trap: a strong pull on both sides cancels out." },
+    { s: "Which model best describes the bonding in a sample of solid sodium metal?",
+      o: ["Na⁺ cations held together by a sea of delocalized valence electrons", "Na₂ molecules held together by shared electron pairs", "Na⁺ and Na⁻ ions held together by Coulombic attraction", "Na atoms held together only by weak attractions between neutral atoms"], c: 0,
+      w: "In a metal, each Na atom contributes its 3s valence electron to a sea of electrons that is shared by the whole sample, and the Na⁺ cores are held by their attraction to that sea. Choice C invents Na⁻ ions; ionic bonding requires a metal and a nonmetal." },
+    { s: "In which bond does the first atom listed carry the partial negative charge?",
+      o: ["C–O", "H–Cl", "N–H", "B–F"], c: 2,
+      w: "N is more electronegative than H, so in N–H the electrons are pulled toward N and N is δ−. In C–O, H–Cl, and B–F, the second atom (O, Cl, F) is the more electronegative one, so the first atom is δ+." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("2.1");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [2], topic: "2.1", compact: true, storageKey: "topic-2.1" });</script>
+</body>
+</html>

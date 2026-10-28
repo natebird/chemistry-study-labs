@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Representations of Reactions Study Lab</title>
+<meta name="description" content="Build the after-reaction particle diagram yourself from a balanced equation and a before box, with live atom counts, then pick the correct diagram out of four in AP-style challenges.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.part { font-size: 1.25rem; margin-top: 6px; }
+.side { display: grid; gap: 12px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.btnrow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.steppers { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 8px; }
+.stp { display: flex; align-items: center; justify-content: space-between; gap: 6px; border: 1px solid var(--rule); border-radius: 10px; padding: 4px 6px 4px 10px; background: var(--paper); }
+.stp .f { font-weight: 500; }
+.stp .ctr { display: inline-grid; grid-template-columns: 28px 26px 28px; align-items: center; }
+.stp button { padding: 0; width: 28px; height: 28px; border-radius: 50%; font-size: 1rem; line-height: 1; }
+.stp output { text-align: center; font-family: var(--mono); color: var(--accent); font-weight: 600; }
+.atomkey { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .82rem; color: var(--muted); }
+.atomkey span { display: inline-flex; align-items: center; gap: 5px; }
+.atomkey i { width: 14px; height: 14px; border-radius: 50%; display: inline-block; border: 1px solid var(--surface); }
+.verdict { font-weight: 600; }
+.choices { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.choice { display: grid; gap: 4px; padding: 8px; border-radius: 10px; text-align: center; font-weight: 600; }
+.choice svg { width: 100%; height: auto; display: block; }
+.choice.right { background: var(--good-soft); border-color: var(--good); color: var(--good); }
+.choice.wrong { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+.choice:disabled { cursor: default; }
+.chal-top { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 14px; align-items: center; }
+.ok { color: var(--good); font-weight: 600; } .no { color: var(--bad); font-weight: 600; }
+.mini td, .mini th { padding: 6px 10px; text-align: center; }
+.mini td:first-child, .mini th:first-child { text-align: left; }
+.mini table { min-width: 0; }
+@media (max-width: 860px) { .choices { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .chal-top { grid-template-columns: 1fr; } .chal-top svg { max-width: 240px; margin: 0 auto; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 4 · Topic 4.3</span>
+  <h1>Representations of Reactions Study Lab</h1>
+  <p class="lede">A balanced equation and a particle diagram are two pictures of the same event. In a correct diagram every atom in the "before" box shows up in the "after" box, the products form in the ratio the coefficients give, and whatever reactant is in excess is still there. Build after-boxes yourself, then spot the correct diagram among look-alikes.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. From equation to particles</h2>
+    <p>Each molecule in a box stands for one molecule. The reactions are treated as going to completion, the way AP particle-diagram questions treat them unless they say otherwise. All substances here are gases, so the molecules are spread out in their boxes.</p>
+  </div>
+
+  <h3 class="part" id="pa-h">Part A: Build the after box</h3>
+
+  <div class="card" style="display:grid; gap:12px;">
+    <div class="group">
+      <div class="tag">Reaction</div>
+      <div class="scenarios" id="rxns"></div>
+    </div>
+    <div class="eqn" id="eqline"></div>
+    <div class="atomkey" id="key"></div>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Before <small id="bf-sub"></small></h3>
+      <svg class="chart" id="sv-before" role="img" aria-label="Particle diagram of the reactant mixture before the reaction"></svg>
+      <div class="controls" id="bf-ctl" style="grid-template-columns: 1fr 1fr;"></div>
+    </div>
+    <div class="card graph-card">
+      <h3>After: your diagram <small id="af-sub"></small></h3>
+      <svg class="chart" id="sv-after" role="img" aria-label="Particle diagram you build for after the reaction"></svg>
+      <div class="steppers" id="af-ctl"></div>
+    </div>
+  </div>
+
+  <div class="card" style="display:grid; gap:12px;">
+    <div class="btnrow"><button type="button" class="primary" id="check">Check my diagram</button><button type="button" id="clear">Clear the after box</button><button type="button" id="answer">Show the correct after box</button></div>
+    <div class="tbl-wrap mini"><table id="tally"></table></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Limiting reactant</div><div class="v" id="r-1"></div><div class="sub" id="r-1s"></div></div>
+    <div class="stat"><div class="k">Reaction events</div><div class="v" id="r-2"></div><div class="sub" id="r-2s"></div></div>
+    <div class="stat"><div class="k">Atoms conserved?</div><div class="v" id="r-3"></div><div class="sub" id="r-3s"></div></div>
+    <div class="stat"><div class="k">Your diagram</div><div class="v" id="r-4"></div><div class="sub" id="r-4s"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+
+  <h3 class="part" id="pb-h">Part B: Which after box is correct?</h3>
+
+  <div class="card" style="display:grid; gap:14px;">
+    <div class="btnrow"><span class="tag" id="chal-n"></span><button type="button" id="prev">Previous</button><button type="button" id="next">Next challenge</button><span class="score" id="chal-score"></span></div>
+    <div class="chal-top">
+      <svg id="chal-before" role="img" aria-label="Before box for this challenge" style="width:100%; height:auto;"></svg>
+      <div style="display:grid; gap:8px;">
+        <div class="eqn" id="chal-eq"></div>
+        <p id="chal-q"></p>
+      </div>
+    </div>
+    <div class="choices" id="choices"></div>
+    <div class="story" id="chal-why" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Same event, two forms</span><h3>Symbols and particles</h3><p>A balanced equation can be translated into a particle diagram and back. Coefficients become numbers of molecules (in the same ratio), formulas become how atoms are bonded together, and states become how the particles are arranged.</p></div>
+    <div class="card"><span class="tag">Count atoms</span><h3>Conservation in a diagram</h3><p>Every atom in the before box must appear in the after box, bonded in a new way or unchanged. Count each element before and after. If the counts differ, the diagram is wrong no matter how good the products look.</p></div>
+    <div class="card"><span class="tag">Molecules are not conserved</span><h3>The number of particles can change</h3><p>In 2H₂ + O₂ → 2H₂O, three molecules become two. A diagram can have fewer (or more) particles after the reaction as long as every atom is accounted for.</p></div>
+    <div class="card"><span class="tag">Excess stays</span><h3>Limiting and excess reactants</h3><p>Divide each reactant's count by its coefficient; the smallest result is the limiting reactant and the number of times the reaction can happen. The other reactant's leftovers must still be drawn in the after box, unchanged.</p></div>
+    <div class="card"><span class="tag">Diagram to equation</span><h3>Reading an equation off a diagram</h3><p>Count what was used and what was made, ignore leftover reactant (it appears on both sides), and reduce to the smallest whole numbers. Four H₂ and two O₂ used to make four H₂O reduces to 2H₂ + O₂ → 2H₂O.</p></div>
+    <div class="card"><span class="tag">States matter</span><h3>Arrangement shows phase</h3><p>Gas particles are far apart, liquid particles are close but disordered, solid particles are packed in a regular pattern. Ions in solution are drawn separated; a precipitate is drawn as a cluster of ions. Molecules in a phase change stay intact.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Checklist for a particle diagram</h2>
+    <p>Run every diagram you draw or judge through these checks. Example column uses 2H₂ + O₂ → 2H₂O with 5 H₂ and 2 O₂ before.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Check</th><th>What to look for</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><b>Atoms of each element</b></td><td>Same count before and after</td><td>H: 10 before, 10 after. O: 4 before, 4 after.</td></tr>
+      <tr><td><b>Limiting reactant</b></td><td>Smallest (molecules ÷ coefficient)</td><td>H₂: 5 ÷ 2 = 2.5. O₂: 2 ÷ 1 = 2. O₂ is limiting, so the reaction happens 2 times.</td></tr>
+      <tr><td><b>Product amount</b></td><td>Events × product coefficient</td><td>2 × 2 = 4 H₂O molecules</td></tr>
+      <tr><td><b>Leftover reactant</b></td><td>Start − events × coefficient</td><td>H₂: 5 − 2 × 2 = 1 H₂ left. O₂: 2 − 2 × 1 = 0.</td></tr>
+      <tr><td><b>Correct formulas</b></td><td>Atoms bonded as in the formula, not floating separately</td><td>Each H₂O is one O bonded to two H, not an H₂ next to an O</td></tr>
+      <tr><td><b>Phase and spacing</b></td><td>Gas spread out; liquid close; solid ordered; aqueous ions separated</td><td>H₂O(g) molecules spread out; H₂O(l) drawn close together</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Answering the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Draw the correct number of each product particle and the correct number of leftover reactant particles. Graders count them.</li>
+        <li>Draw molecules as bonded atoms in the right ratio (an NH₃ is one N touching three H), using the key the question gives.</li>
+        <li>Keep the same representation for the same atom in both boxes (same size, same shading).</li>
+        <li>For ionic solutions, show separated ions with the right charges and ratio (two Cl⁻ for every Ca²⁺ from CaCl₂); show a precipitate as a cluster of ions.</li>
+        <li>When writing an equation from a diagram, leave out the unreacted particles and reduce the coefficients.</li>
+        <li>If asked to justify, cite atom counts: "There are 10 H atoms and 4 O atoms in both boxes, so atoms are conserved."</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Leaving out the excess reactant from the after box.</li>
+        <li>Drawing the same number of molecules after as before. Atoms, not molecules, are conserved.</li>
+        <li>Using the coefficients themselves as the number of particles to draw, regardless of how many were in the before box.</li>
+        <li>Drawing a partial reaction, with both reactants left over, for a reaction that goes to completion.</li>
+        <li>Drawing a diatomic element as single atoms (O instead of O₂) or splitting a polyatomic ion into atoms.</li>
+        <li>Writing an equation from the diagram that includes the leftover reactant on both sides.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 4.3. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-4.html">Unit 4 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = Lab.el;
+
+  // ---------- Molecule drawing ----------
+  var ATOM = {
+    H:  { r: 7,  fill: "var(--surface)", stroke: "var(--ink)", text: "var(--ink)", name: "hydrogen" },
+    C:  { r: 10, fill: "var(--ink)", stroke: "var(--surface)", text: "var(--surface)", name: "carbon" },
+    N:  { r: 10, fill: "var(--accent)", stroke: "var(--surface)", text: "var(--surface)", name: "nitrogen" },
+    O:  { r: 10, fill: "var(--bad)", stroke: "var(--surface)", text: "var(--surface)", name: "oxygen" },
+    Cl: { r: 12, fill: "var(--c2)", stroke: "var(--surface)", text: "var(--surface)", name: "chlorine" }
+  };
+  // Atom positions relative to the molecule's center.
+  var MOL = {
+    H2:  [["H", -6, 0], ["H", 6, 0]],
+    O2:  [["O", -8, 0], ["O", 8, 0]],
+    N2:  [["N", -8, 0], ["N", 8, 0]],
+    Cl2: [["Cl", -10, 0], ["Cl", 10, 0]],
+    H2O: [["O", 0, -3], ["H", -11, 6], ["H", 11, 6]],
+    NH3: [["N", 0, -2], ["H", -12, 5], ["H", 12, 5], ["H", 0, 12]],
+    CH4: [["C", 0, 0], ["H", -13, 0], ["H", 13, 0], ["H", 0, -13], ["H", 0, 13]],
+    CO2: [["C", 0, 0], ["O", -15, 0], ["O", 15, 0]],
+    CO:  [["C", -7, 0], ["O", 7, 0]],
+    NO:  [["N", -7, 0], ["O", 7, 0]],
+    NO2: [["N", 0, -3], ["O", -13, 6], ["O", 13, 6]],
+    HCl: [["H", -9, 0], ["Cl", 5, 0]]
+  };
+  function molR(f) { var r = 0; MOL[f].forEach(function (a) { r = Math.max(r, Math.hypot(a[1], a[2]) + ATOM[a[0]].r); }); return r; }
+  function drawMol(g, f, x, y, s) {
+    s = s || 1;
+    MOL[f].forEach(function (a) {
+      var A = ATOM[a[0]], cx = x + a[1] * s, cy = y + a[2] * s;
+      el("circle", { cx: cx, cy: cy, r: A.r * s, fill: A.fill, stroke: A.stroke, "stroke-width": 1.2 }, g);
+      if (s >= 0.8) el("text", { x: cx, y: cy + 3.3 * s, "text-anchor": "middle", style: "font-size:" + (A.r >= 10 ? 9 : 7.5) * s + "px; font-weight:600; fill:" + A.text }, g, a[0]);
+    });
+  }
+  function rng(seed) { var s = seed; return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+  // Non-overlapping placement of molecules (seeded, so the same box looks the same each time).
+  function place(items, W, H, pad, seed) {
+    var R = rng(seed), out = [];
+    items.forEach(function (it) {
+      var best = null, bestD = -1e9;
+      for (var t = 0; t < 200; t++) {
+        var x = pad + it.r + R() * (W - 2 * pad - 2 * it.r), y = pad + it.r + R() * (H - 2 * pad - 2 * it.r), d = 1e9;
+        out.forEach(function (q) { d = Math.min(d, Math.hypot(x - q.x, y - q.y) - it.r - q.r); });
+        if (d > 5) { best = { x: x, y: y }; break; }
+        if (d > bestD) { bestD = d; best = { x: x, y: y }; }
+      }
+      out.push({ f: it.f, r: it.r, x: best.x, y: best.y });
+    });
+    return out;
+  }
+  // Draw a box of molecules. counts: { formula: n }. Returns nothing.
+  function box(svg, species, counts, opts) {
+    opts = opts || {};
+    var W = opts.W || 300, H = opts.H || 240, s = opts.s || 1;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    el("rect", { x: 1.5, y: 1.5, width: W - 3, height: H - 3, rx: 8, fill: "var(--surface)", stroke: "var(--ink)", "stroke-width": 2 }, svg);
+    var items = [];
+    species.forEach(function (f) { for (var i = 0; i < (counts[f] || 0); i++) items.push({ f: f, r: molR(f) * s }); });
+    // Shuffle deterministically so species are mixed, but keep the result stable for the same counts.
+    var R = rng(opts.seed || 7);
+    for (var i = items.length - 1; i > 0; i--) { var j = Math.floor(R() * (i + 1)); var t = items[i]; items[i] = items[j]; items[j] = t; }
+    var g = el("g", {}, svg);
+    place(items, W, H, 6, (opts.seed || 7) + 3).forEach(function (p) { drawMol(g, p.f, p.x, p.y, s); });
+    if (!items.length) el("text", { x: W / 2, y: H / 2 + 4, "text-anchor": "middle", style: "font-size:13px" }, svg, opts.empty || "empty");
+  }
+  function sub(f) { return Lab.fmla(f); }
+  function plain(f) { return f.replace(/\d/g, function (d) { return "₀₁₂₃₄₅₆₇₈₉"[+d]; }); }
+
+  // ---------- Reactions ----------
+  var RX = [
+    { sp: ["H2", "O2", "H2O"], nu: [-2, -1, 2], before: [5, 2] },
+    { sp: ["N2", "H2", "NH3"], nu: [-1, -3, 2], before: [3, 6] },
+    { sp: ["CO", "O2", "CO2"], nu: [-2, -1, 2], before: [4, 3] },
+    { sp: ["CH4", "O2", "CO2", "H2O"], nu: [-1, -2, 1, 2], before: [3, 4] },
+    { sp: ["H2", "Cl2", "HCl"], nu: [-1, -1, 2], before: [3, 2] },
+    { sp: ["NO", "O2", "NO2"], nu: [-2, -1, 2], before: [5, 2] }
+  ];
+  function eqText(rx, html) {
+    var L = [], Rr = [];
+    rx.sp.forEach(function (f, i) { var n = Math.abs(rx.nu[i]), t = (n > 1 ? n : "") + (html ? sub(f) + "(g)" : plain(f)); (rx.nu[i] < 0 ? L : Rr).push(t); });
+    return L.join(" + ") + " → " + Rr.join(" + ");
+  }
+  function atoms(sp, counts) {
+    var t = {};
+    sp.forEach(function (f) { var c = Lab.parseFormula(f), n = counts[f] || 0; Object.keys(c).forEach(function (e) { t[e] = (t[e] || 0) + c[e] * n; }); });
+    return t;
+  }
+  function elements(sp) { var o = []; sp.forEach(function (f) { Object.keys(Lab.parseFormula(f)).forEach(function (e) { if (o.indexOf(e) < 0) o.push(e); }); }); return o; }
+  // Correct after-box for a reaction that goes to completion with whole molecules.
+  function solve(rx, before) {
+    var ex = Infinity, lim = [], frac = false;
+    rx.sp.forEach(function (f, i) { if (rx.nu[i] < 0) { var q = before[f] / -rx.nu[i]; if (q < ex - 1e-9) { ex = q; lim = [f]; } else if (Math.abs(q - ex) < 1e-9) lim.push(f); } });
+    var ev = Math.floor(ex + 1e-9); if (ev !== ex) frac = true;
+    var after = {};
+    rx.sp.forEach(function (f, i) { after[f] = (before[f] || 0) + rx.nu[i] * ev; });
+    return { ev: ev, lim: lim, after: after, frac: frac, ex: ex };
+  }
+
+  // ---------- Part A ----------
+  var S = { i: 0, before: {}, mine: {}, checked: false };
+  var svB = document.getElementById("sv-before"), svA = document.getElementById("sv-after");
+  function reactants(rx) { return rx.sp.filter(function (f, i) { return rx.nu[i] < 0; }); }
+  function setRx(i) {
+    var rx = RX[i]; S.i = i; S.before = {}; S.mine = {}; S.checked = false;
+    rx.sp.forEach(function (f, j) { S.before[f] = rx.nu[j] < 0 ? rx.before[reactants(rx).indexOf(f)] : 0; S.mine[f] = 0; });
+    buildControls(); render();
+  }
+  function buildControls() {
+    var rx = RX[S.i];
+    document.getElementById("bf-ctl").innerHTML = reactants(rx).map(function (f) {
+      return '<div class="ctl"><label for="bf-' + f + '"><span>' + sub(f) + ' molecules</span> <output id="o-bf-' + f + '"></output></label><input type="range" id="bf-' + f + '" min="0" max="8" step="1"></div>';
+    }).join("");
+    reactants(rx).forEach(function (f) {
+      var r = document.getElementById("bf-" + f);
+      r.addEventListener("input", function () { S.before[f] = +r.value; S.checked = false; render(); });
+    });
+    document.getElementById("af-ctl").innerHTML = rx.sp.map(function (f) {
+      return '<div class="stp"><span class="f">' + sub(f) + '</span><span class="ctr"><button type="button" data-f="' + f + '" data-d="-1" aria-label="Remove one ' + f + '">−</button><output id="o-af-' + f + '"></output><button type="button" data-f="' + f + '" data-d="1" aria-label="Add one ' + f + '">+</button></span></div>';
+    }).join("");
+    Array.prototype.forEach.call(document.querySelectorAll("#af-ctl button"), function (b) {
+      b.addEventListener("click", function () { var f = b.getAttribute("data-f"); S.mine[f] = Math.max(0, Math.min(20, S.mine[f] + +b.getAttribute("data-d"))); S.checked = false; render(); });
+    });
+    var els = elements(rx.sp);
+    document.getElementById("key").innerHTML = "Key: " + els.map(function (e) { return '<span><i style="background:' + ATOM[e].fill + "; border-color:" + ATOM[e].stroke + '"></i>' + e + " (" + ATOM[e].name + ")</span>"; }).join("");
+  }
+
+  function classify(rx, before, mine, sol) {
+    var aB = atoms(rx.sp, before), aM = atoms(rx.sp, mine), els = elements(rx.sp);
+    var bad = els.filter(function (e) { return (aB[e] || 0) !== (aM[e] || 0); });
+    var same = rx.sp.every(function (f) { return (mine[f] || 0) === sol.after[f]; });
+    var total = rx.sp.reduce(function (t, f) { return t + (mine[f] || 0); }, 0);
+    if (same) return { code: "right" };
+    if (!total) return { code: "empty" };
+    if (bad.length) {
+      var omitted = rx.sp.every(function (f, i) { return rx.nu[i] > 0 ? mine[f] === sol.after[f] : (mine[f] || 0) === 0; }) && reactants(rx).some(function (f) { return sol.after[f] > 0; });
+      return { code: omitted ? "omit" : "atoms", bad: bad, aB: aB, aM: aM };
+    }
+    // Atoms conserved but not the complete-reaction answer: find the extent this diagram represents.
+    var p = rx.sp.filter(function (f, i) { return rx.nu[i] > 0; })[0], k = rx.nu[rx.sp.indexOf(p)];
+    var ev = (mine[p] || 0) / k;
+    return { code: ev < sol.ev ? "partial" : "other", ev: ev };
+  }
+
+  function render() {
+    var rx = RX[S.i], sol = solve(rx, S.before);
+    Array.prototype.forEach.call(document.querySelectorAll("#rxns button"), function (b, i) { b.setAttribute("aria-pressed", i === S.i ? "true" : "false"); });
+    document.getElementById("eqline").innerHTML = eqText(rx, true);
+    reactants(rx).forEach(function (f) { document.getElementById("bf-" + f).value = S.before[f]; document.getElementById("o-bf-" + f).textContent = String(S.before[f]); });
+    rx.sp.forEach(function (f) { document.getElementById("o-af-" + f).textContent = String(S.mine[f]); });
+    box(svB, rx.sp, S.before, { seed: 11 + S.i, W: 300, H: 230, s: 1.3, empty: "Add reactant molecules" });
+    box(svA, rx.sp, S.mine, { seed: 29 + S.i, W: 300, H: 230, s: 1.3, empty: "Use the + buttons to build the after box" });
+    var nB = reactants(rx).reduce(function (t, f) { return t + S.before[f]; }, 0), nM = rx.sp.reduce(function (t, f) { return t + S.mine[f]; }, 0);
+    document.getElementById("bf-sub").textContent = nB + " molecules";
+    document.getElementById("af-sub").textContent = nM + " molecules";
+    // Tally
+    var els = elements(rx.sp), aB = atoms(rx.sp, S.before), aM = atoms(rx.sp, S.mine);
+    document.getElementById("tally").innerHTML = "<thead><tr><th>Atoms</th>" + els.map(function (e) { return "<th>" + e + "</th>"; }).join("") + "</tr></thead><tbody>" +
+      "<tr><td>Before box</td>" + els.map(function (e) { return "<td>" + (aB[e] || 0) + "</td>"; }).join("") + "</tr>" +
+      "<tr><td>Your after box</td>" + els.map(function (e) { var ok = (aB[e] || 0) === (aM[e] || 0); return '<td class="' + (ok ? "ok" : "no") + '">' + (aM[e] || 0) + (ok ? " ✓" : " ✗") + "</td>"; }).join("") + "</tr></tbody>";
+    // Readouts
+    var any = nB > 0 && reactants(rx).every(function (f) { return S.before[f] > 0; });
+    document.getElementById("r-1").innerHTML = !any ? "—" : sol.lim.length > 1 ? "Neither" : sub(sol.lim[0]);
+    document.getElementById("r-1s").textContent = !any ? "need both reactants" : sol.lim.length > 1 ? "exact ratio: both used up" : reactants(rx).map(function (f) { return plain(f) + " " + S.before[f] + " ÷ " + -rx.nu[rx.sp.indexOf(f)] + " = " + Lab.fmt(S.before[f] / -rx.nu[rx.sp.indexOf(f)], 2).replace(/\.00$/, ""); }).join(", ");
+    document.getElementById("r-2").textContent = String(sol.ev);
+    document.getElementById("r-2s").textContent = "times the equation can run";
+    var cons = els.every(function (e) { return (aB[e] || 0) === (aM[e] || 0); });
+    document.getElementById("r-3").innerHTML = nM ? (cons ? '<span class="pill lr">Yes</span>' : '<span class="pill infl">No</span>') : "—";
+    document.getElementById("r-3s").textContent = nM ? (cons ? "every element matches" : "some atoms appeared or vanished") : "after box is empty";
+    var c = classify(rx, S.before, S.mine, sol);
+    document.getElementById("r-4").innerHTML = !S.checked ? "Not checked" : c.code === "right" ? '<span class="pill lr">Correct</span>' : '<span class="pill infl">Not yet</span>';
+    document.getElementById("r-4s").textContent = !S.checked ? "press Check" : c.code === "right" ? "matches the equation" : "read the feedback below";
+    document.getElementById("story").innerHTML = story(rx, sol, c);
+  }
+
+  function story(rx, sol, c) {
+    var h = "", R = reactants(rx);
+    var prods = rx.sp.filter(function (f, i) { return rx.nu[i] > 0; });
+    if (!R.every(function (f) { return S.before[f] > 0; })) return "<p>Put some of each reactant in the before box. With one reactant missing, nothing can react, and the after box is the same as the before box.</p>";
+    if (!S.checked) {
+      h += "<p><b>Your task.</b> The before box holds " + R.map(function (f) { return S.before[f] + " " + sub(f); }).join(" and ") + ". Use the equation " + eqText(rx, true) + " to decide how many of each molecule the after box should hold, build it with the + and − buttons, then press <b>Check my diagram</b>.</p>";
+      h += "<p>Strategy: divide each reactant count by its coefficient to find the limiting reactant; that quotient (rounded down to whole molecules) is the number of reaction events. Multiply events by each coefficient. The atom table updates as you build.</p>";
+      return h;
+    }
+    if (c.code === "right") {
+      h += "<p><b>Correct.</b> " + R.map(function (f) { var i = rx.sp.indexOf(f); return plain(f) + ": " + S.before[f] + " ÷ " + -rx.nu[i] + " = " + Lab.fmt(S.before[f] / -rx.nu[i], 2).replace(/\.00$/, ""); }).join("; ") + ". " + (sol.lim.length > 1 ? "The reactants are in the exact ratio of the coefficients, so both are used up." : sub(sol.lim[0]) + " is limiting, so the reaction runs " + sol.ev + " times.") + "</p>";
+      var used = R.map(function (f) { return -rx.nu[rx.sp.indexOf(f)] * sol.ev + " " + sub(f); }).join(" + "), made = prods.map(function (f) { return rx.nu[rx.sp.indexOf(f)] * sol.ev + " " + sub(f); }).join(" + ");
+      var left = R.filter(function (f) { return sol.after[f] > 0; });
+      h += "<ul><li>Used: " + used + ". Made: " + made + ".</li>";
+      if (left.length) h += "<li>Left over: " + left.map(function (f) { return sol.after[f] + " " + sub(f); }).join(", ") + ". Excess reactant is unchanged and must be in the after box.</li>";
+      if (sol.frac) h += "<li>The quotient for the limiting reactant was not a whole number, so the leftover molecules are not enough for one more complete reaction. Real samples contain about 10²³ molecules, so this never matters in the lab; AP diagram questions choose numbers that divide evenly.</li>";
+      h += "<li>Reading the equation back off the diagram: " + used + " → " + made + " reduces to " + eqText(rx, true) + ". The leftover reactant is not part of the equation.</li></ul>";
+      h += "<p><b>AP answer:</b> the after box has the same atoms as the before box, the products in the ratio of the coefficients, and the excess reactant left unreacted.</p>";
+      return h;
+    }
+    if (c.code === "empty") return "<p><b>The after box is empty.</b> Atoms are never destroyed, so the after box must hold as many atoms of each element as the before box. Add the products and any leftover reactant.</p>";
+    if (c.code === "omit") {
+      return "<p><b>Almost.</b> Your products are right, but the excess reactant is missing. " + R.filter(function (f) { return sol.after[f] > 0; }).map(function (f) { return sol.after[f] + " " + sub(f); }).join(" and ") + " did not react and still has to be drawn. The atom table shows the atoms that went missing.</p><p><b>AP answer:</b> the excess reactant appears unchanged in the after box.</p>";
+    }
+    if (c.code === "atoms") {
+      return "<p><b>Atoms are not conserved.</b> " + c.bad.map(function (e) { return e + ": " + (c.aB[e] || 0) + " before, " + (c.aM[e] || 0) + " after"; }).join("; ") + ". A reaction rearranges atoms; it cannot create or destroy them. Check the limiting reactant and multiply the number of events by each coefficient.</p><p><b>AP answer:</b> count each element in both boxes; the counts must match.</p>";
+    }
+    if (c.code === "partial") {
+      return "<p><b>Atoms are conserved, but the reaction stopped early.</b> Your box shows the reaction running " + Lab.fmt(c.ev, 1).replace(/\.0$/, "") + " times, while there is enough limiting reactant for " + sol.ev + ". " + (R.every(function (f) { return S.mine[f] > 0; }) ? "Both reactants are still present, so more reaction could happen." : "") + " A reaction that goes to completion continues until the limiting reactant runs out.</p><p><b>AP answer:</b> unless the question describes equilibrium, the limiting reactant is fully consumed.</p>";
+    }
+    return "<p><b>Atoms are conserved, but the amounts do not match the equation.</b> Recheck the limiting reactant and the number of reaction events.</p>";
+  }
+
+  RX.forEach(function (rx, i) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = eqText(rx, false); b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { setRx(i); });
+    document.getElementById("rxns").appendChild(b);
+  });
+  document.getElementById("check").addEventListener("click", function () { S.checked = true; render(); });
+  document.getElementById("clear").addEventListener("click", function () { RX[S.i].sp.forEach(function (f) { S.mine[f] = 0; }); S.checked = false; render(); });
+  document.getElementById("answer").addEventListener("click", function () { var sol = solve(RX[S.i], S.before); RX[S.i].sp.forEach(function (f) { S.mine[f] = sol.after[f]; }); S.checked = true; render(); });
+  setRx(0);
+
+  // ---------- Part B: pick the correct diagram ----------
+  // Each option lists after-box counts; ok marks the correct one; why explains the error. Counts are checked in testing.
+  var CH = [
+    { rx: 0, before: { H2: 5, O2: 2 }, q: "Hydrogen and oxygen react completely according to the equation. Which box shows the contents after the reaction?",
+      opts: [
+        { c: { H2O: 4 }, why: "Four H₂O is the right amount of product, but the extra H₂ molecule vanished. H atoms: 10 before, 8 after." },
+        { c: { H2O: 5 }, why: "This treats H₂ as limiting. Five H₂O would need 5 O atoms, but only 4 were in the before box." },
+        { c: { H2O: 4, H2: 1 }, ok: 1, why: "O₂ is limiting (2 ÷ 1 = 2 events versus 5 ÷ 2 = 2.5). Two events make 4 H₂O and use 4 H₂, leaving 1 H₂. H: 10 = 10; O: 4 = 4." },
+        { c: { H2O: 2, H2: 3, O2: 1 }, why: "Atoms are conserved, but the reaction stopped after one event while both reactants remain. The question says the reaction goes to completion." }
+      ] },
+    { rx: 1, before: { N2: 3, H2: 6 }, q: "Nitrogen and hydrogen react completely to form ammonia. Which box shows the contents after the reaction?",
+      opts: [
+        { c: { NH3: 2, N2: 2, H2: 3 }, why: "Atoms are conserved, but only one reaction event happened. There is enough H₂ for two." },
+        { c: { NH3: 4, N2: 1 }, ok: 1, why: "H₂ is limiting: 6 ÷ 3 = 2 events, versus 3 ÷ 1 = 3 for N₂. Two events make 4 NH₃ and use 2 N₂, leaving 1 N₂. N: 6 = 6; H: 12 = 12." },
+        { c: { NH3: 6 }, why: "This treats N₂ as limiting. Six NH₃ would need 18 H atoms, but only 12 were in the before box." },
+        { c: { NH3: 4 }, why: "The product count is right, but the leftover N₂ is missing. N atoms: 6 before, 4 after." }
+      ] },
+    { rx: 3, before: { CH4: 3, O2: 4 }, q: "Methane burns completely in the oxygen shown. Which box shows the contents after the reaction?",
+      opts: [
+        { c: { CO2: 3, H2O: 6 }, why: "This burns all three CH₄, which would need 6 O₂. Only 4 O₂ are present. O atoms: 8 before, 12 after." },
+        { c: { CO2: 2, H2O: 2, CH4: 1 }, why: "The coefficient of H₂O was ignored: two events make 4 H₂O, not 2. H atoms: 12 before, 8 after." },
+        { c: { CO2: 2, H2O: 4 }, why: "The products are right, but the unburned CH₄ molecule is missing. C atoms: 3 before, 2 after." },
+        { c: { CO2: 2, H2O: 4, CH4: 1 }, ok: 1, why: "O₂ is limiting: 4 ÷ 2 = 2 events, versus 3 ÷ 1 = 3 for CH₄. Two events make 2 CO₂ and 4 H₂O, leaving 1 CH₄. C 3, H 12, O 8 on both sides." }
+      ] },
+    { rx: 2, before: { CO: 4, O2: 3 }, q: "Carbon monoxide reacts completely with oxygen. Which box shows the contents after the reaction?",
+      opts: [
+        { c: { CO2: 4, O2: 1 }, ok: 1, why: "CO is limiting: 4 ÷ 2 = 2 events, versus 3 ÷ 1 = 3 for O₂. Two events make 4 CO₂ and use 2 O₂, leaving 1 O₂. C: 4 = 4; O: 10 = 10." },
+        { c: { CO2: 7 }, why: "Seven molecules before and seven after: this conserves molecules instead of atoms. C atoms: 4 before, 7 after." },
+        { c: { CO2: 2, CO: 2, O2: 2 }, why: "Atoms are conserved, but only one event happened while both reactants remain." },
+        { c: { CO2: 4 }, why: "The CO₂ count is right, but the leftover O₂ is missing. O atoms: 10 before, 8 after." }
+      ] }
+  ];
+  var P = { i: 0, picked: {}, right: {} };
+  function renderChal() {
+    var ch = CH[P.i], rx = RX[ch.rx];
+    document.getElementById("chal-n").textContent = "Challenge " + (P.i + 1) + " of " + CH.length;
+    document.getElementById("chal-eq").innerHTML = eqText(rx, true);
+    document.getElementById("chal-q").textContent = ch.q;
+    box(document.getElementById("chal-before"), rx.sp, ch.before, { seed: 5 + P.i, W: 240, H: 190, s: 1.2 });
+    var pick = P.picked[P.i];
+    var wrap = document.getElementById("choices"); wrap.innerHTML = "";
+    ch.opts.forEach(function (o, j) {
+      var b = document.createElement("button"); b.type = "button"; b.className = "choice";
+      var lab = String.fromCharCode(65 + j);
+      b.setAttribute("aria-label", "Box " + lab + ": " + rx.sp.filter(function (f) { return o.c[f]; }).map(function (f) { return o.c[f] + " " + f; }).join(", "));
+      var s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); s.setAttribute("aria-hidden", "true");
+      b.appendChild(s);
+      var t = document.createElement("span"); t.textContent = "Box " + lab; b.appendChild(t);
+      box(s, rx.sp, o.c, { seed: 40 + j + 7 * P.i, W: 240, H: 190, s: 1.2 });
+      if (pick != null) { b.disabled = true; if (o.ok) b.classList.add("right"); else if (j === pick) b.classList.add("wrong"); }
+      b.addEventListener("click", function () { if (P.picked[P.i] != null) return; P.picked[P.i] = j; P.right[P.i] = !!o.ok; renderChal(); });
+      wrap.appendChild(b);
+    });
+    var why = document.getElementById("chal-why");
+    if (pick == null) why.innerHTML = "<p>Pick the box that matches. Check atoms first, then the limiting reactant, then the leftovers.</p>";
+    else why.innerHTML = "<p><b>" + (ch.opts[pick].ok ? "Correct." : "Not this one.") + "</b> " + ch.opts.map(function (o, j) { return "<b>Box " + String.fromCharCode(65 + j) + (o.ok ? " (correct)" : "") + ":</b> " + o.why; }).join("</p><p>") + "</p>";
+    var done = Object.keys(P.picked).length, right = Object.keys(P.right).filter(function (k) { return P.right[k]; }).length;
+    document.getElementById("chal-score").textContent = right + " / " + done + " correct";
+    document.getElementById("prev").disabled = P.i === 0;
+    document.getElementById("next").disabled = P.i === CH.length - 1;
+  }
+  document.getElementById("prev").addEventListener("click", function () { if (P.i > 0) { P.i--; renderChal(); } });
+  document.getElementById("next").addEventListener("click", function () { if (P.i < CH.length - 1) { P.i++; renderChal(); } });
+  renderChal();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "A rigid container holds 6 molecules of H₂ and 4 molecules of O₂. They react completely according to 2H₂ + O₂ → 2H₂O. Which describes the contents of the container after the reaction?",
+      o: ["6 H₂O and 1 O₂", "6 H₂O only", "4 H₂O, 2 H₂, and 2 O₂", "8 H₂O only"], c: 0,
+      w: "H₂: 6 ÷ 2 = 3 events; O₂: 4 ÷ 1 = 4. H₂ is limiting, so 3 events make 6 H₂O and use 3 O₂, leaving 1 O₂. Check O: 8 before, 6 + 2 = 8 after. Choice B drops the excess O₂; choice D treats O₂ as limiting and would need 16 H atoms." },
+    { s: "A before box has 4 N₂ and 9 H₂ molecules. After N₂ + 3H₂ → 2NH₃ goes to completion, how many NH₃ molecules and how many leftover molecules are present?",
+      o: ["8 NH₃; 1 N₂ left", "6 NH₃; 1 N₂ left", "6 NH₃; 3 H₂ left", "9 NH₃; no leftovers"], c: 1,
+      w: "N₂: 4 ÷ 1 = 4 events; H₂: 9 ÷ 3 = 3 events. H₂ is limiting, so 3 events make 6 NH₃ and use 3 N₂, leaving 1 N₂. Check: N 8 = 6 + 2; H 18 = 18. Choice A treats N₂ as limiting, which would need 12 H₂." },
+    { s: "A particle diagram shows 4 CO and 4 O₂ molecules before a reaction, and 4 CO₂ and 2 O₂ molecules after. Which balanced equation is represented?",
+      o: ["4CO + 4O₂ → 4CO₂ + 2O₂", "CO + O₂ → CO₂", "CO + 2O₂ → CO₂ + O₂", "2CO + O₂ → 2CO₂"], c: 3,
+      w: "Only 2 O₂ were used (4 − 2), along with 4 CO, to make 4 CO₂. So 4CO + 2O₂ → 4CO₂, which reduces to 2CO + O₂ → 2CO₂. Choice A includes the leftover O₂ on both sides and is not reduced. Choice B is not balanced for O." },
+    { s: "Which statement must be true about any correct before-and-after particle diagram for a chemical reaction?",
+      o: ["The number of molecules is the same in both boxes.", "The number of atoms of each element is the same in both boxes.", "Every reactant molecule is used up.", "The after box contains only product molecules."], c: 1,
+      w: "Atoms are conserved, so each element's count matches. Molecules are not conserved (2H₂ + O₂ → 2H₂O turns 3 molecules into 2), and an excess reactant leaves unreacted molecules, which rules out C and D." },
+    { s: "A box contains 3 CH₄ and 8 O₂ molecules, which react completely by CH₄ + 2O₂ → CO₂ + 2H₂O. How many total molecules are in the box afterward?",
+      o: ["9", "11", "12", "17"], c: 1,
+      w: "CH₄: 3 ÷ 1 = 3 events; O₂: 8 ÷ 2 = 4. CH₄ is limiting: 3 events make 3 CO₂ and 6 H₂O and use 6 O₂, leaving 2 O₂. Total = 3 + 6 + 2 = 11. This reaction keeps the number of molecules the same (1 + 2 → 1 + 2), so 11 before and 11 after. Choice A forgets the leftover O₂." },
+    { s: "A student draws the product of 2H₂ + O₂ → 2H₂O as separate H₂ molecules sitting next to single O atoms. What is wrong with the drawing?",
+      o: ["It does not conserve hydrogen atoms.", "It shows too many molecules.", "Water molecules should be drawn as one O atom bonded to two H atoms; the drawing shows a mixture, not a new substance.", "Oxygen should be drawn as O₂ in the product."], c: 2,
+      w: "A particle diagram must show how atoms are bonded. H₂ next to a lone O atom is not H₂O; it is a mixture of different species. The atom count may well be right, so choice A misses the actual error." },
+    { s: "Solid AgCl forms when solutions of AgNO₃ and NaCl are mixed in the exact 1 : 1 ratio. Which description matches a correct particle diagram of the mixture after the reaction (water not shown)?",
+      o: ["Ag⁺ and Cl⁻ ions spread throughout the solution, with Na⁺ and NO₃⁻ clustered at the bottom", "A cluster of Ag⁺ and Cl⁻ ions at the bottom, with Na⁺ and NO₃⁻ ions spread through the solution in equal numbers", "AgCl molecules spread through the solution with Na⁺ and NO₃⁻ ions", "Ag, Cl, Na, N, and O atoms all spread out separately"], c: 1,
+      w: "The precipitate is an ionic solid, drawn as a cluster of alternating Ag⁺ and Cl⁻ ions. The spectator ions stay dissolved and dispersed, one Na⁺ for every NO₃⁻. Choice C draws an ionic solid as separate molecules, and choice D breaks apart the polyatomic nitrate ion." },
+    { s: "Which change in a particle diagram represents a physical change rather than a chemical change?",
+      o: ["Closely packed H₂O molecules become widely separated H₂O molecules.", "H₂O molecules become H₂ and O₂ molecules.", "H₂ and Cl₂ molecules become HCl molecules.", "NO and O₂ molecules become NO₂ molecules."], c: 0,
+      w: "When packed water molecules spread out, the substance boils or evaporates: the H₂O molecules are unchanged, only the distances between them change. In B, C, and D the atoms are rearranged into new molecules, so those are chemical changes." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("4.3");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [4], topic: "4.3", compact: true, storageKey: "topic-4.3" });</script>
+</body>
+</html>

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mass Spectra of Elements Study Lab</title>
+<meta name="description" content="Read real mass spectra, change isotope abundances to see the average atomic mass shift, solve for an unknown abundance, and identify a mystery element from its spectrum.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.graph-card { align-content: start; }
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"], .els button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.els { display: flex; flex-wrap: wrap; gap: 6px; }
+.els button { padding: 4px 11px; font-size: .86rem; min-width: 44px; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.side .controls { grid-template-columns: 1fr; }
+input[type="range"]:disabled { opacity: .4; }
+.guess { display: flex; flex-wrap: wrap; gap: 8px; }
+.guess button.ok { background: var(--good-soft); border-color: var(--good); color: var(--good); font-weight: 600; }
+.guess button.no { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.calc .row span:last-child { font-family: var(--mono); font-size: .88rem; text-align: right; }
+.work { display: grid; gap: 10px; align-content: start; }
+.formula { font-size: .9rem; }
+.legend .l-avg { color: var(--c4); } .legend .l-tgt { color: var(--c2); }
+.hidden { display: none !important; }
+@media (max-width: 520px) { .calc .row { flex-direction: column; gap: 2px; } .calc .row span:last-child { text-align: left; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 1 · Topic 1.2</span>
+  <h1>Mass Spectra of Elements Study Lab</h1>
+  <p class="lede">Most elements are a mix of isotopes: atoms with the same number of protons but different numbers of neutrons. A mass spectrometer sorts the atoms by mass and shows how common each isotope is. The atomic mass on the periodic table is the weighted average of those isotopes. Pick an element, change the abundances, and see how the average moves.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The mass spectrum builder</h2>
+    <p>Each bar is one isotope: its position is the isotope's mass, its height is how common it is. The magenta line marks the weighted average atomic mass. Isotope masses and natural abundances are rounded values from standard IUPAC/NIST tables.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Mass spectrum <small id="sp-sub"></small></h3>
+      <svg class="chart" id="spec" role="img" aria-label="Mass spectrum: bars at each isotope's mass with heights equal to relative abundance, and a line at the average atomic mass"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Element</div>
+        <div class="els" id="els"></div>
+      </div>
+      <div class="group">
+        <span class="tag" id="ymode-lbl">Vertical axis</span>
+        <div class="seg" role="group" aria-labelledby="ymode-lbl">
+          <button type="button" id="y-pct" aria-pressed="true">% abundance</button>
+          <button type="button" id="y-rel" aria-pressed="false">Relative to tallest peak</button>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-ab">Abundance of the lighter isotope <output id="o-ab"></output></label>
+          <input type="range" id="s-ab" min="0" max="100" step="0.5">
+          <span class="hint" id="ab-hint">Works for elements with two isotopes</span>
+        </div>
+      </div>
+      <div><button type="button" id="btn-nat">Back to natural abundance</button></div>
+      <div class="group hidden" id="guess-box">
+        <div class="tag">Which element is it?</div>
+        <div class="guess" id="guess"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card group">
+    <div class="tag">Exam-style cases</div>
+    <div class="scenarios" id="sc"></div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-ad">Isotope peaks</span><span class="l-avg">Weighted average mass</span><span class="l-tgt" id="lg-tgt">Periodic table value (target)</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Weighted average mass</div><div class="v" id="r-avg"></div><div class="sub" id="r-avg2"></div></div>
+    <div class="stat"><div class="k">Periodic table value</div><div class="v" id="r-pt"></div><div class="sub" id="r-pt2"></div></div>
+    <div class="stat"><div class="k">Most abundant isotope</div><div class="v" id="r-max"></div><div class="sub" id="r-max2"></div></div>
+    <div class="stat"><div class="k">Closest element by mass</div><div class="v" id="r-near"></div><div class="sub" id="r-near2"></div></div>
+  </div>
+
+  <div class="two">
+    <div class="card work">
+      <h3>Show your work</h3>
+      <div><span class="formula">average mass = Σ (isotope mass × fractional abundance)</span></div>
+      <div class="calc" id="calc"></div>
+    </div>
+    <div class="story" id="story" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Same Z, different A</span><h3>Isotopes</h3><p>Isotopes of an element have the same number of protons (so they are the same element) but different numbers of neutrons, so their masses differ. Chlorine-35 has 17 protons and 18 neutrons; chlorine-37 has 17 protons and 20 neutrons.</p></div>
+    <div class="card"><span class="tag">Reading the graph</span><h3>What a mass spectrum shows</h3><p>The horizontal axis is the mass of each isotope (in amu, or mass-to-charge ratio). The height of each peak is that isotope's relative abundance. The number of peaks is the number of naturally occurring isotopes.</p></div>
+    <div class="card"><span class="tag">Σ mass × fraction</span><h3>Weighted average</h3><p>Average atomic mass = Σ (mass of isotope × fractional abundance). Convert percents to decimals first (75.76% → 0.7576). The average always lies between the lightest and heaviest isotope.</p></div>
+    <div class="card"><span class="tag">Closer to the tallest peak</span><h3>Estimate before you calculate</h3><p>The average sits closest to the most abundant isotope. Chlorine is mostly Cl-35, so its average (35.45) is much nearer 35 than 37. Bromine is about half Br-79 and half Br-81, so its average (79.90) sits near the middle.</p></div>
+    <div class="card"><span class="tag">No atom weighs 35.45 amu</span><h3>The average is not a real atom</h3><p>Every chlorine atom has a mass near 35 or near 37 amu. The 35.45 on the periodic table describes a large natural sample, which is why it is the number used for molar mass.</p></div>
+    <div class="card"><span class="tag">x and 1 − x</span><h3>Solving for an abundance</h3><p>For two isotopes, let x be the fraction of one: average = m₁x + m₂(1 − x). Solve for x. The two fractions must add to 1, so the other isotope is 1 − x.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Isotope data used on this page</h2>
+    <p>You do not need to memorize these. On the exam the spectrum or a table gives you the masses and abundances. Notice how each average sits next to the tallest peak.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Element</th><th>Isotopes (mass in amu, % abundance)</th><th>Weighted average</th><th>Periodic table</th></tr></thead>
+    <tbody id="iso-tbl"></tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Mass spectra on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write the setup: (34.97)(0.7576) + (36.97)(0.2424) = 35.45 amu. Show each product, then the sum.</li>
+        <li>Convert percents to decimals, and check that the fractions add to 1 (or the percents to 100).</li>
+        <li>When asked to explain why the average is closer to one mass, say that isotope is <b>more abundant</b>, so it contributes more to the weighted average.</li>
+        <li>To identify an element, compute the weighted average and match it to the periodic table. Identity comes from the average mass here, because the spectrum does not show the number of protons directly.</li>
+        <li>For an unknown abundance, set up average = m₁x + m₂(1 − x), solve for x, and report both percents.</li>
+        <li>Explain different peaks with "different numbers of <b>neutrons</b>." Same element means same number of protons.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Taking a simple average of the isotope masses. (35 + 37) ÷ 2 = 36, not 35.45: the abundances matter.</li>
+        <li>Multiplying by the percent instead of the fraction, which gives an answer 100 times too large.</li>
+        <li>Saying isotopes differ in protons or electrons. A different number of protons is a different element.</li>
+        <li>Reading the tallest peak as the average atomic mass. The tallest peak is the most common isotope.</li>
+        <li>Assuming an element has one isotope because its atomic mass is close to a whole number. Check the spectrum.</li>
+        <li>Swapping x and 1 − x when solving for abundance. Check: the more abundant isotope must be the one closer to the average.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 1.2. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-1.html">Unit 1 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  // Isotope masses (amu) and natural abundances (%), rounded from IUPAC/NIST tables.
+  var ISO = {
+    Li: [[6, 6.015, 7.59], [7, 7.016, 92.41]],
+    B:  [[10, 10.013, 19.9], [11, 11.009, 80.1]],
+    Ne: [[20, 19.992, 90.48], [21, 20.994, 0.27], [22, 21.991, 9.25]],
+    Mg: [[24, 23.985, 78.99], [25, 24.986, 10.00], [26, 25.983, 11.01]],
+    Si: [[28, 27.977, 92.23], [29, 28.976, 4.68], [30, 29.974, 3.09]],
+    Cl: [[35, 34.969, 75.76], [37, 36.966, 24.24]],
+    K:  [[39, 38.964, 93.258], [40, 39.964, 0.012], [41, 40.962, 6.730]],
+    Cu: [[63, 62.930, 69.15], [65, 64.928, 30.85]],
+    Zn: [[64, 63.929, 49.17], [66, 65.926, 27.73], [67, 66.927, 4.04], [68, 67.925, 18.45], [70, 69.925, 0.61]],
+    Ga: [[69, 68.926, 60.11], [71, 70.925, 39.89]],
+    Br: [[79, 78.918, 50.69], [81, 80.916, 49.31]]
+  };
+  var ORDER = ["Li", "B", "Ne", "Mg", "Si", "Cl", "K", "Cu", "Zn", "Ga", "Br"];
+  var SUPD = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+  function sup(n) { return String(n).split("").map(function (c) { return SUPD[+c]; }).join(""); }
+
+  var S = { el: "Cl", ab: null, y: "pct", key: "cl", target: false, mystery: false, guessed: null };
+
+  var SC = [
+    { key: "cl", name: "Chlorine: why 35.45?", el: "Cl" },
+    { key: "br", name: "Bromine: two nearly equal peaks", el: "Br" },
+    { key: "mg", name: "Magnesium: three isotopes", el: "Mg" },
+    { key: "cu", name: "Solve for abundance: copper", el: "Cu", target: true, ab: 50 },
+    { key: "b", name: "Solve for abundance: boron", el: "B", target: true, ab: 50 },
+    { key: "myst", name: "Mystery spectrum", mystery: true }
+  ];
+
+  function isotopes(s) {
+    var iso = ISO[s.el].map(function (x) { return { A: x[0], m: x[1], p: x[2] }; });
+    if (iso.length === 2 && s.ab != null) { iso[0].p = s.ab; iso[1].p = 100 - s.ab; }
+    return iso;
+  }
+  function model(s) {
+    var iso = isotopes(s), avg = 0, tot = 0;
+    iso.forEach(function (i) { avg += i.m * i.p / 100; tot += i.p; });
+    var maxI = iso.reduce(function (a, b) { return b.p > a.p ? b : a; });
+    var near = null;
+    Object.keys(Lab.ELEMENTS).forEach(function (z) { var e = Lab.ELEMENTS[z]; if (!near || Math.abs(e.m - avg) < Math.abs(near.m - avg)) near = e; });
+    var nat = ISO[s.el].reduce(function (a, x) { return a + x[1] * x[2] / 100; }, 0);
+    return { iso: iso, avg: avg, maxI: maxI, near: near, nat: nat, el: Lab.BY_SYMBOL[s.el], two: iso.length === 2 };
+  }
+  function pct(v) { return (v >= 10 ? v.toFixed(1) : v >= 1 ? v.toFixed(2) : v.toFixed(v < 0.1 ? 3 : 2)) + "%"; }
+
+  // ---------- Spectrum ----------
+  var svg = document.getElementById("spec");
+  function draw(m, s) {
+    var lo = Math.floor(m.iso[0].A) - 1.5, hi = m.iso[m.iso.length - 1].A + 1.5;
+    var ticks = []; for (var t = Math.ceil(lo); t <= hi; t++) ticks.push(t);
+    var maxP = Math.max.apply(null, m.iso.map(function (i) { return i.p; }));
+    var yv = function (p) { return s.y === "pct" ? p : (maxP > 0 ? p / maxP * 100 : 0); };
+    var F = Lab.frame(svg, { x: [lo, hi], y: [0, 118], xLabel: "Mass (amu)", yLabel: s.y === "pct" ? "Abundance (%)" : "Relative intensity",
+      xTicks: ticks, yTicks: [0, 20, 40, 60, 80, 100], fmtX: function (v) { return v; }, fmtY: function (v) { return v; }, width: 460, height: 330 });
+    if (s.target) {
+      Lab.line(F, [[m.nat, 0], [m.nat, 112]], "var(--c2)", 2, "6 4");
+      Lab.tag(F, m.nat, 114, "target " + m.nat.toFixed(2), "var(--c2)", "middle");
+    }
+    var sym = s.mystery && !s.guessed ? "X" : s.el;
+    m.iso.forEach(function (i) {
+      var h = yv(i.p);
+      Lab.rect(F, i.m - 0.12, 0, i.m + 0.12, Math.max(h, 0), "var(--accent)", 1);
+      if (h < 1.2) Lab.rect(F, i.m - 0.12, 0, i.m + 0.12, 1.2, "var(--accent)", 0.5);
+      Lab.tag(F, i.m, Math.max(h, 1.2) + 9, sup(i.A) + sym, "var(--ink)", "middle");
+      Lab.tag(F, i.m, Math.max(h, 1.2) + 2.5, s.y === "pct" ? pct(i.p) : Math.round(h), "var(--accent)", "middle");
+    });
+    var ay = s.target ? 100 : 108;
+    Lab.line(F, [[m.avg, 0], [m.avg, ay - 6]], "var(--c4)", 2.5, "3 3");
+    var anchor = m.avg - lo < (hi - lo) * 0.25 ? "start" : m.avg - lo > (hi - lo) * 0.75 ? "end" : "middle";
+    Lab.tag(F, m.avg, ay - 3, "average " + m.avg.toFixed(2), "var(--c4)", anchor);
+  }
+
+  // ---------- Text ----------
+  function calcRows(m) {
+    var rows = m.iso.map(function (i) {
+      return '<div class="row"><span>' + sup(i.A) + (S.mystery && !S.guessed ? "X" : S.el) + ": " + i.m.toFixed(3) + " amu × " + (i.p / 100).toFixed(i.p < 1 ? 5 : 4) + "</span><span>" + (i.m * i.p / 100).toFixed(3) + " amu</span></div>";
+    }).join("");
+    return rows + '<div class="row"><span>Weighted average</span><span>' + m.avg.toFixed(2) + " amu</span></div>";
+  }
+  function story(m, s) {
+    var html = "", li = [], E = m.el, sym = s.mystery && !s.guessed ? "element X" : E.n.toLowerCase();
+    var natural = s.ab == null || Math.abs(s.ab - ISO[s.el][0][2]) < 0.01;
+    if (s.mystery && !s.guessed) {
+      html += "<p><b>Mystery spectrum.</b> Use the peaks to compute the weighted average, then match it to an atomic mass on the periodic table. Pick your answer in the panel.</p>";
+      li.push("The peaks are at " + m.iso.map(function (i) { return i.A; }).join(", ") + " amu, so the average must fall between " + m.iso[0].A + " and " + m.iso[m.iso.length - 1].A + ".");
+      li.push("The tallest peak is at " + m.maxI.A + " amu, so the average will be closest to " + m.maxI.A + ".");
+      html += "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
+      html += "<p><b>AP answer:</b> identify an element from a mass spectrum by computing the weighted average mass and matching it to the periodic table.</p>";
+      return html;
+    }
+    if (s.mystery) html += "<p><b>" + (s.guessed === s.el ? "Correct" : "Not quite") + ": it is " + E.n.toLowerCase() + ".</b> The weighted average, " + m.avg.toFixed(2) + " amu, matches " + E.s + " (" + E.m.toFixed(2) + ") on the periodic table.</p>";
+    else if (s.target) html += "<p><b>Solve for abundance: " + E.n.toLowerCase() + ".</b> The periodic table gives " + m.nat.toFixed(2) + " amu. Drag the slider until the magenta average lands on the green target, then check the algebra below.</p>";
+    else html += "<p><b>" + E.n + "</b> has " + m.iso.length + " naturally occurring isotopes. Every " + E.n.toLowerCase() + " atom has " + E.z + " protons; the isotopes differ only in their number of neutrons (" + m.iso.map(function (i) { return sup(i.A) + E.s + ": " + (i.A - E.z); }).join(", ") + ").</p>";
+    li.push("The weighted average is " + m.avg.toFixed(2) + " amu. It sits closest to " + sup(m.maxI.A) + E.s + " because that isotope is the most abundant (" + pct(m.maxI.p) + ").");
+    if (m.two) {
+      var a = m.iso[0], b = m.iso[1], simple = (a.m + b.m) / 2;
+      li.push("A simple average of the two masses would be " + simple.toFixed(2) + " amu. The real average is " + (Math.abs(m.avg - simple) < 0.05 ? "almost the same, because the two isotopes are nearly equally common." : (m.avg < simple ? "lower" : "higher") + " because the " + (m.avg < simple ? "lighter" : "heavier") + " isotope is more common."));
+      if (s.target) {
+        var x = (b.m - m.nat) / (b.m - a.m);
+        li.push("Algebra: " + m.nat.toFixed(3) + " = " + a.m.toFixed(3) + "x + " + b.m.toFixed(3) + "(1 − x), so x = (" + b.m.toFixed(3) + " − " + m.nat.toFixed(3) + ") ÷ (" + b.m.toFixed(3) + " − " + a.m.toFixed(3) + ") = " + x.toFixed(4) + ". That is " + (x * 100).toFixed(1) + "% " + sup(a.A) + E.s + " and " + ((1 - x) * 100).toFixed(1) + "% " + sup(b.A) + E.s + ".");
+        var off = m.avg - m.nat;
+        li.push(Math.abs(off) < 0.01 ? "<b>Match.</b> Your slider gives the periodic table value." : "Your average is " + Math.abs(off).toFixed(2) + " amu too " + (off > 0 ? "high: make the lighter isotope more abundant." : "low: make the lighter isotope less abundant."));
+      } else if (!natural) {
+        li.push("You changed the abundances from nature's values. With " + pct(a.p) + " " + sup(a.A) + E.s + ", the average is " + m.avg.toFixed(2) + " amu instead of " + m.nat.toFixed(2) + ". A sample like this would have a different molar mass.");
+      }
+    } else {
+      li.push("Three or more isotopes work the same way: multiply each mass by its fraction and add every product.");
+      var small = m.iso.filter(function (i) { return i.p < 1; });
+      if (small.length) li.push("The tiny peak" + (small.length > 1 ? "s" : "") + " (" + small.map(function (i) { return sup(i.A) + E.s + ", " + pct(i.p); }).join("; ") + ") barely change the average.");
+    }
+    if (m.near.s !== E.s) li.push("At this average the closest periodic-table mass is " + m.near.n + " (" + m.near.m.toFixed(2) + "), so a student identifying this sample by mass alone would name the wrong element.");
+    html += "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
+    html += "<p><b>AP answer:</b> average atomic mass = Σ(isotope mass × fractional abundance); the average is closest to the mass of the most abundant isotope, and no single atom has the average mass.</p>";
+    return html;
+  }
+
+  // ---------- Controls ----------
+  var abIn = document.getElementById("s-ab"), elBtns = {}, scBtns = {};
+  var guessBox = document.getElementById("guess-box"), guessEl = document.getElementById("guess");
+  function render() {
+    var m = model(S);
+    draw(m, S);
+    var hide = S.mystery && !S.guessed;
+    document.getElementById("sp-sub").textContent = hide ? "element X" : m.el.n;
+    Object.keys(elBtns).forEach(function (k) { elBtns[k].setAttribute("aria-pressed", !S.mystery && S.el === k ? "true" : "false"); });
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    document.getElementById("y-pct").setAttribute("aria-pressed", S.y === "pct" ? "true" : "false");
+    document.getElementById("y-rel").setAttribute("aria-pressed", S.y === "rel" ? "true" : "false");
+    abIn.disabled = !m.two || hide;
+    abIn.value = m.two ? m.iso[0].p : 50;
+    document.getElementById("o-ab").textContent = m.two ? sup(m.iso[0].A) + (hide ? "X" : S.el) + " " + pct(m.iso[0].p) : "n/a";
+    document.getElementById("ab-hint").textContent = m.two ? "The other isotope is 100% minus this" : "This element has more than two isotopes; pick a two-isotope element to drag";
+    document.getElementById("lg-tgt").style.display = S.target ? "" : "none";
+    guessBox.classList.toggle("hidden", !S.mystery);
+    document.getElementById("r-avg").textContent = m.avg.toFixed(2) + " amu";
+    document.getElementById("r-avg2").textContent = "from " + m.iso.length + " isotopes";
+    document.getElementById("r-pt").textContent = hide ? "?" : m.el.m.toFixed(2);
+    document.getElementById("r-pt2").textContent = hide ? "identify the element first" : m.el.n + ", Z = " + m.el.z;
+    document.getElementById("r-max").textContent = sup(m.maxI.A) + (hide ? "X" : S.el);
+    document.getElementById("r-max2").textContent = pct(m.maxI.p) + " of atoms";
+    document.getElementById("r-near").textContent = hide ? "?" : m.near.s;
+    document.getElementById("r-near2").textContent = hide ? "your job" : m.near.n + ", " + m.near.m.toFixed(2);
+    document.getElementById("calc").innerHTML = calcRows(m);
+    document.getElementById("story").innerHTML = story(m, S);
+  }
+  function setEl(el) { S.el = el; S.ab = null; S.target = false; S.mystery = false; S.guessed = null; S.key = null; render(); }
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = k; b.title = Lab.BY_SYMBOL[k].n; b.setAttribute("aria-label", Lab.BY_SYMBOL[k].n);
+    b.addEventListener("click", function () { setEl(k); });
+    document.getElementById("els").appendChild(b); elBtns[k] = b;
+  });
+  var lastMyst = null;
+  function startMystery() {
+    var pool = ORDER.filter(function (k) { return k !== lastMyst; });
+    var el = pool[Math.floor(Math.random() * pool.length)]; lastMyst = el;
+    S.el = el; S.ab = null; S.target = false; S.mystery = true; S.guessed = null; S.key = "myst";
+    // four choices: the answer plus three elements with nearby masses
+    var others = ORDER.filter(function (k) { return k !== el; }).sort(function (a, b) { return Math.abs(Lab.BY_SYMBOL[a].m - Lab.BY_SYMBOL[el].m) - Math.abs(Lab.BY_SYMBOL[b].m - Lab.BY_SYMBOL[el].m); }).slice(0, 2);
+    var pick = [el].concat(others);
+    var z = Lab.BY_SYMBOL[el].z, nb = Lab.ELEMENTS[z + 1] || Lab.ELEMENTS[z - 1];
+    if (pick.indexOf(nb.s) < 0) pick.push(nb.s);
+    pick.sort(function (a, b) { return Lab.BY_SYMBOL[a].m - Lab.BY_SYMBOL[b].m; });
+    guessEl.innerHTML = "";
+    pick.forEach(function (k) {
+      var b = document.createElement("button"); b.type = "button"; b.textContent = Lab.BY_SYMBOL[k].n + " (" + Lab.BY_SYMBOL[k].m.toFixed(2) + ")";
+      b.addEventListener("click", function () {
+        if (S.guessed) return;
+        S.guessed = k;
+        Array.prototype.forEach.call(guessEl.children, function (x) { x.disabled = true; });
+        b.classList.add(k === el ? "ok" : "no");
+        if (k !== el) Array.prototype.forEach.call(guessEl.children, function (x) { if (x.textContent.indexOf(Lab.BY_SYMBOL[el].n) === 0) x.classList.add("ok"); });
+        render();
+      });
+      guessEl.appendChild(b);
+    });
+    render();
+  }
+  SC.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () {
+      if (x.mystery) { startMystery(); return; }
+      S.el = x.el; S.target = !!x.target; S.mystery = false; S.guessed = null; S.key = x.key;
+      S.ab = x.ab != null ? x.ab : null; render();
+    });
+    document.getElementById("sc").appendChild(b); scBtns[x.key] = b;
+  });
+  abIn.addEventListener("input", function () { S.ab = parseFloat(abIn.value); if (!S.target) S.key = null; render(); });
+  document.getElementById("btn-nat").addEventListener("click", function () { S.ab = null; render(); });
+  document.getElementById("y-pct").addEventListener("click", function () { S.y = "pct"; render(); });
+  document.getElementById("y-rel").addEventListener("click", function () { S.y = "rel"; render(); });
+  render();
+
+  // reference table
+  document.getElementById("iso-tbl").innerHTML = ORDER.map(function (k) {
+    var avg = ISO[k].reduce(function (a, x) { return a + x[1] * x[2] / 100; }, 0);
+    return "<tr><td>" + Lab.BY_SYMBOL[k].n + "</td><td>" + ISO[k].map(function (x) { return sup(x[0]) + k + ": " + x[1].toFixed(3) + ", " + x[2] + "%"; }).join("; ") + "</td><td>" + avg.toFixed(2) + "</td><td><b>" + Lab.BY_SYMBOL[k].m.toFixed(2) + "</b></td></tr>";
+  }).join("");
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "An element has two isotopes: one with mass 10.01 amu (20.0% abundance) and one with mass 11.01 amu (80.0% abundance). What is the element?",
+      o: ["Neon", "Boron", "Carbon", "Sodium"], c: 1,
+      w: "Average = (10.01)(0.200) + (11.01)(0.800) = 2.002 + 8.808 = 10.81 amu, which is boron. A simple average of the two masses (10.51) ignores the abundances and matches nothing well." },
+    { s: "The mass spectrum of an element shows two peaks: 60% of the atoms have mass 69 amu and 40% have mass 71 amu. Which statement is correct?",
+      o: ["The average atomic mass is 70 amu, because there are two isotopes.", "Most atoms of the element have a mass of 69.8 amu.", "The element's atoms differ in their numbers of protons.", "The average atomic mass is closer to 69 amu than to 71 amu."], c: 3,
+      w: "Average = 69(0.60) + 71(0.40) = 69.8 amu, closer to 69 because the 69-amu isotope is more abundant. Choice B is the classic trap: no atom has the average mass. Choice C is wrong because atoms of one element all have the same number of protons." },
+    { s: "Bromine has two isotopes, Br-79 (78.92 amu) and Br-81 (80.92 amu). The atomic mass of bromine is 79.90 amu. Which statement about the natural abundances is best supported?",
+      o: ["The two isotopes are nearly equally abundant, with Br-79 slightly more abundant.", "Br-81 is much more abundant than Br-79.", "Br-79 makes up about 90% of bromine atoms.", "Bromine atoms all have a mass of 79.90 amu."], c: 0,
+      w: "The midpoint of 78.92 and 80.92 is 79.92. The average, 79.90, is just below the midpoint, so the abundances are close to 50:50 with slightly more Br-79 (actually 50.7% and 49.3%). An abundance of 90% Br-79 would pull the average down to about 79.1." },
+    { s: "Gallium has two isotopes, Ga-69 (68.93 amu) and Ga-71 (70.92 amu). The average atomic mass of gallium is 69.72 amu. What is the percent abundance of Ga-69?",
+      o: ["39.7%", "50.0%", "60.3%", "69.7%"], c: 2,
+      w: "69.72 = 68.93x + 70.92(1 − x). So 69.72 = 70.92 − 1.99x, and x = 1.20 ÷ 1.99 = 0.603, or 60.3% Ga-69. Choice A is the abundance of Ga-71; it comes from swapping x and 1 − x. Check: the average is closer to 69, so Ga-69 must be the majority." },
+    { s: "Why does the periodic table list the atomic mass of chlorine as 35.45 amu even though no chlorine atom has that mass?",
+      o: ["Chlorine atoms gain electrons, which add 0.45 amu to each atom.", "35.45 amu is the weighted average of the masses of chlorine's naturally occurring isotopes.", "35.45 amu is the mass of the most common chlorine isotope.", "Some chlorine atoms have 17 protons and others have 18 protons."], c: 1,
+      w: "Natural chlorine is about 75.8% Cl-35 and 24.2% Cl-37. The weighted average is 35.45 amu. Choice C is wrong because the most common isotope has a mass of about 34.97 amu. Choice D describes a different element (argon has 18 protons)." },
+    { s: "The mass spectrum of magnesium shows three peaks, at 24, 25, and 26 amu. Which statement best explains why there are three peaks?",
+      o: ["Magnesium atoms occur with different numbers of neutrons.", "Magnesium atoms occur with different numbers of protons.", "Magnesium atoms lose different numbers of electrons in the spectrometer, producing ions of different mass.", "Magnesium forms three different compounds in the sample."], c: 0,
+      w: "The three peaks are three isotopes: Mg-24, Mg-25, and Mg-26. All have 12 protons; they have 12, 13, and 14 neutrons. Electrons have so little mass that losing one does not shift a peak by a whole amu, so choice C is wrong." },
+    { s: "A mass spectrum shows peaks at 24 amu (79%), 25 amu (10%), and 26 amu (11%). Which element produced the spectrum?",
+      o: ["Sodium", "Aluminum", "Silicon", "Magnesium"], c: 3,
+      w: "Average ≈ 24(0.79) + 25(0.10) + 26(0.11) = 18.96 + 2.50 + 2.86 = 24.32 amu, which matches magnesium (24.31). Sodium (22.99) is too light and aluminum (26.98) too heavy. Matching the tallest peak (24) alone is not enough; compute the average." },
+    { s: "A sample of an element is 7.6% atoms of mass 6 amu and 92.4% atoms of mass 7 amu. Which is the best estimate of the average atomic mass?",
+      o: ["6.08 amu", "6.50 amu", "6.92 amu", "7.00 amu"], c: 2,
+      w: "Average = 6(0.076) + 7(0.924) = 0.456 + 6.468 = 6.92 amu (lithium, 6.94 with exact isotope masses). Choice A comes from pairing the percents with the wrong masses. Choice B is the simple average, which ignores abundance." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("1.2");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [1], topic: "1.2", compact: true, storageKey: "topic-1.2" });</script>
+</body>
+</html>

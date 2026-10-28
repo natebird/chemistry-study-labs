@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stoichiometry Study Lab</title>
+<meta name="description" content="Mix reactants by mass, by solution volume, or for a gas product, watch the particles react, and follow every step from moles to limiting reactant, theoretical yield, leftover excess, and percent yield.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.group { display: grid; gap: 8px; }
+.controls.ctl3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ctl3 .ctl label { flex-wrap: wrap; }
+@media (max-width: 860px) { .controls.ctl3 { grid-template-columns: 1fr; } }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.btnrow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.pair { display: grid; grid-template-columns: minmax(0, 1fr) 30px minmax(0, 1fr); gap: 8px; align-items: center; width: 100%; max-width: 780px; margin: 0 auto; }
+.pair figure { margin: 0; display: grid; gap: 4px; }
+.pair figcaption { text-align: center; font-size: .86rem; color: var(--muted); }
+.pair .arr { text-align: center; font-size: 1.5rem; color: var(--muted); }
+.atomkey { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .82rem; color: var(--muted); }
+.atomkey span { display: inline-flex; align-items: center; gap: 5px; }
+.atomkey i { width: 14px; height: 14px; border-radius: 50%; display: inline-block; border: 1px solid var(--rule); }
+.bca table { min-width: 0; }
+.bca td, .bca th { text-align: right; font-variant-numeric: tabular-nums; }
+.bca td:first-child, .bca th:first-child { text-align: left; }
+.bca .lim { color: var(--bad); font-weight: 600; }
+.bca .tgt { color: var(--good); font-weight: 600; }
+ol.steps li { font-size: .95rem; }
+ol.steps .m { font-family: var(--mono); font-size: .86rem; white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 520px) { .bca td, .bca th { padding: 8px 6px; font-size: .86rem; } }
+@media (max-width: 620px) { .pair { grid-template-columns: 1fr; } .pair .arr { transform: rotate(90deg); line-height: 1; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 4 · Topic 4.5</span>
+  <h1>Stoichiometry Study Lab</h1>
+  <p class="lede">The coefficients of a balanced equation are a recipe in moles. Convert what you have into moles, compare it to the recipe to find the limiting reactant, and every other amount follows: product made, excess left over, gas volume, solution volume. Mix reactants below, watch the particles, and read the worked solution as it updates.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The reactant mixer</h2>
+    <p>Pick a reaction and set the amounts. The sliders move in steps chosen so the particle picture stays exact: each drawn particle stands for a fixed number of moles (shown under the boxes). All amounts are illustrative. Molar masses come from the AP periodic table; gas volumes use R = 0.08206 L·atm/(mol·K).</p>
+  </div>
+
+  <div class="card" style="display:grid; gap:14px;">
+    <div class="group">
+      <div class="tag">Reaction</div>
+      <div class="scenarios" id="rxns"></div>
+    </div>
+    <div class="eqn" id="eqline"></div>
+    <div class="controls ctl3" id="ctl"></div>
+    <div class="btnrow"><button type="button" id="exact">Mix in the exact mole ratio</button><button type="button" id="dflt">Back to the starting amounts</button></div>
+  </div>
+
+  <div class="card graph-card">
+    <h3>Particle view <small id="pv-sub"></small></h3>
+    <div class="pair">
+      <figure><svg class="chart" id="sv-before" role="img" aria-label="Particles before the reaction"></svg><figcaption id="cap-b"></figcaption></figure>
+      <div class="arr" aria-hidden="true">→</div>
+      <figure><svg class="chart" id="sv-after" role="img" aria-label="Particles after the reaction"></svg><figcaption id="cap-a"></figcaption></figure>
+    </div>
+    <div class="atomkey" id="key"></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Limiting reactant</div><div class="v" id="r-1"></div><div class="sub" id="r-1s"></div></div>
+    <div class="stat"><div class="k">Theoretical yield</div><div class="v" id="r-2"></div><div class="sub" id="r-2s"></div></div>
+    <div class="stat"><div class="k">Excess reactant left</div><div class="v" id="r-3"></div><div class="sub" id="r-3s"></div></div>
+    <div class="stat"><div class="k">Percent yield</div><div class="v" id="r-4"></div><div class="sub" id="r-4s"></div></div>
+  </div>
+
+  <div class="two">
+    <div class="card" style="display:grid; gap:10px; align-content:start;">
+      <h3>Before, change, after <small style="font-family:var(--body); font-weight:400; color:var(--muted); font-size:.82rem;">moles</small></h3>
+      <div class="tbl-wrap bca"><table id="bca"></table></div>
+      <p class="hint" style="font-size:.82rem; color:var(--muted);">The change column is the limiting reactant's moles times each mole ratio. Red marks the limiting reactant, green the product the yield is based on.</p>
+    </div>
+    <div class="card" style="display:grid; gap:10px; align-content:start;">
+      <h3>Show your work</h3>
+      <ol class="steps" id="steps"></ol>
+    </div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Moles are the hub</span><h3>Always go through moles</h3><p>Coefficients relate moles, not grams or liters. Convert every given amount to moles first: mass ÷ molar mass, molarity × volume in liters, or PV/RT for a gas. Convert back to the units asked for only at the end.</p></div>
+    <div class="card"><span class="tag">Mole ratio</span><h3>The bridge between substances</h3><p>Moles of B = moles of A × (coefficient of B ÷ coefficient of A). This is the only step that uses the balanced equation, so the equation must be balanced before you start.</p></div>
+    <div class="card"><span class="tag">Smallest n ÷ coefficient</span><h3>Limiting reactant</h3><p>Divide each reactant's moles by its coefficient. The smallest result is the limiting reactant: it runs out first and sets how much product forms. The reactant with the larger mass is not necessarily in excess.</p></div>
+    <div class="card"><span class="tag">Leftovers</span><h3>Excess reactant</h3><p>The excess reactant left = moles you started with − moles used, where moles used = moles of limiting reactant × the mole ratio. Convert to grams if asked.</p></div>
+    <div class="card"><span class="tag">Actual ÷ theoretical</span><h3>Percent yield</h3><p>Theoretical yield is the most product the limiting reactant can make. Percent yield = actual ÷ theoretical × 100%. Below 100% points to losses or incomplete reaction; above 100% means the product is impure or still wet.</p></div>
+    <div class="card"><span class="tag">PV = nRT and M = n/V</span><h3>Gas and solution stoichiometry</h3><p>For gases, n = PV/RT (T in kelvins); the reference sheet also gives 22.4 L/mol for an ideal gas at STP (273.15 K, 1.0 atm). For solutions, n = M × V with V in liters. Then use mole ratios as usual.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Conversion cheat sheet</h2>
+    <p>Every stoichiometry problem is a path through moles. Find the row for what you are given, convert to moles, cross with a mole ratio, and convert out.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Given or wanted</th><th>To moles</th><th>From moles</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td>Mass (g)</td><td>n = m ÷ molar mass</td><td>m = n × molar mass</td><td>9.00 g H₂O ÷ 18.02 g/mol = 0.499 mol</td></tr>
+      <tr><td>Solution (M, L)</td><td>n = M × V</td><td>V = n ÷ M</td><td>0.0250 L × 0.200 M = 5.00 × 10⁻³ mol</td></tr>
+      <tr><td>Gas (P, V, T)</td><td>n = PV ÷ RT</td><td>V = nRT ÷ P</td><td>(1.00 atm)(2.45 L) ÷ (0.08206 × 298 K) = 0.100 mol</td></tr>
+      <tr><td>Gas at STP</td><td>n = V ÷ 22.4 L/mol</td><td>V = n × 22.4 L/mol</td><td>0.500 mol × 22.4 L/mol = 11.2 L</td></tr>
+      <tr><td>Particles</td><td>n = N ÷ 6.022 × 10²³</td><td>N = n × 6.022 × 10²³</td><td>0.100 mol × 6.022 × 10²³ = 6.02 × 10²² molecules</td></tr>
+      <tr><td><b>Between substances</b></td><td colspan="2">n<sub>B</sub> = n<sub>A</sub> × (coefficient B ÷ coefficient A)</td><td>N₂ + 3H₂ → 2NH₃: 0.60 mol H₂ × (2 ÷ 3) = 0.40 mol NH₃</td></tr>
+      <tr><td><b>Percent yield</b></td><td colspan="2">actual ÷ theoretical × 100%</td><td>8.50 g ÷ 10.0 g × 100% = 85.0%</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Answering the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Show each conversion with units: "4.00 g H₂ × (1 mol / 2.016 g) = 1.98 mol H₂." Graders need to see the setup, not just the number.</li>
+        <li>Write the mole ratio explicitly, with both substance names: "× (2 mol H₂O / 2 mol H₂)."</li>
+        <li>When two reactant amounts are given, justify the limiting reactant: compare moles ÷ coefficients, or compute the product each reactant could make and take the smaller.</li>
+        <li>Report answers with the correct number of significant figures (usually set by the given data) and units.</li>
+        <li>Convert mL to L and °C to K before using M = n/V or PV = nRT.</li>
+        <li>For percent yield, divide actual by theoretical, not the other way around, and explain a value over 100% (impure or wet product).</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Using grams in a mole ratio: "4 g H₂ makes 4 g H₂O" is wrong; coefficients relate moles.</li>
+        <li>Picking the limiting reactant by smallest mass or smallest mole count without dividing by the coefficients.</li>
+        <li>Flipping the mole ratio (multiplying by 3/2 instead of 2/3).</li>
+        <li>Using 22.4 L/mol at conditions other than STP. At other conditions, use PV = nRT.</li>
+        <li>Forgetting to subtract the amount used when asked how much excess reactant remains.</li>
+        <li>Forgetting the subscript in solution problems: 0.10 M CaCl₂ is 0.20 M in Cl⁻.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 4.5. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-4.html">Unit 4 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = Lab.el, sig = Lab.sig;
+  var R_GAS = Lab.CONST.R;
+
+  // ---------- Particle glyphs ----------
+  var ATOM = {
+    H:  { r: 6, fill: "var(--surface)", stroke: "var(--ink)", text: "var(--ink)", name: "H" },
+    C:  { r: 8.5, fill: "var(--ink)", stroke: "var(--surface)", text: "var(--surface)", name: "C" },
+    N:  { r: 8.5, fill: "var(--accent)", stroke: "var(--surface)", text: "var(--surface)", name: "N" },
+    O:  { r: 8.5, fill: "var(--bad)", stroke: "var(--surface)", text: "var(--surface)", name: "O" },
+    Al: { r: 9, fill: "var(--c3)", stroke: "var(--surface)", text: "var(--surface)", name: "Al" },
+    Fe: { r: 9, fill: "var(--c1)", stroke: "var(--surface)", text: "var(--surface)", name: "Fe" },
+    Zn: { r: 9, fill: "var(--muted)", stroke: "var(--surface)", text: "var(--surface)", name: "Zn" },
+    Cl: { r: 9.5, fill: "var(--c2)", stroke: "var(--surface)", text: "var(--surface)", name: "Cl" },
+    Ag: { r: 9, fill: "var(--c4)", stroke: "var(--surface)", text: "var(--surface)", name: "Ag" }
+  };
+  var GLYPH = {
+    H2: [["H", -5.5, 0], ["H", 5.5, 0]], O2: [["O", -7, 0], ["O", 7, 0]], N2: [["N", -7, 0], ["N", 7, 0]],
+    H2O: [["O", 0, -2], ["H", -9.5, 5.5], ["H", 9.5, 5.5]],
+    NH3: [["N", 0, -2], ["H", -11, 4], ["H", 11, 4], ["H", 0, 11]],
+    CH4: [["C", 0, 0], ["H", -11, 0], ["H", 11, 0], ["H", 0, -11], ["H", 0, 11]],
+    CO2: [["C", 0, 0], ["O", -13, 0], ["O", 13, 0]],
+    Al: [["Al", 0, 0]], Fe: [["Fe", 0, 0]], Zn: [["Zn", 0, 0]],
+    Fe2O3: [["O", 0, -9], ["Fe", -9, 0], ["Fe", 9, 0], ["O", -8, 11], ["O", 8, 11]],
+    Al2O3: [["O", 0, -9], ["Al", -9, 0], ["Al", 9, 0], ["O", -8, 11], ["O", 8, 11]],
+    Hp: [["H", 0, 0, "H⁺"]], Clm: [["Cl", 0, 0, "Cl⁻"]], Zn2p: [["Zn", 0, 0, "Zn²⁺"]], Agp: [["Ag", 0, 0, "Ag⁺"]],
+    AgCl: [["Ag", -8, 0], ["Cl", 8.5, 0]]
+  };
+  function gR(k) { var r = 0; GLYPH[k].forEach(function (a) { r = Math.max(r, Math.hypot(a[1], a[2]) + ATOM[a[0]].r); }); return r; }
+  function drawGlyph(g, k, x, y) {
+    GLYPH[k].forEach(function (a) {
+      var A = ATOM[a[0]], cx = x + a[1], cy = y + a[2], lab = a[3] || a[0];
+      var r = a[3] && lab.length > 2 ? Math.max(A.r, 10) : A.r;
+      el("circle", { cx: cx, cy: cy, r: r, fill: A.fill, stroke: A.stroke, "stroke-width": 1.1 }, g);
+      el("text", { x: cx, y: cy + 3, "text-anchor": "middle", style: "font-size:" + (lab.length > 2 ? 7.5 : 8) + "px; font-weight:600; fill:" + A.text }, g, lab);
+    });
+  }
+  function rng(seed) { var s = seed; return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+
+  // ---------- Reactions ----------
+  // Each species: f formula, st state, nu coefficient (negative = reactant), g glyphs drawn per formula unit,
+  // inp: "mass" | "sol" (reactants only), M (molarity) for solutions. q = moles per drawn formula unit.
+  // A reactant slider moves in "units" of |nu| x q moles, so every reaction event in the picture is whole.
+  var RX = [
+    { name: "2H₂ + O₂ → 2H₂O", q: 0.25, tgt: 2, sp: [
+      { f: "H2", st: "g", nu: -2, g: ["H2"], inp: "mass", max: 6, d: 4 },
+      { f: "O2", st: "g", nu: -1, g: ["O2"], inp: "mass", max: 12, d: 3 },
+      { f: "H2O", st: "l", nu: 2, g: ["H2O"] }] },
+    { name: "N₂ + 3H₂ → 2NH₃", q: 0.5, tgt: 2, sp: [
+      { f: "N2", st: "g", nu: -1, g: ["N2"], inp: "mass", max: 10, d: 5 },
+      { f: "H2", st: "g", nu: -3, g: ["H2"], inp: "mass", max: 4, d: 3 },
+      { f: "NH3", st: "g", nu: 2, g: ["NH3"] }] },
+    { name: "CH₄ + 2O₂ → CO₂ + 2H₂O", q: 0.1, tgt: 2, sp: [
+      { f: "CH4", st: "g", nu: -1, g: ["CH4"], inp: "mass", max: 8, d: 5 },
+      { f: "O2", st: "g", nu: -2, g: ["O2"], inp: "mass", max: 6, d: 3 },
+      { f: "CO2", st: "g", nu: 1, g: ["CO2"] },
+      { f: "H2O", st: "g", nu: 2, g: ["H2O"] }] },
+    { name: "2Al + Fe₂O₃ → Al₂O₃ + 2Fe (thermite)", q: 0.1, tgt: 3, sp: [
+      { f: "Al", st: "s", nu: -2, g: ["Al"], inp: "mass", max: 6, d: 5 },
+      { f: "Fe2O3", st: "s", nu: -1, g: ["Fe2O3"], inp: "mass", max: 8, d: 3 },
+      { f: "Al2O3", st: "s", nu: 1, g: ["Al2O3"] },
+      { f: "Fe", st: "l", nu: 2, g: ["Fe"] }] },
+    { name: "Zn + 2HCl → ZnCl₂ + H₂ (gas product)", q: 0.01, tgt: 3, gas: true, sp: [
+      { f: "Zn", st: "s", nu: -1, g: ["Zn"], inp: "mass", max: 10, d: 6 },
+      { f: "HCl", st: "aq", nu: -2, g: ["Hp", "Clm"], inp: "sol", M: 1.00, max: 5, d: 4 },
+      { f: "ZnCl2", st: "aq", nu: 1, g: ["Zn2p", "Clm", "Clm"] },
+      { f: "H2", st: "g", nu: 1, g: ["H2"] }] },
+    { name: "AgNO₃ + NaCl → AgCl + NaNO₃ (two solutions)", q: 0.002, tgt: 2, sol: true, sp: [
+      { f: "AgNO3", st: "aq", nu: -1, g: ["Agp"], inp: "sol", M: 0.100, max: 10, d: 6 },
+      { f: "NaCl", st: "aq", nu: -1, g: ["Clm"], inp: "sol", M: 0.200, max: 10, d: 4 },
+      { f: "AgCl", st: "s", nu: 1, g: ["AgCl"] },
+      { f: "NaNO3", st: "aq", nu: 1, g: [] }] }
+  ];
+  RX.forEach(function (rx) { rx.sp.forEach(function (s) { s.mm = Lab.molarMass(s.f); }); });
+
+  var S = { i: 0, k: [], yld: 85 };
+  function reactants(rx) { return rx.sp.filter(function (s) { return s.nu < 0; }); }
+  function products(rx) { return rx.sp.filter(function (s) { return s.nu > 0; }); }
+  function F(f) { return Lab.fmla(f); }
+  function fmtN(v) { return v === 0 ? "0" : Lab.sci(v, 3); }
+  function mmT(v) { return v.toFixed(v < 10 ? 3 : 2); }
+  function g3(v) { return v === 0 ? "0" : sig(v, 3); }
+
+  // ---------- Model ----------
+  function model() {
+    var rx = RX[S.i], q = rx.q, m = { rx: rx, sp: [] };
+    var R = reactants(rx), ev = Infinity;
+    R.forEach(function (s, j) { ev = Math.min(ev, S.k[j]); });
+    m.ev = ev;   // number of reaction events in units of q
+    rx.sp.forEach(function (s, j) {
+      var o = { s: s };
+      if (s.nu < 0) { o.units = S.k[j]; o.n0 = S.k[j] * -s.nu * q; } else { o.n0 = 0; }
+      o.dn = s.nu * ev * q; o.n1 = o.n0 + o.dn;
+      o.c0 = Math.round(o.n0 / q); o.c1 = Math.round(o.n1 / q);
+      o.ratio = s.nu < 0 ? o.n0 / -s.nu : null;
+      m.sp.push(o);
+    });
+    var rs = m.sp.filter(function (o) { return o.s.nu < 0; });
+    var minR = Math.min.apply(null, rs.map(function (o) { return o.ratio; }));
+    m.lim = rs.filter(function (o) { return Math.abs(o.ratio - minR) < 1e-12; });
+    m.exact = m.lim.length === rs.length;
+    m.none = rs.some(function (o) { return o.n0 === 0; });
+    m.t = m.sp[rx.tgt];
+    m.tMass = m.t.n1 * m.t.s.mm;
+    if (rx.gas) { m.V298 = m.t.n1 * R_GAS * 298 / 1.00; m.VSTP = m.t.n1 * 22.4; }
+    return m;
+  }
+
+  // ---------- Controls ----------
+  function amountText(s, units, q) {
+    var n = units * -s.nu * q;
+    if (s.inp === "sol") { var V = n / s.M * 1000; return sig(V, 3) + " mL of " + s.M.toFixed(s.M < 1 ? 3 : 2) + " M"; }
+    return sig(n * s.mm, 4) + " g";
+  }
+  function buildControls() {
+    var rx = RX[S.i], R = reactants(rx), html = "";
+    R.forEach(function (s, j) {
+      html += '<div class="ctl"><label for="amt' + j + '"><span>' + F(s.f) + (s.inp === "sol" ? " solution" : "") + '</span> <output id="o-amt' + j + '"></output></label><input type="range" id="amt' + j + '" min="0" max="' + s.max + '" step="1"><span class="hint" id="h-amt' + j + '"></span></div>';
+    });
+    var t = rx.sp[rx.tgt];
+    html += '<div class="ctl"><label for="yld"><span>Actual yield of ' + F(t.f) + '</span> <output id="o-yld"></output></label><input type="range" id="yld" min="0" max="110" step="1"><span class="hint" id="h-yld">what the experiment recovered</span></div>';
+    document.getElementById("ctl").innerHTML = html;
+    R.forEach(function (s, j) {
+      document.getElementById("amt" + j).addEventListener("input", function (e) { S.k[j] = +e.target.value; render(); });
+    });
+    document.getElementById("yld").addEventListener("input", function (e) { S.yld = +e.target.value; render(); });
+  }
+  function setRx(i) { S.i = i; S.k = reactants(RX[i]).map(function (s) { return s.d; }); buildControls(); render(); }
+
+  // ---------- Drawing ----------
+  var W = 300, H = 230;
+  function drawBox(svg, m, which) {
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var rx = m.rx, anyAq = rx.sp.some(function (s) { return s.st === "aq"; }), waterTop = 0.18;
+    el("rect", { x: 1.5, y: 1.5, width: W - 3, height: H - 3, rx: 8, fill: "var(--surface)", stroke: "var(--ink)", "stroke-width": 2 }, svg);
+    if (anyAq) el("rect", { x: 3, y: H * waterTop, width: W - 6, height: H * (1 - waterTop) - 3, rx: 6, fill: "var(--accent-soft)" }, svg);
+    var items = [];
+    m.sp.forEach(function (o) {
+      var c = which === "b" ? o.c0 : o.c1;
+      for (var n = 0; n < c; n++) o.s.g.forEach(function (k) { items.push({ k: k, r: gR(k), st: o.s.st }); });
+    });
+    // Solid lattice-like clusters for AgCl, other solids and liquids sit at the bottom; gases fill the space; aqueous particles fill the water.
+    var Rn = rng(which === "b" ? 101 + S.i : 211 + S.i), placed = [];
+    var hasCondensed = items.some(function (it) { return it.st === "s" || it.st === "l"; });
+    function region(st) {
+      if (st === "s" || st === "l") return [H * (anyAq ? 0.55 : 0.55), H - 6];
+      if (st === "aq") return [H * waterTop + 4, H - 6];
+      if (anyAq) return [6, H * waterTop + 2];
+      return [6, hasCondensed ? H * 0.62 : H - 6];
+    }
+    // place condensed phases first (tightly), then the rest
+    items.sort(function (a, b) { var o = { s: 0, l: 1, aq: 2, g: 3 }; return o[a.st] - o[b.st]; });
+    items.forEach(function (it) {
+      var reg = region(it.st), gap = (it.st === "s" || it.st === "l") ? 0.5 : 4, best = null, bestD = -1e9;
+      for (var t = 0; t < 300; t++) {
+        var x = 8 + it.r + Rn() * (W - 16 - 2 * it.r), y = reg[0] + it.r + Rn() * Math.max(1, reg[1] - reg[0] - 2 * it.r);
+        if (it.st === "s" || it.st === "l") y = reg[1] - it.r - Math.pow(Rn(), 1.6) * (reg[1] - reg[0] - 2 * it.r);
+        var d = 1e9; placed.forEach(function (p) { d = Math.min(d, Math.hypot(x - p.x, y - p.y) - it.r - p.r); });
+        if (d > gap) { best = { x: x, y: y }; break; }
+        if (d > bestD) { bestD = d; best = { x: x, y: y }; }
+      }
+      it.x = best.x; it.y = best.y; placed.push(it);
+    });
+    var g = el("g", {}, svg);
+    placed.forEach(function (p) { drawGlyph(g, p.k, p.x, p.y); });
+    if (!placed.length) el("text", { x: W / 2, y: H / 2, "text-anchor": "middle", style: "font-size:13px" }, svg, "empty");
+  }
+
+  // ---------- Render ----------
+  function render() {
+    var rx = RX[S.i], m = model(), R = reactants(rx), q = rx.q;
+    Array.prototype.forEach.call(document.querySelectorAll("#rxns button"), function (b, i) { b.setAttribute("aria-pressed", i === S.i ? "true" : "false"); });
+    document.getElementById("eqline").innerHTML = rx.sp.map(function (s, j) {
+      var pre = j === 0 ? "" : (s.nu > 0 && rx.sp[j - 1].nu < 0 ? " → " : " + ");
+      return pre + (Math.abs(s.nu) > 1 ? Math.abs(s.nu) : "") + F(s.f) + "(" + s.st + ")";
+    }).join("");
+    R.forEach(function (s, j) {
+      document.getElementById("amt" + j).value = S.k[j];
+      document.getElementById("o-amt" + j).textContent = amountText(s, S.k[j], q);
+      document.getElementById("h-amt" + j).innerHTML = "= " + g3(S.k[j] * -s.nu * q) + " mol" + (s.inp === "mass" ? " (molar mass " + mmT(s.mm) + " g/mol)" : "");
+    });
+    document.getElementById("yld").value = S.yld;
+    drawBox(document.getElementById("sv-before"), m, "b");
+    drawBox(document.getElementById("sv-after"), m, "a");
+    var unit = "1 drawn particle = " + q + " mol";
+    document.getElementById("pv-sub").textContent = unit;
+    document.getElementById("cap-b").innerHTML = "Before: " + m.sp.filter(function (o) { return o.c0; }).map(function (o) { return o.c0 + " " + F(o.s.f); }).join(" + ");
+    document.getElementById("cap-a").innerHTML = "After: " + (m.sp.filter(function (o) { return o.c1; }).map(function (o) { return o.c1 + " " + F(o.s.f); }).join(" + ") || "empty");
+    // key
+    var kinds = [];
+    rx.sp.forEach(function (s) { s.g.forEach(function (k) { if (k === "AgCl") return; GLYPH[k].forEach(function (a) { var lab = a[3] || a[0]; if (!kinds.some(function (x) { return x[1] === lab; })) kinds.push([a[0], lab]); }); }); });
+    var key = "Key: " + kinds.map(function (x) { return '<span><i style="background:' + ATOM[x[0]].fill + '"></i>' + x[1] + "</span>"; }).join("");
+    if (rx.sol) key += "<span>touching Ag⁺ and Cl⁻ = solid AgCl</span><span>Spectator ions Na⁺ and NO₃⁻ are not drawn.</span>";
+    if (rx.sp.some(function (s) { return s.st === "aq"; })) key += '<span><i style="background:var(--accent-soft); border-radius:3px"></i>water (molecules not drawn)</span>';
+    if (rx.gas) key += "<span>HCl(aq) is a strong acid, drawn as H⁺ and Cl⁻.</span>";
+    document.getElementById("key").innerHTML = key;
+    readouts(m);
+    bca(m);
+    steps(m);
+    document.getElementById("story").innerHTML = story(m);
+  }
+
+  function tUnitText(m, n) {
+    // the target product amount in its natural unit
+    if (m.rx.gas) return sig(n * R_GAS * 298 / 1.00 * 1000, 3) + " mL";
+    return sig(n * m.t.s.mm, 3) + " g";
+  }
+  function readouts(m) {
+    var rx = m.rx, t = m.t;
+    if (m.none) {
+      document.getElementById("r-1").textContent = "—"; document.getElementById("r-1s").textContent = "a reactant is missing";
+    } else {
+      document.getElementById("r-1").innerHTML = m.exact ? "Neither" : F(m.lim[0].s.f);
+      document.getElementById("r-1s").textContent = m.exact ? "exact mole ratio" : "smallest moles ÷ coefficient";
+    }
+    document.getElementById("r-2").innerHTML = m.ev ? tUnitText(m, t.n1) : "0";
+    document.getElementById("r-2s").innerHTML = (m.ev ? g3(t.n1) : "0") + " mol " + F(t.s.f) + (rx.gas ? " at 298 K, 1.00 atm" : "");
+    var ex = m.sp.filter(function (o) { return o.s.nu < 0 && o.n1 > 1e-12; });
+    if (!ex.length) { document.getElementById("r-3").textContent = "None"; document.getElementById("r-3s").textContent = m.none ? "nothing reacted" : "both used up"; }
+    else {
+      var o = ex[0];
+      document.getElementById("r-3").innerHTML = o.s.inp === "sol" ? g3(o.n1) + " mol" : sig(o.n1 * o.s.mm, 3) + " g";
+      document.getElementById("r-3s").innerHTML = F(o.s.f) + ": " + g3(o.n1) + " mol" + (m.none ? " (nothing reacted)" : "");
+    }
+    document.getElementById("r-4").textContent = m.ev ? S.yld + "%" : "—";
+    document.getElementById("r-4s").innerHTML = m.ev ? "actual " + tUnitText(m, t.n1 * S.yld / 100) + " of " + F(t.s.f) : "no product formed";
+    document.getElementById("o-yld").textContent = m.ev ? tUnitText(m, t.n1 * S.yld / 100) + " (" + S.yld + "%)" : "—";
+  }
+
+  function bca(m) {
+    var rx = m.rx;
+    function cell(v, sign) { return Math.abs(v) < 1e-12 ? "0" : (sign && v > 0 ? "+" : v < 0 ? "−" : "") + g3(Math.abs(v)); }
+    var rows = m.sp.map(function (o, j) {
+      var cls = m.lim.indexOf(o) >= 0 && !m.exact && !m.none ? "lim" : j === rx.tgt ? "tgt" : "";
+      return '<tr><td class="' + cls + '">' + F(o.s.f) + "(" + o.s.st + ")" + (cls === "lim" ? ' <span style="font-size:.76rem">(limiting)</span>' : "") + "</td><td>" + cell(o.n0) + "</td><td>" + cell(o.dn, true) + "</td><td>" + cell(o.n1) + "</td></tr>";
+    }).join("");
+    document.getElementById("bca").innerHTML = "<thead><tr><th>Substance</th><th>Before</th><th>Change</th><th>After</th></tr></thead><tbody>" + rows + "</tbody>";
+  }
+
+  function steps(m) {
+    var rx = m.rx, q = rx.q, li = [], R = m.sp.filter(function (o) { return o.s.nu < 0; });
+    // 1. moles of each reactant
+    li.push("<b>Convert to moles.</b> " + R.map(function (o) {
+      var s = o.s;
+      if (s.inp === "sol") { var V = o.n0 / s.M; return '<span class="m">' + sig(V * 1000, 3) + " mL = " + sig(V, 3) + " L; " + sig(V, 3) + " L × " + s.M.toFixed(s.M < 1 ? 3 : 2) + " mol/L = " + g3(o.n0) + " mol " + F(s.f) + "</span>"; }
+      return '<span class="m">' + sig(o.n0 * s.mm, 4) + " g ÷ " + mmT(s.mm) + " g/mol = " + g3(o.n0) + " mol " + F(s.f) + "</span>";
+    }).join("; "));
+    if (m.none) { li.push("<b>Limiting reactant.</b> One reactant is absent, so nothing can react."); document.getElementById("steps").innerHTML = li.map(function (x) { return "<li>" + x + "</li>"; }).join(""); return; }
+    // 2. limiting
+    li.push("<b>Divide by coefficients.</b> " + R.map(function (o) { return '<span class="m">' + F(o.s.f) + ": " + g3(o.n0) + " ÷ " + -o.s.nu + " = " + g3(o.ratio) + "</span>"; }).join("; ") + ". " + (m.exact ? "The results are equal, so the reactants are in the exact mole ratio and both are used up." : "Smallest: <b>" + F(m.lim[0].s.f) + " is limiting.</b>"));
+    // 3. product moles
+    var L = m.lim[0], t = m.t;
+    li.push("<b>Mole ratio to the product.</b> " + '<span class="m">' + g3(L.n0) + " mol " + F(L.s.f) + " × (" + t.s.nu + " mol " + F(t.s.f) + " / " + -L.s.nu + " mol " + F(L.s.f) + ") = " + g3(t.n1) + " mol " + F(t.s.f) + "</span>");
+    // 4. theoretical yield
+    if (rx.gas) {
+      li.push("<b>Theoretical yield as a gas volume.</b> " + '<span class="m">V = nRT/P = (' + g3(t.n1) + " mol)(0.08206 L·atm/(mol·K))(298 K) ÷ 1.00 atm = " + sig(m.V298, 3) + " L = " + sig(m.V298 * 1000, 3) + " mL</span>. At STP it would be " + '<span class="m">' + g3(t.n1) + " mol × 22.4 L/mol = " + sig(m.VSTP, 3) + " L</span>.");
+    } else {
+      li.push("<b>Theoretical yield in grams.</b> " + '<span class="m">' + g3(t.n1) + " mol × " + mmT(t.s.mm) + " g/mol = " + sig(m.tMass, 3) + " g " + F(t.s.f) + "</span>");
+    }
+    // 5. excess
+    var ex = R.filter(function (o) { return o.n1 > 1e-12; });
+    if (ex.length) {
+      var o = ex[0], used = -o.dn;
+      li.push("<b>Excess left over.</b> " + '<span class="m">used = ' + g3(L.n0) + " mol " + F(L.s.f) + " × (" + -o.s.nu + " / " + -L.s.nu + ") = " + g3(used) + " mol " + F(o.s.f) + "; left = " + g3(o.n0) + " − " + g3(used) + " = " + g3(o.n1) + " mol" + (o.s.inp === "mass" ? " = " + sig(o.n1 * o.s.mm, 3) + " g" : "") + "</span>");
+    } else li.push("<b>Excess left over.</b> None: both reactants are used up completely.");
+    // 6. percent yield
+    li.push("<b>Percent yield.</b> " + '<span class="m">' + tUnitText(m, t.n1 * S.yld / 100) + " ÷ " + tUnitText(m, t.n1) + " × 100% = " + S.yld + "%</span>");
+    document.getElementById("steps").innerHTML = li.map(function (x) { return "<li>" + x + "</li>"; }).join("");
+  }
+
+  function story(m) {
+    var rx = m.rx, t = m.t, h = "";
+    if (m.none) return "<p><b>One reactant is missing.</b> With none of one reactant, the reaction cannot happen at all: the after box looks the same as the before box. Move both sliders above zero.</p><p><b>AP answer:</b> a reactant present in zero amount is the limiting reactant, and the theoretical yield is zero.</p>";
+    var R = m.sp.filter(function (o) { return o.s.nu < 0; });
+    var byMass = R.slice().sort(function (a, b) { return b.n0 * b.s.mm - a.n0 * a.s.mm; });
+    if (m.exact) h += "<p><b>Exact mole ratio.</b> The reactants are in the same ratio as their coefficients, so both run out at the same time and no reactant is left over.</p>";
+    else {
+      var L = m.lim[0], X = R.filter(function (o) { return o !== L; })[0];
+      h += "<p><b>" + F(L.s.f) + " is the limiting reactant.</b> It has " + g3(L.n0) + " mol, enough for " + g3(L.ratio) + " \"batches\" of the equation, while " + F(X.s.f) + " has enough for " + g3(X.ratio) + ". " + F(L.s.f) + " runs out first, and " + g3(X.n1) + " mol of " + F(X.s.f) + " is left unreacted, as you can see in the after box.</p>";
+      if (L === byMass[0] && L.s.inp === "mass" && X.s.inp === "mass") h += "<p>Notice that the limiting reactant is the one with the <b>larger mass</b> here. Mass does not decide; moles divided by coefficients do.</p>";
+      else if (X.n0 < L.n0) h += "<p>Notice that the limiting reactant has <b>more moles</b> than the excess reactant. It is limiting because its coefficient is larger: compare moles ÷ coefficient, not moles alone.</p>";
+    }
+    var li = [];
+    li.push("Theoretical yield: " + (rx.gas ? sig(m.V298 * 1000, 3) + " mL of H₂ at 298 K and 1.00 atm (" + g3(t.n1) + " mol)" : sig(m.tMass, 3) + " g of " + F(t.s.f) + " (" + g3(t.n1) + " mol)") + ". This is the most the limiting reactant can make.");
+    if (S.yld > 100) li.push("A percent yield of " + S.yld + "% is impossible for pure product. It usually means the product was still wet or contaminated, or (for a gas) was measured at a higher temperature than assumed.");
+    else if (S.yld < 100) li.push("A percent yield of " + S.yld + "% means some product was lost or the reaction did not go to completion. Typical causes: product left on glassware, side reactions, or incomplete reaction.");
+    else li.push("A 100% yield is the ideal case: every bit of the limiting reactant became recovered product.");
+    if (rx.sol) li.push("This is solution stoichiometry: moles = molarity × volume in liters. Na⁺ and NO₃⁻ are spectators; the particle view shows only the ions that form AgCl.");
+    if (rx.gas) li.push("This is gas stoichiometry: find moles of H₂ from the mole ratio, then V = nRT/P. Use 22.4 L/mol only at STP (273.15 K and 1.0 atm).");
+    h += "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
+    h += "<p><b>AP answer:</b> convert each reactant to moles, divide by its coefficient to identify the limiting reactant, then use the mole ratio from the limiting reactant to calculate product and leftover amounts.</p>";
+    return h;
+  }
+
+  RX.forEach(function (rx, i) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = rx.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { setRx(i); });
+    document.getElementById("rxns").appendChild(b);
+  });
+  document.getElementById("exact").addEventListener("click", function () {
+    var R = reactants(RX[S.i]), k = Math.min.apply(null, R.map(function (s) { return s.max; }));
+    k = Math.min(k, Math.max.apply(null, S.k) || 1);
+    S.k = R.map(function () { return Math.max(1, k); }); render();
+  });
+  document.getElementById("dflt").addEventListener("click", function () { setRx(S.i); });
+  setRx(0);
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "What mass of water forms when 4.00 g of H₂ reacts with excess O₂ according to 2H₂ + O₂ → 2H₂O?",
+      o: ["17.9 g", "35.7 g", "71.5 g", "4.00 g"], c: 1,
+      w: "4.00 g ÷ 2.016 g/mol = 1.98 mol H₂. The mole ratio is 2 mol H₂O : 2 mol H₂, so 1.98 mol H₂O × 18.02 g/mol = 35.7 g. Choice C multiplies by the coefficient 2 instead of using the ratio 2/2; choice D assumes grams carry straight across." },
+    { s: "A mixture of 28.0 g N₂ and 9.00 g H₂ reacts by N₂ + 3H₂ → 2NH₃. What is the maximum mass of NH₃ that can form?",
+      o: ["34.0 g", "50.7 g", "37.0 g", "17.0 g"], c: 0,
+      w: "N₂: 28.0 ÷ 28.02 = 0.999 mol; ÷ 1 = 0.999. H₂: 9.00 ÷ 2.016 = 4.46 mol; ÷ 3 = 1.49. N₂ is limiting. NH₃ = 0.999 × 2 = 2.00 mol × 17.03 g/mol = 34.0 g. Choice B uses H₂ as limiting; choice C adds the reactant masses, but 2.96 g of H₂ is left over." },
+    { s: "Heating 25.0 g of CaCO₃ by CaCO₃(s) → CaO(s) + CO₂(g) produces 12.6 g of CaO. What is the percent yield?",
+      o: ["50.4%", "111%", "89.9%", "56.1%"], c: 2,
+      w: "Theoretical: 25.0 g ÷ 100.09 g/mol = 0.250 mol CaCO₃ → 0.250 mol CaO × 56.08 g/mol = 14.0 g. Percent yield = 12.6 ÷ 14.0 × 100% = 89.9%. Choice A divides the CaO mass by the CaCO₃ mass, which ignores that CO₂ leaves; choice B divides theoretical by actual." },
+    { s: "0.654 g of zinc reacts with excess hydrochloric acid: Zn(s) + 2HCl(aq) → ZnCl₂(aq) + H₂(g). What volume of H₂ forms at STP (273.15 K, 1.0 atm)?",
+      o: ["22.4 mL", "112 mL", "448 mL", "224 mL"], c: 3,
+      w: "0.654 g ÷ 65.38 g/mol = 0.0100 mol Zn → 0.0100 mol H₂ (1 : 1). At STP, 0.0100 mol × 22.4 L/mol = 0.224 L = 224 mL. Choice C uses the 2 in front of HCl, which does not apply to the Zn-to-H₂ ratio." },
+    { s: "What volume of 0.100 M AgNO₃ is needed to precipitate all of the chloride ion in 25.0 mL of 0.200 M CaCl₂? (Ag⁺ + Cl⁻ → AgCl)",
+      o: ["25.0 mL", "50.0 mL", "100. mL", "200. mL"], c: 2,
+      w: "Moles Cl⁻ = 2 × 0.0250 L × 0.200 M = 0.0100 mol (each CaCl₂ gives 2 Cl⁻). That needs 0.0100 mol Ag⁺, and 0.0100 mol ÷ 0.100 M = 0.100 L = 100. mL. Choice B forgets the 2 Cl⁻ per formula unit." },
+    { s: "3.0 mol of H₂ and 2.0 mol of O₂ react by 2H₂ + O₂ → 2H₂O until the limiting reactant is used up. What remains of the excess reactant?",
+      o: ["0.50 mol O₂", "1.0 mol H₂", "1.5 mol O₂", "Nothing; both are used up"], c: 0,
+      w: "H₂: 3.0 ÷ 2 = 1.5; O₂: 2.0 ÷ 1 = 2.0. H₂ is limiting. O₂ used = 3.0 mol H₂ × (1/2) = 1.5 mol, so 2.0 − 1.5 = 0.50 mol O₂ remains. Choice C reports the O₂ used instead of the O₂ left." },
+    { s: "Equal masses of CH₄ and O₂ are mixed and ignited: CH₄ + 2O₂ → CO₂ + 2H₂O. Which statement is correct?",
+      o: ["CH₄ is limiting, because it has the smaller molar mass.", "O₂ is limiting, because there are fewer moles of O₂ and the reaction needs twice as many moles of O₂ as CH₄.", "Neither is limiting, because equal masses are present.", "CH₄ is limiting, because its coefficient is smaller."], c: 1,
+      w: "Take 16 g of each: CH₄ is 1.0 mol and O₂ is 0.50 mol. CH₄ would need 2.0 mol O₂, so O₂ runs out first. Equal masses are not equal moles (choice C), and a smaller molar mass means more moles, not fewer (choice A)." },
+    { s: "Propane burns completely: C₃H₈(g) + 5O₂(g) → 3CO₂(g) + 4H₂O(g). What volume of CO₂ forms from 0.100 mol of C₃H₈, measured at 300. K and 1.00 atm?",
+      o: ["2.46 L", "6.72 L", "9.85 L", "7.39 L"], c: 3,
+      w: "n(CO₂) = 0.100 × 3 = 0.300 mol. V = nRT/P = (0.300)(0.08206)(300.) ÷ 1.00 = 7.39 L. Choice B uses 22.4 L/mol, which applies only at STP (273.15 K), not 300. K. Choice A forgets the 3 : 1 mole ratio." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("4.5");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [4], topic: "4.5", compact: true, storageKey: "topic-4.5" });</script>
+</body>
+</html>

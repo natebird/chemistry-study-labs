@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deviation from Ideal Gas Law Study Lab</title>
+<meta name="description" content="Push real gases to high pressure and low temperature, watch PV/nRT move away from 1, and see at the particle level whether molecular volume or intermolecular attractions cause the deviation.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"], .chips button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { padding: 4px 11px; font-size: .84rem; }
+.side .controls { grid-template-columns: 1fr; }
+.check { display: flex; gap: 8px; align-items: center; font-size: .9rem; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.legend .l-gh { color: var(--ghost); }
+.legend .l-id { color: var(--muted); }
+.legend .l-id::before { background: none; border-top: 2px dashed currentColor; height: 0; }
+.lab-bar > * { min-width: 0; max-width: 100%; }
+@media (max-width: 520px) {
+  .lab-bar .eqn { white-space: normal; }
+  svg.chart text { font-size: 14px; }
+  svg.chart .lbl { font-size: 14px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 3 · Topic 3.6</span>
+  <h1>Deviation from Ideal Gas Law Study Lab</h1>
+  <p class="lede">The ideal gas law assumes gas particles take up no space and do not attract each other. Real particles do both, so real gases drift away from PV = nRT at high pressure and low temperature. Squeeze and cool six real gases, read PV/nRT, and see which particle-level effect wins.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Squeeze and cool a real gas</h2>
+    <p>The ratio PV/nRT is exactly 1 for an ideal gas. Below 1, attractions are winning; above 1, the size of the particles is winning. The curves are calculated with the van der Waals equation and textbook constants. That equation is beyond the AP exam and is itself only an approximate model, so read these curves for trends, not exact values. Where a curve ends, the model predicts the gas condenses to a liquid.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>PV/nRT vs. pressure <small id="zp-sub"></small></h3>
+      <svg class="chart" id="zp" role="img" aria-label="Graph of PV over nRT against pressure for real gases, with the ideal value of 1 dashed"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">AP scenarios</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Gas</div>
+        <div class="chips" id="gases" role="group" aria-label="Gas"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-t">Temperature <output id="o-t"></output></label>
+          <input type="range" id="s-t" min="200" max="800" step="5">
+          <span class="hint">Lower T = slower particles, attractions matter more</span>
+        </div>
+        <div class="ctl">
+          <label for="s-p">Pressure <output id="o-p"></output></label>
+          <input type="range" id="s-p" min="1" max="400" step="1">
+          <span class="hint">Higher P = particles crowded closer together</span>
+        </div>
+      </div>
+      <label class="check" for="others"><input type="checkbox" id="others" checked> Show the other gases faintly at this temperature</label>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-ad">Selected gas</span><span class="l-gh">Other gases</span><span class="l-id">Ideal gas (PV/nRT = 1)</span></div>
+    <div class="eqn">PV/nRT &lt; 1: attractions dominate &nbsp;·&nbsp; PV/nRT &gt; 1: particle volume dominates</div>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Ideal gas model <small>same P and T</small></h3>
+      <svg class="chart" id="b-ideal" role="img" aria-label="Particle diagram of an ideal gas: point particles with no attractions"></svg>
+    </div>
+    <div class="card graph-card">
+      <h3>Real gas <small id="real-sub"></small></h3>
+      <svg class="chart" id="b-real" role="img" aria-label="Particle diagram of the real gas: particle size drawn to show the share of space they take, arrows show attractions pulling particles away from the walls"></svg>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">PV/nRT</div><div class="v" id="r-z"></div><div class="sub" id="r-z2"></div></div>
+    <div class="stat"><div class="k">Volume per mole, real vs. ideal</div><div class="v" id="r-v"></div><div class="sub" id="r-v2"></div></div>
+    <div class="stat"><div class="k">Space the molecules block</div><div class="v" id="r-b"></div><div class="sub">of the container (van der Waals b/V)</div></div>
+    <div class="stat"><div class="k">Pressure lost to attractions</div><div class="v" id="r-a"></div><div class="sub">vs. the same particles without attractions</div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Two assumptions fail</span><h3>Why real gases deviate</h3><p>The ideal gas model treats particles as points with no attractions. Real particles have volume and do attract each other through intermolecular forces. When either effect becomes significant, PV/nRT moves away from 1.</p></div>
+    <div class="card"><span class="tag">PV/nRT &lt; 1</span><h3>Attractions lower the pressure</h3><p>A particle about to hit the wall is pulled back slightly by its neighbors, so it strikes with less force. Particles also cluster briefly. The measured pressure is lower than PV = nRT predicts. This dominates at moderate pressures and low temperatures.</p></div>
+    <div class="card"><span class="tag">PV/nRT &gt; 1</span><h3>Particle volume raises it</h3><p>At very high pressure the particles themselves fill a noticeable share of the container. The empty space they can move in is smaller than V, so they hit the walls more often than the ideal model predicts. The measured pressure (or volume) is higher than ideal.</p></div>
+    <div class="card"><span class="tag">Most ideal</span><h3>High T, low P</h3><p>At low pressure the particles are far apart, so their volume is negligible and they rarely feel each other. At high temperature they move so fast that attractions have little effect during a collision. Real gases behave most ideally under these conditions.</p></div>
+    <div class="card"><span class="tag">Which gas?</span><h3>Stronger IMFs, bigger deviation</h3><p>Gases with stronger intermolecular forces (polar molecules, hydrogen bonding, large polarizable electron clouds) deviate more. NH₃ and CO₂ deviate far more than He or H₂, which have tiny, weakly attracting particles.</p></div>
+    <div class="card"><span class="tag">The extreme case</span><h3>Condensation</h3><p>Cool a gas or squeeze it enough and the attractions take over completely: the gas condenses to a liquid. Near that point the ideal gas law fails badly, and once it is a liquid the gas laws no longer apply at all.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Deviation cheat sheet</h2>
+    <p>Rank deviations with the same tools you used for boiling points in topic 3.1: the stronger the intermolecular forces and the larger the particles, the less ideal the gas.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Condition</th><th>Effect that matters</th><th>Measured P compared with nRT/V</th><th>PV/nRT</th></tr></thead>
+    <tbody>
+      <tr><td>Low P, high T</td><td>Neither: particles far apart and fast</td><td>About equal</td><td><b>≈ 1</b> (nearly ideal)</td></tr>
+      <tr><td>Moderate P, low T</td><td>Attractions between particles</td><td>Lower</td><td><b>&lt; 1</b></td></tr>
+      <tr><td>Very high P</td><td>Volume of the particles</td><td>Higher</td><td><b>&gt; 1</b></td></tr>
+      <tr><td>Near condensation</td><td>Attractions dominate completely</td><td>Much lower</td><td>Well below 1</td></tr>
+      <tr><td>He, H₂ (tiny, few electrons)</td><td>Particle volume shows first; attractions very weak</td><td>Higher at high P</td><td>Slightly &gt; 1 at room T</td></tr>
+      <tr><td>NH₃ (polar, hydrogen bonding)</td><td>Strong attractions</td><td>Lower</td><td>Well below 1</td></tr>
+      <tr><td>CO₂ (nonpolar but 22 electrons)</td><td>Strong dispersion forces</td><td>Lower</td><td>Well below 1 near room T</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Deviations on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points</h3>
+      <ul>
+        <li>Say <b>which</b> assumption fails: "particles have attractions" or "particles have volume that is not negligible."</li>
+        <li>Give the direction: attractions make the measured pressure <b>lower</b> than predicted; particle volume makes it <b>higher</b>.</li>
+        <li>Explain with collisions: attractions reduce the force and frequency of wall collisions; particle volume reduces the free space, so collisions are more frequent.</li>
+        <li>Name the conditions: deviations are largest at high pressure and low temperature; gases are most ideal at low pressure and high temperature.</li>
+        <li>When comparing gases, name the intermolecular force (hydrogen bonding in NH₃, dispersion forces from many electrons in CO₂) that makes one less ideal.</li>
+        <li>If a lab result for molar mass or moles is off, connect it: a lower measured P makes calculated n = PV/RT too small.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying attractions make the pressure higher. They pull particles back from the wall, so the pressure is lower.</li>
+        <li>Saying gases are most ideal at low temperature. Slow particles feel attractions more; high temperature is more ideal.</li>
+        <li>Saying particle volume matters at low pressure. At 1 atm the particles fill well under 1% of the space.</li>
+        <li>Blaming "collisions are not elastic" for deviations. AP answers use attractions and particle volume.</li>
+        <li>Thinking a nonpolar gas is always nearly ideal. CO₂ has large dispersion forces and deviates strongly.</li>
+        <li>Forgetting that the same gas can show PV/nRT below 1 at moderate pressure and above 1 at very high pressure.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 3.6. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-3.html">Unit 3 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var R = Lab.CONST.R;   // 0.08206 L·atm/(mol·K)
+  // van der Waals constants: a in L²·atm/mol², b in L/mol (common textbook values)
+  var GASES = [
+    { f: "He", u: "He", a: 0.0341, b: 0.0237, imf: "only very weak dispersion forces (2 electrons per atom)" },
+    { f: "H2", u: "H₂", a: 0.244, b: 0.0266, imf: "only weak dispersion forces (2 electrons per molecule)" },
+    { f: "N2", u: "N₂", a: 1.39, b: 0.0391, imf: "dispersion forces only (nonpolar, 14 electrons)" },
+    { f: "CH4", u: "CH₄", a: 2.25, b: 0.0428, imf: "dispersion forces only (nonpolar, 10 electrons)" },
+    { f: "CO2", u: "CO₂", a: 3.59, b: 0.0427, imf: "fairly strong dispersion forces (nonpolar, but 22 electrons in a large cloud)" },
+    { f: "NH3", u: "NH₃", a: 4.17, b: 0.0371, imf: "hydrogen bonding and dipole–dipole forces (polar, N–H bonds)" }
+  ];
+  function gas(f) { return GASES.filter(function (g) { return g.f === f; })[0]; }
+
+  // ---------- van der Waals model ----------
+  var cache = {};
+  function model(g, T) {
+    var k = g.f + T; if (cache[k]) return cache[k];
+    var a = g.a, b = g.b;
+    var P = function (V) { return R * T / (V - b) - a / (V * V); };
+    var dP = function (V) { return -R * T / ((V - b) * (V - b)) + 2 * a / (V * V * V); };
+    var m = { P: P, Tc: 8 * a / (27 * R * b), Psat: null, lo: b * (1 + 1e-12) };
+    function root(Pt, lo, hi) { for (var i = 0; i < 100; i++) { var x = (lo + hi) / 2; if (P(x) > Pt) lo = x; else hi = x; } return (lo + hi) / 2; }
+    if (T < m.Tc) {
+      // spinodal points (where dP/dV = 0), then the Maxwell equal-area pressure = model vapor pressure
+      var sp = [], prev = null, Vp = null;
+      for (var i = 0; i <= 3000; i++) {
+        var V = b * Math.pow(10, 0.00005 + i * Math.log10(5000) / 3000), d = dP(V);
+        if (prev !== null && (d > 0) !== (prev > 0)) {
+          var lo = Vp, hi = V;
+          for (var j = 0; j < 80; j++) { var mid = (lo + hi) / 2; if ((dP(mid) > 0) === (dP(lo) > 0)) lo = mid; else hi = mid; }
+          sp.push((lo + hi) / 2);
+        }
+        prev = d; Vp = V;
+      }
+      var Vs1 = sp[0], Vs2 = sp[1], Pmin = P(Vs1), Pmax = P(Vs2);
+      var gfun = function (Pt) {
+        var Vl = root(Pt, b * (1 + 1e-12), Vs1), Vg = root(Pt, Vs2, R * T / Pt + b + 1);
+        return R * T * Math.log((Vg - b) / (Vl - b)) + a * (1 / Vg - 1 / Vl) - Pt * (Vg - Vl);
+      };
+      var pl = Math.max(Pmin, 0) + 1e-9 * Pmax, ph = Pmax * (1 - 1e-9);
+      for (var q = 0; q < 90; q++) { var pm = (pl + ph) / 2; if (gfun(pm) > 0) pl = pm; else ph = pm; }
+      m.Psat = (pl + ph) / 2; m.lo = Vs2;
+    }
+    m.V = function (Pt) { return root(Pt, m.lo, R * T / Pt + b + 1); };
+    m.Z = function (Pt) { return Pt * m.V(Pt) / (R * T); };
+    m.curve = [];
+    var pEnd = m.Psat != null ? Math.min(m.Psat, 400) : 400;
+    for (var s = 0; s <= 160; s++) { var Pt = Math.max(0.05, pEnd * s / 160); m.curve.push([Pt, m.Z(Pt)]); }
+    return (cache[k] = m);
+  }
+
+  var BASE = { g: "N2", T: 300, P: 1, others: true };
+  var S = Object.assign({}, BASE), key = "near";
+
+  // ---------- Graph ----------
+  var svg = document.getElementById("zp");
+  function draw(g, m) {
+    var F = Lab.frame(svg, { x: [0, 400], y: [0, 2], xLabel: "Pressure (atm)", yLabel: "PV/nRT", xTicks: [0, 50, 100, 150, 200, 250, 300, 350, 400], yTicks: [0, 0.5, 1, 1.5, 2], fmtX: function (v) { return v % 100 === 0 ? String(v) : ""; }, fmtY: function (v) { return v.toFixed(1); }, width: 440, height: 330 });
+    Lab.rect(F, 0, 1, 400, 2, "var(--c1)", 0.06);
+    Lab.rect(F, 0, 0, 400, 1, "var(--accent)", 0.05);
+    Lab.tag(F, 392, 1.9, "particle volume dominates", "var(--c1)", "end");
+    Lab.tag(F, 392, 0.08, "attractions dominate", "var(--accent)", "end");
+    Lab.hline(F, 1, "var(--muted)", 2, "7 5");
+    Lab.tag(F, 8, 1.04, "ideal gas", "var(--muted)");
+    var labels = [];
+    if (S.others) GASES.forEach(function (o) {
+      if (o.f === g.f) return;
+      var om = model(o, S.T);
+      Lab.line(F, om.curve, "var(--ghost)", 1.8);
+      var e = om.curve[om.curve.length - 1];
+      if (om.Psat != null) Lab.el("circle", { cx: F.sx(e[0]), cy: F.sy(e[1]), r: 3, fill: "var(--ghost)" }, F.g);
+      if (e[0] > 60) labels.push({ x: Math.min(e[0], 395) - 3, y: Math.min(1.93, Math.max(0.05, e[1] + 0.03)), t: o.u, c: "var(--ghost)" });
+    });
+    Lab.line(F, m.curve, "var(--accent)", 3.5);
+    var end = m.curve[m.curve.length - 1];
+    if (m.Psat != null && m.Psat < 400) {
+      Lab.el("circle", { cx: F.sx(end[0]), cy: F.sy(end[1]), r: 5, fill: "var(--surface)", stroke: "var(--accent)", "stroke-width": 2.5 }, F.g);
+      Lab.tag(F, end[0] + 6, end[1] - 0.09, "condenses (model)", "var(--accent)", end[0] > 250 ? "end" : "start");
+    } else {
+      labels.push({ x: 395, y: Math.min(1.93, Math.max(0.12, end[1] + 0.06)), t: g.u, c: "var(--accent)", main: true });
+    }
+    // spread out labels that end near the same place so they do not overlap
+    labels.sort(function (p, q) { return p.y - q.y; });
+    for (var li = 1; li < labels.length; li++) {
+      var pr = labels[li - 1], cu = labels[li];
+      if (Math.abs(pr.x - cu.x) < 40 && cu.y - pr.y < 0.075) cu.y = pr.y + 0.075;
+    }
+    labels.forEach(function (L) { Lab.tag(F, L.x, L.y, L.t, L.c, "end"); });
+    var liquid = m.Psat != null && S.P > m.Psat;
+    if (!liquid) Lab.dot(F, S.P, m.Z(S.P), "var(--c4)", true);
+    else {
+      Lab.vline(F, S.P, "var(--bad)", 2, "4 4");
+      Lab.tag(F, S.P + (S.P > 250 ? -6 : 6), 1.5, "liquid here", "var(--bad)", S.P > 250 ? "end" : "start");
+    }
+    document.getElementById("zp-sub").textContent = g.u + " at " + S.T + " K";
+  }
+
+  // ---------- Particle boxes ----------
+  var N = 30, W = 440, H = 250;
+  function seeded(s) { return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+  function placements(r) {
+    var rnd = seeded(97), pts = [];
+    for (var i = 0; i < N; i++) {
+      var best = null, bestD = -1;
+      for (var t = 0; t < 60; t++) {
+        var x = 20 + r + rnd() * (W - 40 - 2 * r), y = 20 + r + rnd() * (H - 40 - 2 * r), dmin = 1e9;
+        pts.forEach(function (p) { dmin = Math.min(dmin, Math.hypot(p[0] - x, p[1] - y)); });
+        if (dmin > 2 * r + 2) { best = [x, y]; break; }
+        if (dmin > bestD) { bestD = dmin; best = [x, y]; }
+      }
+      pts.push(best);
+    }
+    return pts;
+  }
+  function liquidPts(r) {
+    var pts = [], perRow = Math.floor((W - 40) / (2 * r + 1)), i = 0, rnd = seeded(5);
+    for (var row = 0; i < N; row++) for (var c = 0; c < perRow && i < N; c++, i++)
+      pts.push([22 + r + c * (2 * r + 1) + (row % 2 ? r : 0) + rnd() * 2, H - 22 - r - row * (2 * r - 3) - rnd() * 2]);
+    return pts;
+  }
+  function box(svgEl, r, arrowLen, note, liquid) {
+    svgEl.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svgEl.firstChild) svgEl.removeChild(svgEl.firstChild);
+    Lab.el("rect", { x: 18, y: 18, width: W - 36, height: H - 36, fill: "var(--paper)", stroke: "var(--ink)", "stroke-width": 2.5, rx: 3 }, svgEl);
+    var pts = liquid ? liquidPts(r) : placements(r), cx = W / 2, cy = H / 2;
+    pts.forEach(function (p) {
+      Lab.el("circle", { cx: p[0].toFixed(1), cy: p[1].toFixed(1), r: r.toFixed(1), fill: "var(--accent)", opacity: 0.85 }, svgEl);
+      var edge = Math.min(p[0] - 18, W - 18 - p[0], p[1] - 18, H - 18 - p[1]) - r;
+      if (arrowLen > 2 && edge < 34) {
+        var dx = cx - p[0], dy = cy - p[1], L = Math.hypot(dx, dy); dx /= L; dy /= L;
+        var x1 = p[0] + dx * (r + 2), y1 = p[1] + dy * (r + 2), x2 = x1 + dx * arrowLen, y2 = y1 + dy * arrowLen;
+        Lab.el("path", { d: "M" + x1.toFixed(1) + " " + y1.toFixed(1) + " L" + x2.toFixed(1) + " " + y2.toFixed(1), stroke: "var(--c4)", "stroke-width": 2, fill: "none" }, svgEl);
+        Lab.el("path", { d: "M" + x2.toFixed(1) + " " + y2.toFixed(1) + " l" + (-dx * 6 + dy * 4).toFixed(1) + " " + (-dy * 6 - dx * 4).toFixed(1) + " l" + (-dy * 8).toFixed(1) + " " + (dx * 8).toFixed(1) + " z", fill: "var(--c4)" }, svgEl);
+      }
+    });
+    var ny = liquid ? 30 : H - 44;
+    Lab.el("rect", { x: 26, y: ny, width: W - 52, height: 20, fill: "var(--surface)", opacity: 0.85, rx: 4 }, svgEl);
+    Lab.el("text", { x: W / 2, y: ny + 15, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, svgEl, note);
+  }
+
+  // ---------- Readouts and story ----------
+  function pct(x) { return x < 0.001 ? "< 0.1%" : (x * 100 < 10 ? (x * 100).toFixed(1) : Math.round(x * 100)) + "%"; }
+  function update(g, m) {
+    var liquid = m.Psat != null && S.P > m.Psat;
+    var Vi = R * S.T / S.P;
+    var ideal = document.getElementById("b-ideal"), real = document.getElementById("b-real");
+    box(ideal, 3, 0, "point particles, no attractions: PV/nRT = 1");
+    if (liquid) {
+      box(real, 13, 0, "condensed: a liquid, not a gas", true);
+      document.getElementById("real-sub").textContent = g.u + ": liquid at these conditions";
+      ["r-z", "r-v", "r-b", "r-a"].forEach(function (id) { document.getElementById(id).textContent = "—"; });
+      document.getElementById("r-z2").textContent = "model predicts a liquid above " + Lab.sig(m.Psat, 3) + " atm";
+      document.getElementById("r-v2").textContent = "ideal gas would be " + Lab.sig(Vi, 3) + " L";
+      return { liquid: true };
+    }
+    var V = m.V(S.P), Z = S.P * V / (R * S.T);
+    var fb = g.b / V, fa = (g.a / (V * V)) / (R * S.T / (V - g.b));
+    var r = Math.max(3, Math.sqrt(Math.min(0.5, fb) * (W - 36) * (H - 36) / (N * Math.PI)));
+    box(real, r, Math.min(28, fa * 60), "molecules block " + pct(fb) + " of the space; attractions: −" + pct(fa) + " P");
+    document.getElementById("real-sub").textContent = g.u + ", " + S.P + " atm, " + S.T + " K";
+    document.getElementById("r-z").textContent = Z.toFixed(3);
+    document.getElementById("r-z2").textContent = Math.abs(Z - 1) < 0.02 ? "nearly ideal (ideal = 1)" : Z < 1 ? "below 1: attractions dominate" : "above 1: particle volume dominates";
+    document.getElementById("r-v").textContent = Lab.sig(V, 3) + " L";
+    document.getElementById("r-v2").textContent = "ideal: " + Lab.sig(Vi, 3) + " L (" + (V < Vi ? "real is smaller" : "real is larger") + ")";
+    document.getElementById("r-b").textContent = pct(fb);
+    document.getElementById("r-a").textContent = pct(fa);
+    return { liquid: false, Z: Z, V: V, Vi: Vi, fb: fb, fa: fa };
+  }
+  function story(g, m, o) {
+    var html = "", li = [];
+    html += "<p><b>" + g.u + " at " + S.P + " atm and " + S.T + " K.</b> " + g.u + " has " + g.imf + ".</p>";
+    if (o.liquid) {
+      li.push("At this temperature the model predicts " + g.u + " condenses at about " + Lab.sig(m.Psat, 3) + " atm, so at " + S.P + " atm it is a <b>liquid</b>. Attractions have pulled the particles together completely. PV = nRT does not describe liquids at all.");
+      li.push("The van der Waals model is only approximate about where condensation starts. (For example, it puts NH₃ at 300 K near 30 atm; real ammonia condenses near 10 atm.) The trend is what matters: lower temperature, condensation at lower pressure.");
+      if (m.Tc) li.push("Above about " + Math.round(m.Tc) + " K (the model's critical temperature for " + g.u + "), no amount of pressure condenses it. Raise the temperature to see the full curve.");
+      html += "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
+      html += "<p><b>AP answer:</b> at low temperature and high pressure, attractions between particles become strong enough to condense the gas; real gases deviate most from ideal behavior near condensation.</p>";
+      return html;
+    }
+    var Z = o.Z;
+    if (Math.abs(Z - 1) < 0.02) {
+      li.push("PV/nRT = " + Z.toFixed(3) + ", within 2% of 1, so the ideal gas law works well here.");
+      li.push("The molecules block only " + pct(o.fb) + " of the container, and attractions lower the pressure by only " + pct(o.fa) + ". " + (S.P <= 10 ? "At low pressure the particles are far apart, so neither effect matters." : "The two effects are small or partly cancel at this pressure."));
+    } else if (Z < 1) {
+      li.push("PV/nRT = " + Z.toFixed(3) + ", <b>below 1</b>. The real gas takes up " + Lab.sig(o.V, 3) + " L per mole instead of the ideal " + Lab.sig(o.Vi, 3) + " L; equivalently, at a fixed volume its pressure would be lower than nRT/V.");
+      li.push("<b>Attractions win.</b> As a particle heads for the wall, neighbors behind it pull it back, so it hits with less force. The pressure is about " + pct(o.fa) + " lower than the same particles would exert without attractions. The particles' own volume (" + pct(o.fb) + " of the space) pushes the other way but is smaller here.");
+      if (S.T < 400) li.push("At " + S.T + " K the particles are slow enough to feel these attractions. Raise the temperature and watch the dip shrink.");
+    } else {
+      li.push("PV/nRT = " + Z.toFixed(3) + ", <b>above 1</b>. The real gas needs " + Lab.sig(o.V, 3) + " L per mole instead of the ideal " + Lab.sig(o.Vi, 3) + " L; at a fixed volume its pressure would be higher than nRT/V.");
+      li.push("<b>Particle volume wins.</b> The molecules themselves block about " + pct(o.fb) + " of the container, so the free space they move through is smaller than V. They hit the walls more often than point particles would. Attractions (" + pct(o.fa) + ") are the smaller effect.");
+      if (g.f === "He" || g.f === "H2") li.push(g.u + " has so few electrons that its attractions are tiny; at room temperature its PV/nRT rises above 1 at every pressure.");
+    }
+    if (S.others) {
+      var ranked = GASES.map(function (x) { var mm = model(x, S.T); return { u: x.u, z: mm.Psat != null && S.P > mm.Psat ? null : mm.Z(S.P) }; });
+      var liq = ranked.filter(function (x) { return x.z === null; }).map(function (x) { return x.u; });
+      var gasR = ranked.filter(function (x) { return x.z !== null; }).sort(function (p, q) { return p.z - q.z; });
+      li.push("At this P and T, from lowest to highest PV/nRT: " + gasR.map(function (x) { return x.u + " " + x.z.toFixed(2); }).join(", ") + (liq.length ? ". Condensed in the model: " + liq.join(", ") : "") + ". The gases with the strongest intermolecular forces sit lowest.");
+    }
+    html += "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
+    var end = Math.abs(Z - 1) < 0.02 ? "at low pressure and high temperature, particles are far apart and fast, so their volume and attractions are negligible and the gas behaves ideally."
+      : Z < 1 ? "attractive forces between particles reduce the force and frequency of collisions with the walls, so the measured pressure is lower than the ideal gas law predicts (PV/nRT < 1)."
+      : "at very high pressure the volume of the particles is no longer negligible; the free space is less than V, so the measured pressure is higher than the ideal gas law predicts (PV/nRT > 1).";
+    html += "<p><b>AP answer:</b> " + end.charAt(0).toUpperCase() + end.slice(1) + "</p>";
+    return html;
+  }
+
+  // ---------- Controls ----------
+  var el = function (id) { return document.getElementById(id); };
+  var chips = {};
+  GASES.forEach(function (g) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = g.u;
+    b.addEventListener("click", function () { S.g = g.f; key = null; render(); });
+    el("gases").appendChild(b); chips[g.f] = b;
+  });
+  var SC = {
+    near:  { name: "Nearly ideal: N₂ at 1 atm", g: "N2", T: 300, P: 1 },
+    attr:  { name: "Attractions win: CO₂ at 70 atm", g: "CO2", T: 310, P: 70 },
+    cold:  { name: "Colder gas: CH₄ at 200 K", g: "CH4", T: 200, P: 40 },
+    polar: { name: "Polar NH₃ vs. the rest", g: "NH3", T: 450, P: 100 },
+    vol:   { name: "Volume wins: He at 400 atm", g: "He", T: 300, P: 400 },
+    both:  { name: "Below 1, then above 1: N₂ at 300 atm", g: "N2", T: 300, P: 300 },
+    cond:  { name: "Condensation: CO₂ at 280 K", g: "CO2", T: 280, P: 60 }
+  };
+  var scBtns = {}, stop = function () {};
+  Object.keys(SC).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () {
+      var x = SC[k]; key = k; stop();
+      S.g = x.g; S.T = x.T; S.others = true;
+      var p0 = S.P;
+      stop = Lab.animate(800, function (t) { S.P = Math.round(p0 + (x.P - p0) * t); render(false); }, function () { S.P = x.P; render(); });
+    });
+    el("sc").appendChild(b); scBtns[k] = b;
+  });
+  var sT = el("s-t"), sP = el("s-p"), cb = el("others");
+  sT.addEventListener("input", function () { stop(); S.T = +sT.value; key = null; render(); });
+  sP.addEventListener("input", function () { stop(); S.P = +sP.value; key = null; render(); });
+  cb.addEventListener("change", function () { S.others = cb.checked; render(); });
+
+  function render(full) {
+    var g = gas(S.g), m = model(g, S.T);
+    draw(g, m);
+    sT.value = S.T; sP.value = S.P; cb.checked = S.others;
+    el("o-t").textContent = S.T + " K (" + (S.T - 273) + " °C)";
+    el("o-p").textContent = S.P + " atm";
+    Object.keys(chips).forEach(function (f) { chips[f].setAttribute("aria-pressed", S.g === f ? "true" : "false"); });
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", key === k ? "true" : "false"); });
+    var o = update(g, m);
+    if (full !== false) el("story").innerHTML = story(g, m, o);
+  }
+  render();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Under which conditions does a real gas behave most like an ideal gas?",
+      o: ["Low temperature and low pressure", "High temperature and low pressure", "Low temperature and high pressure", "High temperature and high pressure"], c: 1,
+      w: "At low pressure the particles are far apart, so their volume is negligible and they rarely interact. At high temperature they move fast enough that attractions have little effect. Choice A is the trap: low temperature makes attractions matter more." },
+    { s: "At 10 atm and 250 K, the measured pressure of a sample of CO₂ is lower than the pressure calculated from PV = nRT. Which statement best explains this?",
+      o: ["The CO₂ molecules take up a significant fraction of the container volume", "Collisions between CO₂ molecules are not elastic", "CO₂ molecules decompose at high pressure", "Attractive forces between CO₂ molecules reduce the force of their collisions with the container walls"], c: 3,
+      w: "A lower-than-ideal pressure means attractions dominate: molecules are pulled back by their neighbors and strike the walls less forcefully. Choice A would make the pressure higher than predicted, not lower." },
+    { s: "Which gas would deviate most from ideal behavior at 400 K and 20 atm?",
+      o: ["He", "H₂", "NH₃", "N₂"], c: 2,
+      w: "NH₃ is polar and forms hydrogen bonds, so its intermolecular attractions are much stronger than the dispersion forces in the nonpolar gases. Stronger attractions mean larger deviations. He and H₂ are the most nearly ideal of these four." },
+    { s: "At 600 atm and 300 K, PV/nRT for N₂ is greater than 1. Which statement explains this?",
+      o: ["The volume of the N₂ molecules is no longer negligible compared with the volume of the container", "Attractions between N₂ molecules are stronger at high pressure", "N₂ molecules move faster at high pressure", "The temperature is too high for the ideal gas law to apply"], c: 0,
+      w: "At very high pressure the molecules fill a significant share of the container, so the space they move through is less than V, and the pressure is higher than ideal. Choice B describes an effect that would make PV/nRT less than 1. Molecular speed depends on temperature, not pressure (choice C)." },
+    { s: "A student uses PV = nRT and measured P, V, and T to find the moles of a gas near its condensation point. How will the calculated moles compare with the actual moles?",
+      o: ["Higher, because attractions increase the measured pressure", "Lower, because attractions decrease the measured pressure", "Equal, because PV = nRT always holds for gases", "Higher, because the particles' volume makes V too small"], c: 1,
+      w: "Near condensation, attractions are strong, so the measured P is lower than an ideal gas with the same n would exert. n = PV/RT with a low P gives too few moles. Choice A has the direction of the effect backward." },
+    { s: "Which statement about the ideal gas model is the reason real gases deviate from it at high pressure?",
+      o: ["The model assumes particles move in random directions", "The model assumes average kinetic energy is proportional to temperature", "The model assumes the particles have negligible volume", "The model assumes the container is rigid"], c: 2,
+      w: "At high pressure, particles are packed closely enough that their own volume matters, contradicting the assumption that it is negligible. The other assumptions in A and B still hold for real gases; D is not part of the model." },
+    { s: "Samples of CH₄ (16 g/mol) and CCl₄ vapor (154 g/mol) are compared at the same temperature and pressure. Which is expected to deviate more from ideal behavior, and why?",
+      o: ["CH₄, because its molecules move faster", "Neither; both are nonpolar so both are ideal", "CH₄, because its molecules have fewer electrons", "CCl₄, because its larger, more polarizable electron cloud gives stronger dispersion forces, and its molecules are larger"], c: 3,
+      w: "Both are nonpolar, but CCl₄ has 74 electrons to CH₄'s 10, so its dispersion forces are much stronger, and its molecules are bigger. Both effects increase deviation. Choice B wrongly assumes nonpolar means no attractions." },
+    { s: "In a particle diagram of a real gas at moderate pressure, arrows show molecules near the wall being pulled toward the center of the container. What does this representation explain?",
+      o: ["Why the measured pressure is lower than the ideal pressure", "Why the measured pressure is higher than the ideal pressure", "Why the gas expands when heated", "Why the gas has a lower molar mass than expected"], c: 0,
+      w: "Molecules pulled back by attractions strike the wall with less force, so the real pressure is lower than PV = nRT predicts. A diagram showing large particles crowding the box would explain a higher-than-ideal pressure instead (choice B)." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("3.6");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [3], topic: "3.6", compact: true, storageKey: "topic-3.6" });</script>
+</body>
+</html>

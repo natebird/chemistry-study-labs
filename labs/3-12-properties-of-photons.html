@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Properties of Photons Study Lab</title>
+<meta name="description" content="Move an electron between hydrogen energy levels to emit or absorb photons, calculate each photon's energy, frequency and wavelength with E = hν and c = λν, and shine light on a metal to see why photon energy, not brightness, decides whether electrons come out.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=1"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; font-family: var(--mono); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.seg button:disabled { opacity: .35; cursor: default; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v sup { font-size: .65em; }
+.side .controls { grid-template-columns: 1fr; }
+.sub-h { font-family: var(--display); font-size: 1.25rem; margin-top: 10px; }
+#lev text, #pe text { font-size: 11.5px; }
+#lev text.lbl, #pe text.lbl { font-size: 12.5px; }
+@media (max-width: 520px) { #lev text, #pe text { font-size: 14px; } #lev text.lbl, #pe text.lbl { font-size: 14.5px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 3 · Topic 3.12</span>
+  <h1>Properties of Photons Study Lab</h1>
+  <p class="lede">Light comes in packets called photons. When an atom or molecule absorbs a photon, its energy rises by exactly the photon's energy; when it emits one, its energy falls by the same amount. Two equations connect a photon's energy, frequency and wavelength: E = hν and c = λν. Move electrons between energy levels, then see why only photons with enough energy can knock electrons out of a metal.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Photon workbench</h2>
+    <p>Part A uses the energy levels of a hydrogen atom, E<sub>n</sub> = −2.178 × 10<sup>−18</sup> J ÷ n<sup>2</sup>. This formula is given data for hydrogen, not something you must memorize; on the exam the level energies are usually given in a diagram. Pick a starting and an ending level: going down emits a photon, going up absorbs one.</p>
+  </div>
+
+  <h3 class="sub-h">A. Absorbing and emitting photons</h3>
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Hydrogen energy levels <small id="lev-sub"></small></h3>
+      <svg class="chart" id="lev" role="img" aria-label="Energy-level diagram of hydrogen with the selected transition and the resulting spectral line"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag" id="from-lbl">Electron starts in level</div>
+        <div class="seg" role="group" aria-labelledby="from-lbl" id="from"></div>
+      </div>
+      <div class="group">
+        <div class="tag" id="to-lbl">Electron ends in level</div>
+        <div class="seg" role="group" aria-labelledby="to-lbl" id="to"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Classic transitions</div>
+        <div class="scenarios" id="sc-a"></div>
+      </div>
+    </div>
+  </div>
+  <div class="readout">
+    <div class="stat"><div class="k">Photon energy |ΔE|</div><div class="v" id="ra-e"></div><div class="sub" id="ra-e2"></div></div>
+    <div class="stat"><div class="k">Frequency ν = E / h</div><div class="v" id="ra-nu"></div><div class="sub">s<sup>−1</sup> (Hz)</div></div>
+    <div class="stat"><div class="k">Wavelength λ = c / ν</div><div class="v" id="ra-l"></div><div class="sub" id="ra-l2"></div></div>
+    <div class="stat"><div class="k">Region</div><div class="v" id="ra-r" style="font-size:1rem"></div><div class="sub" id="ra-r2"></div></div>
+  </div>
+  <div class="story" id="story" aria-live="polite"></div>
+
+  <h3 class="sub-h">B. Light on a metal: one photon, one electron</h3>
+  <p style="color:var(--muted); max-width:70ch">Each electron in a metal is held with a minimum energy, the threshold energy. A single photon either has at least that much energy or it does not. Change the color and the brightness of the light and watch what comes off. Threshold energies are approximate literature values.</p>
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Photoelectric effect <small id="pe-sub"></small></h3>
+      <svg class="chart" id="pe" role="img" aria-label="Photons striking a metal surface and any electrons ejected"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Metal</div>
+        <div class="scenarios" id="metal"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-w">Wavelength of the light <output id="o-w"></output></label>
+          <input type="range" id="s-w" min="150" max="800" step="1">
+          <span class="hint">Sets the energy of each photon</span>
+        </div>
+        <div class="ctl">
+          <label for="s-i">Brightness (intensity) <output id="o-i"></output></label>
+          <input type="range" id="s-i" min="1" max="10" step="1">
+          <span class="hint">Sets the number of photons per second</span>
+        </div>
+      </div>
+      <div class="group">
+        <div class="tag">Classic tests</div>
+        <div class="scenarios" id="sc-b"></div>
+      </div>
+    </div>
+  </div>
+  <div class="readout">
+    <div class="stat"><div class="k">Energy per photon</div><div class="v" id="rb-e"></div><div class="sub" id="rb-e2"></div></div>
+    <div class="stat"><div class="k">Threshold energy of the metal</div><div class="v" id="rb-t"></div><div class="sub" id="rb-t2"></div></div>
+    <div class="stat"><div class="k">Electrons ejected?</div><div class="v" id="rb-y"></div><div class="sub" id="rb-y2"></div></div>
+    <div class="stat"><div class="k">Leftover energy per electron</div><div class="v" id="rb-k"></div><div class="sub">becomes the electron's kinetic energy</div></div>
+  </div>
+  <div class="story" id="story-b" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">c = λν</span><h3>Wavelength and frequency</h3><p>All light travels at c = 2.998 × 10<sup>8</sup> m/s in a vacuum. Wavelength and frequency are inversely proportional: halve the wavelength and the frequency doubles.</p></div>
+    <div class="card"><span class="tag">E = hν</span><h3>Planck's equation</h3><p>The energy of one photon is proportional to its frequency: E = hν, with h = 6.626 × 10<sup>−34</sup> J·s. Combine the two equations to get E = hc/λ: shorter wavelength, more energy.</p></div>
+    <div class="card"><span class="tag">Conservation</span><h3>Photon energy = level gap</h3><p>When an atom absorbs a photon, its energy rises by exactly the photon's energy. When it drops to a lower level, it emits a photon whose energy equals the drop. A photon whose energy matches no gap is not absorbed.</p></div>
+    <div class="card"><span class="tag">Line spectra</span><h3>Why atoms give lines</h3><p>Because the energy levels are quantized, only certain energy differences, and therefore certain wavelengths, can be emitted or absorbed. Each element has its own set of lines.</p></div>
+    <div class="card"><span class="tag">Per photon vs. per mole</span><h3>Scaling up</h3><p>E = hν gives joules for one photon. Multiply by Avogadro's number for a mole of photons, then divide by 1000 for kJ/mol, which you can compare with bond energies.</p></div>
+    <div class="card"><span class="tag">Intensity</span><h3>Brighter is not stronger</h3><p>Brightness is the number of photons, not the energy of each one. If a single photon cannot eject an electron from a metal, a billion of them cannot either. Above the threshold, brighter light ejects more electrons, not faster ones.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Photon calculation cheat sheet</h2>
+    <p>Always convert the wavelength to meters first. 1 nm = 10<sup>−9</sup> m, 1 µm = 10<sup>−6</sup> m.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Given</th><th>Find</th><th>Equation</th><th>Worked example</th></tr></thead>
+    <tbody>
+      <tr><td>λ</td><td>ν</td><td><b>ν = c / λ</b></td><td>600. nm: (2.998 × 10<sup>8</sup>) ÷ (6.00 × 10<sup>−7</sup>) = 5.00 × 10<sup>14</sup> s<sup>−1</sup></td></tr>
+      <tr><td>ν</td><td>E</td><td><b>E = hν</b></td><td>(6.626 × 10<sup>−34</sup>)(5.00 × 10<sup>14</sup>) = 3.31 × 10<sup>−19</sup> J</td></tr>
+      <tr><td>λ</td><td>E</td><td><b>E = hc / λ</b></td><td>400. nm: (6.626 × 10<sup>−34</sup>)(2.998 × 10<sup>8</sup>) ÷ (4.00 × 10<sup>−7</sup>) = 4.97 × 10<sup>−19</sup> J</td></tr>
+      <tr><td>E</td><td>λ</td><td><b>λ = hc / E</b></td><td>3.98 × 10<sup>−19</sup> J → 4.99 × 10<sup>−7</sup> m = 499 nm</td></tr>
+      <tr><td>E per photon</td><td>E per mole</td><td>× 6.022 × 10<sup>23</sup>, ÷ 1000</td><td>4.97 × 10<sup>−19</sup> J → 2.99 × 10<sup>5</sup> J/mol = 299 kJ/mol</td></tr>
+      <tr><td>Two energy levels</td><td>Photon energy</td><td><b>E<sub>photon</sub> = |E<sub>final</sub> − E<sub>initial</sub>|</b></td><td>Hydrogen n = 3 → 2: 3.025 × 10<sup>−19</sup> J → 656.7 nm (red)</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Answering it on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write the equation, substitute with units, and give the answer with units and three significant figures.</li>
+        <li>For a transition, state that the photon's energy equals the difference between the two levels.</li>
+        <li>Say which direction: a drop to a lower level emits a photon; a jump to a higher level requires absorbing one.</li>
+        <li>Compare photons with the relationships, not just numbers: "shorter wavelength, so higher frequency and higher energy per photon."</li>
+        <li>For photoelectron questions, reason one photon at a time: a photon below the threshold energy cannot eject an electron no matter how many arrive.</li>
+        <li>When asked for energy per mole, multiply by Avogadro's number and convert J to kJ.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Plugging nanometers into c = λν. 650 nm is 6.50 × 10<sup>−7</sup> m.</li>
+        <li>Inverting the relationship: longer wavelength means <b>lower</b> energy.</li>
+        <li>Thinking higher-energy light travels faster. Every photon moves at c.</li>
+        <li>Reporting a negative photon energy. The level difference can be negative; the photon's energy is its size.</li>
+        <li>Claiming brighter light ejects faster electrons. Brighter light means more photons, so more electrons, each with the same energy.</li>
+        <li>Mixing up per photon and per mole when comparing with a bond energy in kJ/mol.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation. Use h = 6.626 × 10⁻³⁴ J·s and c = 2.998 × 10⁸ m/s.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 3.12. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-3.html">Unit 3 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var el = Lab.el, h = Lab.CONST.h, c = Lab.CONST.c, NA = Lab.CONST.NA, sci = function (v) { return Lab.sci(v, 3, true); };
+  var E1 = 2.178e-18, INF = 99;
+  function En(n) { return n === INF ? 0 : -E1 / (n * n); }
+  function nName(n) { return n === INF ? "∞" : String(n); }
+  function visColor(nm) {
+    var hue = nm < 440 ? 270 : nm < 490 ? 270 - (nm - 440) / 50 * 70 : nm < 510 ? 200 - (nm - 490) / 20 * 60 : nm < 580 ? 140 - (nm - 510) / 70 * 80 : nm < 645 ? 60 - (nm - 580) / 65 * 60 : 0;
+    return "hsl(" + hue.toFixed(0) + ", 85%, 52%)";
+  }
+  function region(nm) { return nm < 10 ? "X-ray" : nm < 400 ? "Ultraviolet" : nm <= 700 ? "Visible" : nm < 1e6 ? "Infrared" : "Microwave"; }
+  function colorName(nm) { return nm < 450 ? "violet" : nm < 495 ? "blue" : nm < 570 ? "green" : nm < 590 ? "yellow" : nm < 620 ? "orange" : "red"; }
+
+  // ================= Part A =================
+  var A = { i: 3, f: 2, key: 0 };
+  var SCA = [
+    { name: "n = 3 → 2 (red Balmer line)", i: 3, f: 2 },
+    { name: "n = 4 → 2 (blue-green)", i: 4, f: 2 },
+    { name: "n = 2 → 1 (Lyman, UV)", i: 2, f: 1 },
+    { name: "n = 4 → 3 (infrared)", i: 4, f: 3 },
+    { name: "Absorb: n = 1 → 3", i: 1, f: 3 },
+    { name: "Ionize from n = 1", i: 1, f: INF }
+  ];
+  var lev = document.getElementById("lev");
+  var LEVELS = [1, 2, 3, 4, 5, 6, INF];
+  var flash = 0;
+  function drawLev() {
+    var W = 440, H = 330;
+    lev.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (lev.firstChild) lev.removeChild(lev.firstChild);
+    var top = 22, bot = 222, x0 = 92, x1 = 296;
+    var y = function (E) { return top + Math.sqrt(E / -E1) * (bot - top); };   // square-root scale so the upper levels spread out
+    // axis
+    el("line", { x1: 60, x2: 60, y1: top - 8, y2: bot + 6, stroke: "var(--ink)", "stroke-width": 1.4 }, lev);
+    el("text", { x: 16, y: (top + bot) / 2, "class": "lbl", style: "fill:var(--ink)", transform: "rotate(-90 16 " + (top + bot) / 2 + ")", "text-anchor": "middle" }, lev, "Energy (10⁻¹⁹ J), not to scale");
+    LEVELS.forEach(function (n) {
+      var E = En(n), yy = y(E), sel = n === A.i || n === A.f;
+      el("line", { x1: x0, x2: x1, y1: yy, y2: yy, stroke: sel ? "var(--ink)" : "var(--ghost)", "stroke-width": sel ? 2.4 : 1.3, "stroke-dasharray": n === INF ? "5 4" : null }, lev);
+    });
+    // labels, pushed apart so the crowded upper levels stay readable (top to bottom)
+    var labs = [[INF, "n = ∞ (removed)"], [5, "n = 5, 6"], [4, "n = 4"], [3, "n = 3"], [2, "n = 2"], [1, "n = 1"]], last = -99;
+    labs.forEach(function (L) {
+      var yy = y(En(L[0])), ty = Math.max(yy + 4, last + 13); last = ty;
+      el("text", { x: x1 + 6, y: ty, style: "fill:" + (L[0] === 5 ? "var(--muted)" : "var(--ink)") }, lev, L[1]);
+      if (L[0] !== 5) el("text", { x: 56, y: ty, "text-anchor": "end" }, lev, (En(L[0]) / 1e-19).toFixed(2));
+    });
+    // transition arrow
+    var yi = y(En(A.i)), yf = y(En(A.f)), ax = 200, emit = A.f < A.i && A.f !== INF || (A.i === INF);
+    var dE = En(A.f) - En(A.i), nm = Math.abs(h * c / dE) * 1e9;
+    var col = nm >= 400 && nm <= 700 ? visColor(nm) : nm < 400 ? "var(--c3)" : "var(--c1)";
+    el("line", { x1: ax, x2: ax, y1: yi, y2: yf + (yf < yi ? 9 : -9), stroke: "var(--ink)", "stroke-width": 3 }, lev);
+    el("path", { d: "M" + ax + " " + yf + (yf < yi ? " l-7 11 h14 z" : " l-7 -11 h14 z"), fill: "var(--ink)" }, lev);
+    el("circle", { cx: ax, cy: yi, r: 6, fill: "var(--accent)", stroke: "var(--surface)", "stroke-width": 2 }, lev);
+    // photon squiggle
+    var py = (yi + yf) / 2, d = [], len = 70, dir = emit ? 1 : -1, sx = emit ? ax + 12 : ax + 12 + len;
+    for (var k = 0; k <= 60; k++) { var xx = ax + 12 + k / 60 * len; d.push((k ? "L" : "M") + xx.toFixed(1) + " " + (py + 6 * Math.sin(k / 60 * len / 7 + flash)).toFixed(1)); }
+    el("path", { d: d.join(" "), fill: "none", stroke: col, "stroke-width": 2.4 }, lev);
+    var tipX = emit ? ax + 12 + len : ax + 14;
+    el("path", { d: "M" + tipX + " " + py + (emit ? " l-9 -5 v10 z" : " l9 -5 v10 z"), fill: col }, lev);
+    el("text", { x: ax - 10, y: py + 4, "text-anchor": "end", "class": "lbl", style: "fill:var(--ink)" }, lev, emit ? "photon emitted" : "photon absorbed");
+    // spectrum strip 350–750 nm
+    var sy = 268, sh = 26, s0 = 40, s1 = 420, l0 = 350, l1 = 750;
+    var sxl = function (v) { return s0 + (v - l0) / (l1 - l0) * (s1 - s0); };
+    var defs = el("defs", {}, lev), gr = el("linearGradient", { id: "rb", x1: 0, x2: 1, y1: 0, y2: 0 }, defs);
+    for (var w = 380; w <= 720; w += 20) el("stop", { offset: ((sxl(w) - s0) / (s1 - s0)).toFixed(3), "stop-color": visColor(w) }, gr);
+    if (emit) el("rect", { x: s0, y: sy, width: s1 - s0, height: sh, fill: "#111" }, lev);
+    else { el("rect", { x: s0, y: sy, width: s1 - s0, height: sh, fill: "url(#rb)" }, lev); }
+    // Balmer reference lines (faint)
+    [656.5, 486.3, 434.2, 410.3].forEach(function (b) { el("line", { x1: sxl(b), x2: sxl(b), y1: sy, y2: sy + 5, stroke: emit ? "#888" : "#222" }, lev); });
+    if (nm >= l0 && nm <= l1) el("rect", { x: sxl(nm) - 2, y: sy, width: 4, height: sh, fill: emit ? visColor(Math.max(380, Math.min(720, nm))) : "#111" }, lev);
+    else el("text", { x: nm < l0 ? s0 + 4 : s1 - 4, y: sy + 17, "text-anchor": nm < l0 ? "start" : "end", style: "fill:" + (emit ? "#ddd" : "#111") + "; font-weight:600" }, lev, nm < l0 ? "← line at " + nm.toFixed(1) + " nm (UV, off the visible strip)" : "line at " + (nm >= 1000 ? (nm / 1000).toFixed(3) + " µm" : nm.toFixed(0) + " nm") + " (IR, off the strip) →");
+    el("text", { x: s0, y: sy + sh + 16 }, lev, "350 nm");
+    el("text", { x: s1, y: sy + sh + 16, "text-anchor": "end" }, lev, "750 nm");
+    el("text", { x: (s0 + s1) / 2, y: sy + sh + 16, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, lev, emit ? "emission spectrum (bright line)" : "absorption spectrum (dark line)");
+    return { dE: dE, nm: nm, emit: emit };
+  }
+  var fromBtns = {}, toBtns = {}, scaBtns = [];
+  function renderA() {
+    if (A.i === A.f) A.f = A.i === 1 ? 2 : 1;
+    var r = drawLev(), E = Math.abs(r.dE), nu = E / h, lam = c / nu, nm = lam * 1e9;
+    Object.keys(fromBtns).forEach(function (k) { fromBtns[k].setAttribute("aria-pressed", +k === A.i ? "true" : "false"); });
+    Object.keys(toBtns).forEach(function (k) { toBtns[k].setAttribute("aria-pressed", +k === A.f ? "true" : "false"); toBtns[k].disabled = +k === A.i; });
+    scaBtns.forEach(function (b, i) { b.setAttribute("aria-pressed", A.key === i ? "true" : "false"); });
+    document.getElementById("lev-sub").textContent = "n = " + nName(A.i) + " → n = " + nName(A.f) + (r.emit ? ": emission" : ": absorption");
+    document.getElementById("ra-e").innerHTML = sci(E) + " J";
+    document.getElementById("ra-e2").innerHTML = Lab.sig(E * NA / 1000, 3) + " kJ per mole of photons";
+    document.getElementById("ra-nu").innerHTML = sci(nu);
+    document.getElementById("ra-l").textContent = nm < 1000 ? nm.toFixed(1) + " nm" : (nm / 1000).toFixed(3) + " µm";
+    document.getElementById("ra-l2").innerHTML = sci(lam) + " m";
+    var reg = region(nm);
+    document.getElementById("ra-r").textContent = reg + (reg === "Visible" ? " (" + colorName(nm) + ")" : "");
+    document.getElementById("ra-r2").textContent = r.emit ? "light given off" : "light that must be absorbed";
+    var Ei = En(A.i), Ef = En(A.f), out = "";
+    out += "<p><b>n = " + nName(A.i) + " → n = " + nName(A.f) + ".</b> " + (r.emit ? "The electron drops to a lower level, so the atom loses energy and <b>emits</b> a photon carrying exactly that energy." : A.f === INF ? "The electron is removed from the atom entirely (ionization). The atom must <b>absorb</b> a photon with at least this much energy." : "The electron moves up to a higher level. That can happen only if the atom <b>absorbs</b> a photon with exactly this energy; a photon with a bit more or less passes through.") + "</p>";
+    out += '<ol class="steps"><li>Level energies: E<sub>' + nName(A.i) + "</sub> = " + (A.i === INF ? "0" : sci(Ei)) + " J, E<sub>" + nName(A.f) + "</sub> = " + (A.f === INF ? "0" : sci(Ef)) + " J.</li>";
+    out += "<li>Photon energy: |ΔE| = |E<sub>final</sub> − E<sub>initial</sub>| = " + sci(E) + " J.</li>";
+    out += "<li>Frequency: ν = E ÷ h = " + sci(E) + " J ÷ 6.626 × 10<sup>−34</sup> J·s = " + sci(nu) + " s<sup>−1</sup>.</li>";
+    out += "<li>Wavelength: λ = c ÷ ν = 2.998 × 10<sup>8</sup> m/s ÷ " + sci(nu) + " s<sup>−1</sup> = " + sci(lam) + " m = " + (nm < 1000 ? nm.toFixed(1) + " nm" : (nm / 1000).toFixed(3) + " µm") + ".</li></ol>";
+    if (reg === "Visible") out += "<p>This line is in the visible range, so you would see " + colorName(nm) + " light. The measured hydrogen line is within about 0.1% of this value; the small gap comes from rounding in the level formula and the difference between wavelengths in air and in vacuum.</p>";
+    else out += "<p>This line is " + (reg === "Ultraviolet" ? "ultraviolet: the gap is larger than any visible photon's energy." : "infrared: the gap is smaller than any visible photon's energy.") + " Larger energy gaps give shorter wavelengths.</p>";
+    out += "<p><b>AP answer:</b> the energy of the photon " + (r.emit ? "emitted" : "absorbed") + " equals the difference in energy between the two levels, " + sci(E) + " J; then ν = E/h and λ = c/ν.</p>";
+    document.getElementById("story").innerHTML = out;
+  }
+  [1, 2, 3, 4, 5, 6].forEach(function (n) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = "n = " + n; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { A.i = n; A.key = null; renderA(); });
+    document.getElementById("from").appendChild(b); fromBtns[n] = b;
+  });
+  LEVELS.forEach(function (n) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = "n = " + nName(n); b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { A.f = n; A.key = null; renderA(); });
+    document.getElementById("to").appendChild(b); toBtns[n] = b;
+  });
+  SCA.forEach(function (s, i) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = s.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { A.i = s.i; A.f = s.f; A.key = i; renderA(); });
+    document.getElementById("sc-a").appendChild(b); scaBtns.push(b);
+  });
+  renderA();
+
+  // ================= Part B: photoelectric =================
+  // Threshold energies (approximate work functions): Cs 2.14 eV, Na 2.28 eV, Zn 4.3 eV; 1 eV = 1.602 × 10^-19 J.
+  var METALS = [
+    { name: "Cesium", s: "Cs", phi: 3.43e-19 },
+    { name: "Sodium", s: "Na", phi: 3.65e-19 },
+    { name: "Zinc", s: "Zn", phi: 6.89e-19 }
+  ];
+  var SCB = [
+    { name: "Dim red light on sodium", m: 1, w: 650, i: 2 },
+    { name: "Very bright red light on sodium", m: 1, w: 650, i: 10 },
+    { name: "Dim violet light on sodium", m: 1, w: 400, i: 2 },
+    { name: "Bright violet light on sodium", m: 1, w: 400, i: 10 },
+    { name: "Visible light on zinc", m: 2, w: 400, i: 8 },
+    { name: "UV (250 nm) on zinc", m: 2, w: 250, i: 5 }
+  ];
+  var B = { m: 1, w: 650, i: 2, key: 0 };
+  var pe = document.getElementById("pe"), t0 = 0;
+  function waveCol(nm) { return nm >= 400 && nm <= 700 ? visColor(nm) : nm < 400 ? "var(--c3)" : "var(--c1)"; }
+  function drawPE(t) {
+    var W = 440, H = 300, mt = METALS[B.m], Ep = h * c / (B.w * 1e-9), ok = Ep >= mt.phi, KE = Ep - mt.phi;
+    pe.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (pe.firstChild) pe.removeChild(pe.firstChild);
+    // lamp
+    el("rect", { x: 22, y: 26, width: 64, height: 40, rx: 8, fill: "var(--surface)", stroke: "var(--ink)", "stroke-width": 1.5 }, pe);
+    el("circle", { cx: 86, cy: 46, r: 12, fill: waveCol(B.w), opacity: 0.25 + 0.06 * B.i }, pe);
+    el("text", { x: 54, y: 84, "text-anchor": "middle" }, pe, "lamp, " + B.w + " nm");
+    // metal plate
+    var px0 = 120, px1 = 400, py = 240;
+    el("rect", { x: px0, y: py, width: px1 - px0, height: 26, fill: "var(--ghost)", stroke: "var(--ink)", "stroke-width": 1.2 }, pe);
+    el("text", { x: (px0 + px1) / 2, y: py + 17, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, pe, mt.name + " metal (" + mt.s + ")");
+    // photons: N per cycle, each travels lamp -> plate
+    var N = B.i, per = Math.max(10, Math.min(28, B.w / 20));
+    for (var k = 0; k < N; k++) {
+      var p = ((t * 0.55) + k / N) % 1, tx = 160 + (k * 97) % 220;
+      var x = 96 + (tx - 96) * p, y = 52 + (py - 52) * p;
+      if (p > 0.97) continue;
+      var ang = Math.atan2(py - 52, tx - 96), d = [];
+      for (var j = 0; j <= 16; j++) { var s = -j * 1.6, wob = 4 * Math.sin(j * 1.6 * 2 * Math.PI / per * 3); d.push((j ? "L" : "M") + (x + s * Math.cos(ang) - wob * Math.sin(ang)).toFixed(1) + " " + (y + s * Math.sin(ang) + wob * Math.cos(ang)).toFixed(1)); }
+      el("path", { d: d.join(" "), fill: "none", stroke: waveCol(B.w), "stroke-width": 2 }, pe);
+      el("circle", { cx: x, cy: y, r: 2.6, fill: waveCol(B.w) }, pe);
+      // electron for this photon, launched when the photon lands
+      if (ok) {
+        var q2 = ((t * 0.55) + k / N + 0.03) % 1;   // time since this photon's last landing
+        var speed = 0.35 + 2.2 * Math.sqrt(KE / 5e-19);
+        var dist = q2 * 300 * speed;
+        if (dist < 230) {
+          var ex = tx + dist * 0.55, ey = py - 4 - dist * 0.85;
+          if (ey > 10 && ex < W - 6) {
+            el("circle", { cx: ex, cy: ey, r: 4.5, fill: "var(--accent)" }, pe);
+            el("text", { x: ex + 7, y: ey + 4, style: "fill:var(--accent); font-size:10px" }, pe, "e⁻");
+          }
+        }
+      }
+    }
+    if (!ok) el("text", { x: (px0 + px1) / 2, y: py - 14, "text-anchor": "middle", "class": "lbl", style: "fill:var(--bad)" }, pe, "no electrons: each photon is below the threshold");
+    return { Ep: Ep, ok: ok, KE: KE, mt: mt };
+  }
+  var metalBtns = [], scbBtns = [];
+  var elW = document.getElementById("s-w"), elI = document.getElementById("s-i");
+  function renderB() {
+    var r = drawPE(t0), mt = r.mt, lamT = h * c / mt.phi * 1e9;
+    elW.value = B.w; elI.value = B.i;
+    document.getElementById("o-w").textContent = B.w + " nm";
+    document.getElementById("o-i").textContent = B.i + " / 10";
+    metalBtns.forEach(function (b, i) { b.setAttribute("aria-pressed", B.m === i ? "true" : "false"); });
+    scbBtns.forEach(function (b, i) { b.setAttribute("aria-pressed", B.key === i ? "true" : "false"); });
+    document.getElementById("pe-sub").textContent = region(B.w) + (region(B.w) === "Visible" ? " (" + colorName(B.w) + ")" : "") + " light, brightness " + B.i;
+    document.getElementById("rb-e").innerHTML = sci(r.Ep) + " J";
+    document.getElementById("rb-e2").innerHTML = "hc ÷ (" + sci(B.w * 1e-9) + " m)";
+    document.getElementById("rb-t").innerHTML = sci(mt.phi) + " J";
+    document.getElementById("rb-t2").textContent = mt.name + ": light shorter than about " + lamT.toFixed(0) + " nm";
+    document.getElementById("rb-y").innerHTML = r.ok ? '<span class="pill lr">Yes</span>' : '<span class="pill infl">No</span>';
+    document.getElementById("rb-y2").textContent = r.ok ? "number ∝ brightness: " + B.i + " per pulse here" : "at any brightness";
+    document.getElementById("rb-k").innerHTML = r.ok ? sci(r.KE) + " J" : "—";
+    var out = "<p><b>" + B.w + " nm light on " + mt.name.toLowerCase() + ".</b> Each photon carries E = hc/λ = " + sci(r.Ep) + " J. Removing an electron from " + mt.name.toLowerCase() + " takes at least " + sci(mt.phi) + " J.</p><ul>";
+    if (r.ok) {
+      out += "<li>Each photon has enough energy, so each absorbed photon can free one electron. The extra " + sci(r.KE) + " J becomes the electron's kinetic energy.</li>";
+      out += "<li>Raising the brightness sends more photons per second, so <b>more</b> electrons come off, but each still gets at most " + sci(r.KE) + " J. To make them faster, use a shorter wavelength.</li>";
+    } else {
+      out += "<li>Each photon is " + sci(mt.phi - r.Ep) + " J short of the threshold. An electron absorbs one photon at a time, so the energies of separate photons do not add up.</li>";
+      out += "<li>Making the light brighter only sends more of these too-weak photons: still <b>no</b> electrons. Only light with a wavelength shorter than about " + lamT.toFixed(0) + " nm works.</li>";
+    }
+    out += "</ul><p><b>AP answer:</b> whether electrons are ejected depends on the energy of each photon (E = hν, set by the frequency), not on the intensity. Intensity sets the number of photons and therefore the number of electrons ejected.</p>";
+    document.getElementById("story-b").innerHTML = out;
+  }
+  METALS.forEach(function (m, i) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = m.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { B.m = i; B.key = null; renderB(); });
+    document.getElementById("metal").appendChild(b); metalBtns.push(b);
+  });
+  SCB.forEach(function (s, i) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = s.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { B.m = s.m; B.w = s.w; B.i = s.i; B.key = i; renderB(); });
+    document.getElementById("sc-b").appendChild(b); scbBtns.push(b);
+  });
+  elW.addEventListener("input", function () { B.w = parseInt(elW.value, 10); B.key = null; renderB(); });
+  elI.addEventListener("input", function () { B.i = parseInt(elI.value, 10); B.key = null; renderB(); });
+  renderB();
+  if (Lab.reduceMotion) drawPE(0.3);
+  else (function loop(ts) { t0 = ts / 1000; drawPE(t0); requestAnimationFrame(loop); })(0);
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "A photon has an energy of 3.98 × 10⁻¹⁹ J. What is its wavelength?",
+      o: ["6.01 × 10¹⁴ m", "2.01 × 10⁶ m", "4.99 × 10⁻⁷ m", "1.19 × 10⁻¹⁰ m"], c: 2,
+      w: "λ = hc/E = (6.626 × 10⁻³⁴ J·s)(2.998 × 10⁸ m/s) ÷ (3.98 × 10⁻¹⁹ J) = 4.99 × 10⁻⁷ m, or 499 nm. Choice A is E/h, which is the frequency, not a wavelength. Choice B is E/(hc), which equals 1/λ. Choice D multiplies E by c instead of dividing hc by E." },
+    { s: "What is the frequency of light with a wavelength of 600. nm?",
+      o: ["5.00 × 10¹⁴ s⁻¹", "5.00 × 10⁵ s⁻¹", "2.00 × 10⁻¹⁵ s⁻¹", "1.80 × 10¹¹ s⁻¹"], c: 0,
+      w: "ν = c/λ = (2.998 × 10⁸ m/s) ÷ (6.00 × 10⁻⁷ m) = 5.00 × 10¹⁴ s⁻¹. Choice B divides by 600 without converting nm to m. Choice C is λ/c, the reciprocal." },
+    { s: "What is the energy of one mole of photons of 400. nm light?",
+      o: ["4.97 × 10⁻¹⁹ kJ/mol", "0.299 kJ/mol", "2.99 × 10⁵ kJ/mol", "299 kJ/mol"], c: 3,
+      w: "E per photon = hc/λ = 1.986 × 10⁻²⁵ J·m ÷ 4.00 × 10⁻⁷ m = 4.97 × 10⁻¹⁹ J. Times 6.022 × 10²³ mol⁻¹ = 2.99 × 10⁵ J/mol = 299 kJ/mol. Choice C forgets to convert J to kJ; choice A is the energy of one photon (in J, not kJ/mol)." },
+    { s: "An electron in a hydrogen atom moves from n = 3 to n = 2. Which statement is correct?",
+      o: ["A photon is absorbed whose energy equals E₃ − E₂", "A photon is emitted whose energy equals E₃ − E₂", "A photon is emitted whose energy equals E₃ + E₂", "No photon is involved, because the electron stays in the atom"], c: 1,
+      w: "Moving to a lower level lowers the atom's energy, and the difference leaves as an emitted photon with energy E₃ − E₂ (a positive number, since E₃ is less negative than E₂). This is the red 656 nm line. Absorption (A) would move the electron up." },
+    { s: "An atom has energy levels at −8.0 × 10⁻¹⁹ J (lowest), −3.0 × 10⁻¹⁹ J and −1.0 × 10⁻¹⁹ J. An atom in its lowest level can absorb a photon of which energy?",
+      o: ["2.0 × 10⁻¹⁹ J", "4.0 × 10⁻¹⁹ J", "7.0 × 10⁻¹⁹ J", "6.0 × 10⁻¹⁹ J"], c: 2,
+      w: "From the lowest level, the allowed gaps are 8.0 − 3.0 = 5.0 × 10⁻¹⁹ J and 8.0 − 1.0 = 7.0 × 10⁻¹⁹ J. Only 7.0 × 10⁻¹⁹ J is offered. Choice A is the gap between the two upper levels, which an atom in the lowest level cannot use. Choice D matches no gap, so a photon of that energy passes through without being absorbed." },
+    { s: "Red light shining on a sodium surface ejects no electrons. When the red light is made much brighter, still no electrons are ejected. Which explanation is consistent with these observations?",
+      o: ["Each photon of red light has less energy than is needed to remove an electron, and brighter light only increases the number of such photons", "Brighter light has photons of higher frequency, but not high enough", "Red light travels too slowly to transfer its energy", "The electrons need to absorb several photons, which takes longer than the experiment"], c: 0,
+      w: "An electron absorbs one photon at a time, and the photon's energy depends only on its frequency (E = hν). Intensity changes the number of photons, not their energy (ruling out B), and all light travels at c (ruling out C)." },
+    { s: "If the wavelength of a photon is doubled, what happens to its energy?",
+      o: ["It doubles", "It is halved", "It is quadrupled", "It does not change"], c: 1,
+      w: "E = hc/λ, so energy is inversely proportional to wavelength. Doubling λ halves the frequency and halves the energy." },
+    { s: "Compared with a photon of red light (700 nm), a photon of blue light (450 nm) has:",
+      o: ["a lower frequency and less energy", "the same energy but a higher speed", "a higher frequency and more energy, and the same speed", "a higher frequency and less energy"], c: 2,
+      w: "Shorter wavelength means higher frequency (c = λν) and more energy (E = hν). All photons travel at the same speed c in a vacuum, which rules out B." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("3.12");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [3], topic: "3.12", compact: true, storageKey: "topic-3.12" });</script>
+</body>
+</html>
