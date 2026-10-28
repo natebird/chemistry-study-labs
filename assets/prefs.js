@@ -74,6 +74,8 @@
     ".ap-sw button[aria-pressed=\"true\"]{border-color:var(--ink);box-shadow:inset 0 0 0 3px var(--surface)}" +
     ".ap-name{font-size:.84rem;color:var(--muted);margin:0}" +
     ".ap-reset{justify-self:start;border:1px solid var(--rule);background:none;color:var(--ink);border-radius:999px;padding:5px 12px;font:500 .82rem var(--body,system-ui);cursor:pointer}" +
+    /* On phones the button shrinks to a small dot so it covers less of the lab controls. */
+    "@media (max-width:620px){.ap-btn{right:10px;bottom:10px;padding:9px;opacity:.92}.ap-btn .ap-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.ap-panel{right:10px;bottom:58px;width:calc(100vw - 20px)}}" +
     "@media print{.ap-btn,.ap-panel{display:none!important}}";
 
   var mode = get(KEY_MODE) || "auto", color = byId(get(KEY_COLOR)) ? get(KEY_COLOR) : DEFAULT;
@@ -84,7 +86,7 @@
     var btn = document.createElement("button");
     btn.type = "button"; btn.className = "ap-btn";
     btn.setAttribute("aria-expanded", "false"); btn.setAttribute("aria-controls", "ap-panel");
-    btn.innerHTML = '<span class="ap-dot" aria-hidden="true"></span><span>Appearance</span>';
+    btn.innerHTML = '<span class="ap-dot" aria-hidden="true"></span><span class="ap-label">Appearance</span>';
 
     var panel = document.createElement("div");
     panel.className = "ap-panel"; panel.id = "ap-panel"; panel.hidden = true;

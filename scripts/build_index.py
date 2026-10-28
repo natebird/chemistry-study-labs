@@ -21,7 +21,7 @@ HEAD = '''<meta charset="utf-8">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{p}assets/lab.css?v=1">
-<script src="{p}assets/prefs.js?v=1"></script>'''
+<script src="{p}assets/prefs.js?v=2"></script>'''
 GLOSS_SCRIPTS = "\n".join(f'<script src="../assets/glossary/unit-{u}.js"></script>' for u in UNITS)
 
 def esc(t): return html.escape(t, quote=False)

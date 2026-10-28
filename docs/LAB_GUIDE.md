@@ -20,7 +20,7 @@ A high-school student taking AP Chemistry, studying on her own. Plain, direct se
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/lab.css?v=1">
-<script src="../assets/prefs.js?v=1"></script>
+<script src="../assets/prefs.js?v=2"></script>
 <style>/* page-specific styles only */</style>
 </head>
 <body>
