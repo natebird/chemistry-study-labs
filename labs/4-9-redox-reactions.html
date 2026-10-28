@@ -133,7 +133,7 @@
   <div class="concepts">
     <div class="card"><span class="tag">Bookkeeping</span><h3>Oxidation numbers</h3><p>An oxidation number is the charge an atom would have if all its bonds were ionic. It is not a real charge (Mn in MnO<sub>4</sub><sup>−</sup> is not a 7+ ion), but tracking it shows exactly which atoms gain or lose electrons.</p></div>
     <div class="card"><span class="tag">OIL RIG</span><h3>Oxidized and reduced</h3><p>Oxidation is loss of electrons, so the oxidation number goes up. Reduction is gain of electrons, so it goes down. They always happen together: the electrons one species loses are the electrons the other gains.</p></div>
-    <div class="card"><span class="tag">Agents</span><h3>Oxidizing and reducing agents</h3><p>The oxidizing agent causes oxidation by taking electrons, so it is the species that is <b>reduced</b>. The reducing agent gives electrons away, so it is the species that is <b>oxidized</b>. Name the whole species (MnO<sub>4</sub><sup>−</sup>), not just the atom.</p></div>
+    <div class="card"><span class="tag">Agents</span><h3>Oxidizing and reducing agents</h3><p>The oxidizing agent causes oxidation by taking electrons, so it is the species that is <b>reduced</b>. The reducing agent gives electrons away, so it is the species that is <b>oxidized</b>. Name the whole species (MnO<sub>4</sub><sup>−</sup>), not just the atom. The AP Exam itself does not test these two terms (a CED exclusion), but your class and textbook will use them.</p></div>
     <div class="card"><span class="tag">Half-reactions</span><h3>Split, balance, recombine</h3><p>Write the oxidation and reduction separately. Balance each for atoms and charge, with electrons as a reactant (reduction) or a product (oxidation). Then multiply so the electrons match and add.</p></div>
     <div class="card"><span class="tag">Acidic solution</span><h3>H<sub>2</sub>O and H<sup>+</sup> fill the gaps</h3><p>Oxygen-containing ions such as MnO<sub>4</sub><sup>−</sup> lose or gain O atoms. In acidic solution, add H<sub>2</sub>O to balance O and H<sup>+</sup> to balance H. They are really there: the reaction uses up acid or makes water.</p></div>
     <div class="card"><span class="tag">Final check</span><h3>Atoms and charge</h3><p>A correct redox equation has the same number of each atom and the same total charge on both sides, and no electrons left over. If the charges don't match, the electron count is wrong.</p></div>
@@ -260,7 +260,7 @@
     "CH4": { known: { H: 1 }, unk: "C", x: { C: -4, H: 1 } },
     "ClO3^-": { known: { O: -2 }, unk: "Cl", x: { Cl: 5, O: -2 } },
     "HClO": { known: { H: 1, O: -2 }, unk: "Cl", x: { H: 1, Cl: 1, O: -2 } },
-    "Fe3O4": { known: { O: -2 }, unk: "Fe", x: { Fe: 8 / 3, O: -2 }, note: "The answer is not a whole number: +8/3 is the average of two Fe at +3 and one at +2. AP accepts average oxidation numbers." }
+    "Fe3O4": { known: { O: -2 }, unk: "Fe", x: { Fe: 8 / 3, O: -2 }, note: "The answer is not a whole number: +8/3 is the average of two Fe at +3 and one at +2. An average oxidation number like this is a correct answer when the atoms differ." }
   };
   function charge(f) { if (f === "e^-") return -1; var m = String(f).match(/\^(\d*)([+\-])$/); return m ? (m[2] === "-" ? -1 : 1) * (m[1] ? +m[1] : 1) : 0; }
   function counts(f) { return f === "e^-" ? {} : Lab.parseFormula(f); }
@@ -589,9 +589,9 @@
     { s: "What is the oxidation number of chromium in the dichromate ion, Cr₂O₇²⁻?",
       o: ["+7", "+6", "+12", "+3"], c: 1,
       w: "O is −2, so seven O contribute −14. The ion's charge is −2, so 2x − 14 = −2, 2x = +12, and x = +6. Choice C is the total for both Cr atoms; choice A forgets the ion's charge." },
-    { s: "2Al(s) + 3Cu²⁺(aq) → 2Al³⁺(aq) + 3Cu(s). Which species is the oxidizing agent?",
+    { s: "2Al(s) + 3Cu²⁺(aq) → 2Al³⁺(aq) + 3Cu(s). Which species gains electrons in this reaction?",
       o: ["Al", "Al³⁺", "Cu", "Cu²⁺"], c: 3,
-      w: "Cu²⁺ is reduced (+2 → 0) by taking electrons from Al, so Cu²⁺ is the oxidizing agent. Al is oxidized and is the reducing agent. Choice A is the common mix-up: the species that is oxidized is the reducing agent." },
+      w: "Cu²⁺ goes from +2 to 0, so it gains electrons (it is reduced); those electrons come from Al, which goes from 0 to +3 (oxidized). Choice C is the product of the reduction, not the species that gains electrons; choice A is the species that loses them. (In class you may hear Cu²⁺ called the oxidizing agent.)" },
     { s: "Which half-reaction correctly shows MnO₄⁻ being reduced to Mn²⁺ in acidic solution?",
       o: ["MnO₄⁻ + 8H⁺ + 5e⁻ → Mn²⁺ + 4H₂O", "MnO₄⁻ + 8H⁺ → Mn²⁺ + 4H₂O + 5e⁻", "MnO₄⁻ + 4H⁺ + 3e⁻ → Mn²⁺ + 2H₂O", "MnO₄⁻ + 8H⁺ + 7e⁻ → Mn²⁺ + 4H₂O"], c: 0,
       w: "Four O need 4 H₂O, the 8 H in water need 8 H⁺, and the charge goes from −1 + 8 = +7 on the left to +2 on the right, so 5 e⁻ are added on the left. Mn goes from +7 to +2, a gain of 5 electrons. Choice B puts electrons on the product side, which would be oxidation; choice D gives the charge as 0 on the left, not +2." },

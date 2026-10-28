@@ -49,7 +49,7 @@
 <section aria-labelledby="lab-h">
   <div class="sec-head">
     <h2 id="lab-h">1. The trend explorer</h2>
-    <p>Darker tiles have larger values. Click a tile to set element A, then another for element B. Data: first ionization energies and Pauling electronegativities from the AP-style table used across this site; atomic radii are calculated values (Clementi, 1967) so the noble gases can be included; ionic radii are Shannon radii for six-coordinate ions (N³⁻ four-coordinate). Different sources give somewhat different radii, but the trends are the same.</p>
+    <p>Darker tiles have larger values. Click a tile to set element A, then another for element B. Data: first ionization energies and Pauling electronegativities are standard reference values; atomic radii are calculated values (Clementi, 1967) so the noble gases can be included; ionic radii are Shannon radii for six-coordinate ions (N³⁻ four-coordinate). Different sources give somewhat different radii, but the trends are the same.</p>
   </div>
 
   <div class="card ptcard">
@@ -210,9 +210,8 @@
     { key: "fcl", name: "F vs. Cl electronegativity", t: "en", a: 9, b: 17 },
     { key: "iso", name: "O²⁻ vs. Mg²⁺ (isoelectronic)", t: "ion", a: 8, b: 12 },
     { key: "clk", name: "Cl⁻ vs. K⁺ (isoelectronic)", t: "ion", a: 17, b: 19 },
-    { key: "diag", name: "Mg vs. Cl vs. diagonal", t: "rad", a: 3, b: 12 }
+    { key: "diag", name: "Li vs. Mg (diagonal)", t: "rad", a: 3, b: 12 }
   ];
-  SC[7].name = "Li vs. Mg (diagonal)";
 
   function range(t) {
     var vals = []; for (var z = 1; z <= MAXZ; z++) { var v = TR[t].get(z); if (v != null) vals.push(v); }
@@ -305,7 +304,7 @@
     if (rel.k === "period") {
       var right = A.g > B.g ? A : B, left = right === A ? B : A;
       expect = TR[t].dir.period > 0 ? right : left;
-      why = right.n + " has more protons (" + right.z + " vs. " + left.z + ") and its valence electrons are in the same shell (n = " + A.p + "), with about the same core shielding. The stronger attraction pulls the valence electrons closer and holds them more tightly.";
+      why = right.n + " has more protons (" + right.z + " vs. " + left.z + ") and its valence electrons are in the same shell (n = " + A.p + "), " + (left.g <= 2 && right.g >= 13 && A.p >= 4 ? "and the 3d electrons it adds in between shield the valence electrons only weakly." : "with about the same core shielding.") + " The stronger attraction pulls the valence electrons closer and holds them more tightly.";
     } else if (rel.k === "group") {
       var low = A.p > B.p ? A : B, up = low === A ? B : A;
       expect = TR[t].dir.group > 0 ? low : up;
@@ -314,7 +313,7 @@
       expect = TR[t].dir.period > 0 ? rel.upper : rel.lower;
       why = rel.upper.n + " is both higher (fewer shells) and farther right (more protons for its shell) than " + rel.lower.n.toLowerCase() + ", so both trends point the same way.";
     } else {
-      why = rel.upper.n + " is higher but farther left than " + rel.lower.n.toLowerCase() + ". The period trend and the group trend pull in opposite directions, so the general trends cannot decide; use the data. AP questions avoid asking you to predict these pairs.";
+      why = rel.upper.n + " is higher but farther left than " + rel.lower.n.toLowerCase() + ". The period trend and the group trend pull in opposite directions, so the general trends cannot decide; use the data.";
     }
     var tmPair = tm(A) || tm(B);
     if (expect) {
@@ -322,10 +321,12 @@
       L.push((fits ? "This follows the trend. " : "") + why);
       if (!fits && big) {
         var key = Math.min(a, b) + "-" + Math.max(a, b);
-        if (t === "ie" && IE_EX[key] === "s") L.push("<b>Exception.</b> " + Lab.ELEMENTS[Math.max(a, b)].n + "'s first electron comes from a " + (Math.max(a, b) === 31 ? "4p" : Math.max(a, b) === 5 ? "2p" : "3p") + " orbital, which is higher in energy than the filled s subshell below it and partly shielded by those s electrons, so it is easier to remove.");
+        var hi = Lab.ELEMENTS[Math.max(a, b)], lo = Lab.ELEMENTS[Math.min(a, b)];
+        if (t === "ie" && !IE_EX[key] && rel.k === "period" && hi.g === 13 && lo.g >= 2 && lo.g <= 12) key = "s";
+        if (t === "ie" && (IE_EX[key] === "s" || key === "s")) L.push("<b>Exception.</b> " + Lab.ELEMENTS[Math.max(a, b)].n + "'s first electron comes from a " + (Math.max(a, b) === 31 ? "4p" : Math.max(a, b) === 5 ? "2p" : "3p") + " orbital, which is higher in energy than the filled s subshell below it and partly shielded by those s electrons, so it is easier to remove.");
         else if (t === "ie" && IE_EX[key] === "pair") L.push("<b>Exception.</b> " + Lab.ELEMENTS[Math.max(a, b)].n + " has four p electrons, so one p orbital holds a pair. Repulsion between the paired electrons makes one of them easier to remove than any of " + Lab.ELEMENTS[Math.min(a, b)].n.toLowerCase() + "'s three unpaired p electrons.");
-        else if (tmPair) L.push("<b>Exception.</b> Transition metals add electrons to an inner 3d subshell, so their properties change only a little and not always smoothly across the row. These small irregularities are beyond the AP exam.");
-        else L.push("<b>Small irregularity.</b> Here the data run against the simple trend, mainly because the filled 3d subshell shields the 4s and 4p electrons poorly (gallium and germanium hold their electrons more tightly than expected). This detail is beyond the AP exam.");
+        else if (tmPair) L.push("<b>Exception.</b> Transition metals add electrons to an inner 3d subshell, so their properties change only a little and not always smoothly across the row. These small irregularities go beyond what the AP course asks you to explain.");
+        else L.push("<b>Small irregularity.</b> Here the data run against the simple trend, mainly because the filled 3d subshell shields the 4s and 4p electrons poorly (gallium and germanium hold their electrons more tightly than expected). This detail goes beyond what the AP course asks you to explain.");
       }
     } else L.push(why);
     if (t === "rad") L.push("Ionization energy and electronegativity usually run opposite to radius: a smaller atom holds its electrons more tightly.");

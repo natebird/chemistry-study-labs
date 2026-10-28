@@ -135,7 +135,7 @@
       <tr><td>C–C</td><td>1</td><td>154</td><td>348</td><td rowspan="3">Same atoms, higher bond order: <b>shorter and stronger</b>. A triple bond is not three times as strong as a single bond, because π bonds are weaker than σ bonds.</td></tr>
       <tr><td>C=C</td><td>2</td><td>134</td><td>614</td></tr>
       <tr><td>C≡C</td><td>3</td><td>120</td><td>839</td></tr>
-      <tr><td>N–N</td><td>1</td><td>147</td><td>163</td><td rowspan="3">The same pattern for nitrogen. N≡N is one of the strongest bonds known, which is why N₂ is so unreactive.</td></tr>
+      <tr><td>N–N</td><td>1</td><td>147</td><td>163</td><td rowspan="3">The same pattern for nitrogen. N≡N is one of the strongest bonds known, which is why N₂ is so unreactive. Here the triple bond is more than three times the single bond, because the N–N single bond is unusually weak (lone pairs on neighboring N atoms repel).</td></tr>
       <tr><td>N=N</td><td>2</td><td>124</td><td>418</td></tr>
       <tr><td>N≡N</td><td>3</td><td>110</td><td>941</td></tr>
       <tr><td>H–F</td><td>1</td><td>92</td><td>567</td><td rowspan="4">Down a group, the halogen gets larger: <b>longer and weaker</b> bonds to H.</td></tr>
@@ -169,7 +169,7 @@
         <li>Saying energy is needed to <b>form</b> a bond. Forming a bond releases energy; breaking a bond requires energy.</li>
         <li>Reading the bond length where the curve crosses zero on the left. That crossing is closer than the bond length; the bond length is at the minimum.</li>
         <li>Saying the atoms stop at the bond length because there is no force. Both attraction and repulsion are present; they balance there.</li>
-        <li>Assuming a triple bond is three times as strong as a single bond. It is stronger, but not three times.</li>
+        <li>Assuming each extra bond adds the same energy, so a triple bond is exactly three times a single bond. Bond energy rises with bond order, but not in equal steps (C≡C 839 is less than 3 × 348; N≡N 941 is more than 3 × 163).</li>
         <li>Using only size to compare ionic attractions when the charges differ. A 2+/2− pair beats a 1+/1− pair even with larger ions.</li>
         <li>Writing Coulomb's law with r² for potential energy. Force goes as 1/r²; potential energy goes as 1/r. AP questions only need the direction of the trend.</li>
       </ul>
@@ -347,12 +347,12 @@
     } else {
       html += "The atoms have been pushed so close that the potential energy is positive (" + (e > 9999 ? "very large" : Math.round(e) + " kJ/mol") + "), higher than for separate atoms.</p>";
       li.push("Repulsion between the two nuclei (and between the two inner electron clouds) dominates. This is the steep wall on the left of the curve.");
-      li.push("This is why atoms in a bond never get closer than about the bond length: it costs far too much energy.");
+      li.push("This is why bonded atoms stay near the bond length: pushing them much closer costs a lot of energy.");
     }
     var cmp = SETS[S.set].keys;
     if (cmp.length) {
       if (S.set === "hx") li.push("<b>Comparison:</b> going from H–F to H–I, the halogen atom gets larger (more electron shells). The shared electrons are farther from the halogen nucleus, so the minimum moves <b>right</b> (longer bond: 92 → 161 pm) and gets <b>shallower</b> (weaker bond: 567 → 299 kJ/mol).");
-      else li.push("<b>Comparison:</b> going from single to double to triple bond between the same two atoms, more electrons are shared between the nuclei. The minimum moves <b>left</b> (shorter bond) and gets <b>deeper</b> (stronger bond). The triple bond is not three times as strong as the single bond.");
+      else li.push("<b>Comparison:</b> going from single to double to triple bond between the same two atoms, more electrons are shared between the nuclei. The minimum moves <b>left</b> (shorter bond) and gets <b>deeper</b> (stronger bond)." + (S.set === "cc" ? " The triple bond is not three times as strong as the single bond (839 vs. 3 × 348 = 1044 kJ/mol), because each π bond adds less than a σ bond." : " Each added bond does not add the same energy (163 → 418 → 941 kJ/mol); the N–N single bond is unusually weak because the lone pairs on the two N atoms repel."));
     }
     html += "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
     var end = cmp.length

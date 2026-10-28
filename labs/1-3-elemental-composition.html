@@ -132,7 +132,7 @@
   <div class="concepts">
     <div class="card"><span class="tag">Fixed ratio</span><h3>Law of definite proportions</h3><p>A pure compound always has the same elements in the same proportion by mass. Pure water is always 11.2% hydrogen and 88.8% oxygen by mass, whether it is a drop or a lake. This is what makes a compound a pure substance.</p></div>
     <div class="card"><span class="tag">mass of element ÷ mass of compound</span><h3>Percent composition</h3><p>Percent by mass of an element = (mass of that element in one mole ÷ molar mass) × 100. For H₂O: 2(1.008) ÷ 18.02 × 100 = 11.2% H. The percents of all the elements add to 100.</p></div>
-    <div class="card"><span class="tag">Simplest whole-number ratio</span><h3>Empirical formula</h3><p>The empirical formula gives the lowest whole-number ratio of atoms. Glucose, C₆H₁₂O₆, has the empirical formula CH₂O. Ionic compounds are always written as empirical formulas (NaCl, Fe₂O₃).</p></div>
+    <div class="card"><span class="tag">Simplest whole-number ratio</span><h3>Empirical formula</h3><p>The empirical formula gives the lowest whole-number ratio of atoms. Glucose, C₆H₁₂O₆, has the empirical formula CH₂O. Formulas of ionic compounds are written as empirical formulas (NaCl, Fe₂O₃).</p></div>
     <div class="card"><span class="tag">Percent → grams → moles</span><h3>From data to formula</h3><p>Assume a 100 g sample so percents become grams. Convert each mass to moles. Divide every mole value by the smallest. If a ratio ends in about .5, .33, or .25, multiply all of them by 2, 3, or 4.</p></div>
     <div class="card"><span class="tag">n = M ÷ empirical mass</span><h3>Molecular formula</h3><p>The molecular formula is a whole-number multiple of the empirical formula. Divide the compound's molar mass by the empirical formula mass to get that multiple, then multiply every subscript by it.</p></div>
     <div class="card"><span class="tag">Same ratio, different compounds</span><h3>What composition cannot tell you</h3><p>Compounds with the same empirical formula have the same percent composition. C₂H₂ and C₆H₆ are both 92.3% C. To tell them apart you need more information, such as the molar mass.</p></div>
@@ -441,8 +441,6 @@
       B.mode = x.mode; B.rows = x.rows.map(function (r) { return r.slice(); }); B.mm = x.mm; B.key = x.key;
       B.note = x.key === "mgo" ? "The oxide weighs 4.15 g and contains 2.50 g of Mg, so the oxygen that combined is 4.15 − 2.50 = 1.65 g." : "";
       writeRows(); renderB();
-  var wasNarrow = narrow(barsSvg);
-  window.addEventListener("resize", function () { var n = narrow(barsSvg); if (n !== wasNarrow) { wasNarrow = n; renderA(); renderB(); } });
     });
     document.getElementById("sc").appendChild(b); scBtns[x.key] = b;
   });

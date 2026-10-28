@@ -247,8 +247,10 @@ svg.mini { width: 100%; height: auto; display: block; }
     var a = eps(A.l) * bc;
     Lab.vline(F, A.l, "var(--c4)", 1.5, "5 4");
     Lab.dot(F, A.l, a, "var(--c4)", false);
-    Lab.tag(F, A.l + (A.l > 600 ? -6 : 6), Math.min(top * 0.93, a + top * 0.07), "A = " + f3(a), "var(--c4)", A.l > 600 ? "end" : "start");
-    Lab.tag(F, 503, Math.min(top * 0.98, EMAX * bc + top * 0.05), A.c > 0 ? "λmax = 500 nm" : "", "var(--accent)");
+    // keep the A label and the λmax label on opposite sides of the peak so they never overlap
+    var left = (A.l >= 440 && A.l <= 500) || A.l > 600;
+    Lab.tag(F, A.l + (left ? -6 : 6), Math.min(top * 0.93, a + top * 0.07), "A = " + f3(a), "var(--c4)", left ? "end" : "start");
+    Lab.tag(F, A.l <= 500 ? 503 : 497, Math.min(top * 0.98, EMAX * bc + top * 0.05), A.c > 0 ? "λmax = 500 nm" : "", "var(--accent)", A.l <= 500 ? "start" : "end");
   }
   function drawCuv() {
     var W = 440, H = 120, a = eps(A.l) * A.b * A.c * 1e-6, T = Math.pow(10, -a);
@@ -258,14 +260,14 @@ svg.mini { width: 100%; height: auto; display: block; }
     el("rect", { x: 10, y: 40, width: 46, height: 36, rx: 6, fill: "var(--surface)", stroke: "var(--ink)" }, cuv);
     el("text", { x: 33, y: 96, "text-anchor": "middle" }, cuv, "source");
     el("rect", { x: 56, y: 52, width: cx - cw / 2 - 56, height: 12, fill: col, opacity: 0.9 }, cuv);
-    el("text", { x: (56 + cx - cw / 2) / 2, y: 44, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, cuv, "I₀");
+    el("text", { x: (56 + cx - cw / 2) / 2, y: 34, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, cuv, "I₀");
     el("rect", { x: cx - cw / 2, y: 22, width: cw, height: 72, fill: "var(--c4)", opacity: Math.min(0.85, 0.04 + A.c / 60 * 0.6), stroke: "var(--ink)", "stroke-width": 1.5 }, cuv);
     el("text", { x: cx, y: 110, "text-anchor": "middle" }, cuv, "b = " + A.b.toFixed(2) + " cm");
-    el("rect", { x: cx + cw / 2, y: 52, width: 360 - cx - cw / 2, height: 12, fill: col, opacity: Math.max(0.03, 0.9 * T) }, cuv);
-    el("text", { x: (cx + cw / 2 + 360) / 2, y: 44, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, cuv, "I = " + (100 * T).toFixed(1) + "% of I₀");
-    el("rect", { x: 360, y: 36, width: 60, height: 44, rx: 6, fill: "var(--accent-soft)", stroke: "var(--ink)" }, cuv);
-    el("text", { x: 390, y: 63, "text-anchor": "middle", style: "fill:var(--ink); font-family:var(--mono)" }, cuv, "A " + a.toFixed(3));
-    el("text", { x: 390, y: 96, "text-anchor": "middle" }, cuv, "detector");
+    el("rect", { x: cx + cw / 2, y: 52, width: 352 - cx - cw / 2, height: 12, fill: col, opacity: Math.max(0.03, 0.9 * T) }, cuv);
+    el("text", { x: cx + cw / 2 + 4, y: 34, "class": "lbl", style: "fill:var(--ink)" }, cuv, "I = " + (100 * T).toFixed(1) + "% of I₀");
+    el("rect", { x: 352, y: 40, width: 80, height: 40, rx: 6, fill: "var(--accent-soft)", stroke: "var(--ink)" }, cuv);
+    el("text", { x: 392, y: 65, "text-anchor": "middle", style: "fill:var(--ink); font-family:var(--mono)" }, cuv, "A " + a.toFixed(3));
+    el("text", { x: 392, y: 96, "text-anchor": "middle" }, cuv, "detector");
   }
   var bBtns = {}, scaBtns = [];
   function renderA() {
@@ -346,12 +348,14 @@ svg.mini { width: 100%; height: auto; display: block; }
     Lab.line(F, [[0, measA], [cCalc, measA], [cCalc, 0]], "var(--c4)", 1.5, "4 3");
     Lab.dot(F, cCalc, measA, "var(--c4)", false);
     el("path", { d: "M" + F.sx(B.u) + " " + (F.sy(0) - 2) + " l-6 -10 h12 z", fill: "var(--c2)" }, F.svg);
-    Lab.tag(F, cCalc + 1.5, Math.min(1.6, measA + 0.07), "unknown", "var(--c4)");
+    // label in open space: above the dashed line near the A axis, or below-right of the point when A is small
+    if (measA >= 0.35) Lab.tag(F, 1, Math.min(1.6, measA + 0.05), "unknown", "var(--c4)");
+    else Lab.tag(F, cCalc + 1.5, Math.max(0.03, measA - 0.12), "unknown", "var(--c4)");
     // readouts
     document.getElementById("rb-fit").textContent = "A = " + ft.m.toFixed(5) + " c " + (ft.k >= 0 ? "+ " : "− ") + Math.abs(ft.k).toFixed(4);
     document.getElementById("rb-fit2").innerHTML = "c in µM; slope = εb = " + sci(ft.m * 1e6) + " M<sup>−1</sup>";
     document.getElementById("rb-a").textContent = f3(measA);
-    document.getElementById("rb-a2").textContent = Math.abs(measA - trueA) > 1e-6 ? "should be " + f3(trueA + er.std) : "measured correctly";
+    document.getElementById("rb-a2").textContent = Math.abs(measA - trueA) < 1e-6 ? "measured correctly" : er.std ? "includes the same +" + er.std.toFixed(3) + " as the standards" : "should be " + f3(trueA);
     document.getElementById("rb-c").textContent = cCalc.toFixed(1) + " µM";
     document.getElementById("rb-c2").textContent = "(A − intercept) ÷ slope";
     var pct = (cCalc - B.u) / B.u * 100;
@@ -400,7 +404,7 @@ svg.mini { width: 100%; height: auto; display: block; }
       w: "Leftover water dilutes the sample in the cuvette, so fewer solute particles are in the beam, A is lower, and the calculated concentration is too low. Higher transmittance (D) means lower absorbance, which gives a lower, not higher, concentration." },
     { s: "A calibration curve gives A = (1.85 × 10⁴ M⁻¹)c + 0.002. An unknown has A = 0.372. What is its concentration?",
       o: ["6.88 × 10³ M", "5.00 × 10⁴ M", "2.00 × 10⁻⁵ M", "2.00 × 10⁻³ M"], c: 2,
-      w: "c = (A − 0.002) ÷ 1.85 × 10⁴ M⁻¹ = 0.370 ÷ 1.85 × 10⁴ M⁻¹ = 2.00 × 10⁻⁵ M. Choice A multiplies A by the slope. Choice B is the slope divided by A, the reciprocal." },
+      w: "c = (A − 0.002) ÷ 1.85 × 10⁴ M⁻¹ = 0.370 ÷ 1.85 × 10⁴ M⁻¹ = 2.00 × 10⁻⁵ M. Choice A multiplies A by the slope. Choice B is the slope divided by (A − 0.002), the reciprocal." },
     { s: "A solution has an absorbance of 1.00 at the wavelength used. What percentage of the incident light passes through the sample?",
       o: ["0%", "1%", "10%", "90%"], c: 2,
       w: "A = −log(I/I₀), so I/I₀ = 10⁻¹·⁰⁰ = 0.100, or 10% transmitted and 90% absorbed. Choice D is the percentage absorbed, not transmitted." },

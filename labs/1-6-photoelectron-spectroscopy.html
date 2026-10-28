@@ -50,7 +50,7 @@
 <section aria-labelledby="lab-h">
   <div class="sec-head">
     <h2 id="lab-h">1. The PES generator</h2>
-    <p>Binding energy increases to the <b>left</b>, as on AP spectra. Because core electrons are bound hundreds of times more tightly than valence electrons, the axis uses a log scale so every peak fits. Core binding energies are rounded literature values (MJ/mol); the lowest-energy peak equals the element's first ionization energy.</p>
+    <p>Binding energy increases to the <b>left</b>, as on AP spectra. Because core electrons can be bound hundreds of times more tightly than valence electrons, the axis uses a log scale so every peak fits. Core binding energies are rounded literature values (MJ/mol); the lowest-energy peak equals the element's first ionization energy.</p>
   </div>
 
   <div class="lab pes">
@@ -289,13 +289,17 @@
     if (C) {
       var c = Lab.ELEMENTS[s.cmp], more = s.cmp > s.z ? c : e, less = s.cmp > s.z ? e : c;
       var Pm = s.cmp > s.z ? C : P, Pl = s.cmp > s.z ? P : C;
-      L.push("<b>Overlay: " + c.n + "</b> (dashed). Every subshell they share is at a higher binding energy in " + more.n.toLowerCase() + " (1s: " + fmtBE(Pm[0].be) + " vs. " + fmtBE(Pl[0].be) + " MJ/mol), because " + more.n.toLowerCase() + " has one more proton pulling on electrons in the same shells.");
+      var lowerPk = Pm.filter(function (p) { return Pl.some(function (q) { return q.key === p.key && p.be < q.be; }); });
+      L.push("<b>Overlay: " + c.n + "</b> (dashed). " + (lowerPk.length ? "Every core subshell they share" : "Every subshell they share") + " is at a higher binding energy in " + more.n.toLowerCase() + " (1s: " + fmtBE(Pm[0].be) + " vs. " + fmtBE(Pl[0].be) + " MJ/mol), because " + more.n.toLowerCase() + " has one more proton pulling on electrons in the same shells.");
       var newPk = Pm.filter(function (p) { return !Pl.some(function (q) { return q.key === p.key; }); });
       if (newPk.length) L.push(more.n + " has a new peak, " + newPk[0].key + ", with " + newPk[0].e + " electron" + (newPk[0].e > 1 ? "s" : "") + (newPk[0].n > Pl[Pl.length - 1].n ? ". It starts a new shell, so it sits far to the right at low energy." : "."));
-      if ((s.z === 7 && s.cmp === 8) || (s.z === 8 && s.cmp === 7)) L.push("Exception to watch: O's 2p peak (1.31) is <b>lower</b> than N's (1.40) even though O has more protons. O's fourth 2p electron must pair in an orbital that already has one electron, and the extra electron–electron repulsion makes it easier to remove. The 1s and 2s peaks still follow the proton trend.");
+      if (lowerPk.length) {
+        var lp = lowerPk[0], lq = Pl.filter(function (q) { return q.key === lp.key; })[0];
+        L.push("Exception to watch: " + more.s + "'s " + lp.key + " peak (" + fmtBE(lp.be) + ") is <b>lower</b> than " + less.s + "'s (" + fmtBE(lq.be) + ") even though " + more.s + " has more protons. " + more.s + "'s fourth " + lp.key + " electron must pair in an orbital that already has one electron, and the extra electron–electron repulsion makes it easier to remove. The core peaks still follow the proton trend.");
+      }
       if ((s.z === 4 && s.cmp === 5) || (s.z === 5 && s.cmp === 4)) L.push("B's 2p peak (0.80) is lower than Be's 2s peak (0.90): the 2p electron is higher in energy and partly shielded by the 2s electrons. PES shows this directly as separate 2s and 2p peaks in boron.");
     }
-    if (s.z >= 19 && !C) L.push("The 4s peak sits to the right of 3p: the 4s electron is in a higher shell (n = 4) and is removed first, which is why potassium forms K⁺.");
+    if (s.z >= 19 && !C) L.push("The 4s peak sits to the right of 3p: the 4s electron" + (s.z === 20 ? "s are" : " is") + " in a higher shell (n = 4) and " + (s.z === 20 ? "are" : "is") + " removed first, which is why " + (s.z === 20 ? "calcium forms Ca²⁺" : "potassium forms K⁺") + ".");
     h += li(L);
     h += "<p><b>AP answer:</b> a peak's position is the binding energy (set by distance from the nucleus and nuclear charge, per Coulomb's law) and its height is the number of electrons in that subshell.</p>";
     return h;

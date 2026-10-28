@@ -497,7 +497,7 @@
     var ev = "";
     if (S.tOx) {
       var ch = !!x.rx;
-      ev += '<p class="t-ox"><b>Oxidation numbers:</b> ' + (ch ? "some change. Colored numbers mark the atoms whose oxidation number goes up (oxidized) or down (reduced)." + (x.avg ? " *Average oxidation number for C; the two carbons differ, but the average is what the AP exam uses." : "") : "none change. Every element has the same oxidation number on both sides, so no electrons are transferred.") + "</p>";
+      ev += '<p class="t-ox"><b>Oxidation numbers:</b> ' + (ch ? "some change. Colored numbers mark the atoms whose oxidation number goes up (oxidized) or down (reduced)." + (x.avg ? " *Average oxidation number for C; the two carbons actually differ (−3 and −1), but the average is all you need to count electrons." : "") : "none change. Every element has the same oxidation number on both sides, so no electrons are transferred.") + "</p>";
     }
     if (S.tH) ev += '<p class="t-h"><b>Proton transfer:</b> ' + x.hN + "</p>";
     if (S.tS) ev += '<p class="t-s"><b>Insoluble product:</b> ' + x.sN + "</p>";

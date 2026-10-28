@@ -117,7 +117,7 @@
 <section aria-labelledby="tbl-h">
   <div class="sec-head">
     <h2 id="tbl-h">3. VSEPR master table</h2>
-    <p>All thirteen shapes the AP exam uses. "Polar?" assumes all outer atoms are identical. Angles with "&lt;" are smaller than ideal because of lone-pair repulsion.</p>
+    <p>The thirteen VSEPR shapes for two to six electron domains. "Polar?" assumes all outer atoms are identical. Angles with "&lt;" are smaller than ideal because of lone-pair repulsion.</p>
   </div>
   <div class="tbl-wrap">
   <table>
@@ -385,12 +385,12 @@
     var sh = M.sh, m = M.m, nb = M.bondIdx.length, nl = S.l, name = m ? m.f : "AX" + sub(nb) + (nl ? "E" + sub(nl) : "");
     var li = [], html;
     html = "<p><b>" + name + ": " + sh.mg.toLowerCase() + ".</b> The central " + (m ? m.c : "atom A") + " has <b>" + S.d + " electron domains</b>: " + nb + " bonding domain" + (nb > 1 ? "s" : "") + (nl ? " and " + nl + " lone pair" + (nl > 1 ? "s" : "") : " and no lone pairs") + ".</p>";
-    li.push("Electron domains spread as far apart as possible, so the " + S.d + " domains point toward the corners of a <b>" + sh.eg.toLowerCase() + "</b> arrangement" + (nl ? ". Only the atoms define the molecular shape, so with " + nl + " of those positions taken by lone pairs the molecule is <b>" + sh.mg.toLowerCase() + "</b>." : ", and with no lone pairs the molecular geometry is the same."));
+    li.push("Electron domains spread as far apart as possible, so the " + S.d + " domains point toward the corners of " + (/^[aeiou]/i.test(sh.eg) ? "an" : "a") + " <b>" + sh.eg.toLowerCase() + "</b> arrangement" + (nl ? ". Only the atoms define the molecular shape, so with " + (nl === 1 ? "one of those positions taken by a lone pair" : nl + " of those positions taken by lone pairs") + " the molecule is <b>" + sh.mg.toLowerCase() + "</b>." : ", and with no lone pairs the molecular geometry is the same."));
     if (m && m.ord.some(function (o) { return o > 1; })) li.push("Each multiple bond counts as <b>one</b> domain.");
     if (m && m.note) li.push(m.note);
     var angTxt = m ? m.ang : sh.ang;
     if (nl && S.d <= 4) li.push("Bond angle " + angTxt + ": lone pairs repel more strongly than bonding pairs, squeezing the bonds closer than the ideal " + (S.d === 4 ? "109.5°" : "120°") + ".");
-    else if (nl && S.d >= 5 && sh.ang.indexOf("<") >= 0) li.push("Bond angles " + angTxt + ": lone pairs push the bonds slightly closer than the ideal 90° and 120°. " + (S.d === 5 ? "Lone pairs sit in equatorial positions, where they have more room (only two neighbors at 90° instead of three)." : ""));
+    else if (nl && S.d >= 5 && sh.ang.indexOf("<") >= 0) li.push("Bond angles " + angTxt + ": lone pairs push the bonds slightly closer than the ideal " + (S.d === 5 ? "90° and 120°" : "90°") + ". " + (S.d === 5 ? "Lone pairs sit in equatorial positions, where they have more room (only two neighbors at 90° instead of three)." : ""));
     else li.push("Bond angle" + (sh.ang.indexOf(",") >= 0 ? "s" : "") + ": " + angTxt + ".");
     if (S.d <= 4) li.push("Hybridization: " + S.d + " domains → <b>" + sh.hy + "</b> on the central atom" + (m ? " (" + M.sigma + " σ bond" + (M.sigma > 1 ? "s" : "") + " and " + M.pi + " π bond" + (M.pi === 1 ? "" : "s") + " in the molecule)" : "") + ".");
     else li.push("Hybridization: " + S.d + " domains would be " + sh.hy.replace("*", "") + ", but hybridization involving d orbitals is <b>not assessed</b> on the AP exam." + (m ? " The molecule has " + M.sigma + " σ bonds and no π bonds." : ""));
@@ -459,7 +459,7 @@
       w: "O has four electron domains (sp³), two of them lone pairs. A lone pair is held by only one nucleus and occupies more space, so lone pair–bond pair repulsion is greater than bond pair–bond pair repulsion, compressing the angle. Choice A is wrong: four domains means sp³." },
     { s: "What is the hybridization of the carbon atom in CO₂?",
       o: ["sp", "sp²", "sp³", "sp³d"], c: 0,
-      w: "The Lewis diagram is O=C=O. Each double bond counts as one electron domain, so C has two domains, a linear arrangement with 180° angles: sp hybridization. Choice B comes from counting the two π bonds as extra domains." },
+      w: "The Lewis diagram is O=C=O. Each double bond counts as one electron domain, so C has two domains, a linear arrangement with 180° angles: sp hybridization. Choice C comes from counting each of the four bonding pairs as a separate domain; a double bond is one domain." },
     { s: "Which of the following molecules is nonpolar even though it contains polar bonds?",
       o: ["H₂O", "NH₃", "CF₄", "CH₃Cl"], c: 2,
       w: "CF₄ is tetrahedral with four identical C–F bonds, so the four bond dipoles cancel. H₂O (bent) and NH₃ (trigonal pyramidal) are asymmetric. CH₃Cl is tetrahedral, but its outer atoms are not all the same, so its dipoles do not cancel." },

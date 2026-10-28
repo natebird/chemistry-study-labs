@@ -117,7 +117,7 @@ input[type="range"]:disabled { opacity: .4; }
     <div class="card"><span class="tag">Same Z, different A</span><h3>Isotopes</h3><p>Isotopes of an element have the same number of protons (so they are the same element) but different numbers of neutrons, so their masses differ. Chlorine-35 has 17 protons and 18 neutrons; chlorine-37 has 17 protons and 20 neutrons.</p></div>
     <div class="card"><span class="tag">Reading the graph</span><h3>What a mass spectrum shows</h3><p>The horizontal axis is the mass of each isotope (in amu, or mass-to-charge ratio). The height of each peak is that isotope's relative abundance. The number of peaks is the number of naturally occurring isotopes.</p></div>
     <div class="card"><span class="tag">Σ mass × fraction</span><h3>Weighted average</h3><p>Average atomic mass = Σ (mass of isotope × fractional abundance). Convert percents to decimals first (75.76% → 0.7576). The average always lies between the lightest and heaviest isotope.</p></div>
-    <div class="card"><span class="tag">Closer to the tallest peak</span><h3>Estimate before you calculate</h3><p>The average sits closest to the most abundant isotope. Chlorine is mostly Cl-35, so its average (35.45) is much nearer 35 than 37. Bromine is about half Br-79 and half Br-81, so its average (79.90) sits near the middle.</p></div>
+    <div class="card"><span class="tag">Closer to the tallest peak</span><h3>Estimate before you calculate</h3><p>The average is pulled toward the most abundant isotope; with two isotopes it always sits closer to the more abundant one. Chlorine is mostly Cl-35, so its average (35.45) is much nearer 35 than 37. Bromine is about half Br-79 and half Br-81, so its average (79.90) sits near the middle.</p></div>
     <div class="card"><span class="tag">No atom weighs 35.45 amu</span><h3>The average is not a real atom</h3><p>Every chlorine atom has a mass near 35 or near 37 amu. The 35.45 on the periodic table describes a large natural sample, which is why it is the number used for molar mass.</p></div>
     <div class="card"><span class="tag">x and 1 − x</span><h3>Solving for an abundance</h3><p>For two isotopes, let x be the fraction of one: average = m₁x + m₂(1 − x). Solve for x. The two fractions must add to 1, so the other isotope is 1 − x.</p></div>
   </div>
@@ -127,7 +127,7 @@ input[type="range"]:disabled { opacity: .4; }
 <section aria-labelledby="tbl-h">
   <div class="sec-head">
     <h2 id="tbl-h">3. Isotope data used on this page</h2>
-    <p>You do not need to memorize these. On the exam the spectrum or a table gives you the masses and abundances. Notice how each average sits next to the tallest peak.</p>
+    <p>You do not need to memorize these. On the exam the spectrum or a table gives you the masses and abundances. Notice how each average is pulled toward the tallest peak. Zinc is an exception: with five isotopes, the heavy ones together outweigh Zn-64, so the average (65.38) lands nearer Zn-66.</p>
   </div>
   <div class="tbl-wrap">
   <table>
@@ -294,7 +294,9 @@ input[type="range"]:disabled { opacity: .4; }
     if (s.mystery) html += "<p><b>" + (s.guessed === s.el ? "Correct" : "Not quite") + ": it is " + E.n.toLowerCase() + ".</b> The weighted average, " + m.avg.toFixed(2) + " amu, matches " + E.s + " (" + E.m.toFixed(2) + ") on the periodic table.</p>";
     else if (s.target) html += "<p><b>Solve for abundance: " + E.n.toLowerCase() + ".</b> The periodic table gives " + m.nat.toFixed(2) + " amu. Drag the slider until the magenta average lands on the green target, then check the algebra below.</p>";
     else html += "<p><b>" + E.n + "</b> has " + m.iso.length + " naturally occurring isotopes. Every " + E.n.toLowerCase() + " atom has " + E.z + " protons; the isotopes differ only in their number of neutrons (" + m.iso.map(function (i) { return sup(i.A) + E.s + ": " + (i.A - E.z); }).join(", ") + ").</p>";
-    li.push("The weighted average is " + m.avg.toFixed(2) + " amu. It sits closest to " + sup(m.maxI.A) + E.s + " because that isotope is the most abundant (" + pct(m.maxI.p) + ").");
+    var closest = m.iso.reduce(function (p, q) { return Math.abs(q.m - m.avg) < Math.abs(p.m - m.avg) ? q : p; });
+    if (closest === m.maxI) li.push("The weighted average is " + m.avg.toFixed(2) + " amu. It sits closest to " + sup(m.maxI.A) + E.s + " because that isotope is the most abundant (" + pct(m.maxI.p) + ").");
+    else li.push("The weighted average is " + m.avg.toFixed(2) + " amu. The most abundant isotope, " + sup(m.maxI.A) + E.s + " (" + pct(m.maxI.p) + "), pulls the average toward it, but here the other isotopes together outweigh it, so the average lands nearest " + sup(closest.A) + E.s + ". With more than two isotopes, compute; do not just pick the tallest peak.");
     if (m.two) {
       var a = m.iso[0], b = m.iso[1], simple = (a.m + b.m) / 2;
       li.push("A simple average of the two masses would be " + simple.toFixed(2) + " amu. The real average is " + (Math.abs(m.avg - simple) < 0.05 ? "almost the same, because the two isotopes are nearly equally common." : (m.avg < simple ? "lower" : "higher") + " because the " + (m.avg < simple ? "lighter" : "heavier") + " isotope is more common."));
@@ -309,11 +311,11 @@ input[type="range"]:disabled { opacity: .4; }
     } else {
       li.push("Three or more isotopes work the same way: multiply each mass by its fraction and add every product.");
       var small = m.iso.filter(function (i) { return i.p < 1; });
-      if (small.length) li.push("The tiny peak" + (small.length > 1 ? "s" : "") + " (" + small.map(function (i) { return sup(i.A) + E.s + ", " + pct(i.p); }).join("; ") + ") barely change the average.");
+      if (small.length) li.push("The tiny peak" + (small.length > 1 ? "s" : "") + " (" + small.map(function (i) { return sup(i.A) + E.s + ", " + pct(i.p); }).join("; ") + ") barely change" + (small.length > 1 ? "" : "s") + " the average.");
     }
     if (m.near.s !== E.s) li.push("At this average the closest periodic-table mass is " + m.near.n + " (" + m.near.m.toFixed(2) + "), so a student identifying this sample by mass alone would name the wrong element.");
     html += "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
-    html += "<p><b>AP answer:</b> average atomic mass = Σ(isotope mass × fractional abundance); the average is closest to the mass of the most abundant isotope, and no single atom has the average mass.</p>";
+    html += "<p><b>AP answer:</b> average atomic mass = Σ(isotope mass × fractional abundance); the average is pulled toward the most abundant isotope (with two isotopes, it is always closer to the more abundant one), and no single atom has the average mass.</p>";
     return html;
   }
 

@@ -353,11 +353,13 @@
       b: { water: [0.12, 1], groups: [{ f: "Ag", n: 8, lay: "gas", reg: [0.12, 1] }, { f: "Cl_", n: 8, lay: "gas", reg: [0.12, 1] }] }, a: { water: [0.12, 1], groups: [{ alt: ["Ag", "Cl_"], n: 8, cols: 4, lay: "lattice", reg: ALL }] },
       cb: "Ag⁺ and Cl⁻ from two solutions (spectators not shown)", ca: "solid AgCl settles",
       broken: "None (ion–dipole attractions to water are lost)", formed: "Ionic bonds in a new AgCl lattice", imf: "Ion–dipole interactions with water are replaced",
+      ap: "chemical, because Ag⁺ and Cl⁻ ions from two different solutions form ionic bonds in a new solid, AgCl, a compound that was not present in either solution.",
       why: "Silver ions from one solution and chloride ions from another combine into silver chloride, a white solid that was not in either solution. AP treats precipitation as a type of chemical reaction (topic 4.7) because a new compound forms. At the particle level it is the reverse of dissolving AgCl, which is why the formation of a precipitate is listed as evidence of a chemical change, not proof by itself." },
     { id: "hcldis", name: "HCl gas dissolving in water", eq: "HCl(g) + H₂O(l) → H₃O⁺(aq) + Cl⁻(aq)", call: "chemical",
       b: { water: [0.42, 1], groups: [{ f: "HCl", n: 4, lay: "gas", reg: TOP }, { f: "H2O", n: 8, lay: "liquid", reg: LOW }] }, a: { water: [0.42, 1], groups: [{ f: "H3O", n: 4, lay: "liquid", reg: LOW }, { f: "Cl_", n: 4, lay: "liquid", reg: LOW }, { f: "H2O", n: 4, lay: "liquid", reg: LOW }] },
       cb: "HCl gas over water", ca: "H₃O⁺ and Cl⁻ in solution",
       broken: "H–Cl covalent bonds", formed: "A new O–H bond in each H₃O⁺", imf: "Ion–dipole interactions form",
+      ap: "chemical, because the H–Cl covalent bond breaks and a new O–H bond forms in each H₃O⁺, producing new species.",
       why: "Unlike sugar, HCl does not just spread out in water: each HCl molecule transfers H⁺ to a water molecule. The H–Cl covalent bond breaks and a new O–H bond forms, producing H₃O⁺ and Cl⁻, which are new species. That makes it a chemical change (an acid–base reaction, topic 4.8). Count: 4 H₂O were used, so 8 became 4." },
     { id: "h2o2", name: "Decomposing hydrogen peroxide", eq: "2H₂O₂(l) → 2H₂O(l) + O₂(g)", call: "chemical",
       b: { groups: [{ f: "H2O2", n: 6, lay: "liquid", reg: [0.48, 1] }] }, a: { groups: [{ f: "H2O", n: 6, lay: "liquid", reg: [0.55, 1] }, { f: "O2", n: 3, lay: "gas", reg: [0, 0.5] }] },
@@ -398,8 +400,10 @@
     if (!mine) return "<p><b>" + p.name + ": " + p.eq + ".</b> Compare the two boxes. Are the particles after the change the same particles as before? Make your call above; the bond and IMF readouts fill in once you do.</p>";
     var h = "<p><b>" + (mine === p.call ? "Your call matches." : "Not this time.") + "</b> You said <b>" + CALL[mine].toLowerCase() + "</b>; the best answer is <b>" + CALL[p.call].toLowerCase() + "</b>.</p>";
     h += "<p>" + p.why + "</p>";
-    h += "<p><b>AP answer:</b> " + (p.call === "chemical" ? "chemical, because " + p.broken.charAt(0).toLowerCase() + p.broken.slice(1) + " break and " + p.formed.charAt(0).toLowerCase() + p.formed.slice(1) + " form, producing new substances." :
-      p.call === "physical" ? "physical, because only intermolecular forces change (" + p.imf.charAt(0).toLowerCase() + p.imf.slice(1) + "); the particles keep their identity and no chemical bonds break." :
+    // Lower-case the first letter for mid-sentence use, but never a chemical symbol ("H–Cl", "O=O", "C–H").
+    function lc(t) { return /^([A-Z][a-z]?[–=]|London)/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1); }
+    h += "<p><b>AP answer:</b> " + (p.call === "chemical" ? (p.ap || "chemical, because " + lc(p.broken) + " break and " + lc(p.formed) + " form, producing new substances.") :
+      p.call === "physical" ? "physical, because only intermolecular forces change (" + lc(p.imf) + "); the particles keep their identity and no chemical bonds break." :
       "either classification earns credit with a particle-level reason: physical because the same ions exist before and after with no new substance, or chemical because ionic bonds break and ion–dipole interactions form.") + "</p>";
     return h;
   }

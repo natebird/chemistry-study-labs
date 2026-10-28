@@ -131,7 +131,7 @@
   <div class="readout">
     <div class="stat"><div class="k">Vapor pressure</div><div class="v" id="rb-p"></div><div class="sub" id="rb-p2"></div></div>
     <div class="stat"><div class="k">Normal boiling point</div><div class="v" id="rb-bp"></div><div class="sub">where vapor pressure = 760 torr</div></div>
-    <div class="stat"><div class="k">Strongest IMF</div><div class="v txt" id="rb-imf"></div><div class="sub" id="rb-imf2"></div></div>
+    <div class="stat"><div class="k">Main IMF</div><div class="v txt" id="rb-imf"></div><div class="sub" id="rb-imf2"></div></div>
     <div class="stat"><div class="k">Ranking at this temperature</div><div class="v txt" id="rb-rk"></div><div class="sub">highest to lowest vapor pressure</div></div>
   </div>
 
@@ -169,9 +169,9 @@
   </div>
   <div class="tbl-wrap">
   <table>
-    <thead><tr><th>Liquid</th><th>Strongest IMF</th><th>Vapor pressure at 25 °C</th><th>Normal boiling point</th><th>Melting point</th></tr></thead>
+    <thead><tr><th>Liquid</th><th>Main IMF</th><th>Vapor pressure at 25 °C</th><th>Normal boiling point</th><th>Melting point</th></tr></thead>
     <tbody>
-      <tr><td>Diethyl ether, (C<sub>2</sub>H<sub>5</sub>)<sub>2</sub>O</td><td>Dipole–dipole (no O–H, so no hydrogen bonding between molecules)</td><td>about 530 torr</td><td>34.6 °C</td><td>−116 °C</td></tr>
+      <tr><td>Diethyl ether, (C<sub>2</sub>H<sub>5</sub>)<sub>2</sub>O</td><td>Dispersion and dipole–dipole (no O–H, so no hydrogen bonding between molecules)</td><td>about 530 torr</td><td>34.6 °C</td><td>−116 °C</td></tr>
       <tr><td>Ethanol, C<sub>2</sub>H<sub>5</sub>OH</td><td>Hydrogen bonding (one O–H per molecule)</td><td>about 59 torr</td><td>78.4 °C</td><td>−114 °C</td></tr>
       <tr><td>Water, H<sub>2</sub>O</td><td>Hydrogen bonding (two O–H and two lone pairs per molecule)</td><td>about 24 torr</td><td>100.0 °C</td><td>0.0 °C</td></tr>
     </tbody>
@@ -251,7 +251,7 @@
     ethanol: { name: "Ethanol", f: "C₂H₅OH", mp: -114, bp: 78.4, M: 46.07, rho: 0.789, A: 8.20417, B: 1642.89, C: 230.300, col: "var(--c2)",
                imf: "Hydrogen bonding", imf2: "one O–H bond per molecule, plus a larger dispersion force" },
     ether:   { name: "Diethyl ether", f: "(C₂H₅)₂O", mp: -116, bp: 34.6, M: 74.12, rho: 0.713, A: 6.92032, B: 1064.07, C: 228.800, col: "var(--c1)",
-               imf: "Dipole–dipole", imf2: "no O–H bond, so no hydrogen bonding between molecules" }
+               imf: "Dispersion and dipole–dipole forces", imf2: "no O–H bond, so no hydrogen bonding between molecules" }
   };
   var ORDER = ["ether", "ethanol", "water"];
   function vp(k, t) { var s = SUBS[k]; return Math.pow(10, s.A - s.B / (s.C + t)); }
@@ -365,7 +365,7 @@
     var s = SUBS[k], ph = x.ph, html = "", li = [];
     html += "<p><b>" + s.name + " at " + deg(t) + " °C is a " + ph + ".</b> It melts at " + deg(s.mp) + " °C and boils at " + s.bp + " °C at 1 atm.</p>";
     if (ph === "solid") {
-      li.push("The molecules have too little kinetic energy to overcome the attractions holding them in place, so they only vibrate. Warming the solid makes the vibrations larger until, at " + s.mp + " °C, molecules can start to slide past each other.");
+      li.push("The molecules have too little kinetic energy to overcome the attractions holding them in place, so they only vibrate. Warming the solid makes the vibrations larger until, at " + deg(s.mp) + " °C, molecules can start to slide past each other.");
       if (A.amorph) li.push("<b>Amorphous</b>: the particles touch but have no repeating pattern. Some attractions are stronger than others, so an amorphous solid like glass softens over a range of temperatures instead of melting sharply.");
       else if (k === "water") li.push("<b>Ice is unusual.</b> Each molecule is hydrogen-bonded to four neighbors in an open pattern, so ice takes up more space than liquid water and floats on it. For most substances, including ethanol and ether, the solid is denser than the liquid.");
       else li.push("<b>Crystalline</b>: the molecules sit in a regular, repeating pattern, which gives a sharp melting point.");

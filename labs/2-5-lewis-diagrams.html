@@ -221,6 +221,7 @@ svg .hit-a:hover, svg .hit-a:focus-visible { fill-opacity: .14; }
       if (a.s === "H") { ok = c === 2; if (!ok) note = "H must have exactly 2 electrons (one single bond, no lone pairs)"; }
       else if (a.s === "B" || a.s === "Be") { ok = c <= 8 && c >= (a.s === "B" ? 6 : 4); note = !ok ? a.s + " has " + c + " electrons" : c < 8 ? "incomplete octet (" + c + " electrons), allowed for " + a.s : ""; }
       else if (PER[a.s] === 2) { ok = c === 8; if (c < 8) note = a.s + " has only " + c + " electrons; it needs 8"; if (c > 8) note = a.s + " has " + c + " electrons; period 2 atoms cannot exceed 8"; }
+      else if (degree(m, i) === 1) { ok = c === 8; if (!ok) note = a.s + " is a terminal atom with " + c + " electrons; outer atoms need exactly 8"; }
       else { ok = c >= 8 && c <= 12; note = c < 8 ? a.s + " has only " + c + " electrons; it needs at least 8" : c > 12 ? a.s + " has " + c + " electrons, too many" : c > 8 ? "expanded octet (" + c + " electrons), allowed for period " + PER[a.s] : ""; }
       if (ok) nOk++;
       sumAbs += Math.abs(f); sumFc += f;

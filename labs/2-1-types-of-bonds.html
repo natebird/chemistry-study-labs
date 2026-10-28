@@ -92,7 +92,7 @@
       <h3 id="drill-h">Quick drill: which bond is more polar?</h3>
       <span class="score" id="drill-score">0 / 0</span>
     </div>
-    <p style="color:var(--muted); font-size:.92rem;">Both choices are covalent bonds between nonmetals. Use periodic trends: electronegativity increases to the right across a period and up a group, and fluorine is the most electronegative element.</p>
+    <p style="color:var(--muted); font-size:.92rem;">Both choices are covalent bonds between nonmetals (a few include the metalloid B or Si). Use periodic trends: electronegativity increases to the right across a period and up a group, and fluorine is the most electronegative element.</p>
     <div class="drill-opts" id="drill-opts"></div>
     <div class="drill-fb" id="drill-fb" aria-live="polite"></div>
     <div><button type="button" id="drill-next">Next pair</button></div>
@@ -328,8 +328,8 @@
     el("circle", { cx: xa, cy: y, r: 58, fill: "var(--c4)", "fill-opacity": 0.18, stroke: "var(--c4)", "stroke-width": 2 }, svg);
     txt(xc, y + 7, cl, "fill:var(--ink); font-size:19px; font-weight:600");
     txt(xa, y + 7, an, "fill:var(--ink); font-size:19px; font-weight:600");
-    txt(xc, y + 62, "cation (smaller)", "font-size:11px");
-    txt(xa, y + 82, "anion (larger)", "font-size:11px");
+    txt(xc, y + 62, "cation (usually smaller)", "font-size:11px");
+    txt(xa, y + 82, "anion (usually larger)", "font-size:11px");
     // transfer arrow
     var path = "M" + (xc + 10) + " " + (y - 40) + " Q " + ((xc + xa) / 2) + " " + (y - 110) + " " + (xa - 18) + " " + (y - 58);
     el("path", { d: path, fill: "none", stroke: "var(--c2)", "stroke-width": 2, "stroke-dasharray": "5 4" }, svg);
@@ -376,7 +376,7 @@
   }
   function drawMixed(a, b) {
     atom(150, 120, 60, a.s, "var(--muted)", 0.08); atom(290, 120, 60, b.s, "var(--muted)", 0.08);
-    txt(220, 212, "Metal + metalloid: bonding is in between; not tested on AP", "font-size:12px");
+    txt(220, 212, "Metal + metalloid: bonding is in between; not a standard AP case", "font-size:12px");
   }
   function draw(r) {
     stopAnim(); stopAnim = function () {};
@@ -404,17 +404,17 @@
     if (r.type === "metallic") {
       li.push("Both atoms are metals with low ionization energies, so neither holds its valence electrons tightly. The valence electrons spread out over the whole sample as a <b>sea of delocalized electrons</b>.");
       li.push("The positive metal cations are held in place by their attraction to that electron sea. This is <b>metallic bonding</b>. The electrons are not owned by any one atom, which is why metals conduct electricity.");
-      if (a !== b) li.push("A mixture of two metals bonded this way is an <b>alloy</b>. Cu and Zn have similar atomic radii, so Zn atoms replace Cu atoms in the lattice (a substitutional alloy, topic 2.4).");
+      if (a !== b) li.push("A mixture of two metals bonded this way is an <b>alloy</b>." + ((a.s === "Cu" && b.s === "Zn") || (a.s === "Zn" && b.s === "Cu") ? " Cu and Zn have similar atomic radii, so Zn atoms replace Cu atoms in the lattice (a substitutional alloy, topic 2.4)." : " When the two kinds of atoms have similar radii, one can replace the other in the lattice (a substitutional alloy, topic 2.4)."));
       end = "<b>AP answer:</b> both elements are metals, so they form metallic bonds: metal cations surrounded by a sea of delocalized valence electrons.";
     } else if (r.type === "ionic") {
       var m = r.ka === "metal" ? a : b, n = m === a ? b : a, qc = cationCharge(m), qa = anionCharge(n);
-      li.push(m.n + " is a metal with a low first ionization energy (" + m.ie + " kJ/mol), so it loses " + (qc ? (qc === 1 ? "its valence electron" : "its " + qc + " valence electrons") : "valence electrons") + " easily. " + n.n + " is a nonmetal with a high electronegativity, so it gains electrons to fill its valence shell.");
+      li.push(m.n + " is a metal with a low first ionization energy (" + m.ie + " kJ/mol), so it loses " + (qc ? (qc === 1 ? "its valence electron" : "its " + qc + " valence electrons") : "valence electrons") + " easily. " + n.n + " is a nonmetal with a higher electronegativity, so it gains electrons to fill its valence shell.");
       li.push("The result is " + (qc ? m.s + "<sup>" + sup(qc, "+") + "</sup>" : "metal cations") + " and " + (qa ? n.s + "<sup>" + sup(qa, "−") + "</sup>" : "anions") + " held together by <b>Coulombic attraction</b> between opposite charges. There are no shared electron pairs and no molecules, only a lattice of ions.");
       if (r.conflict) li.push("<b>Watch out:</b> the rough ΔEN guide says only " + r.d.toFixed(2) + ", which would suggest polar covalent. Real " + m.s + "–" + n.s + " compounds do have noticeable covalent character, but for AP classification a metal bonded to a nonmetal is called <b>ionic</b>. If an AP question gives you properties (for example, a low melting point), use the properties.");
       else li.push("The ΔEN of " + r.d.toFixed(2) + " is large, which agrees with the element-type rule.");
       end = "<b>AP answer:</b> " + m.s + " is a metal and " + n.s + " is a nonmetal, so the metal transfers electrons to the nonmetal and the oppositely charged ions attract: an ionic bond.";
     } else if (r.type === "mixed") {
-      li.push("One element is a metal and the other is a metalloid. Bonding between them is in between metallic, ionic, and covalent, and this case is outside the AP exam. Pick a nonmetal or a second metal to see a standard case.");
+      li.push("One element is a metal and the other is a metalloid. Bonding between them is in between metallic, ionic, and covalent, and AP questions do not focus on this case. Pick a nonmetal or a second metal to see a standard case.");
       end = "<b>AP answer:</b> AP questions stick to metal + nonmetal (ionic), nonmetal + nonmetal (covalent), and metal + metal (metallic).";
     } else if (r.d === 0) {
       li.push("Two identical atoms have identical electronegativities, so they pull on the shared pair exactly equally. There is no δ+ or δ− end.");

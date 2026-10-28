@@ -41,7 +41,7 @@ svg.mini { width: 100%; height: auto; display: block; }
 <header>
   <span class="kicker">AP Chemistry · Unit 3 · Topic 3.10</span>
   <h1>Solubility Study Lab</h1>
-  <p class="lede">"Like dissolves like" is shorthand for an IMF argument: a substance dissolves well when the attractions it can form with the solvent are comparable to the attractions that must be broken inside the solute and inside the solvent. Predict, test, and explain ten solute–solvent pairs, then watch what a growing nonpolar chain does to solubility in water.</p>
+  <p class="lede">"Like dissolves like" is shorthand for an IMF argument: a substance dissolves well when the attractions it can form with the solvent are comparable to the attractions that must be broken inside the solute and inside the solvent. Predict, test, and explain ten solutes in two solvents, then watch what a growing nonpolar chain does to solubility in water.</p>
 </header>
 
 <!-- LAB -->
@@ -234,14 +234,15 @@ svg.mini { width: 100%; height: auto; display: block; }
       w: { ok: true, sv: "iond", amt: "about 32 g per 100 mL", why: "K<sup>+</sup> and NO<sub>3</sub><sup>−</sup> are each surrounded by oriented water molecules (ion–dipole attractions). All potassium salts and all nitrates are soluble in water." },
       h: { ok: false, sv: "ionind", why: "No dipoles, no ion–dipole attractions: a nonpolar solvent cannot separate the ions of an ionic solid." } },
     { k: "agcl", f: "AgCl", name: "silver chloride", type: "ionic (insoluble)", state: "s", ss: "ionic",
-      w: { ok: false, sv: "iond", amt: "about 0.0002 g per 100 mL", why: "AgCl is ionic, and water does form ion–dipole attractions with Ag<sup>+</sup> and Cl<sup>−</sup>, but here they do not make up for the attractions holding the solid together. This is the limit of \"like dissolves like\": the rule says what is likely, not what always happens. On the exam, the solubility of such a salt is given (you are expected to know only that Na<sup>+</sup>, K<sup>+</sup>, NH<sub>4</sub><sup>+</sup> and NO<sub>3</sub><sup>−</sup> salts are soluble)." },
+      w: { ok: false, sv: "iond", amt: "about 0.0002 g per 100 mL", why: "AgCl is ionic, and water does form ion–dipole attractions with Ag<sup>+</sup> and Cl<sup>−</sup>, but here they do not make up for the attractions holding the solid together. This is the limit of \"like dissolves like\": the rule says what is likely, not what always happens. On the exam, the solubility of such a salt is given (you are expected to know only that Na<sup>+</sup>, K<sup>+</sup>, NH<sub>4</sub><sup>+</sup> and NO<sub>3</sub><sup>−</sup> salts are soluble).",
+        ap: "AgCl is not appreciably soluble in water because the ion–dipole attractions between its ions and water do not make up for the strong attractions between Ag<sup>+</sup> and Cl<sup>−</sup> ions in the solid." },
       h: { ok: false, sv: "ionind", why: "If water cannot dissolve AgCl, a nonpolar solvent certainly cannot: it offers only weak ion–induced dipole attractions." } },
     { k: "glu", f: "C6H12O6", name: "glucose", type: "polar, five −OH groups", state: "s", ss: "hb",
       w: { ok: true, sv: "hb", amt: "about 90 g per 100 mL", why: "Glucose has five −OH groups and a ring O. Each forms hydrogen bonds with water, replacing the hydrogen bonds that held the glucose crystal and the water together. It dissolves as whole molecules, not ions." },
       h: { ok: false, sv: "dipind", why: "Glucose molecules hold each other by many hydrogen bonds. Hexane can offer only weak London and dipole–induced dipole attractions, so the crystal stays intact." } },
     { k: "etoh", f: "C2H5OH", name: "ethanol", type: "polar −OH, small nonpolar part", state: "l", dens: 0.79, ss: "hb",
       w: { ok: true, sv: "hb", amt: "miscible in all proportions", why: "Ethanol's −OH group hydrogen-bonds with water just as water does with itself. Its small ethyl group does little to disrupt this, so the two liquids mix in any proportion." },
-      h: { ok: true, sv: "ldfM", amt: "miscible", why: "Ethanol's ethyl group gives it London forces comparable to hexane's, so ethanol also mixes with hexane. Small molecules with a polar head and a nonpolar part can be miscible with both kinds of solvent. (Methanol, with only one carbon, does <i>not</i> fully mix with hexane at room temperature.)" } },
+      h: { ok: true, sv: "ldfM", amt: "miscible", why: "Ethanol's ethyl group can attract hexane through London forces, and that is enough to make up for the hydrogen bonds between ethanol molecules that are disrupted, so ethanol also mixes with hexane. Small molecules with a polar head and a nonpolar part can be miscible with both kinds of solvent. (Methanol, with only one carbon, does <i>not</i> fully mix with hexane at room temperature.)" } },
     { k: "acet", f: "(CH3)2CO", name: "acetone", type: "polar, no O–H", state: "l", dens: 0.79, ss: "dip",
       w: { ok: true, sv: "hb", amt: "miscible in all proportions", why: "Acetone cannot donate a hydrogen bond (no H on O), but its C=O oxygen accepts hydrogen bonds from water's O–H. Those attractions plus dipole–dipole forces make it miscible with water." },
       h: { ok: true, sv: "dipind", amt: "miscible", why: "Acetone's two CH<sub>3</sub> groups give London forces with hexane, and acetone's own dipole–dipole forces are not strong enough to keep it out. Acetone mixes with hexane too, which is why it is such a common lab solvent." } },
@@ -255,7 +256,8 @@ svg.mini { width: 100%; height: auto; display: block; }
       w: { ok: false, sv: "dipind", why: "Each C–Cl bond is polar, but the tetrahedral shape cancels the bond dipoles, so CCl<sub>4</sub> is nonpolar. It forms two layers with water; at 1.59 g/mL it sinks to the bottom." },
       h: { ok: true, sv: "ldfM", amt: "miscible", why: "Two nonpolar liquids attracted by London forces: they mix in all proportions." } },
     { k: "octol", f: "C8H17OH", name: "1-octanol", type: "−OH + long nonpolar chain", state: "l", dens: 0.83, ss: "hbldf",
-      w: { ok: false, sv: "hb", amt: "about 0.05 g per 100 mL", why: "1-Octanol has an −OH group that can hydrogen-bond to water, but the eight-carbon chain is a large nonpolar region. Fitting that chain among water molecules disrupts many hydrogen bonds, so very little dissolves; it floats as a layer (0.83 g/mL). See part B." },
+      w: { ok: false, sv: "hb", amt: "about 0.05 g per 100 mL", why: "1-Octanol has an −OH group that can hydrogen-bond to water, but the eight-carbon chain is a large nonpolar region. Fitting that chain among water molecules disrupts many hydrogen bonds, so very little dissolves; it floats as a layer (0.83 g/mL). See part B.",
+        ap: "1-octanol is only slightly soluble in water: its −OH group hydrogen-bonds to water, but its large nonpolar chain attracts water only through weak London (dipole–induced dipole) attractions, which cannot make up for the water–water hydrogen bonds it disrupts." },
       h: { ok: true, sv: "ldfL", amt: "miscible", why: "The long chain gives strong London forces with hexane, which outweigh the cost of separating 1-octanol's hydrogen-bonded −OH groups. It mixes with hexane." } }
   ];
   var SOLV = {
@@ -360,7 +362,7 @@ svg.mini { width: 100%; height: auto; display: block; }
       else h += "<p><b>" + fm(x.f) + " in " + sv.name + ":</b> " + (res.ok ? (liquid ? "miscible" : "dissolves") : (liquid ? "immiscible" : "does not dissolve")) + (res.amt ? " (" + res.amt + ")" : "") + ".</p>";
       h += "<p>" + res.why + "</p>";
       h += "<ul><li>Broken: " + lc(IMF[x.ss].t) + " (solute–solute) and " + lc(IMF[sv.imf].t) + " (" + sv.name + "–" + sv.name + ").</li><li>Formed: " + lc(IMF[res.sv].t) + " (solute–" + sv.name + "), which " + (res.ok ? "is comparable to what was broken." : "is too weak to make up for what would be broken.") + "</li></ul>";
-      h += "<p><b>AP answer:</b> " + fm(x.f) + (res.ok ? " is soluble in " : " is not appreciably soluble in ") + sv.name + " because the " + lc(IMF[res.sv].t) + " attractions between " + fm(x.f) + " and " + sv.name + " " + (res.ok ? "are similar in strength to" : "are much weaker than") + " the attractions that must be overcome within the pure substances.</p>";
+      h += "<p><b>AP answer:</b> " + (res.ap ? res.ap + "</p>" : fm(x.f) + (res.ok ? " is soluble in " : " is not appreciably soluble in ") + sv.name + " because the " + lc(IMF[res.sv].t) + " attractions between " + fm(x.f) + " and " + sv.name + " " + (res.ok ? "are similar in strength to" : "are much weaker than") + " the attractions that must be overcome within the pure substances.</p>");
     }
     document.getElementById("story").innerHTML = h;
   }
