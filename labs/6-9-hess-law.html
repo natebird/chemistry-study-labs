@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hess’s Law Study Lab</title>
+<meta name="description" content="Solve Hess's law puzzles by reversing and scaling step equations until they add to the target, watching species cancel and the ΔH values add up on a step-by-step energy path.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.lab > *, .side > *, .group > *, section > * { min-width: 0; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; max-width: 100%; }
+.seg button { border: 0; border-radius: 0; padding: 5px 11px; font-size: .84rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btnrow button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.lab-bar > * { min-width: 0; max-width: 100%; }
+.note { font-size: .82rem; color: var(--muted); }
+.target { border: 2px solid var(--accent); border-radius: 10px; padding: 10px 12px; display: grid; gap: 4px; }
+.target .eqn { background: none; padding: 0; white-space: normal; }
+.steplist { display: grid; gap: 10px; }
+.stepc { border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px; display: grid; gap: 6px; background: var(--surface); }
+.stepc .eqn { white-space: normal; font-size: .9rem; }
+.stepc .dh { font-family: var(--mono); font-size: .86rem; }
+.stepc.changed { border-color: var(--accent); }
+.sumbox { display: grid; gap: 6px; }
+.sumbox .eqn { white-space: normal; }
+.x { text-decoration: line-through; text-decoration-color: var(--bad); color: var(--ghost); }
+.ok { color: var(--good); font-weight: 600; } .no { color: var(--bad); font-weight: 600; }
+.legend .l-up::before { background: var(--c1); } .legend .l-dn::before { background: var(--c2); } .legend .l-net::before { background: var(--accent); }
+.legend .l-up, .legend .l-dn, .legend .l-net { color: var(--muted); }
+#path text.big { font-size: 13px; font-weight: 600; }
+@media (max-width: 520px) {
+  #path text.lbl { font-size: 13px; }
+  #path text.big { font-size: 14px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 6 · Topic 6.9</span>
+  <h1>Hess’s Law Study Lab</h1>
+  <p class="lede">If a reaction can be written as the sum of other reactions, its ΔH is the sum of their ΔH values. To use that, you reverse and multiply the given equations until they add up to the one you want, and do the same things to their ΔH values. Solve the puzzles below and watch the species cancel.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The Hess’s law puzzle</h2>
+    <p>Each puzzle gives a target equation and some step equations with known ΔH. Use <b>Reverse</b> and the multipliers on each step. The running sum below adds the steps, cancels anything that appears on both sides, and tells you when the sum matches the target. ΔH values are standard textbook data at 25 °C.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Energy path, one step at a time <small id="p-sub"></small></h3>
+      <svg class="chart" id="path" role="img" aria-label="Energy path: each manipulated step is an arrow, the running total is the level reached, and the net arrow shows the overall enthalpy change"></svg>
+      <p class="note">Each arrow is one step's ΔH after your changes, drawn in order from a starting level of 0. The final level is the sum, whether or not the steps add to the target yet.</p>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Puzzles</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="target">
+        <div class="tag">Target</div>
+        <div class="eqn" id="target"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Step equations</div>
+        <div class="steplist" id="steps"></div>
+      </div>
+      <div class="btnrow">
+        <button type="button" id="b-show">Show me the solution</button>
+        <button type="button" id="b-reset">Reset steps</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-up">Endothermic step</span><span class="l-dn">Exothermic step</span><span class="l-net">Sum of the steps</span></div>
+    <div class="eqn">reverse: ΔH → −ΔH &nbsp;·&nbsp; × c: ΔH → c·ΔH &nbsp;·&nbsp; add equations: add ΔH</div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Σ ΔH of the steps</div><div class="v" id="r-sum"></div><div class="sub" id="r-sum2"></div></div>
+    <div class="stat"><div class="k">ΔH of the target</div><div class="v" id="r-tgt"></div><div class="sub" id="r-tgt2"></div></div>
+    <div class="stat"><div class="k">Species that don't match</div><div class="v" id="r-left"></div><div class="sub" id="r-left2"></div></div>
+    <div class="stat"><div class="k">Status</div><div class="v" id="r-st"></div><div class="sub" id="r-st2"></div></div>
+  </div>
+
+  <div class="card sumbox" id="sumbox" aria-live="polite"></div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">The law</span><h3>Steps add, so their ΔH values add</h3><p>Many processes can be broken into a series of steps, each with its own ΔH. Because energy is conserved, the total heat transferred in the series equals the sum of the heats for each step, so ΔH<sub>overall</sub> = ΔH<sub>1</sub> + ΔH<sub>2</sub> + …</p></div>
+    <div class="card"><span class="tag">Rule 1</span><h3>Reverse: flip the sign</h3><p>If A → B has ΔH = −50 kJ, then B → A has ΔH = +50 kJ. Same size, opposite sign: whatever heat one direction releases, the other direction must absorb.</p></div>
+    <div class="card"><span class="tag">Rule 2</span><h3>Multiply: multiply ΔH</h3><p>ΔH is for the equation as written. Doubling every coefficient doubles the amount reacting, so it doubles ΔH. Multiplying by ½ halves it. Multiply every species in the equation, not just the one you need.</p></div>
+    <div class="card"><span class="tag">Rule 3</span><h3>Add: add ΔH, cancel species</h3><p>When equations are added, anything that appears on both sides cancels (subtract the smaller coefficient from the larger). Intermediates such as CO₂ in a combustion route must cancel completely to leave the target.</p></div>
+    <div class="card"><span class="tag">Strategy</span><h3>Work from the target</h3><p>Find a species that appears in only one given equation. Its position (left or right) and coefficient in the target tell you whether to reverse that equation and what to multiply by. Then check that everything else cancels.</p></div>
+    <div class="card"><span class="tag">Phases count</span><h3>H₂O(l) is not H₂O(g)</h3><p>Species only cancel if they are identical, phase included. If one equation makes H₂O(g) and another uses H₂O(l), you need a phase-change step (H₂O(l) → H₂O(g), +44 kJ) to connect them, as in the diborane puzzle.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Hess's law manipulation cheat sheet</h2>
+    <p>Each row starts from the same reaction, C(s) + O₂(g) → CO₂(g), ΔH = −393.5 kJ.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>What you do</th><th>New equation</th><th>New ΔH</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Nothing</td><td>C(s) + O₂(g) → CO₂(g)</td><td><b>−393.5 kJ</b></td><td>As given.</td></tr>
+      <tr><td>Reverse</td><td>CO₂(g) → C(s) + O₂(g)</td><td><b>+393.5 kJ</b></td><td>The reverse process absorbs what the forward process releases.</td></tr>
+      <tr><td>Multiply by 2</td><td>2C(s) + 2O₂(g) → 2CO₂(g)</td><td><b>−787.0 kJ</b></td><td>Twice as much reacts, twice the heat.</td></tr>
+      <tr><td>Multiply by ½</td><td>½C(s) + ½O₂(g) → ½CO₂(g)</td><td><b>−196.8 kJ</b></td><td>Fractions are fine in thermochemical equations.</td></tr>
+      <tr><td>Reverse and multiply by 3</td><td>3CO₂(g) → 3C(s) + 3O₂(g)</td><td><b>+1180.5 kJ</b></td><td>Apply both rules; order doesn't matter.</td></tr>
+      <tr><td>Add another equation</td><td>Sum, with species on both sides cancelled</td><td><b>ΔH<sub>1</sub> + ΔH<sub>2</sub></b></td><td>Energy is conserved through a sequence of steps.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Hess's law on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points</h3>
+      <ul>
+        <li>Rewrite each given equation the way you use it (reversed, multiplied) with its new ΔH beside it, then add.</li>
+        <li>Show the sum: ΔH = (+283.0) + (−393.5) = −110.5 kJ, with signs in parentheses.</li>
+        <li>Check the cancellation: every species not in the target must cancel, and every target species must end up on the correct side with the right coefficient.</li>
+        <li>When asked to justify, cite the rules: reversing changes the sign; multiplying by c multiplies ΔH by c; adding equations adds ΔH values.</li>
+        <li>When asked why it works, say total energy is conserved, so the enthalpy change for the overall process equals the sum of the enthalpy changes for the steps.</li>
+        <li>Keep units (kJ or kJ/mol<sub>rxn</sub>) and match the precision of the data.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Reversing an equation but forgetting to change the sign of its ΔH.</li>
+        <li>Multiplying only the species you care about, or forgetting to multiply ΔH.</li>
+        <li>Letting species cancel when their phases differ, e.g. H₂O(l) with H₂O(g).</li>
+        <li>Dropping a given equation you actually need (every species must be accounted for).</li>
+        <li>Adding the original ΔH values instead of the manipulated ones.</li>
+        <li>Expecting every step to be exothermic. Individual steps can have either sign; only the sum matters.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 6.9. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-6.html">Unit 6 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  // Equations: r and p are lists of [coefficient, "Formula(phase)"]; dH in kJ for the equation as written.
+  // sol: the intended manipulation of each step, [reversed?, factor]. ans: hand-checked target ΔH.
+  var PZ = {
+    co: { label: "C → CO", t: { r: [[1, "C(s)"], [0.5, "O2(g)"]], p: [[1, "CO(g)"]] }, ans: -110.5,
+          steps: [{ r: [[1, "C(s)"], [1, "O2(g)"]], p: [[1, "CO2(g)"]], dH: -393.5 },
+                  { r: [[1, "CO(g)"], [0.5, "O2(g)"]], p: [[1, "CO2(g)"]], dH: -283.0 }],
+          sol: [[false, 1], [true, 1]],
+          ctx: "Burning carbon in limited oxygen makes CO, but some CO₂ always forms too, so ΔH for C → CO can't be measured directly. Hess's law gets it from two combustions that can." },
+    ch4: { label: "Methane from its elements", t: { r: [[1, "C(s)"], [2, "H2(g)"]], p: [[1, "CH4(g)"]] }, ans: -74.8,
+          steps: [{ r: [[1, "C(s)"], [1, "O2(g)"]], p: [[1, "CO2(g)"]], dH: -393.5 },
+                  { r: [[1, "H2(g)"], [0.5, "O2(g)"]], p: [[1, "H2O(l)"]], dH: -285.8 },
+                  { r: [[1, "CH4(g)"], [2, "O2(g)"]], p: [[1, "CO2(g)"], [2, "H2O(l)"]], dH: -890.3 }],
+          sol: [[false, 1], [false, 2], [true, 1]],
+          ctx: "Carbon and hydrogen don't react cleanly to make methane, but all three substances burn. Combustion data are the classic route to an enthalpy of formation." },
+    no2: { label: "N₂ → NO₂", t: { r: [[1, "N2(g)"], [2, "O2(g)"]], p: [[2, "NO2(g)"]] }, ans: 66.4,
+          steps: [{ r: [[1, "N2(g)"], [1, "O2(g)"]], p: [[2, "NO(g)"]], dH: 180.6 },
+                  { r: [[2, "NO2(g)"]], p: [[2, "NO(g)"], [1, "O2(g)"]], dH: 114.2 }],
+          sol: [[false, 1], [true, 1]],
+          ctx: "A two-step process: N₂ and O₂ form NO in hot engines, then NO reacts with more O₂ in the air. Step 2 is given as the decomposition of NO₂, so it has to be turned around. In the solved path one step is endothermic and one exothermic; the sum is endothermic." },
+    c2h6: { label: "Ethene + H₂", t: { r: [[1, "C2H4(g)"], [1, "H2(g)"]], p: [[1, "C2H6(g)"]] }, ans: -137.0,
+          steps: [{ r: [[1, "C2H4(g)"], [3, "O2(g)"]], p: [[2, "CO2(g)"], [2, "H2O(l)"]], dH: -1411.0 },
+                  { r: [[1, "H2(g)"], [0.5, "O2(g)"]], p: [[1, "H2O(l)"]], dH: -285.8 },
+                  { r: [[1, "C2H6(g)"], [3.5, "O2(g)"]], p: [[2, "CO2(g)"], [3, "H2O(l)"]], dH: -1559.8 }],
+          sol: [[false, 1], [false, 1], [true, 1]],
+          ctx: "Hydrogenation from three heats of combustion. Watch the O₂: 3 + ½ on the left cancels the 7/2 that appears on the right after reversing." },
+    b2h6: { label: "Diborane (four steps)", t: { r: [[2, "B(s)"], [3, "H2(g)"]], p: [[1, "B2H6(g)"]] }, ans: 36, dp: 0,
+          steps: [{ r: [[2, "B(s)"], [1.5, "O2(g)"]], p: [[1, "B2O3(s)"]], dH: -1273 },
+                  { r: [[1, "B2H6(g)"], [3, "O2(g)"]], p: [[1, "B2O3(s)"], [3, "H2O(g)"]], dH: -2035 },
+                  { r: [[1, "H2(g)"], [0.5, "O2(g)"]], p: [[1, "H2O(l)"]], dH: -286 },
+                  { r: [[1, "H2O(l)"]], p: [[1, "H2O(g)"]], dH: 44 }],
+          sol: [[false, 1], [true, 1], [false, 3], [false, 3]],
+          ctx: "A textbook classic. The vaporization step is a physical process; it is needed because one combustion gives H₂O(g) and the other gives H₂O(l)." }
+  };
+  var ORDER = ["co", "ch4", "no2", "c2h6", "b2h6"];
+  var FACT = [0.5, 1, 2, 3];
+
+  var S = { key: "co", m: [] };   // m[i] = [reversed, factor]
+  var F = Lab.fmla;
+  function frac(x) {
+    var a = Math.abs(x);
+    for (var d = 1; d <= 4; d *= 2) { var n = Math.round(a * d); if (Math.abs(n / d - a) < 1e-9) return d === 1 ? String(n) : n === 1 && d === 2 ? "½" : n === 1 && d === 4 ? "¼" : n + "/" + d; }
+    return String(Math.round(a * 1000) / 1000);
+  }
+  function r1(x) { return Math.round(x * 10) / 10; }
+  function dh(x) { var v = r1(x), dp = PZ[S.key].dp == null ? 1 : PZ[S.key].dp; return (v < 0 ? "−" : v > 0 ? "+" : "") + Math.abs(v).toFixed(dp); }
+  function sp(k) { var m = k.match(/^(.*)\((s|l|g|aq)\)$/); return F(m[1]) + "(" + m[2] + ")"; }
+  function cf(c) { if (Math.abs(c - 1) < 1e-9) return ""; var f = frac(c); return f.indexOf("/") >= 0 ? f + " " : f; }
+  function side(list) { return list.length ? list.map(function (t) { return cf(t[0]) + sp(t[1]); }).join(" + ") : "—"; }
+  function applied(st, mm) {
+    var r = st.r, p = st.p; if (mm[0]) { var t = r; r = p; p = t; }
+    var f = mm[1];
+    return { r: r.map(function (x) { return [x[0] * f, x[1]]; }), p: p.map(function (x) { return [x[0] * f, x[1]]; }), dH: st.dH * f * (mm[0] ? -1 : 1) };
+  }
+  function net(eqs) {   // products positive, reactants negative
+    var n = {}, order = [];
+    eqs.forEach(function (e) {
+      e.r.forEach(function (x) { if (n[x[1]] == null) { n[x[1]] = 0; order.push(x[1]); } n[x[1]] -= x[0]; });
+      e.p.forEach(function (x) { if (n[x[1]] == null) { n[x[1]] = 0; order.push(x[1]); } n[x[1]] += x[0]; });
+    });
+    return { n: n, order: order };
+  }
+  function derive() {
+    var pz = PZ[S.key], A = pz.steps.map(function (st, i) { return applied(st, S.m[i]); });
+    var sum = A.reduce(function (a, e) { return a + e.dH; }, 0);
+    var N = net(A), T = net([pz.t]), keys = N.order.slice();
+    T.order.forEach(function (k) { if (keys.indexOf(k) < 0) keys.push(k); });
+    var wrong = keys.filter(function (k) { return Math.abs((N.n[k] || 0) - (T.n[k] || 0)) > 1e-9; });
+    // hint order: species found in only one step first (they decide that step), then target species, then intermediates
+    function rank(k) {
+      var owners = pz.steps.filter(function (st) { return st.r.concat(st.p).some(function (x) { return x[1] === k; }); }).length;
+      return (owners === 1 ? 0 : 2) + (T.n[k] ? 0 : 1);
+    }
+    wrong.sort(function (a, b) { return rank(a) - rank(b) || keys.indexOf(a) - keys.indexOf(b); });
+    return { pz: pz, A: A, sum: sum, N: N, T: T, keys: keys, wrong: wrong, solved: wrong.length === 0 };
+  }
+
+  // ---------- Energy path ----------
+  var svg = document.getElementById("path");
+  var stop = null;
+  function niceStep(span) { var s = [20, 50, 100, 200, 250, 500, 1000, 2000]; for (var i = 0; i < s.length; i++) if (span / s[i] <= 7) return s[i]; return 5000; }
+  function draw(d, grow) {
+    var lv = [0], acc = 0;
+    d.A.forEach(function (e) { acc += e.dH; lv.push(acc); });
+    var lo = Math.min.apply(null, lv), hi = Math.max.apply(null, lv), span = hi - lo, pad = span * 0.14 + 30;
+    var st = niceStep(span + 2 * pad), y0 = Math.floor((lo - pad) / st) * st, y1 = Math.ceil((hi + pad) / st) * st, ticks = [];
+    for (var t = y0; t <= y1 + 1e-9; t += st) ticks.push(t);
+    var nS = d.A.length, X = nS + 1;
+    var Fr = Lab.frame(svg, { x: [0, X], y: [y0, y1], yLabel: "Running total of ΔH (kJ)", yTicks: ticks, fmtY: function (v) { return v < 0 ? "−" + Math.abs(v) : String(v); }, width: 440, height: 340 });
+    Array.prototype.forEach.call(svg.querySelectorAll("text[transform]"), function (tx) { var y = tx.getAttribute("y"); tx.setAttribute("x", 9); tx.setAttribute("transform", "rotate(-90 9 " + y + ")"); });
+    var el = Lab.el, g = el("g", {}, svg);
+    function hl(x0, x1, y, color, w, dash) { el("line", { x1: Fr.sx(x0), x2: Fr.sx(x1), y1: Fr.sy(y), y2: Fr.sy(y), stroke: color, "stroke-width": w, "stroke-linecap": "round", "stroke-dasharray": dash || null }, g); }
+    function arrow(x, ya, yb, color) {
+      var Xp = Fr.sx(x), A = Fr.sy(ya), B = Fr.sy(yb), dir = B > A ? 1 : -1;
+      if (Math.abs(B - A) < 10) { el("circle", { cx: Xp, cy: B, r: 3, fill: color }, g); return; }
+      el("line", { x1: Xp, x2: Xp, y1: A, y2: B - dir * 9, stroke: color, "stroke-width": 3 }, g);
+      el("path", { d: "M" + (Xp - 6) + " " + (B - dir * 10) + " L" + Xp + " " + B + " L" + (Xp + 6) + " " + (B - dir * 10) + " Z", fill: color }, g);
+    }
+    for (var i = 0; i < nS; i++) el("text", { x: Fr.sx(i + 0.5), y: Fr.H - Fr.M.b + 16, "text-anchor": "middle" }, svg, "step " + (i + 1));
+    el("text", { x: Fr.sx(nS + 0.5), y: Fr.H - Fr.M.b + 16, "text-anchor": "middle" }, svg, "sum");
+    hl(0.05, 0.3, 0, "var(--ink)", 3);
+    function upd(k) {
+      while (g.childNodes.length > 1) g.removeChild(g.lastChild);
+      var shown = k * nS, a = 0;
+      for (var i = 0; i < nS; i++) {
+        var part = Math.max(0, Math.min(1, shown - i)); if (part <= 0) break;
+        var e = d.A[i], b = a + e.dH * part, c = e.dH > 0 ? "var(--c1)" : "var(--c2)";
+        arrow(i + 0.5, a, b, c);
+        if (part >= 1) {
+          hl(i + 0.5, i + 1.5, b, "var(--ghost)", 1.5, "4 4");
+          el("text", { x: Fr.sx(i + 0.5) + 6, y: Fr.sy(a + e.dH / 2) + 4, "class": "big", style: "fill:" + c }, g, dh(e.dH));
+        }
+        a = b;
+      }
+      if (k >= 1) {
+        var xs = nS + 0.5;
+        hl(0.3, xs + 0.3, 0, "var(--ghost)", 1, "2 4");
+        arrow(xs, 0, d.sum, "var(--accent)");
+        hl(xs - 0.3, xs + 0.3, d.sum, "var(--accent)", 4);
+        el("text", { x: Fr.sx(X) - 2, y: Fr.sy(d.sum) + (d.sum >= 0 ? -12 : 22), "text-anchor": "end", "class": "big", style: "fill:var(--accent)" }, svg, (d.solved ? "ΔH = " : "Σ = ") + dh(d.sum));
+      }
+    }
+    if (stop) stop();
+    if (grow) stop = Lab.animate(300 * nS + 300, upd); else upd(1);
+  }
+
+  // ---------- Step cards ----------
+  function buildSteps() {
+    var box = document.getElementById("steps"); box.innerHTML = "";
+    PZ[S.key].steps.forEach(function (st, i) {
+      var c = document.createElement("div"); c.className = "stepc"; c.id = "st-" + i;
+      var fs = FACT.map(function (f) { return "<button type='button' data-f='" + f + "' aria-label='Multiply step " + (i + 1) + " by " + f + "'>× " + frac(f) + "</button>"; }).join("");
+      c.innerHTML = "<div class='tag'>Step " + (i + 1) + "</div><div class='eqn'></div><div class='dh'></div><div class='btnrow'><button type='button' class='rev' aria-pressed='false'>Reverse</button><div class='seg' role='group' aria-label='Multiplier for step " + (i + 1) + "'>" + fs + "</div></div>";
+      c.querySelector(".rev").addEventListener("click", function () { S.m[i][0] = !S.m[i][0]; render(false); });
+      Array.prototype.forEach.call(c.querySelectorAll(".seg button"), function (b) {
+        b.addEventListener("click", function () { S.m[i][1] = +b.getAttribute("data-f"); render(false); });
+      });
+      box.appendChild(c);
+    });
+  }
+
+  // ---------- Render ----------
+  function render(grow) {
+    var d = derive(), pz = d.pz;
+    document.getElementById("target").innerHTML = side(pz.t.r) + " → " + side(pz.t.p) + " &nbsp; ΔH = ?";
+    document.getElementById("p-sub").textContent = pz.label;
+    pz.steps.forEach(function (st, i) {
+      var c = document.getElementById("st-" + i), e = d.A[i], mm = S.m[i];
+      c.querySelector(".eqn").innerHTML = side(e.r) + " → " + side(e.p);
+      var how = (mm[0] ? "reversed" : "") + (mm[0] && mm[1] !== 1 ? ", " : "") + (mm[1] !== 1 ? "× " + frac(mm[1]) : "");
+      c.querySelector(".dh").innerHTML = "ΔH = " + dh(e.dH) + " kJ" + (how ? " <span class='note'>(given " + dh(st.dH) + " kJ, " + how + ")</span>" : "");
+      c.className = "stepc" + (how ? " changed" : "");
+      c.querySelector(".rev").setAttribute("aria-pressed", mm[0] ? "true" : "false");
+      Array.prototype.forEach.call(c.querySelectorAll(".seg button"), function (b) { b.setAttribute("aria-pressed", +b.getAttribute("data-f") === mm[1] ? "true" : "false"); });
+    });
+    draw(d, grow);
+
+    // running sum with cancellation
+    var L = [], R = [], Lx = [], Rx = [];
+    d.A.forEach(function (e) { e.r.forEach(function (x) { L.push(x); }); e.p.forEach(function (x) { R.push(x); }); });
+    var netL = [], netR = [];
+    d.N.order.forEach(function (k) { var v = d.N.n[k]; if (v < -1e-9) netL.push([-v, k]); else if (v > 1e-9) netR.push([v, k]); });
+    function crossed(list) {
+      return list.map(function (t) { var full = Math.abs(d.N.n[t[1]]) < 1e-9; return "<span" + (full ? " class='x'" : "") + ">" + cf(t[0]) + sp(t[1]) + "</span>"; }).join(" + ");
+    }
+    var h = "<h3>Running sum</h3>";
+    h += "<div class='note'>All steps added (crossed out = cancels completely):</div><div class='eqn'>" + crossed(L) + " → " + crossed(R) + "</div>";
+    h += "<div class='note'>After cancelling:</div><div class='eqn'>" + side(netL) + " → " + side(netR) + " &nbsp; ΔH = " + d.A.map(function (e) { return "(" + dh(e.dH) + ")"; }).join(" + ") + " = " + dh(d.sum) + " kJ</div>";
+    h += "<div>" + (d.solved ? "<span class='ok'>This is the target equation.</span>" : "<span class='no'>Not the target yet.</span>") + "</div>";
+    document.getElementById("sumbox").innerHTML = h;
+
+    document.getElementById("r-sum").textContent = dh(d.sum) + " kJ";
+    document.getElementById("r-sum2").textContent = d.A.length + " steps added";
+    document.getElementById("r-tgt").textContent = d.solved ? dh(d.sum) + " kJ" : "?";
+    document.getElementById("r-tgt2").textContent = d.solved ? "equal to the sum of the steps" : "known once the steps add to the target";
+    document.getElementById("r-left").textContent = d.wrong.length;
+    document.getElementById("r-left2").innerHTML = d.wrong.length ? d.wrong.slice(0, 4).map(sp).join(", ") : "everything matches";
+    document.getElementById("r-st").innerHTML = d.solved ? "<span class='ok'>Solved</span>" : "<span class='no'>Keep going</span>";
+    document.getElementById("r-st2").textContent = d.solved ? "the sum equals the target" : "adjust reverse / multiply";
+
+    // story with a targeted hint
+    var s = "<p><b>" + pz.label + ".</b> " + pz.ctx + "</p>";
+    if (d.solved) {
+      s += "<p>Every intermediate cancels and the remaining species are exactly the target. Because the target is the sum of these steps, its ΔH is the sum of their ΔH values: " + d.A.map(function (e) { return "(" + dh(e.dH) + ")"; }).join(" + ") + " = <b>" + dh(d.sum) + " kJ</b>, " + (d.sum < 0 ? "exothermic." : "endothermic.") + "</p>";
+    } else {
+      var k = d.wrong[0], have = d.N.n[k] || 0, want = d.T.n[k] || 0, inT = Math.abs(want) > 1e-9, hint;
+      var where = function (v) { return Math.abs(v) < 1e-9 ? "nowhere (it cancels)" : (v < 0 ? "on the left" : "on the right") + " with coefficient " + frac(v); };
+      var owners = [];
+      pz.steps.forEach(function (st, i) { if (st.r.concat(st.p).some(function (x) { return x[1] === k; })) owners.push(i + 1); });
+      if (inT && owners.length === 1) hint = sp(k) + " appears only in step " + owners[0] + ", so that step alone decides it. The target needs it " + where(want) + "; right now it is " + where(have) + ". " + (have * want < 0 ? "Reverse step " + owners[0] + "." : "Change the multiplier on step " + owners[0] + ".");
+      else if (inT) hint = "The target needs " + sp(k) + " " + where(want) + "; right now it is " + where(have) + ". It appears in steps " + owners.join(", ") + ".";
+      else hint = sp(k) + " is not in the target, so it has to cancel. Right now it is " + where(have) + ". " + (owners.length === 1 ? "Only step " + owners[0] + " contains it, so check that step." : "Steps " + owners.join(", ") + " contain it; make the amounts on the two sides equal.");
+      s += "<p><b>Hint:</b> " + hint + " The running sum of ΔH (" + dh(d.sum) + " kJ) only means something once the equations add up to the target.</p>";
+    }
+    s += "<p><b>AP answer:</b> " + (d.solved ? "ΔH<sub>target</sub> = " + d.A.map(function (e) { return "(" + dh(e.dH) + ")"; }).join(" + ") + " = " + dh(d.sum) + " kJ, because reversing an equation changes the sign of ΔH, multiplying it by c multiplies ΔH by c, and adding equations adds their ΔH values." :
+      "manipulate the steps until they add to the target: reversing changes the sign of ΔH, multiplying by c multiplies ΔH by c, and the target's ΔH is the sum of the manipulated ΔH values.") + "</p>";
+    document.getElementById("story").innerHTML = s;
+
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+  }
+
+  function pickPuzzle(k) {
+    S.key = k; S.m = PZ[k].steps.map(function () { return [false, 1]; });
+    buildSteps(); render(true);
+  }
+  var scBtns = {};
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.innerHTML = PZ[k].label; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pickPuzzle(k); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  document.getElementById("b-reset").addEventListener("click", function () { pickPuzzle(S.key); });
+  document.getElementById("b-show").addEventListener("click", function () {
+    S.m = PZ[S.key].sol.map(function (x) { return [x[0], x[1]]; });
+    render(true);
+  });
+  pickPuzzle("co");
+
+  // ---------- Self-check ----------
+  (function selfCheck() {
+    var bad = [], save = { key: S.key, m: S.m };
+    function bal(e, name) {
+      var at = {};
+      e.r.forEach(function (x) { var p = Lab.parseFormula(x[1].replace(/\((s|l|g|aq)\)$/, "")); for (var q in p) at[q] = (at[q] || 0) - x[0] * p[q]; });
+      e.p.forEach(function (x) { var p = Lab.parseFormula(x[1].replace(/\((s|l|g|aq)\)$/, "")); for (var q in p) at[q] = (at[q] || 0) + x[0] * p[q]; });
+      for (var q in at) if (Math.abs(at[q]) > 1e-9) bad.push(name + ": " + q + " not balanced");
+    }
+    ORDER.forEach(function (k) {
+      var pz = PZ[k];
+      bal(pz.t, k + " target");
+      pz.steps.forEach(function (st, i) { bal(st, k + " step " + (i + 1)); });
+      S.key = k; S.m = pz.sol.map(function (x) { return [x[0], x[1]]; });
+      var d = derive();
+      if (!d.solved) bad.push(k + ": solution does not give the target (" + d.wrong.join(",") + ")");
+      if (Math.abs(d.sum - pz.ans) > 0.05) bad.push(k + ": ΔH " + d.sum + " vs expected " + pz.ans);
+      pz.sol.forEach(function (x) { if (FACT.indexOf(x[1]) < 0) bad.push(k + ": factor not offered"); });
+      S.m = pz.steps.map(function () { return [false, 1]; });
+      if (derive().solved) bad.push(k + ": solved with no changes");
+    });
+    S.key = save.key; S.m = save.m;
+    if (bad.length) console.error("Self-check failed: " + bad.join("; "));
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Given: C(s) + O₂(g) → CO₂(g), ΔH = −393.5 kJ and CO(g) + ½O₂(g) → CO₂(g), ΔH = −283.0 kJ. What is ΔH for C(s) + ½O₂(g) → CO(g)?",
+      o: ["−676.5 kJ", "+110.5 kJ", "−110.5 kJ", "−393.5 kJ"], c: 2,
+      w: "Keep the first equation and reverse the second (CO₂ → CO + ½O₂, ΔH = +283.0 kJ). Adding them cancels CO₂ and ½O₂: ΔH = −393.5 + 283.0 = −110.5 kJ. Choice A adds the equations without reversing the second, so CO₂ would not cancel. Choice B has the sign backward." },
+    { s: "For the reaction 2A → B, ΔH = +60 kJ. What is ΔH for ½B → A?",
+      o: ["+30 kJ", "−30 kJ", "−60 kJ", "+120 kJ"], c: 1,
+      w: "Reversing 2A → B gives B → 2A with ΔH = −60 kJ. Multiplying by ½ gives ½B → A with ΔH = −30 kJ. Choice A halves but forgets to change the sign; choice C reverses but forgets to halve." },
+    { s: "Given: N₂(g) + O₂(g) → 2NO(g), ΔH = +180.6 kJ and 2NO(g) + O₂(g) → 2NO₂(g), ΔH = −114.2 kJ. What is ΔH for NO₂(g) → ½N₂(g) + O₂(g)?",
+      o: ["−33.2 kJ", "+66.4 kJ", "−66.4 kJ", "+33.2 kJ"], c: 0,
+      w: "Adding the two equations gives N₂ + 2O₂ → 2NO₂, ΔH = +180.6 − 114.2 = +66.4 kJ. The target is that reaction reversed and multiplied by ½: ΔH = −½(66.4) = −33.2 kJ. Choice B is the sum before reversing and halving; choice D halves without reversing." },
+    { s: "Which statement best explains why the enthalpy change of an overall reaction equals the sum of the enthalpy changes of the steps that add up to it?",
+      o: ["Every step in the sequence must be exothermic, so their heats add.", "The intermediate species have enthalpy changes of zero.", "All the steps occur at the same rate, so they release heat together.", "Energy is conserved, so the net thermal energy transferred in a sequence of steps equals the sum of the energy transferred in each step."], c: 3,
+      w: "The first law of thermodynamics (conservation of energy) means the heat for the overall process must equal the total of the heats for the steps. Choice A is false: steps can be endothermic (as in the NO₂ puzzle). Choice C confuses enthalpy with kinetics; rates have nothing to do with ΔH." },
+    { s: "Given: 2B(s) + 3/2 O₂(g) → B₂O₃(s), ΔH = −1273 kJ; B₂H₆(g) + 3O₂(g) → B₂O₃(s) + 3H₂O(g), ΔH = −2035 kJ; H₂(g) + ½O₂(g) → H₂O(l), ΔH = −286 kJ; H₂O(l) → H₂O(g), ΔH = +44 kJ. What is ΔH for 2B(s) + 3H₂(g) → B₂H₆(g)?",
+      o: ["+520 kJ", "−36 kJ", "−4034 kJ", "+36 kJ"], c: 3,
+      w: "Keep equation 1 (−1273), reverse equation 2 (+2035), and multiply equations 3 and 4 by 3 (−858 and +132). Sum: −1273 + 2035 − 858 + 132 = +36 kJ. Choice A forgets to multiply equations 3 and 4 by 3. Choice C forgets to reverse equation 2." },
+    { s: "A process takes place in two steps: X → Y, ΔH = −75 kJ, then Y → Z, ΔH = +30 kJ. Which statement about the overall process X → Z is correct?",
+      o: ["ΔH = −105 kJ, because the magnitudes add.", "ΔH cannot be found, because Y is an intermediate that is not in the overall equation.", "ΔH = −45 kJ; the overall process is exothermic even though one step is endothermic.", "ΔH = +45 kJ, because the second step reverses part of the first."], c: 2,
+      w: "Adding the steps cancels Y: ΔH = −75 + 30 = −45 kJ. The overall process releases heat even though the second step absorbs some. Choice A ignores the sign of the second step. Choice B misreads the role of intermediates: they cancel when the steps are added." },
+    { s: "To find ΔH for C₂H₄(g) + H₂(g) → C₂H₆(g) from heats of combustion, the equation C₂H₆(g) + 7/2 O₂(g) → 2CO₂(g) + 3H₂O(l), ΔH = −1559.8 kJ, must be used. How?",
+      o: ["Used as written, with ΔH = −1559.8 kJ", "Reversed, with ΔH = +1559.8 kJ", "Reversed and doubled, with ΔH = +3119.6 kJ", "Multiplied by 2/7, with ΔH = −445.7 kJ"], c: 1,
+      w: "C₂H₆ is a product in the target but a reactant in the combustion equation, and its coefficient is already 1, so the equation is reversed once: ΔH = +1559.8 kJ. Choice A leaves C₂H₆ on the wrong side. Choice C would make 2 C₂H₆." },
+    { s: "Given: S(s) + O₂(g) → SO₂(g), ΔH = −296.8 kJ and 2SO₂(g) + O₂(g) → 2SO₃(g), ΔH = −197.8 kJ. What is ΔH for 2S(s) + 3O₂(g) → 2SO₃(g)?",
+      o: ["−791.4 kJ", "−494.6 kJ", "−395.7 kJ", "+791.4 kJ"], c: 0,
+      w: "Double the first equation (2S + 2O₂ → 2SO₂, ΔH = −593.6 kJ) and add the second: 2SO₂ cancels and O₂ totals 3. ΔH = −593.6 + (−197.8) = −791.4 kJ. Choice B forgets to double the first equation, so SO₂ would not cancel. Choice C is the value per mole of SO₃." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("6.9");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [6], topic: "6.9", compact: true, storageKey: "topic-6.9" });</script>
+</body>
+</html>

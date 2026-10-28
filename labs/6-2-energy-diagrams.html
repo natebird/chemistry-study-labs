@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy Diagrams Study Lab</title>
+<meta name="description" content="Build energy diagrams for reactions and phase changes to scale, reverse them, track where the energy goes, and practice reading ΔH off unlabeled diagrams.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.group { display: grid; gap: 8px; }
+.ctlcard { display: grid; gap: 16px; }
+.ctlcard .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btnrow button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.note { font-size: .82rem; color: var(--muted); }
+.mq { display: grid; gap: 8px; }
+.mq .opts { grid-template-columns: 1fr 1fr; }
+.mq .fb { font-size: .9rem; }
+.mq .fb.ok { color: var(--good); } .mq .fb.no { color: var(--bad); }
+.mystery { display: none; }
+.is-mystery .mystery { display: grid; }
+.is-mystery .not-mystery { display: none; }
+@media (max-width: 520px) { .ctlcard .controls, .mq .opts { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 6 · Topic 6.2</span>
+  <h1>Energy Diagrams Study Lab</h1>
+  <p class="lede">An energy diagram is a picture of where a system's energy starts and ends. If the products sit below the reactants, the system lost energy to its surroundings (exothermic); if they sit above, it absorbed energy (endothermic). Build diagrams to scale for real reactions and phase changes, flip them around, and practice reading ΔH off a diagram with no labels.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The energy diagram builder</h2>
+    <p>Pick a process to see its diagram drawn to scale, or drag the sliders to build your own. ΔH values are standard values at 25 °C (reaction values computed from enthalpies of formation; vaporization at 100 °C). The hump at the top of a reaction curve is the activation energy from topic 5.6; its heights here are illustrative, not measured. Turn on <b>Read a diagram</b> to practice with unlabeled diagrams.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Energy diagram <small id="dia-sub"></small></h3>
+      <svg class="chart" id="dia" role="img" aria-label="Energy diagram: enthalpy on the vertical axis against reaction progress, with reactant and product levels and the enthalpy change marked."></svg>
+    </div>
+    <div class="card graph-card">
+      <h3>Energy bookkeeping <small>per mole of reaction as written</small></h3>
+      <svg class="chart" id="book" role="img" aria-label="Bar chart: change in energy of the system and of the surroundings. They are equal in size and opposite in sign."></svg>
+    </div>
+  </div>
+
+  <div class="card ctlcard" id="ctlcard">
+    <div class="group not-mystery">
+      <div class="tag">Process</div>
+      <div class="scenarios" id="sc"></div>
+      <div class="eqn" id="eqn"></div>
+    </div>
+    <div class="btnrow">
+      <button type="button" id="b-rev" class="not-mystery">Reverse the process</button>
+      <button type="button" id="b-hump" aria-pressed="true" class="not-mystery">Activation-energy hump: on</button>
+      <button type="button" id="b-mys" aria-pressed="false">Read a diagram: off</button>
+    </div>
+    <div class="controls not-mystery">
+      <div class="ctl">
+        <label for="s-dh">ΔH (products − reactants) <output id="o-dh"></output></label>
+        <input type="range" id="s-dh" min="-1000" max="1000" step="5">
+        <span class="hint">Moving a slider switches to a custom process A → B</span>
+      </div>
+      <div class="ctl">
+        <label for="s-ea">Height of the hump above the reactants <output id="o-ea"></output></label>
+        <input type="range" id="s-ea" min="0" max="600" step="5">
+        <span class="hint">Must reach at least as high as the products</span>
+      </div>
+    </div>
+    <div class="mystery mq">
+      <div class="tag">Read the diagram</div>
+      <div id="m-q">What is ΔH for the process shown, and how is it classified?</div>
+      <div class="opts" id="m-opts"></div>
+      <div class="fb" id="m-fb" aria-live="polite"></div>
+      <div class="btnrow"><button type="button" id="m-new">New diagram</button><span class="note" id="m-score"></span></div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">ΔH = H(products) − H(reactants)</div><div class="v" id="r-dh"></div><div class="sub" id="r-dh2"></div></div>
+    <div class="stat"><div class="k">Classification</div><div class="v" id="r-cl"></div><div class="sub" id="r-cl2"></div></div>
+    <div class="stat"><div class="k">Lower enthalpy (more stable)</div><div class="v" id="r-st"></div><div class="sub" id="r-st2"></div></div>
+    <div class="stat"><div class="k">Hump above reactants (5.6)</div><div class="v" id="r-ea"></div><div class="sub" id="r-ea2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">The axes</span><h3>What the picture shows</h3><p>The vertical axis is the enthalpy (chemical potential energy) of the system. The horizontal axis is reaction progress: how far the process has gone, not time. Only differences in height have meaning, so the reactant level is often set at zero.</p></div>
+    <div class="card"><span class="tag">Downhill</span><h3>Exothermic diagram</h3><p>Products below reactants. The system ends with less energy than it started with; the difference was released to the surroundings. ΔH = H<sub>products</sub> − H<sub>reactants</sub> is negative. Combustion and freezing look like this.</p></div>
+    <div class="card"><span class="tag">Uphill</span><h3>Endothermic diagram</h3><p>Products above reactants. The system had to absorb energy from the surroundings to get there, so ΔH is positive. Melting, vaporizing, decomposing CaCO<sub>3</sub>, and dissolving NH<sub>4</sub>NO<sub>3</sub> look like this.</p></div>
+    <div class="card"><span class="tag">Stability</span><h3>Lower means more stable</h3><p>Whichever side sits lower on the diagram has less chemical potential energy and is more stable. In an exothermic process the products are more stable; in an endothermic process the reactants are.</p></div>
+    <div class="card"><span class="tag">Flip it</span><h3>Reverse the process, flip the sign</h3><p>Running a process backward follows the same curve in the other direction. The two levels do not move, so ΔH has the same size and the opposite sign: condensation is −ΔH<sub>vap</sub>, freezing is −ΔH<sub>fus</sub>.</p></div>
+    <div class="card"><span class="tag">Don't mix them up</span><h3>ΔH is not the hump</h3><p>ΔH depends only on where the curve starts and ends. The height of the hump (the activation energy, topic 5.6) tells you about the path and the rate, not about whether the process is exothermic or endothermic.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Diagram reading cheat sheet</h2>
+    <p>The same few readings answer almost every energy-diagram question. Values here are per mole of reaction as written, at 25 °C unless noted.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Process</th><th>Products vs. reactants</th><th>ΔH (kJ/mol)</th><th>More stable side</th><th>Energy flow</th></tr></thead>
+    <tbody>
+      <tr><td>CH<sub>4</sub>(g) + 2O<sub>2</sub>(g) → CO<sub>2</sub>(g) + 2H<sub>2</sub>O(l)</td><td>Far below</td><td><b>−890.3</b></td><td>Products</td><td>Released to surroundings</td></tr>
+      <tr><td>N<sub>2</sub>(g) + O<sub>2</sub>(g) → 2NO(g)</td><td>Above</td><td><b>+180.6</b></td><td>Reactants</td><td>Absorbed from surroundings</td></tr>
+      <tr><td>CaCO<sub>3</sub>(s) → CaO(s) + CO<sub>2</sub>(g)</td><td>Above</td><td><b>+178.3</b></td><td>Reactants</td><td>Absorbed from surroundings</td></tr>
+      <tr><td>H<sub>2</sub>O(s) → H<sub>2</sub>O(l) at 0 °C</td><td>Slightly above</td><td><b>+6.01</b></td><td>Solid</td><td>Absorbed</td></tr>
+      <tr><td>H<sub>2</sub>O(g) → H<sub>2</sub>O(l) at 100 °C</td><td>Below</td><td><b>−40.7</b></td><td>Liquid</td><td>Released</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:8px;">Reading a diagram in four moves</h3>
+    <ol class="steps">
+      <li>Find the reactant level (left plateau) and the product level (right plateau). Ignore the hump for now.</li>
+      <li>ΔH = H<sub>products</sub> − H<sub>reactants</sub>. Read both values off the axis and subtract in that order.</li>
+      <li>Negative ΔH (downhill): exothermic, energy released, products more stable. Positive ΔH (uphill): endothermic, energy absorbed, reactants more stable.</li>
+      <li>If asked about the reverse process, keep the size of ΔH and flip the sign.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Energy diagrams on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Label the vertical axis with a quantity and units, such as "Enthalpy (kJ/mol)" or "Potential energy," and the horizontal axis "Reaction progress."</li>
+        <li>Draw the product level on the correct side of the reactant level: below for negative ΔH, above for positive ΔH.</li>
+        <li>Draw it to scale when numbers are given. If ΔH = −890 kJ/mol and the hump rises 200 kJ/mol above the reactants, the products must sit about four and a half times farther below the reactant level than the peak sits above it.</li>
+        <li>Mark ΔH with an arrow from the reactant level to the product level, not from the top of the hump.</li>
+        <li>Label each plateau with formulas and states, such as H<sub>2</sub>O(l), so the grader can see which side is which.</li>
+        <li>When asked to justify "exothermic," point at the diagram: "The products are lower in enthalpy than the reactants, so energy is released to the surroundings."</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Calculating ΔH as reactants − products, which gives the wrong sign.</li>
+        <li>Reading the height of the hump as ΔH. The hump is the activation energy and has nothing to do with the sign of ΔH.</li>
+        <li>Thinking a curve that goes down after the peak means the reaction is exothermic. Every curve goes down after its peak; compare the end to the start.</li>
+        <li>Putting time on the horizontal axis. It is reaction progress.</li>
+        <li>Forgetting to flip the sign when the process is reversed or when going from vaporization to condensation.</li>
+        <li>Saying products "have more heat." Heat is energy in transfer; the diagram shows the system's chemical potential energy (enthalpy).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 6.2. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-6.html">Unit 6 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Data ----------
+  // Standard enthalpies of formation, kJ/mol, 25 °C (used to compute and self-check the preset ΔH values).
+  var HF = { "CH4(g)": -74.8, "O2(g)": 0, "CO2(g)": -393.5, "H2O(l)": -285.8, "H2(g)": 0, "N2(g)": 0, "NO(g)": 90.3, "CaCO3(s)": -1206.9, "CaO(s)": -635.1 };
+  var CP_LIQ = 75.3;   // J/(mol·K), liquid water
+  var DH_FUS = 6.01, DH_VAP = 40.7;   // kJ/mol, water at 0 °C and 100 °C
+  // r, p: [coefficient, species] lists used with HF; dh: ΔH (computed from HF when r/p given); ea: illustrative hump height above reactants.
+  var SC = {
+    ch4:  { name: "Burning methane", r: [[1, "CH4(g)"], [2, "O2(g)"]], p: [[1, "CO2(g)"], [2, "H2O(l)"]], ea: 250, kind: "rxn" },
+    h2:   { name: "Burning hydrogen", r: [[2, "H2(g)"], [1, "O2(g)"]], p: [[2, "H2O(l)"]], ea: 160, kind: "rxn" },
+    no:   { name: "N₂ + O₂ → 2NO", r: [[1, "N2(g)"], [1, "O2(g)"]], p: [[2, "NO(g)"]], ea: 320, kind: "rxn" },
+    caco: { name: "Decomposing CaCO₃", r: [[1, "CaCO3(s)"]], p: [[1, "CaO(s)"], [1, "CO2(g)"]], ea: 230, kind: "rxn" },
+    nh4:  { name: "Dissolving NH₄NO₃", rs: "NH4NO3(s)", ps: "NH4^+(aq) + NO3^-(aq)", dh: 25.7, ea: 0, kind: "phys" },
+    vap:  { name: "Boiling water", rs: "H2O(l)", ps: "H2O(g)", dh: DH_VAP, ea: 0, kind: "phys", note: "at 100 °C" },
+    lad:  { name: "Ice → steam ladder", kind: "ladder" }
+  };
+  var ORDER = ["ch4", "h2", "no", "caco", "nh4", "vap", "lad"];
+
+  function side(list) { return list.map(function (t) { return (t[0] > 1 ? t[0] : "") + t[1]; }).join(" + "); }
+  function hfSum(list) { return list.reduce(function (a, t) { return a + t[0] * HF[t[1]]; }, 0); }
+  ORDER.forEach(function (k) {
+    var x = SC[k];
+    if (x.r) { x.dh = Math.round((hfSum(x.p) - hfSum(x.r)) * 10) / 10; x.rs = side(x.r); x.ps = side(x.p); }
+  });
+  // Ladder: ice (0 °C) → water (0 °C) → water (100 °C) → steam (100 °C), per mole H2O.
+  var LADDER = [
+    { lab: "H2O(s), 0 °C", step: null },
+    { lab: "H2O(l), 0 °C", step: DH_FUS, what: "melt (ΔH_fus)" },
+    { lab: "H2O(l), 100 °C", step: CP_LIQ * 100 / 1000, what: "heat liquid 100 °C" },
+    { lab: "H2O(g), 100 °C", step: DH_VAP, what: "boil (ΔH_vap)" }
+  ];
+
+  var S = { key: "ch4", rev: false, hump: true, dh: 0, ea: 0, mystery: false, mq: null, mRight: 0, mDone: 0 };
+
+  // current process, after reversal
+  function cur() {
+    if (S.mystery) return { kind: "rxn", rs: "Reactants", ps: "Products", dh: S.mq.dh, ea: S.mq.ea, mystery: true };
+    if (S.key === "custom") return { kind: "rxn", rs: "A", ps: "B", dh: S.dh, ea: S.ea, name: "Custom A → B" };
+    var x = SC[S.key];
+    if (x.kind === "ladder") {
+      var lv = [0], acc = 0;
+      LADDER.slice(1).forEach(function (l) { acc += l.step; lv.push(acc); });
+      var labs = LADDER.map(function (l) { return l.lab; });
+      if (S.rev) { lv = lv.slice().reverse().map(function (v) { return v - acc; }); labs = labs.slice().reverse(); }
+      return { kind: "ladder", levels: lv, labs: labs, dh: S.rev ? -acc : acc };
+    }
+    var dh = S.rev ? -x.dh : x.dh;
+    var ea = x.ea ? (S.rev ? x.ea - x.dh : x.ea) : 0;
+    return { kind: x.kind, rs: S.rev ? x.ps : x.rs, ps: S.rev ? x.rs : x.ps, dh: dh, ea: ea, name: x.name, note: x.note };
+  }
+  function sgn(v, d) { var s = Lab.fmt(Math.abs(v), d == null ? 1 : d); return (v < 0 && +s !== 0 ? "−" : v > 0 && +s !== 0 ? "+" : "") + s; }
+  function nd(v) { return Math.abs(v) >= 100 ? (Math.abs(v - Math.round(v)) < 1e-9 ? 0 : 1) : Math.abs(v - Math.round(v)) < 1e-9 ? 0 : Math.abs(v * 10 - Math.round(v * 10)) < 1e-9 ? 1 : 2; }
+  function kj(v) { return sgn(v, nd(v)) + " kJ/mol"; }
+  function chem(s) { return s.split(" + ").map(function (t) { var m = t.match(/^(\d*)(.*?)(\((?:s|l|g|aq)\))?(,.*)?$/); return (m[1] || "") + Lab.fmla(m[2]) + (m[3] || "") + (m[4] || ""); }).join(" + "); }
+  function niceStep(span) { var raw = span / 5, p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; }
+
+  // ---------- Energy diagram ----------
+  var dia = document.getElementById("dia");
+  function curvePts(R, P, peak, hump) {
+    var pts = [[0.3, R], [3, R]];
+    var n = 40, i, s;
+    if (hump) {
+      for (i = 1; i <= n; i++) { s = i / n; pts.push([3 + 3 * s, R + (peak - R) * (1 - Math.cos(Math.PI * s)) / 2]); }
+      for (i = 1; i <= n; i++) { s = i / n; pts.push([6 + 3 * s, peak + (P - peak) * (1 - Math.cos(Math.PI * s)) / 2]); }
+    } else {
+      for (i = 1; i <= n; i++) { s = i / n; pts.push([3 + 6 * s, R + (P - R) * (1 - Math.cos(Math.PI * s)) / 2]); }
+    }
+    pts.push([11.7, P]);
+    return pts;
+  }
+  function drawDia(x) {
+    var E = Lab.el;
+    if (x.kind === "ladder") return drawLadder(x);
+    var R = 0, P = x.dh, showHump = x.kind === "rxn" && (S.hump || x.mystery) && x.ea > 0;
+    var peak = showHump ? R + x.ea : null;
+    var lo = Math.min(R, P), hi = Math.max(R, P, peak == null ? -1e9 : peak);
+    var span = Math.max(hi - lo, 20), step = niceStep(span * 1.25);
+    var y0 = Math.floor((lo - span * 0.12) / step) * step, y1 = Math.ceil((hi + span * 0.22) / step) * step;
+    var yt = []; for (var v = y0; v <= y1 + 1e-9; v += step) yt.push(Math.round(v * 1000) / 1000);
+    var F = Lab.frame(dia, { x: [0, 12], y: [y0, y1], xLabel: "Reaction progress", yLabel: "Enthalpy, H (kJ/mol)", xTicks: [], yTicks: yt, fmtX: function () { return ""; }, fmtY: function (v) { return Math.abs(v) < 1e-9 ? "0" : (v < 0 ? "−" : "") + Lab.fmt(Math.abs(v), step < 1 ? 1 : 0); } });
+    var col = P < R ? "var(--c1)" : "var(--accent)";
+    // reference line at the reactant level
+    Lab.line(F, [[3, R], [11.7, R]], "var(--ghost)", 1.5, "5 4");
+    Lab.line(F, curvePts(R, P, peak, showHump), "var(--ink)", 3);
+    Lab.line(F, [[0.3, R], [3, R]], "var(--c2)", 5);
+    Lab.line(F, [[9, P], [11.7, P]], col, 5);
+    // plateau labels
+    var off = (y1 - y0) * 0.05;
+    if (!x.mystery) {
+      tagHTML(F, 0.3, R, x.rs, "var(--c2)", "start", -8);
+      tagHTML(F, 11.7, P, x.ps, col, "end", P < R ? 18 : -8);
+    } else {
+      Lab.tag(F, 0.3, R + off * 0.4, "Reactants", "var(--c2)");
+      Lab.tag(F, 11.7, P + (P < R ? -off * 1.3 : off * 0.4), "Products", col, "end");
+    }
+    // ΔH arrow over the product plateau; its label sits on the empty side of the reactant line
+    if (!x.mystery) {
+      if (Math.abs(P - R) > 0) Lab.arrow(F, 10.3, R, 10.3, P, col);
+      Lab.tag(F, 11.7, R + (P < R ? off * 0.5 : -off * 1.4), "ΔH = " + kj(x.dh), col, "end");
+      if (showHump) {
+        Lab.line(F, [[5.2, peak], [6, peak]], "var(--ghost)", 1, "3 3");
+        Lab.arrow(F, 5.2, R, 5.2, peak, "var(--c3)");
+        Lab.tag(F, 4.9, R + (peak - R) * 0.7, "Eₐ", "var(--c3)", "end");
+      }
+    }
+    return F;
+  }
+  // label with formula markup: build a <text> with tspans for sub/superscripts
+  function tagHTML(F, x, y, s, color, anchor, dy) {
+    var t = Lab.el("text", { x: F.sx(x), y: F.sy(y) + dy, style: "fill:" + color, "class": "lbl", "text-anchor": anchor }, F.svg);
+    var parts = s.split(" + ");
+    parts.forEach(function (p, i) {
+      if (i) Lab.el("tspan", {}, t, " + ");
+      var m = p.match(/^(\d*)(.*?)(\((?:s|l|g|aq)\))?(,.*)?$/), f = m[2];
+      if (m[1]) Lab.el("tspan", {}, t, m[1]);
+      var re = /([A-Z][a-z]?|\(|\))(\d*)|\^(\d*[+-])/g, mm;
+      while ((mm = re.exec(f))) {
+        if (mm[3]) { Lab.el("tspan", { "baseline-shift": "super", style: "font-size:8px" }, t, mm[3].replace("-", "−")); continue; }
+        Lab.el("tspan", {}, t, mm[1]);
+        if (mm[2]) Lab.el("tspan", { "baseline-shift": "sub", style: "font-size:8px" }, t, mm[2]);
+      }
+      if (m[3]) Lab.el("tspan", {}, t, m[3]);
+      if (m[4]) Lab.el("tspan", {}, t, m[4]);
+    });
+    return t;
+  }
+  function drawLadder(x) {
+    var lv = x.levels, lo = Math.min.apply(null, lv), hi = Math.max.apply(null, lv);
+    var F = Lab.frame(dia, { x: [0, 12], y: [lo - 8, hi + 8], xLabel: "Progress (heating " + (S.rev ? "reversed: cooling" : "ice to steam") + ")", yLabel: "Enthalpy, H (kJ/mol H₂O)", xTicks: [], yTicks: [0, 10, 20, 30, 40, 50, -10, -20, -30, -40, -50].filter(function (v) { return v >= lo - 8 && v <= hi + 8; }), fmtX: function () { return ""; }, fmtY: function (v) { return (v < 0 ? "−" : "") + Math.abs(v); } });
+    var xs = [[0.2, 2.8], [3.2, 5.8], [6.2, 8.8], [9.2, 11.8]];
+    lv.forEach(function (v, i) {
+      Lab.line(F, [[xs[i][0], v], [xs[i][1], v]], i === 0 ? "var(--c2)" : i === 3 ? (x.dh < 0 ? "var(--c1)" : "var(--accent)") : "var(--ink)", 4);
+      if (i) {
+        var d = v - lv[i - 1], c = d < 0 ? "var(--c1)" : "var(--accent)", ax = xs[i][0] - 0.2;
+        Lab.line(F, [[xs[i - 1][1], lv[i - 1]], [ax, lv[i - 1]]], "var(--ink)", 1.5, "3 3");
+        Lab.arrow(F, ax, lv[i - 1], ax, v, c);
+        Lab.tag(F, ax - 0.12, (lv[i - 1] + v) / 2, sgn(d, 2).replace(/0+$/, "").replace(/\.$/, "") + " kJ", c, "end");
+      }
+      tagHTML(F, (xs[i][0] + xs[i][1]) / 2, v, x.labs[i], "var(--ink)", "middle", S.rev ? -7 : 15).setAttribute("style", "fill:var(--ink);font-size:10px");
+    });
+    Lab.line(F, [[0.3, lv[0]], [11.7, lv[0]]], "var(--ghost)", 1, "5 4");
+    return F;
+  }
+
+  // ---------- Bookkeeping bars ----------
+  var book = document.getElementById("book");
+  function drawBook(x) {
+    var d = x.dh, a = Math.max(Math.abs(d), 1), step = niceStep(a * 2.2);
+    var lim = Math.ceil(a * 1.2 / step) * step;
+    var yt = []; for (var v = -lim; v <= lim + 1e-9; v += step) yt.push(Math.round(v * 1000) / 1000);
+    var F = Lab.frame(book, { x: [0, 3], y: [-lim, lim], xLabel: "", yLabel: "Energy change (kJ/mol)", xTicks: [], yTicks: yt, fmtY: function (v) { return Math.abs(v) < 1e-9 ? "0" : (v < 0 ? "−" : "+") + Lab.fmt(Math.abs(v), step < 1 ? 1 : 0); } });
+    Lab.hline(F, 0, "var(--ink)", 1.5);
+    if (x.mystery && !S.mq.answered) {
+      Lab.tag(F, 1.5, lim * 0.1, "hidden until you answer", "var(--muted)", "middle");
+      return;
+    }
+    Lab.rect(F, 0.35, 0, 1.25, d, d < 0 ? "var(--c1)" : "var(--accent)", 0.85);
+    Lab.rect(F, 1.75, 0, 2.65, -d, -d < 0 ? "var(--c1)" : "var(--accent)", 0.35);
+    var E = Lab.el;
+    E("text", { x: F.sx(0.8), y: F.H - F.M.b + 16, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, book, "System");
+    E("text", { x: F.sx(2.2), y: F.H - F.M.b + 16, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, book, "Surroundings");
+    E("text", { x: F.sx(0.8), y: F.sy(d) + (d < 0 ? 16 : -6), "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, book, sgn(d, nd(d)));
+    E("text", { x: F.sx(2.2), y: F.sy(-d) + (-d < 0 ? 16 : -6), "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, book, sgn(-d, nd(d)));
+    Lab.tag(F, 1.5, d > 0 ? -lim * 0.85 : lim * 0.8, "total change: 0", "var(--muted)", "middle");
+  }
+
+  // ---------- Story ----------
+  function story(x) {
+    var h = "", li = [], exo = x.dh < 0;
+    if (x.mystery) {
+      li.push("No labels this time. Read the reactant level and the product level off the vertical axis, then subtract: ΔH = H<sub>products</sub> − H<sub>reactants</sub>.");
+      li.push("The hump is a distractor for ΔH. Its height is the activation energy, which says nothing about whether the process releases or absorbs energy.");
+      if (S.mq.answered) li.push("Here the reactants sit at 0 and the products at " + sgn(x.dh, 0) + " kJ/mol, so ΔH = " + kj(x.dh) + ": " + (exo ? "exothermic, products more stable." : "endothermic, reactants more stable."));
+      h += "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+      h += "<p><b>AP answer:</b> ΔH is the vertical distance from the reactant level to the product level: negative if the products are lower (exothermic), positive if higher (endothermic).</p>";
+      return h;
+    }
+    if (x.kind === "ladder") {
+      var up = !S.rev;
+      li.push(up ? "Each step up is an endothermic change for one mole of water: melting absorbs 6.01 kJ, warming the liquid from 0 °C to 100 °C absorbs (75.3 J/(mol·K))(100 K) = 7.53 kJ, and boiling absorbs 40.7 kJ." : "Read backward, each step is exothermic: condensing releases 40.7 kJ, cooling the liquid from 100 °C to 0 °C releases 7.53 kJ, and freezing releases 6.01 kJ per mole.");
+      li.push("The vaporization step is by far the tallest: separating molecules completely into a gas takes much more energy than loosening them from a solid into a liquid.");
+      li.push("Overall ΔH = " + kj(x.dh) + " per mole of H₂O. The surroundings " + (up ? "lose" : "gain") + " exactly that much.");
+      h += "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+      h += "<p><b>AP answer:</b> on an energy diagram for a phase change, the gas is highest, the liquid in the middle, and the solid lowest; " + (up ? "melting and boiling go uphill (endothermic)." : "condensing and freezing go downhill (exothermic) by the same amounts that melting and boiling go uphill.") + "</p>";
+      return h;
+    }
+    var rs = chem(x.rs), ps = chem(x.ps);
+    li.push("The products, " + ps + ", sit " + (Math.abs(x.dh) < 1e-9 ? "at the same level as" : Math.abs(sgn(x.dh, nd(x.dh)).replace(/[−+]/, "")) + " kJ/mol " + (exo ? "below" : "above")) + " the reactants, " + rs + ". So ΔH = H<sub>products</sub> − H<sub>reactants</sub> = " + kj(x.dh) + (x.note ? " (" + x.note + ")" : "") + ".");
+    if (Math.abs(x.dh) < 1e-9) li.push("With ΔH = 0 the process is neither endothermic nor exothermic. Real chemical changes almost always have some energy change.");
+    else if (exo) li.push("<b>Exothermic.</b> The system ends with less chemical potential energy than it started with. The difference, " + Lab.fmt(Math.abs(x.dh), nd(x.dh)) + " kJ per mole of reaction as written, is released to the surroundings, which warm up. The products are more stable.");
+    else li.push("<b>Endothermic.</b> The system ends with more chemical potential energy than it started with, so it must absorb " + Lab.fmt(Math.abs(x.dh), nd(x.dh)) + " kJ per mole of reaction from the surroundings, which cool down. The reactants are more stable.");
+    if (S.rev) li.push("You reversed the process. The two levels did not move; you are reading the same picture from right to left, so ΔH has the same size and the opposite sign.");
+    if (x.kind === "rxn" && x.ea > 0 && S.hump) li.push("The hump rises " + Lab.fmt(x.ea, 0) + " kJ/mol above the reactants (illustrative). That is the activation energy, a barrier both endothermic and exothermic reactions must cross. It does not change ΔH.");
+    if (x.kind === "phys") li.push("This is a physical process, so no hump is drawn. The diagram still shows which side has more energy.");
+    if (S.key === "custom" && x.kind === "rxn" && S.ea < Math.max(0, S.dh) && S.hump) li.push("The hump was raised to the product level: a path from reactants to products has to pass at least that high.");
+    h += "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+    h += "<p><b>AP answer:</b> " + (Math.abs(x.dh) < 1e-9 ? "with products and reactants at the same level, ΔH = 0." : "the products are " + (exo ? "lower" : "higher") + " in enthalpy than the reactants, so the process is " + (exo ? "exothermic: energy is released to the surroundings" : "endothermic: energy is absorbed from the surroundings") + " and ΔH = " + kj(x.dh) + ".") + "</p>";
+    return h;
+  }
+
+  // ---------- Read-a-diagram mode ----------
+  function newMystery() {
+    var dh, ea;
+    do { dh = (Math.round(Math.random() * 56) - 28) * 10; } while (Math.abs(dh) < 40);
+    do { ea = Math.max(0, dh) + 40 + Math.round(Math.random() * 16) * 10; } while (ea === -dh);
+    var opts = [
+      { t: "ΔH = " + sgn(dh, 0) + " kJ/mol; " + (dh < 0 ? "exothermic" : "endothermic"), ok: true },
+      { t: "ΔH = " + sgn(-dh, 0) + " kJ/mol; " + (dh < 0 ? "endothermic" : "exothermic"), why: "reactants − products: the sign is backward" },
+      { t: "ΔH = +" + ea + " kJ/mol; endothermic", why: "that is the height of the hump above the reactants (Eₐ), not ΔH" },
+      { t: "ΔH = " + sgn(dh, 0) + " kJ/mol; " + (dh < 0 ? "endothermic" : "exothermic"), why: "the value is right but the classification is backward" }
+    ];
+    for (var i = opts.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = opts[i]; opts[i] = opts[j]; opts[j] = t; }
+    S.mq = { dh: dh, ea: ea, opts: opts, answered: false };
+  }
+  function drawMQ() {
+    var box = document.getElementById("m-opts"), fb = document.getElementById("m-fb");
+    box.innerHTML = ""; fb.textContent = ""; fb.className = "fb";
+    S.mq.opts.forEach(function (o, i) {
+      var b = document.createElement("button"); b.type = "button"; b.className = "opt";
+      b.textContent = String.fromCharCode(65 + i) + ".  " + o.t;
+      b.addEventListener("click", function () {
+        if (S.mq.answered) return;
+        S.mq.answered = true; S.mDone++; if (o.ok) S.mRight++;
+        box.querySelectorAll("button").forEach(function (x, j) { x.disabled = true; if (S.mq.opts[j].ok) x.classList.add("right"); });
+        if (!o.ok) b.classList.add("wrong");
+        fb.className = "fb " + (o.ok ? "ok" : "no");
+        document.getElementById("m-score").textContent = S.mRight + " / " + S.mDone + " right";
+        fb.textContent = o.ok ? "Correct. Products minus reactants: " + sgn(S.mq.dh, 0) + " − 0 = " + sgn(S.mq.dh, 0) + " kJ/mol." : "Not quite: " + o.why + ". ΔH = H(products) − H(reactants) = " + sgn(S.mq.dh, 0) + " kJ/mol.";
+        render(true);
+      });
+      box.appendChild(b);
+    });
+    document.getElementById("m-score").textContent = S.mRight + " / " + S.mDone + " right";
+  }
+
+  // ---------- Render ----------
+  var elDh = document.getElementById("s-dh"), elEa = document.getElementById("s-ea");
+  var bRev = document.getElementById("b-rev"), bHump = document.getElementById("b-hump"), bMys = document.getElementById("b-mys");
+  var scBtns = {};
+  function render(keepMQ) {
+    var x = cur();
+    drawDia(x); drawBook(x);
+    document.getElementById("ctlcard").classList.toggle("is-mystery", S.mystery);
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    bHump.setAttribute("aria-pressed", S.hump ? "true" : "false");
+    bHump.textContent = "Activation-energy hump: " + (S.hump ? "on" : "off");
+    bMys.setAttribute("aria-pressed", S.mystery ? "true" : "false");
+    bMys.textContent = "Read a diagram: " + (S.mystery ? "on" : "off");
+    bRev.textContent = S.rev ? "Reverse again (back to original)" : "Reverse the process";
+    if (x.kind !== "ladder" && !x.mystery) {
+      elDh.value = Math.max(-1000, Math.min(1000, x.dh));
+      elEa.value = Math.max(0, Math.min(600, x.ea));
+    }
+    document.getElementById("o-dh").textContent = kj(x.dh);
+    document.getElementById("o-ea").textContent = x.kind === "rxn" ? Lab.fmt(x.ea, 0) + " kJ/mol" : "none";
+    var eq = x.kind === "ladder" ? (S.rev ? "H<sub>2</sub>O(g, 100 °C) → H<sub>2</sub>O(l, 100 °C) → H<sub>2</sub>O(l, 0 °C) → H<sub>2</sub>O(s, 0 °C)" : "H<sub>2</sub>O(s, 0 °C) → H<sub>2</sub>O(l, 0 °C) → H<sub>2</sub>O(l, 100 °C) → H<sub>2</sub>O(g, 100 °C)") : chem(x.rs) + " → " + chem(x.ps);
+    document.getElementById("eqn").innerHTML = eq + " &nbsp; ΔH = " + kj(x.dh) + (x.note ? " (" + x.note + ")" : "");
+    document.getElementById("dia-sub").textContent = x.mystery ? "unlabeled: read it yourself" : x.kind === "ladder" ? "one mole of water" : S.key === "custom" ? "custom process" : x.kind === "phys" ? "physical change" : "chemical reaction";
+    document.getElementById("legend").innerHTML = '<span class="l-c2">Reactant level</span><span class="' + (x.dh < 0 ? "l-c1" : "l-ad") + '">Product level</span>' + (x.kind === "rxn" && (S.hump || x.mystery) ? '<span class="l-c3">Activation-energy hump (5.6)</span>' : "") + '<span class="l-ghost">Reactant level carried across</span>';
+    var hide = x.mystery && !S.mq.answered;
+    document.getElementById("r-dh").textContent = hide ? "?" : kj(x.dh);
+    document.getElementById("r-dh2").textContent = hide ? "read it from the axis" : x.kind === "ladder" ? "per mol H₂O" : "per mole of reaction as written";
+    document.getElementById("r-cl").textContent = hide ? "?" : Math.abs(x.dh) < 1e-9 ? "Neither" : x.dh < 0 ? "Exothermic" : "Endothermic";
+    document.getElementById("r-cl2").textContent = hide ? "" : Math.abs(x.dh) < 1e-9 ? "no net energy transfer" : x.dh < 0 ? "energy released to surroundings" : "energy absorbed from surroundings";
+    document.getElementById("r-st").textContent = hide ? "?" : x.dh < 0 ? "Products" : x.dh > 0 ? "Reactants" : "Equal";
+    document.getElementById("r-st2").textContent = hide ? "" : Math.abs(x.dh) < 1e-9 ? "same enthalpy" : "less chemical potential energy";
+    document.getElementById("r-ea").textContent = x.kind === "rxn" && (S.hump || x.mystery) ? Lab.fmt(x.ea, 0) + " kJ/mol" : "—";
+    document.getElementById("r-ea2").textContent = x.kind === "rxn" && (S.hump || x.mystery) ? "illustrative; does not affect ΔH" : x.kind === "rxn" ? "hump hidden" : "no hump for this process";
+    document.getElementById("story").innerHTML = story(x);
+  }
+  function pick(k) { S.key = k; S.rev = false; S.mystery = false; render(); }
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name;
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pick(k); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  function toCustom() {
+    var x = cur();
+    if (S.key !== "custom") { S.dh = x.kind === "ladder" ? Math.round(x.dh) : x.dh; S.ea = x.kind === "rxn" ? x.ea : 150; S.key = "custom"; S.rev = false; }
+  }
+  elDh.addEventListener("input", function () { toCustom(); S.dh = parseFloat(elDh.value); if (S.ea < Math.max(0, S.dh)) S.ea = Math.max(0, S.dh); render(); });
+  elEa.addEventListener("input", function () { toCustom(); S.ea = Math.max(parseFloat(elEa.value), Math.max(0, S.dh)); render(); });
+  bRev.addEventListener("click", function () {
+    if (S.key === "custom") { S.ea = S.ea - S.dh; S.dh = -S.dh; } else S.rev = !S.rev;
+    render();
+  });
+  bHump.addEventListener("click", function () { S.hump = !S.hump; render(); });
+  bMys.addEventListener("click", function () { S.mystery = !S.mystery; if (S.mystery) { newMystery(); drawMQ(); } render(); });
+  document.getElementById("m-new").addEventListener("click", function () { newMystery(); drawMQ(); render(); });
+  pick("ch4");
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "On an energy diagram for a reaction, the reactants are at 50 kJ/mol, the products are at −30 kJ/mol, and the highest point of the curve is at 120 kJ/mol. What is ΔH for the reaction?",
+      o: ["+80 kJ/mol", "−80 kJ/mol", "+70 kJ/mol", "−150 kJ/mol"], c: 1,
+      w: "ΔH = H(products) − H(reactants) = −30 − 50 = −80 kJ/mol. Choice A subtracts in the wrong order. Choice C is the activation energy (120 − 50), the height of the hump above the reactants, which is not ΔH." },
+    { s: "When NH₄NO₃(s) dissolves in water, the temperature of the solution decreases. Which description matches the energy diagram for this dissolution?",
+      o: ["The products are lower than the reactants, and the difference is energy released to the water.", "The products and reactants are at the same level, because no chemical bonds are broken.", "The reactants are at a higher level than the products, and the curve has a large hump.", "The products are higher than the reactants, and the difference is energy absorbed from the water."], c: 3,
+      w: "A temperature drop means the water lost energy to the dissolving salt, so the system's energy increased: the products (aqueous ions) sit above the reactants (solid + water), with a positive ΔH. Choice A describes an exothermic process. Choice B is wrong because separating ions and forming ion–water attractions both involve energy." },
+    { s: "For the reaction 2H₂(g) + O₂(g) → 2H₂O(l), ΔH = −572 kJ/mol. Which statement about the energy diagram for this reaction is correct?",
+      o: ["The products are 572 kJ/mol lower in enthalpy than the reactants, and that energy is transferred to the surroundings.", "The products are 572 kJ/mol higher in enthalpy than the reactants.", "The top of the curve is 572 kJ/mol above the reactants.", "The reactants and products are at the same level, because mass is conserved."], c: 0,
+      w: "A negative ΔH means the products are lower than the reactants by that amount, and the energy goes to the surroundings. Choice C confuses ΔH with the activation energy. Choice D confuses conservation of mass with no change in energy." },
+    { s: "Which ordering of the enthalpy of one mole of water in its three phases, all at the same temperature, is correct?",
+      o: ["H₂O(g) < H₂O(l) < H₂O(s)", "H₂O(l) < H₂O(s) < H₂O(g)", "H₂O(s) < H₂O(l) < H₂O(g)", "All three are equal because the substance is the same."], c: 2,
+      w: "Melting and vaporizing are both endothermic, so each step from solid to liquid to gas goes uphill on an energy diagram. The solid has the strongest net attractions and the lowest enthalpy. Choice A is the reverse order. Choice D ignores the energy needed to overcome intermolecular attractions." },
+    { s: "On an energy diagram, the reactants are at 0 kJ/mol, the products are at +40 kJ/mol, and the peak of the curve is at +100 kJ/mol. Which statement is correct?",
+      o: ["The reaction is endothermic, and the reactants are more stable than the products.", "The reaction is exothermic, because the curve goes down from the peak to the products.", "The reaction is endothermic with ΔH = +100 kJ/mol.", "The products are more stable, because they are closer to the peak."], c: 0,
+      w: "The products end 40 kJ/mol above the reactants, so ΔH = +40 kJ/mol: endothermic, and the lower-energy reactants are more stable. Choice B compares the products with the peak instead of with the reactants; every curve goes down after its peak. Choice C reads the peak as ΔH." },
+    { s: "For the process A → B, ΔH = −120 kJ/mol. Which statement describes the energy diagram for the reverse process, B → A?",
+      o: ["ΔH = −120 kJ/mol, because the same substances are involved.", "ΔH = 0, because the forward and reverse processes cancel.", "ΔH = +240 kJ/mol, because the curve is crossed twice.", "ΔH = +120 kJ/mol: the diagram starts at the lower level (B) and ends 120 kJ/mol higher (A)."], c: 3,
+      w: "The levels of A and B do not change; reversing just reads the diagram from the other end. B is 120 kJ/mol below A, so going from B to A is uphill: ΔH = +120 kJ/mol. Choice A forgets to flip the sign. Choice B confuses one reverse process with the round trip." },
+    { s: "A student draws an energy diagram for the combustion of methane, ΔH = −890 kJ/mol, on axes labeled \"Enthalpy (kJ/mol).\" The reactant level is drawn at 0 kJ/mol. Where should the product level be drawn?",
+      o: ["At +890 kJ/mol", "At −445 kJ/mol, because there are two product molecules", "At −890 kJ/mol", "At 0 kJ/mol, with a hump 890 kJ/mol high"], c: 2,
+      w: "H(products) = H(reactants) + ΔH = 0 + (−890) = −890 kJ/mol. ΔH is for the reaction as written, so it is not split among product molecules (choice B). Choice A would describe an endothermic reaction, and choice D draws the energy change as a hump." },
+    { s: "Which process would be represented by an energy diagram in which the products are higher in enthalpy than the reactants?",
+      o: ["Water vapor condensing on a cold window", "Ice melting in a glass of water", "Methane burning in a furnace", "CaCl₂ dissolving in water and warming the solution"], c: 1,
+      w: "Products higher than reactants means ΔH > 0, an endothermic process. Melting absorbs energy to overcome attractions in the solid. Condensing (A), combustion (C), and an exothermic dissolution that warms the water (D) all release energy, so their products are lower." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("6.2");
+
+  // ---------- Self-check ----------
+  (function () {
+    var expect = { ch4: -890.3, h2: -571.6, no: 180.6, caco: 178.3 };
+    Object.keys(expect).forEach(function (k) {
+      if (Math.abs(SC[k].dh - expect[k]) > 0.05) console.error("Self-check: ΔH for " + k + " is " + SC[k].dh + ", expected " + expect[k]);
+      if (SC[k].ea < Math.max(0, SC[k].dh)) console.error("Self-check: hump for " + k + " is below the products");
+      // atoms balance
+      var cnt = function (list) { var t = {}; list.forEach(function (s) { var f = Lab.parseFormula(s[1].replace(/\(.*\)$/, "")); for (var e in f) t[e] = (t[e] || 0) + s[0] * f[e]; }); return t; };
+      var a = cnt(SC[k].r), b = cnt(SC[k].p);
+      Object.keys(a).concat(Object.keys(b)).forEach(function (e) { if (a[e] !== b[e]) console.error("Self-check: " + k + " is not balanced in " + e); });
+    });
+    var tot = DH_FUS + CP_LIQ * 100 / 1000 + DH_VAP;
+    if (Math.abs(tot - 54.24) > 0.005) console.error("Self-check: ladder total is " + tot + ", expected 54.24");
+    // reversal flips the sign, keeps the size
+    var save = { key: S.key, rev: S.rev };
+    ["ch4", "nh4", "lad"].forEach(function (k) {
+      S.key = k; S.rev = false; var f = cur().dh; S.rev = true; var r = cur().dh;
+      if (Math.abs(f + r) > 1e-9 || f === 0) console.error("Self-check: reversing " + k + " does not flip ΔH");
+    });
+    S.key = "ch4"; S.rev = true; var rv = cur();
+    if (Math.abs(rv.ea - (SC.ch4.ea - SC.ch4.dh)) > 1e-9) console.error("Self-check: reverse hump height");
+    S.key = save.key; S.rev = save.rev; render();
+    if (Math.abs((-30 - 50) - (-80)) > 1e-9) console.error("Self-check: quiz 1 arithmetic");
+    var cs = Q.map(function (q) { return q.c; });
+    if (cs.filter(function (c, i) { return cs.indexOf(c) === i; }).length < 4) console.error("Self-check: quiz answer letters do not vary");
+  })();
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [6], topic: "6.2", compact: true, storageKey: "topic-6.2" });</script>
+</body>
+</html>

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy of Phase Changes Study Lab</title>
+<meta name="description" content="Heat ice into steam or cool steam into ice along a live heating curve, watch the particles change phase, and calculate the energy of every sloped and flat segment with q = mcΔT and q = nΔH.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.group { display: grid; gap: 8px; }
+.ctlcard { display: grid; gap: 16px; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; width: fit-content; max-width: 100%; }
+.seg button { border: 0; border-radius: 0; padding: 5px 11px; font-size: .84rem; font-family: var(--body); font-weight: 500; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.note { font-size: .82rem; color: var(--muted); }
+.story ol.steps li.now { font-weight: 600; }
+.story ol.steps li.later { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 6 · Topic 6.5</span>
+  <h1>Energy of Phase Changes Study Lab</h1>
+  <p class="lede">Melting and boiling take energy even though the temperature does not change: the energy goes into pulling particles apart against their attractions, not into making them move faster. Drive a sample of water along its heating or cooling curve, watch the particles, and calculate the energy of each segment, sloped (q = mcΔT) and flat (q = nΔH).</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The heating and cooling curve</h2>
+    <p>Pick a scenario or set the mass and temperatures, then press <b>Run</b> or drag the energy slider. The sample is heated (or cooled) slowly at 1 atm, so the temperature is uniform. Values used: c<sub>ice</sub> = 2.09, c<sub>water</sub> = 4.18, c<sub>steam</sub> = 2.01 J/(g·°C); ΔH<sub>fus</sub> = 6.01 kJ/mol at 0 °C; ΔH<sub>vap</sub> = 40.7 kJ/mol at 100 °C; M = 18.02 g/mol. Specific heats of ice and steam vary a little with temperature, and textbooks round them differently.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3 id="g-title">Heating curve <small id="g-sub"></small></h3>
+      <svg class="chart" id="graph" role="img" aria-label="Heating or cooling curve: temperature against energy added or removed, with sloped segments for warming one phase and flat segments for phase changes."></svg>
+    </div>
+    <div class="card graph-card">
+      <h3>Particle view <small id="pv-sub"></small></h3>
+      <svg class="chart particles" id="pv" role="img" aria-label="Particles of water in a container, arranged as a solid lattice, a liquid, or a gas depending on the current state."></svg>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <div class="tag">Scenario</div>
+      <div class="scenarios" id="sc"></div>
+    </div>
+    <div class="btnrow">
+      <div class="seg" id="dir"><button type="button" data-v="heat" aria-pressed="true">Heating (add energy)</button><button type="button" data-v="cool" aria-pressed="false">Cooling (remove energy)</button></div>
+      <button type="button" class="primary" id="b-run">Run</button>
+      <button type="button" id="b-reset">Back to start</button>
+    </div>
+    <div class="controls">
+      <div class="ctl"><label for="s-m">Mass of water <output id="o-m"></output></label><input type="range" id="s-m" min="5" max="100" step="0.01"><span class="hint">18.02 g is exactly 1.000 mol</span></div>
+      <div class="ctl"><label for="s-ts">Starting temperature <output id="o-ts"></output></label><input type="range" id="s-ts" min="-40" max="150" step="1"><span class="hint" id="h-ts"></span></div>
+      <div class="ctl"><label for="s-te">Final temperature <output id="o-te"></output></label><input type="range" id="s-te" min="-40" max="150" step="1"><span class="hint" id="h-te"></span></div>
+      <div class="ctl"><label for="s-q"><span>Energy <span id="l-q">added</span> so far</span> <output id="o-q"></output></label><input type="range" id="s-q" min="0" max="1000" step="1"><span class="hint">Drag to move along the curve</span></div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Temperature</div><div class="v" id="r-t"></div><div class="sub" id="r-t2"></div></div>
+    <div class="stat"><div class="k">What is in the container</div><div class="v" id="r-ph"></div><div class="sub" id="r-ph2"></div></div>
+    <div class="stat"><div class="k" id="r-q-k">Energy added</div><div class="v" id="r-q"></div><div class="sub" id="r-q2"></div></div>
+    <div class="stat"><div class="k">Current segment</div><div class="v" id="r-seg"></div><div class="sub" id="r-seg2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Flat segments</span><h3>Constant temperature during a phase change</h3><p>While a pure substance melts or boils, its temperature stays constant. The energy absorbed overcomes intermolecular attractions (raising potential energy) instead of raising the average kinetic energy, so the thermometer does not move until the phase change is complete.</p></div>
+    <div class="card"><span class="tag">Sloped segments</span><h3>One phase warming or cooling</h3><p>Between phase changes, energy changes the temperature of a single phase: q = mcΔT, with the specific heat of that phase. Ice, liquid water, and steam all have different specific heats, so the slopes differ.</p></div>
+    <div class="card"><span class="tag">Per mole</span><h3>q = nΔH for a phase change</h3><p>The energy for a phase change is the moles of substance times the molar enthalpy of that change: q = nΔH<sub>fus</sub> for melting, q = nΔH<sub>vap</sub> for boiling. Convert grams to moles first.</p></div>
+    <div class="card"><span class="tag">Reverse processes</span><h3>Same size, opposite sign</h3><p>Freezing releases exactly the energy melting absorbs, and condensing releases what vaporizing absorbs: ΔH<sub>freezing</sub> = −ΔH<sub>fus</sub> and ΔH<sub>condensation</sub> = −ΔH<sub>vap</sub>. A cooling curve is the heating curve run backward.</p></div>
+    <div class="card"><span class="tag">Why boiling is so long</span><h3>ΔH<sub>vap</sub> ≫ ΔH<sub>fus</sub></h3><p>Melting only loosens the particles; they stay in contact in the liquid. Vaporizing separates them almost completely, overcoming nearly all the attractions. For water, ΔH<sub>vap</sub> (40.7 kJ/mol) is almost seven times ΔH<sub>fus</sub> (6.01 kJ/mol).</p></div>
+    <div class="card"><span class="tag">Endo or exo</span><h3>Direction of energy flow</h3><p>Melting, vaporization, and sublimation are endothermic: the system's energy increases. Freezing, condensation, and deposition are exothermic: the system's energy decreases and the surroundings warm.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Heating-curve cheat sheet for water</h2>
+    <p>Each segment of the curve, the equation that goes with it, and the energy for one mole (18.02 g) of water.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Segment</th><th>What the particles do</th><th>Temperature</th><th>Equation</th><th>Energy for 18.02 g</th></tr></thead>
+    <tbody id="tab"></tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Phase-change energy on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Split a multistep problem into segments and label each: warm the solid, melt, warm the liquid, boil, warm the gas.</li>
+        <li>Use q = mcΔT on slopes (grams) and q = nΔH on plateaus (moles). Show the gram-to-mole conversion.</li>
+        <li>Put every segment in the same unit (usually kJ) before adding them.</li>
+        <li>Explain a plateau at the particle level: "the energy absorbed overcomes intermolecular attractions, increasing potential energy while the average kinetic energy, and so the temperature, stays constant."</li>
+        <li>For condensing or freezing, give the energy a negative sign for the system and say it is released to the surroundings.</li>
+        <li>When reading a heating curve made with a constant heating rate, compare plateau lengths: longer plateau, larger molar enthalpy (for the same sample).</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Using q = mcΔT across a phase change. On a plateau ΔT = 0, which would wrongly give q = 0.</li>
+        <li>Multiplying grams by ΔH in kJ/mol. Convert to moles first.</li>
+        <li>Using liquid water's specific heat for ice or steam.</li>
+        <li>Adding J and kJ without converting.</li>
+        <li>Saying "temperature stays constant because no energy is absorbed." Energy is absorbed; it goes into overcoming attractions.</li>
+        <li>Saying bonds break when water boils. Covalent O–H bonds stay intact; only intermolecular attractions are overcome.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 6.5. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-6.html">Unit 6 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  var CP = [2.09, 4.18, 2.01];               // J/(g·°C): ice, liquid, steam
+  var PH = ["ice", "liquid water", "steam"];
+  var PHS = ["solid", "liquid", "gas"];
+  var DH_FUS = 6.01, DH_VAP = 40.7, MW = 18.02, TMP = 0, TBP = 100;
+
+  var SC = {
+    full:  { name: "Ice at −20 °C to steam at 120 °C", dir: "heat", m: 18.02, ts: -20, te: 120 },
+    melt:  { name: "Melt ice at 0 °C", dir: "heat", m: 25, ts: 0, te: 0 },
+    boil:  { name: "Boil water at 100 °C", dir: "heat", m: 25, ts: 100, te: 100 },
+    warm:  { name: "Warm liquid water (no phase change)", dir: "heat", m: 25, ts: 25, te: 75 },
+    burn:  { name: "Steam burn: steam at 100 °C to skin at 37 °C", dir: "cool", m: 10, ts: 100, te: 37 },
+    freeze:{ name: "Freeze water at 0 °C", dir: "cool", m: 25, ts: 0, te: 0 }
+  };
+  var ORDER = ["full", "melt", "boil", "warm", "burn", "freeze"];
+  var S = { key: "full", dir: "heat", m: 18.02, ts: -20, te: 120, q: 0 };
+
+  // Phase rules: a process completes the transitions at its end temperature and starts before any transition at its start temperature.
+  function startPhase(dir, T) { return dir === "heat" ? (T <= TMP ? 0 : T <= TBP ? 1 : 2) : (T < TMP ? 0 : T < TBP ? 1 : 2); }
+  function endPhase(dir, T) { return dir === "heat" ? (T < TMP ? 0 : T < TBP ? 1 : 2) : (T <= TMP ? 0 : T <= TBP ? 1 : 2); }
+  // Segments from start to end. q in J, always positive (energy added when heating, removed when cooling).
+  function buildPath(dir, ts, te, m) {
+    var segs = [], n = m / MW, p = startPhase(dir, ts), pe = endPhase(dir, te), T = ts;
+    var up = dir === "heat", bnd = function (ph) { return up ? (ph === 0 ? TMP : TBP) : (ph === 1 ? TMP : TBP); };
+    while (true) {
+      var target = p === pe ? te : bnd(p);
+      if (Math.abs(target - T) > 1e-9) segs.push({ type: "warm", ph: p, T0: T, T1: target, q: m * CP[p] * Math.abs(target - T) });
+      T = target;
+      if (p === pe) break;
+      var np = up ? p + 1 : p - 1, fus = (p + np) === 1;
+      segs.push({ type: fus ? "fus" : "vap", from: p, to: np, T0: T, T1: T, q: n * (fus ? DH_FUS : DH_VAP) * 1000 });
+      p = np;
+    }
+    var acc = 0; segs.forEach(function (s) { s.qs = acc; acc += s.q; s.qe = acc; });
+    return { segs: segs, total: acc, n: n };
+  }
+  function valid() {
+    // heating needs te >= ts; cooling needs te <= ts
+    if (S.dir === "heat" && S.te < S.ts) S.te = S.ts;
+    if (S.dir === "cool" && S.te > S.ts) S.te = S.ts;
+  }
+  function state(P, q) {
+    var segs = P.segs;
+    if (!segs.length) return { T: S.ts, ph: startPhase(S.dir, S.ts), frac: 0, seg: null, i: -1 };
+    q = Math.max(0, Math.min(P.total, q));
+    for (var i = 0; i < segs.length; i++) {
+      var s = segs[i];
+      if (q <= s.qe + 1e-9 || i === segs.length - 1) {
+        var f = s.q > 0 ? (q - s.qs) / s.q : 1;
+        if (s.type === "warm") return { T: s.T0 + (s.T1 - s.T0) * f, ph: s.ph, frac: 0, seg: s, i: i, f: f };
+        return { T: s.T0, ph: s.from, to: s.to, frac: f, seg: s, i: i, f: f };
+      }
+    }
+  }
+  function kJ(J) { return Lab.sig(J / 1000, 3) + " kJ"; }
+  function f1(v) { return Lab.fmt(v, 1); }
+  function degC(v) { return (v < 0 ? "−" : "") + Lab.fmt(Math.abs(v), 0) + " °C"; }
+
+  // ---------- Graph ----------
+  var graph = document.getElementById("graph");
+  function drawGraph(P, st) {
+    var tot = P.total / 1000 || 1, step = tot > 40 ? 10 : tot > 16 ? 5 : tot > 6 ? 2 : tot > 3 ? 1 : 0.5;
+    var xmax = Math.ceil(tot * 1.04 / step) * step, xt = []; for (var v = 0; v <= xmax + 1e-9; v += step) xt.push(Math.round(v * 100) / 100);
+    var lo = Math.min(S.ts, S.te), hi = Math.max(S.ts, S.te), y0 = Math.floor((lo - 15) / 20) * 20, y1 = Math.ceil((hi + 15) / 20) * 20;
+    var yt = []; for (var w = y0; w <= y1; w += 20) yt.push(w);
+    var F = Lab.frame(graph, { x: [0, xmax], y: [y0, y1], xLabel: "Energy " + (S.dir === "heat" ? "added" : "removed") + " (kJ)", yLabel: "Temperature (°C)", xTicks: xt, yTicks: yt, fmtX: function (v) { return step < 1 ? v.toFixed(1) : v; }, fmtY: function (v) { return v; } });
+    [TMP, TBP].forEach(function (T) { if (T > y0 && T < y1) Lab.hline(F, T, "var(--ghost)", 1, "3 4"); });
+    var full = [[0, S.ts]], done = [[0, S.ts]], qnow = S.q;
+    P.segs.forEach(function (s) {
+      full.push([s.qe / 1000, s.T1]);
+      if (qnow >= s.qe) done.push([s.qe / 1000, s.T1]);
+      else if (qnow > s.qs) done.push([qnow / 1000, st.T]);
+    });
+    Lab.line(F, full, "var(--ghost)", 2.5, "6 4");
+    if (done.length > 1) Lab.line(F, done, S.dir === "heat" ? "var(--c1)" : "var(--accent)", 3.5);
+    Lab.dot(F, qnow / 1000, st.T, S.dir === "heat" ? "var(--c1)" : "var(--accent)");
+    // segment labels
+    P.segs.forEach(function (s) {
+      var xm = (s.qs + s.qe) / 2000, wide = (s.qe - s.qs) / 1000 / xmax;
+      if (s.type === "warm") { if (wide > 0.05) Lab.tag(F, (s.qs + s.qe) / 2000 + xmax * 0.015, (s.T0 + s.T1) / 2, ["ice", "liquid", "steam"][s.ph], "var(--muted)"); }
+      else Lab.tag(F, xm, s.T0 + (y1 - y0) * 0.035, s.type === "fus" ? (S.dir === "heat" ? "melting" : "freezing") : (S.dir === "heat" ? "boiling" : "condensing"), "var(--ink)", "middle");
+    });
+    document.getElementById("g-title").firstChild.textContent = (S.dir === "heat" ? "Heating" : "Cooling") + " curve ";
+    document.getElementById("g-sub").textContent = Lab.fmt(S.m, 2) + " g = " + Lab.sig(P.n, 3) + " mol";
+  }
+
+  // ---------- Particle view ----------
+  var pv = document.getElementById("pv"), N = 40;
+  var SEEDS = (function () { var s = 3, a = []; function r() { s = (s * 9301 + 49297) % 233280; return s / 233280; } for (var i = 0; i < N; i++) a.push([r(), r(), r(), r()]); return a; })();
+  // particles are ranked so the same ones melt/boil first every time
+  function drawPV(st) {
+    var E = Lab.el;
+    pv.setAttribute("viewBox", "0 0 440 330");
+    while (pv.firstChild) pv.removeChild(pv.firstChild);
+    var X0 = 40, X1 = 400, Y0 = 20, Y1 = 300;
+    E("rect", { x: X0, y: Y0, width: X1 - X0, height: Y1 - Y0, fill: "none", stroke: "var(--ink)", "stroke-width": 2, rx: 6 }, pv);
+    // count of particles in each phase
+    var nS = 0, nL = 0, nG = 0;
+    if (!st.seg || st.seg.type === "warm") { if (st.ph === 0) nS = N; else if (st.ph === 1) nL = N; else nG = N; }
+    else {
+      var k = Math.round(N * st.frac), a = st.ph, b = st.to;
+      var cnt = [0, 0, 0]; cnt[a] = N - k; cnt[b] = k; nS = cnt[0]; nL = cnt[1]; nG = cnt[2];
+    }
+    var amp = 0.8 + 3.2 * Math.max(0, Math.min(1, (st.T + 40) / 190));
+    var r = 9, d = 2 * r + 1, idx = 0;
+    // solid: lattice at the bottom (8 per row)
+    for (var i = 0; i < nS; i++, idx++) {
+      var row = Math.floor(i / 8), col = i % 8;
+      var px = (X0 + X1) / 2 - 3.5 * d + col * d + (SEEDS[idx][0] - 0.5) * amp, py = Y1 - r - 4 - row * d + (SEEDS[idx][1] - 0.5) * amp;
+      E("circle", { cx: px, cy: py, r: r, fill: "var(--accent)" }, pv);
+    }
+    // liquid: loosely packed above any solid, touching neighbours
+    var solidRows = Math.ceil(nS / 8), base = Y1 - 4 - solidRows * d;
+    for (var j = 0; j < nL; j++, idx++) {
+      var lr = Math.floor(j / 10), lc = j % 10, sd = SEEDS[idx];
+      var lx = X0 + 22 + lc * 35 + (sd[0] - 0.5) * 12 + (lr % 2) * 10, ly = base - r - lr * (d - 2) + (sd[1] - 0.5) * 6;
+      E("circle", { cx: Math.min(X1 - r - 2, lx), cy: ly, r: r, fill: "var(--c2)" }, pv);
+    }
+    // gas: spread through the upper space
+    var topLiquid = base - Math.ceil(nL / 10) * (d - 2);
+    for (var g = 0; g < nG; g++, idx++) {
+      var sg = SEEDS[idx];
+      var gx = X0 + r + 4 + sg[2] * (X1 - X0 - 2 * r - 8), gy = Y0 + r + 4 + sg[3] * Math.max(20, topLiquid - Y0 - 2 * r - 30);
+      E("circle", { cx: gx, cy: gy, r: r, fill: "var(--c1)" }, pv);
+      if (sg[0] > 0.3) {
+        var ang = sg[1] * 2 * Math.PI, len = 10 + 10 * amp / 4;
+        E("line", { x1: gx + Math.cos(ang) * (r + 2), y1: gy + Math.sin(ang) * (r + 2), x2: gx + Math.cos(ang) * (r + 2 + len), y2: gy + Math.sin(ang) * (r + 2 + len), stroke: "var(--c1)", "stroke-width": 1.5, "stroke-opacity": 0.6 }, pv);
+      }
+    }
+    E("text", { x: X0 + 8, y: Y0 + 18, "class": "lbl", style: "fill:var(--ink)" }, pv, f1(st.T) + " °C");
+    document.getElementById("pv-sub").textContent = "each circle stands for many molecules";
+  }
+
+  // ---------- Story ----------
+  function segLine(s, P) {
+    if (s.type === "warm") return "Warm " + (S.dir === "heat" ? "" : "(cool) ") + PH[s.ph] + " from " + degC(s.T0) + " to " + degC(s.T1) + ": q = mcΔT = (" + Lab.fmt(S.m, 2) + " g)(" + CP[s.ph] + " J/(g·°C))(" + Lab.fmt(Math.abs(s.T1 - s.T0), 0) + " °C) = " + kJ(s.q) + ".";
+    var fus = s.type === "fus", name = fus ? (S.dir === "heat" ? "Melt" : "Freeze") : (S.dir === "heat" ? "Boil" : "Condense");
+    return name + " at " + degC(s.T0) + ": q = nΔH<sub>" + (fus ? "fus" : "vap") + "</sub> = (" + Lab.sig(P.n, 4) + " mol)(" + (fus ? DH_FUS : DH_VAP) + " kJ/mol) = " + kJ(s.q) + (S.dir === "cool" ? " released" : "") + ".";
+  }
+  function story(P, st) {
+    var h = "", li = [], heat = S.dir === "heat";
+    if (!P.segs.length) {
+      h += "<p>The start and end are the same state, so no energy is needed. Move the final temperature or pick a scenario.</p><p><b>AP answer:</b> energy is needed only to change the temperature (q = mcΔT) or the phase (q = nΔH).</p>";
+      return h;
+    }
+    var s = st.seg;
+    if (S.q <= 0) li.push("Start: " + Lab.fmt(S.m, 2) + " g of " + PH[startPhase(S.dir, S.ts)] + " at " + degC(S.ts) + ". " + (heat ? "Add" : "Remove") + " energy with <b>Run</b> or the energy slider.");
+    else if (S.q >= P.total - 1e-6) li.push("Done: " + PH[endPhase(S.dir, S.te)] + " at " + degC(S.te) + ". In total " + kJ(P.total) + " was " + (heat ? "absorbed by" : "released by") + " the water.");
+    else if (s.type === "warm") li.push("<b>Sloped segment:</b> only " + PH[s.ph] + " is present, so the " + (heat ? "added" : "removed") + " energy " + (heat ? "raises" : "lowers") + " the average kinetic energy of the particles, and the temperature " + (heat ? "rises" : "falls") + ". Use q = mcΔT with c = " + CP[s.ph] + " J/(g·°C).");
+    else {
+      var fus = s.type === "fus", pct = Math.round(st.frac * 100);
+      li.push("<b>Flat segment (" + (fus ? (heat ? "melting" : "freezing") : (heat ? "boiling" : "condensing")) + "):</b> " + pct + "% done. The temperature stays at " + degC(s.T0) + " because " + (heat ? "the absorbed energy is overcoming attractions between molecules (raising their potential energy), not making them move faster." : "energy is released as attractions form between molecules (lowering their potential energy), while the average kinetic energy stays the same.") + " Use q = nΔH.");
+      li.push(heat ? (fus ? "Melting is endothermic: ΔH<sub>fus</sub> = +6.01 kJ/mol." : "Vaporization is endothermic: ΔH<sub>vap</sub> = +40.7 kJ/mol. Molecules separate almost completely, which is why this plateau is so long.") :
+        (fus ? "Freezing is exothermic: ΔH = −ΔH<sub>fus</sub> = −6.01 kJ/mol." : "Condensation is exothermic: ΔH = −ΔH<sub>vap</sub> = −40.7 kJ/mol."));
+    }
+    if (S.key === "burn") li.push("Compare: 10.0 g of liquid water cooling from 100 °C to 37 °C releases only " + kJ(10 * 4.18 * 63) + ". Steam releases " + kJ(P.segs[0].q) + " more just by condensing, which is why steam burns are so much worse.");
+    var vap = P.segs.filter(function (x) { return x.type === "vap"; })[0], fz = P.segs.filter(function (x) { return x.type === "fus"; })[0];
+    if (vap && fz) li.push("The " + (heat ? "boiling" : "condensing") + " plateau (" + kJ(vap.q) + ") is " + Lab.fmt(vap.q / fz.q, 1) + " times as long as the " + (heat ? "melting" : "freezing") + " plateau (" + kJ(fz.q) + "), because ΔH<sub>vap</sub> ÷ ΔH<sub>fus</sub> = 40.7 ÷ 6.01 = 6.8.");
+    h += "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+    h += "<p><b>Every segment, start to finish:</b></p><ol class=\"steps\">" + P.segs.map(function (x, i) { return "<li class=\"" + (i === st.i && S.q > 0 && S.q < P.total ? "now" : S.q < x.qs + 1e-6 ? "later" : "") + "\">" + segLine(x, P) + "</li>"; }).join("") +
+      (P.segs.length > 1 ? "<li>Total = " + P.segs.map(function (x) { return Lab.sig(x.q / 1000, 3); }).join(" + ") + " = <b>" + kJ(P.total) + "</b> " + (heat ? "absorbed" : "released") + ".</li>" : "") + "</ol>";
+    h += "<p><b>AP answer:</b> " + (s && s.type !== "warm" && S.q > 0 && S.q < P.total ?
+      "during a phase change the temperature of a pure substance is constant; the energy " + (heat ? "absorbed" : "released") + " equals n × " + (s.type === "fus" ? "ΔH<sub>fus</sub>" : "ΔH<sub>vap</sub>") + (heat ? "" : " with a negative sign for the system") + " and goes into " + (heat ? "overcoming" : "forming") + " intermolecular attractions." :
+      "add the segments: q = mcΔT for each phase warming or cooling and q = nΔH for each phase change; here the total is " + kJ(P.total) + " " + (heat ? "absorbed (endothermic)" : "released (exothermic, q = −" + kJ(P.total) + " for the water)") + ".") + "</p>";
+    return h;
+  }
+
+  // ---------- Render / controls ----------
+  var el = function (id) { return document.getElementById(id); };
+  var scBtns = {}, stopAnim = null;
+  function render() {
+    valid();
+    var P = buildPath(S.dir, S.ts, S.te, S.m);
+    S.q = Math.max(0, Math.min(P.total, S.q));
+    var st = state(P, S.q);
+    drawGraph(P, st); drawPV(st);
+    el("s-m").value = S.m; el("s-ts").value = S.ts; el("s-te").value = S.te;
+    el("s-q").max = Math.max(1, Math.round(P.total)); el("s-q").value = Math.round(S.q);
+    el("o-m").textContent = Lab.fmt(S.m, 2) + " g"; el("o-ts").textContent = degC(S.ts); el("o-te").textContent = degC(S.te); el("o-q").textContent = kJ(S.q);
+    el("l-q").textContent = S.dir === "heat" ? "added" : "removed";
+    el("h-ts").textContent = "starts as " + PH[startPhase(S.dir, S.ts)];
+    el("h-te").textContent = "ends as " + PH[endPhase(S.dir, S.te)] + (S.dir === "heat" ? " (at or above start)" : " (at or below start)");
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    el("dir").querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.v === S.dir ? "true" : "false"); });
+    el("legend").innerHTML = '<span class="' + (S.dir === "heat" ? "l-c1" : "l-ad") + '">Path so far</span><span class="l-ghost">Whole path; 0 °C and 100 °C</span><span class="l-ad">Solid particle</span><span class="l-c2">Liquid particle</span><span class="l-c1">Gas particle</span>';
+    el("r-t").textContent = f1(st.T) + " °C";
+    el("r-t2").textContent = st.seg && st.seg.type !== "warm" && S.q > 0 && S.q < P.total ? "constant during the phase change" : st.seg ? (S.dir === "heat" ? "rising on a slope" : "falling on a slope") : "";
+    var phTxt = !st.seg || st.seg.type === "warm" ? PH[st.ph] : Math.round((1 - st.frac) * 100) + "% " + PHS[st.ph] + ", " + Math.round(st.frac * 100) + "% " + PHS[st.to];
+    el("r-ph").textContent = phTxt;
+    el("r-ph2").textContent = !st.seg || st.seg.type === "warm" ? "one phase" : "two phases coexist";
+    el("r-q-k").textContent = S.dir === "heat" ? "Energy added" : "Energy removed";
+    el("r-q").textContent = kJ(S.q);
+    el("r-q2").textContent = "of " + kJ(P.total) + " for the whole path";
+    el("r-seg").textContent = !st.seg ? "—" : st.seg.type === "warm" ? "q = mcΔT" : "q = nΔH";
+    el("r-seg2").textContent = !st.seg ? "" : st.seg.type === "warm" ? "c(" + PHS[st.seg.ph] + ") = " + CP[st.seg.ph] + " J/(g·°C)" : (st.seg.type === "fus" ? "ΔH(fus) = 6.01" : "ΔH(vap) = 40.7") + " kJ/mol";
+    el("story").innerHTML = story(P, st);
+  }
+  function stop() { if (stopAnim) { stopAnim(); stopAnim = null; } }
+  function run() {
+    stop();
+    var P = buildPath(S.dir, S.ts, S.te, S.m);
+    var from = S.q >= P.total - 1e-6 ? 0 : S.q;
+    stopAnim = Lab.animate(Math.max(400, 6000 * (P.total - from) / Math.max(P.total, 1)), function (k) { S.q = from + (P.total - from) * k; render(); }, function () { stopAnim = null; });
+  }
+  function pick(k) {
+    stop();
+    var x = SC[k];
+    S.key = k; S.dir = x.dir; S.m = x.m; S.ts = x.ts; S.te = x.te; S.q = 0;
+    render(); run();
+  }
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pick(k); });
+    el("sc").appendChild(b); scBtns[k] = b;
+  });
+  el("dir").querySelectorAll("button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (b.dataset.v === S.dir) return;
+      stop(); S.dir = b.dataset.v; S.key = null;
+      var t = S.ts; S.ts = S.te; S.te = t; S.q = 0;   // run the same path backward
+      render();
+    });
+  });
+  el("s-m").addEventListener("input", function () { stop(); S.m = parseFloat(el("s-m").value); S.key = null; S.q = 0; render(); });
+  el("s-ts").addEventListener("input", function () { stop(); S.ts = parseFloat(el("s-ts").value); if (S.dir === "heat" && S.te < S.ts) S.te = S.ts; if (S.dir === "cool" && S.te > S.ts) S.te = S.ts; S.key = null; S.q = 0; render(); });
+  el("s-te").addEventListener("input", function () { stop(); S.te = parseFloat(el("s-te").value); if (S.dir === "heat" && S.te < S.ts) S.ts = S.te; if (S.dir === "cool" && S.te > S.ts) S.ts = S.te; S.key = null; S.q = 0; render(); });
+  el("s-q").addEventListener("input", function () { stop(); S.q = parseFloat(el("s-q").value); render(); });
+  el("b-run").addEventListener("click", run);
+  el("b-reset").addEventListener("click", function () { stop(); S.q = 0; render(); });
+
+  // reference table, generated for 18.02 g
+  (function () {
+    var P = buildPath("heat", -20, 120, MW), rows = [
+      ["Warm ice, −20 → 0 °C", "Vibrate faster in fixed positions", "Rises", "q = mc<sub>ice</sub>ΔT"],
+      ["Melt at 0 °C", "Break out of the lattice; still touching", "Constant", "q = nΔH<sub>fus</sub>"],
+      ["Warm liquid, 0 → 100 °C", "Move faster, sliding past each other", "Rises", "q = mc<sub>water</sub>ΔT"],
+      ["Boil at 100 °C", "Separate almost completely", "Constant", "q = nΔH<sub>vap</sub>"],
+      ["Warm steam, 100 → 120 °C", "Fly faster between collisions", "Rises", "q = mc<sub>steam</sub>ΔT"]
+    ];
+    el("tab").innerHTML = rows.map(function (r, i) { return "<tr><td>" + r[0] + "</td><td>" + r[1] + "</td><td>" + r[2] + "</td><td>" + r[3] + "</td><td><b>" + kJ(P.segs[i].q) + "</b></td></tr>"; }).join("") +
+      "<tr><td>Total, ice at −20 °C to steam at 120 °C</td><td></td><td></td><td>Sum of the five</td><td><b>" + kJ(P.total) + "</b></td></tr>";
+  })();
+
+  pick("full");
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "How much energy is required to melt 36.0 g of ice at 0 °C? (ΔH(fus) = 6.01 kJ/mol; molar mass of water = 18.02 g/mol)",
+      o: ["216 kJ", "6.01 kJ", "12.0 kJ", "1.47 × 10³ kJ"], c: 2,
+      w: "n = 36.0 g ÷ 18.02 g/mol = 1.998 mol, and q = nΔH(fus) = (1.998 mol)(6.01 kJ/mol) = 12.0 kJ. Choice A multiplies grams by a per-mole quantity. Choice B is the energy for only one mole. Choice D uses ΔH(vap) with grams." },
+    { s: "On the heating curve of water, the temperature stays at 100 °C while energy is added. Which statement explains this?",
+      o: ["The added energy overcomes attractions between water molecules, increasing their potential energy while their average kinetic energy stays the same.", "No energy is absorbed during this segment, so the temperature cannot change.", "The added energy breaks the O–H covalent bonds in the water molecules.", "The added energy increases the average kinetic energy of the molecules, but the thermometer cannot detect it."], c: 0,
+      w: "During boiling, absorbed energy goes into separating molecules against their intermolecular attractions, which raises potential energy, not kinetic energy, so the temperature is constant. Energy is absorbed (choice B is wrong), and boiling does not break covalent bonds (choice C). Temperature is a direct measure of average kinetic energy, so choice D is contradictory." },
+    { s: "What is q for the water when 9.01 g of steam condenses to liquid water at 100 °C? (ΔH(vap) = 40.7 kJ/mol)",
+      o: ["+20.4 kJ", "−40.7 kJ", "+40.7 kJ", "−20.4 kJ"], c: 3,
+      w: "n = 9.01 ÷ 18.02 = 0.500 mol. Condensation is the reverse of vaporization, so ΔH = −40.7 kJ/mol and q = (0.500)(−40.7) = −20.4 kJ: energy is released by the water. Choice A has the size right but the sign of vaporization. Choice B uses one mole instead of 0.500 mol." },
+    { s: "For water, ΔH(vap) = 40.7 kJ/mol and ΔH(fus) = 6.01 kJ/mol. Which explanation for the much larger ΔH(vap) is best?",
+      o: ["Boiling happens at a higher temperature, and energy is proportional to temperature.", "Vaporizing separates the molecules almost completely, overcoming nearly all their intermolecular attractions, while melting only loosens them so they can move past one another.", "Vaporizing breaks covalent bonds, while melting breaks only intermolecular attractions.", "Liquid water has a higher specific heat than ice."], c: 1,
+      w: "In the liquid, molecules are still in contact and still attract each other strongly; melting only disrupts the rigid arrangement. In the gas, molecules are far apart, so nearly all attractions must be overcome. Choice C is wrong because no covalent bonds break in either phase change. Choice D is true but concerns sloped segments, not phase changes." },
+    { s: "How much energy is needed to convert 10.0 g of ice at −10.0 °C to liquid water at 20.0 °C? (c(ice) = 2.09 J/(g·°C), c(water) = 4.18 J/(g·°C), ΔH(fus) = 6.01 kJ/mol, M = 18.02 g/mol)",
+      o: ["3.34 kJ", "1.05 kJ", "4.38 kJ", "61.1 kJ"], c: 2,
+      w: "Warm ice: (10.0)(2.09)(10.0) = 209 J. Melt: (10.0 ÷ 18.02 mol)(6010 J/mol) = 3335 J. Warm water: (10.0)(4.18)(20.0) = 836 J. Total = 4380 J = 4.38 kJ. Choice A counts only melting; choice B only the two warming steps. Choice D multiplies grams by ΔH(fus) in kJ/mol." },
+    { s: "Why does a burn from steam at 100 °C usually cause more damage than a burn from the same mass of liquid water at 100 °C?",
+      o: ["As the steam condenses on the skin it releases ΔH(vap), in addition to the energy released as the condensed water cools.", "Steam has a higher temperature than boiling water at the same pressure.", "Steam has a larger specific heat than liquid water.", "Liquid water absorbs energy from the skin as it cools."], c: 0,
+      w: "Both start at 100 °C, but steam must first condense, releasing 40.7 kJ per mole, and then cool like the liquid. For 10.0 g that is about 22.6 kJ extra, many times the 2.63 kJ released by cooling the liquid from 100 °C to 37 °C. Choice B is false at the same pressure, and choice C is false: steam's specific heat (about 2.0 J/(g·°C)) is lower than liquid water's." },
+    { s: "A pure solid is heated at a constant rate. Its temperature stays constant at 80 °C for 3.0 minutes and later at 218 °C for 15.0 minutes. Which conclusion is supported by these data?",
+      o: ["The enthalpy of fusion is larger, because melting happens first.", "No energy is absorbed during the two flat segments.", "The specific heat of the liquid is five times that of the solid.", "The enthalpy of vaporization is about five times the enthalpy of fusion."], c: 3,
+      w: "At a constant heating rate, energy absorbed is proportional to time. The boiling plateau (218 °C) lasts 15.0 ÷ 3.0 = 5 times as long as the melting plateau (80 °C), so ΔH(vap) ≈ 5 × ΔH(fus) for this sample. Choice B is the misconception that a flat segment means no energy is absorbed. Specific heats (choice C) come from the slopes, not the plateaus." },
+    { s: "A well-stirred mixture of ice and liquid water is heated slowly at 1 atm. Which describes the temperature while ice remains?",
+      o: ["It rises steadily, because energy is being added.", "It stays at 0 °C until all the ice has melted.", "It falls, because melting is endothermic.", "It rises to 100 °C and then stays constant."], c: 1,
+      w: "As long as both phases are present, the added energy goes into melting the ice, and the temperature of a pure substance stays at its melting point, 0 °C. Only after the last ice melts does the temperature begin to rise (choice A). Choice C confuses the sign of ΔH with the temperature of the mixture." }
+  ];
+  Lab.quiz(Q, el("quiz"), el("score"), el("quiz-reset"));
+  Lab.nav("6.5");
+
+  // ---------- Self-check ----------
+  (function () {
+    function chk(name, got, exp, tol) { if (!(Math.abs(got - exp) <= tol)) console.error("Self-check: " + name + " = " + got + ", expected " + exp); }
+    var P = buildPath("heat", -20, 120, 18.02);
+    chk("full path segments", P.segs.length, 5, 0);
+    chk("full path total (kJ)", P.total / 1000, 55.72, 0.005);
+    chk("ice segment (J)", P.segs[0].q, 753.236, 1e-6);
+    // the same path run backward releases the same energy (complementary phase changes)
+    var C = buildPath("cool", 120, -20, 18.02);
+    chk("cooling total = heating total", C.total - P.total, 0, 1e-6);
+    if (C.segs.map(function (s) { return s.type; }).join() !== P.segs.map(function (s) { return s.type; }).reverse().join()) console.error("Self-check: cooling path is not the heating path reversed");
+    // plateau-only paths
+    chk("melt 25.0 g (kJ)", buildPath("heat", 0, 0, 25).total / 1000, 25 / 18.02 * 6.01, 1e-9);
+    chk("boil 25.0 g segments", buildPath("heat", 100, 100, 25).segs.length, 1, 0);
+    chk("freeze 25.0 g segments", buildPath("cool", 0, 0, 25).segs.length, 1, 0);
+    // steam burn: 10.0 g steam at 100 °C to 37 °C = 25.22 kJ
+    chk("steam burn (kJ)", buildPath("cool", 100, 37, 10).total / 1000, 25.22, 0.005);
+    chk("warm liquid only", buildPath("heat", 25, 75, 25).total, 25 * 4.18 * 50, 1e-6);
+    // temperature is constant along every plateau
+    buildPath("heat", -20, 120, 18.02).segs.forEach(function (s) { if (s.type !== "warm" && s.T0 !== s.T1) console.error("Self-check: plateau with changing T"); });
+    // quiz arithmetic
+    chk("Q1", 36.0 / 18.02 * 6.01, 12.0, 0.05);
+    chk("Q3", -(9.01 / 18.02) * 40.7, -20.4, 0.05);
+    chk("Q5", (10 * 2.09 * 10 + 10 / 18.02 * 6010 + 10 * 4.18 * 20) / 1000, 4.38, 0.005);
+    chk("Q6 extra", 10 / 18.02 * 40.7, 22.6, 0.05);
+    var cs = Q.map(function (q) { return q.c; });
+    if (cs.filter(function (c, i) { return cs.indexOf(c) === i; }).length < 4) console.error("Self-check: quiz answer letters do not vary");
+  })();
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [6], topic: "6.5", compact: true, storageKey: "topic-6.5" });</script>
+</body>
+</html>

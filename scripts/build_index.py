@@ -144,7 +144,7 @@ def terms_page(title, nav, kicker, h1, lede, extra, mount, pager):
 <div class="pager">{pager}</div>
 </div>
 {GLOSS_SCRIPTS}
-<script src="../assets/lab.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
 <script src="../assets/glossary.js?v=1"></script>
 <script>{mount}</script>
 </body>

@@ -42,7 +42,7 @@ A high-school student taking AP Chemistry, studying on her own. Plain, direct se
 </div>
 <script src="../assets/glossary/unit-1.js"></script> … through unit-9.js (all nine, in order)
 <script src="../assets/glossary.js?v=1"></script>
-<script src="../assets/lab.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
 <script> (function () { "use strict"; … Lab.nav("N.k"); Lab.quiz(Q, …); })(); </script>
 <script>Glossary.mount(document.getElementById("key-terms"), { units: [N], topic: "N.k", compact: true, storageKey: "topic-N.k" });</script>
 </body>

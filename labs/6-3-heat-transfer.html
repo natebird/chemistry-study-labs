@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heat Transfer and Thermal Equilibrium Study Lab</title>
+<meta name="description" content="Put a hot body and a cold body in contact, watch particle collisions carry energy across the boundary, and follow both temperatures until they meet at thermal equilibrium.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.group { display: grid; gap: 8px; }
+.ctlcard { display: grid; gap: 16px; }
+.bodies { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.body { display: grid; gap: 10px; border: 1px solid var(--rule); border-radius: 8px; padding: 12px; }
+.body .controls { grid-template-columns: 1fr 1fr; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; width: fit-content; max-width: 100%; }
+.seg button { border: 0; border-radius: 0; padding: 5px 11px; font-size: .84rem; font-family: var(--body); font-weight: 500; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btnrow button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.note { font-size: .82rem; color: var(--muted); }
+@media (max-width: 860px) { .bodies { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .body .controls { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 6 · Topic 6.3</span>
+  <h1>Heat Transfer and Thermal Equilibrium Study Lab</h1>
+  <p class="lede">Temperature measures the average kinetic energy of particles. When a hot body touches a cold one, their particles collide at the boundary, and on average the faster particles hand energy to the slower ones. Put two bodies in contact, watch the energy flow, and see why it stops exactly when the temperatures match.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Two bodies in thermal contact</h2>
+    <p>Pick a scenario or set each body's material, mass, and starting temperature, then press <b>Run</b>. The two bodies are insulated from everything else, so every joule one loses, the other gains. In the particle view each dot stands for a huge number of particles, and the jiggling is exaggerated so the difference shows: even at 0 °C, real particles move very fast. The time scale is illustrative.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Particle view <small id="pv-sub"></small></h3>
+      <svg class="chart particles" id="pv" role="img" aria-label="Two blocks of particles side by side. Particles in the hotter block jiggle more. Collisions at the boundary carry energy from the hotter block to the colder block."></svg>
+    </div>
+    <div class="card graph-card">
+      <h3><span id="g-title">Temperature vs. time</span> <span class="seg" id="g-seg"><button type="button" data-v="t" aria-pressed="true">Temperatures</button><button type="button" data-v="e" aria-pressed="false">Particle energies</button></span></h3>
+      <svg class="chart" id="graph" role="img" aria-label="Graph of the temperatures of both bodies against time, or the spread of particle kinetic energies in each body."></svg>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <div class="tag">Scenario</div>
+      <div class="scenarios" id="sc"></div>
+    </div>
+    <div class="btnrow">
+      <button type="button" class="primary" id="b-run">Run</button>
+      <button type="button" id="b-reset">Reset to start</button>
+      <button type="button" id="b-contact" aria-pressed="true">Thermal contact: on</button>
+    </div>
+    <div class="bodies">
+      <div class="body">
+        <div class="tag" style="color:var(--c1)">Body A (left)</div>
+        <div class="seg" id="mat-a"></div>
+        <div class="controls">
+          <div class="ctl"><label for="s-ma">Mass <output id="o-ma"></output></label><input type="range" id="s-ma" min="10" max="500" step="5"></div>
+          <div class="ctl"><label for="s-ta">Starting temperature <output id="o-ta"></output></label><input type="range" id="s-ta" min="0" max="100" step="1"></div>
+        </div>
+      </div>
+      <div class="body">
+        <div class="tag" style="color:var(--accent)">Body B (right)</div>
+        <div class="seg" id="mat-b"></div>
+        <div class="controls">
+          <div class="ctl"><label for="s-mb">Mass <output id="o-mb"></output></label><input type="range" id="s-mb" min="10" max="500" step="5"></div>
+          <div class="ctl"><label for="s-tb">Starting temperature <output id="o-tb"></output></label><input type="range" id="s-tb" min="0" max="100" step="1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Temperature of A / B</div><div class="v" id="r-t"></div><div class="sub" id="r-t2"></div></div>
+    <div class="stat"><div class="k">q for body A</div><div class="v" id="r-qa"></div><div class="sub" id="r-qa2"></div></div>
+    <div class="stat"><div class="k">q for body B</div><div class="v" id="r-qb"></div><div class="sub" id="r-qb2"></div></div>
+    <div class="stat"><div class="k">Net energy flow</div><div class="v" id="r-st"></div><div class="sub" id="r-st2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Particle view</span><h3>Temperature reflects average kinetic energy</h3><p>The particles in a warmer body have a greater <b>average</b> kinetic energy than those in a cooler body. Individual particles have a spread of energies, so some particles in the cold body move faster than some in the hot body.</p></div>
+    <div class="card"><span class="tag">Mechanism</span><h3>Collisions carry the energy</h3><p>Where two bodies touch, their particles collide. A single collision can move energy either way, but on average the more energetic particles lose energy and the less energetic ones gain it. The net result is energy flowing from hot to cold: heat transfer.</p></div>
+    <div class="card"><span class="tag">End state</span><h3>Thermal equilibrium</h3><p>Energy keeps flowing until the average kinetic energies, and so the temperatures, are equal. Particles still collide and still exchange energy at equilibrium, but the exchanges balance, so there is no net transfer.</p></div>
+    <div class="card"><span class="tag">Conservation</span><h3>Energy lost = energy gained</h3><p>In an isolated pair, q<sub>A</sub> + q<sub>B</sub> = 0. The hot body's q is negative and the cold body's q is positive, with equal sizes. This is the first law, and it is the basis of every calorimetry calculation in topic 6.4.</p></div>
+    <div class="card"><span class="tag">Who changes more</span><h3>Heat capacity sets the ΔT</h3><p>Both bodies move the same amount of energy, but the one with the smaller heat capacity (mass × specific heat) changes temperature more. A small metal sample in a lot of water swings a long way; the water barely moves.</p></div>
+    <div class="card"><span class="tag">Words matter</span><h3>Heat is not temperature</h3><p>Temperature is a property of a body. Heat is energy in transit because of a temperature difference. Bodies do not "contain heat," and "cold" never flows: energy flows from the warmer body into the colder one.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Before, during, and at equilibrium</h2>
+    <p>What the particles are doing at each stage, and what you would measure.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Stage</th><th>Average kinetic energy</th><th>Collisions at the boundary</th><th>Net energy transfer</th><th>Temperatures</th></tr></thead>
+    <tbody>
+      <tr><td>Just after contact</td><td>Higher in the hot body</td><td>Happen; on average energy moves hot → cold</td><td><b>Largest</b></td><td>Far apart</td></tr>
+      <tr><td>Approaching equilibrium</td><td>Gap shrinking</td><td>Happen; transfer still favors hot → cold, but less</td><td><b>Smaller and smaller</b></td><td>Converging</td></tr>
+      <tr><td>Thermal equilibrium</td><td>Equal</td><td>Still happen; exchanges in both directions balance</td><td><b>Zero</b></td><td>Equal, steady</td></tr>
+      <tr><td>Insulating wall between</td><td>Unchanged</td><td>None between the bodies</td><td><b>Zero</b></td><td>Stay different</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:8px;">Final temperature of two bodies (no phase change, no losses)</h3>
+    <ol class="steps">
+      <li>Energy lost by the hot body = energy gained by the cold body: m<sub>A</sub>c<sub>A</sub>(T<sub>f</sub> − T<sub>A</sub>) + m<sub>B</sub>c<sub>B</sub>(T<sub>f</sub> − T<sub>B</sub>) = 0.</li>
+      <li>Solve for T<sub>f</sub> = (m<sub>A</sub>c<sub>A</sub>T<sub>A</sub> + m<sub>B</sub>c<sub>B</sub>T<sub>B</sub>) ÷ (m<sub>A</sub>c<sub>A</sub> + m<sub>B</sub>c<sub>B</sub>): a weighted average of the starting temperatures.</li>
+      <li>Check: T<sub>f</sub> must lie between the two starting temperatures, and closer to the body with the larger m × c.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Heat transfer on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Use the particle model explicitly: "The particles of the metal have a greater average kinetic energy than the particles of the water."</li>
+        <li>Name the mechanism: "collisions between particles at the surface transfer energy from the metal to the water."</li>
+        <li>Describe the end state with both ideas: "until the average kinetic energies are equal, so the temperatures are equal (thermal equilibrium)."</li>
+        <li>For conservation, write it as an equation with signs: q<sub>metal</sub> = −q<sub>water</sub>.</li>
+        <li>When comparing temperature changes, cite heat capacity: the body with the smaller m × c has the larger ΔT for the same energy.</li>
+        <li>Say "average" kinetic energy. Individual particles in the same body have different energies.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying "cold transfers to the hot object." Only energy moves, and it moves from hot to cold.</li>
+        <li>Saying collisions stop at equilibrium. They continue; only the net transfer stops.</li>
+        <li>Assuming the final temperature is the simple average of the two. That is true only when both bodies have the same m × c.</li>
+        <li>Assuming both bodies change temperature by the same amount. They transfer the same energy, not the same ΔT.</li>
+        <li>Claiming every particle in the hot body is faster than every particle in the cold body.</li>
+        <li>Mixing up heat and temperature: "the water has more heat" should be "the water has a higher temperature" or "more thermal energy."</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 6.3. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-6.html">Unit 6 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // Specific heat capacities, J/(g·°C), near room temperature.
+  var MAT = { water: { n: "Water", c: 4.18 }, al: { n: "Aluminum", c: 0.897 }, fe: { n: "Iron", c: 0.449 }, cu: { n: "Copper", c: 0.385 } };
+  var MORDER = ["water", "al", "fe", "cu"];
+  var T_END = 90, LAMBDA = 0.1;   // illustrative time scale, s and 1/s
+
+  var SC = {
+    equal: { name: "Equal blocks", a: ["fe", 100, 80], b: ["fe", 100, 20] },
+    metal: { name: "Hot metal in cool water", a: ["cu", 50, 100], b: ["water", 100, 20] },
+    diff:  { name: "Same mass, different metals", a: ["al", 100, 80], b: ["cu", 100, 20] },
+    big:   { name: "Small hot vs. large cool water", a: ["water", 50, 90], b: ["water", 400, 20] },
+    same:  { name: "Already the same temperature", a: ["fe", 100, 40], b: ["water", 100, 40] },
+    wall:  { name: "Insulating wall", a: ["fe", 100, 80], b: ["fe", 100, 20], wall: true }
+  };
+  var ORDER = ["equal", "metal", "diff", "big", "same", "wall"];
+
+  var S = { key: "equal", A: { mat: "fe", m: 100, T0: 80 }, B: { mat: "fe", m: 100, T0: 20 }, contact: true, view: "t", t: 0, TA: 80, TB: 20, hist: [], run: false };
+
+  function CA() { return S.A.m * MAT[S.A.mat].c; }
+  function CB() { return S.B.m * MAT[S.B.mat].c; }
+  function finalT(a, b) { var ca = a.m * MAT[a.mat].c, cb = b.m * MAT[b.mat].c; return (ca * a.T0 + cb * b.T0) / (ca + cb); }
+  function f1(v) { return Lab.fmt(v, 1); }
+  function sgn(v, d) { var s = Lab.fmt(Math.abs(v), d); return (v < 0 && +s !== 0 ? "−" : v > 0 && +s !== 0 ? "+" : "") + s; }
+  function J(v) { return Math.abs(v) >= 1000 ? sgn(v / 1000, 2) + " kJ" : sgn(v, 0) + " J"; }
+
+  // advance the exact solution of dT/dt from the current state by dt seconds
+  function advance(dt) {
+    if (dt <= 0) return;
+    if (S.contact) {
+      var ca = CA(), cb = CB(), Tf = (ca * S.TA + cb * S.TB) / (ca + cb), k = Math.exp(-LAMBDA * dt);
+      S.TA = Tf + (S.TA - Tf) * k; S.TB = Tf + (S.TB - Tf) * k;
+    }
+    S.t += dt;
+    S.hist.push([S.t, S.TA, S.TB]);
+  }
+  function restart() {
+    stopRun();
+    S.t = 0; S.TA = S.A.T0; S.TB = S.B.T0; S.hist = [[0, S.TA, S.TB]];
+  }
+
+  // ---------- Particle view ----------
+  var pv = document.getElementById("pv"), NC = 7, NR = 8;
+  var R = []; (function () { var s = 11; function r() { s = (s * 9301 + 49297) % 233280; return s / 233280; } for (var i = 0; i < 2 * NC * NR; i++) R.push(-Math.log(1 - 0.98 * r())); })();
+  function amp(T, ri) { return Math.max(0.4, Math.min(9, (0.6 + 6.5 * (T + 10) / 110) * Math.sqrt(ri))); }
+  function drawPV(jitter) {
+    var E = Lab.el;
+    pv.setAttribute("viewBox", "0 0 440 330");
+    while (pv.firstChild) pv.removeChild(pv.firstChild);
+    var top = 56, bot = 296, gap = S.contact ? 0 : 24;
+    var ax0 = 20, ax1 = 220 - gap / 2, bx0 = 220 + gap / 2, bx1 = 420;
+    E("rect", { x: ax0, y: top, width: ax1 - ax0, height: bot - top, fill: "var(--surface)", stroke: "var(--c1)", "stroke-width": 2, rx: 6 }, pv);
+    E("rect", { x: bx0, y: top, width: bx1 - bx0, height: bot - top, fill: "var(--surface)", stroke: "var(--accent)", "stroke-width": 2, rx: 6 }, pv);
+    if (!S.contact) {
+      E("rect", { x: ax1 + 2, y: top - 8, width: gap - 4, height: bot - top + 16, fill: "var(--ghost)", rx: 3 }, pv);
+      var ty = (top + bot) / 2;
+      E("text", { x: 220, y: ty, "text-anchor": "middle", "class": "lbl", style: "fill:var(--surface)", transform: "rotate(-90 220 " + ty + ")" }, pv, "insulation");
+    }
+    E("text", { x: (ax0 + ax1) / 2, y: 22, "text-anchor": "middle", "class": "lbl", style: "fill:var(--c1)" }, pv, "A: " + S.A.m + " g " + MAT[S.A.mat].n.toLowerCase());
+    E("text", { x: (bx0 + bx1) / 2, y: 22, "text-anchor": "middle", "class": "lbl", style: "fill:var(--accent)" }, pv, "B: " + S.B.m + " g " + MAT[S.B.mat].n.toLowerCase());
+    E("text", { x: (ax0 + ax1) / 2, y: 42, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, pv, f1(S.TA) + " °C");
+    E("text", { x: (bx0 + bx1) / 2, y: 42, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, pv, f1(S.TB) + " °C");
+    function block(x0, x1, T, off) {
+      var dx = (x1 - x0) / NC, dy = (bot - top) / NR, hot = Math.max(0.04, Math.min(1, Math.pow(Math.max(0, T) / 100, 1.2)));
+      for (var r = 0; r < NR; r++) for (var c = 0; c < NC; c++) {
+        var i = off + r * NC + c, a = amp(T, R[i]);
+        var jx = jitter ? (Math.random() * 2 - 1) * a : Math.sin(i * 1.7) * a * 0.7, jy = jitter ? (Math.random() * 2 - 1) * a : Math.cos(i * 2.3) * a * 0.7;
+        var px = x0 + dx * (c + 0.5) + jx, py = top + dy * (r + 0.5) + jy;
+        E("circle", { cx: px, cy: py, r: 6.5, fill: "var(--accent)", "fill-opacity": 0.35 }, pv);
+        E("circle", { cx: px, cy: py, r: 6.5, fill: "var(--c1)", "fill-opacity": hot * Math.min(1, 0.55 + 0.45 * R[i]) }, pv);
+      }
+    }
+    block(ax0, ax1, S.TA, 0); block(bx0, bx1, S.TB, NC * NR);
+    // collisions and net flow at the boundary
+    var d = S.TA - S.TB;
+    if (S.contact) {
+      if (jitter) for (var k = 0; k < 3; k++) E("circle", { cx: 220 + (Math.random() * 8 - 4), cy: top + 10 + Math.random() * (bot - top - 20), r: 5, fill: "none", style: "stroke:var(--c4);stroke-width:2" }, pv);
+      if (Math.abs(d) > 0.05) {
+        var w = Math.max(1.5, Math.min(8, Math.abs(d) / 8)), y = bot + 20, x1 = d > 0 ? 160 : 280, x2 = d > 0 ? 280 : 160, h = 8 + w;
+        E("path", { d: "M" + x1 + " " + y + " L" + (x2 - (d > 0 ? h : -h)) + " " + y, stroke: "var(--c4)", "stroke-width": w, fill: "none" }, pv);
+        E("path", { d: "M" + x2 + " " + y + " L" + (x2 - (d > 0 ? h : -h)) + " " + (y - h * 0.6) + " L" + (x2 - (d > 0 ? h : -h)) + " " + (y + h * 0.6) + " Z", fill: "var(--c4)" }, pv);
+        E("text", { x: d > 0 ? 150 : 290, y: y + 4, "text-anchor": d > 0 ? "end" : "start", style: "fill:var(--c4)", "class": "lbl" }, pv, "net energy flow");
+      } else {
+        E("text", { x: 220, y: bot + 24, "text-anchor": "middle", style: "fill:var(--good)", "class": "lbl" }, pv, "thermal equilibrium: no net flow");
+      }
+    } else {
+      E("text", { x: 220, y: bot + 24, "text-anchor": "middle", style: "fill:var(--muted)", "class": "lbl" }, pv, "no contact: no collisions between A and B");
+    }
+    document.getElementById("pv-sub").textContent = S.t > 0 ? "t = " + Math.round(S.t) + " s" : "before contact starts";
+  }
+
+  // ---------- Graph ----------
+  var graph = document.getElementById("graph");
+  function drawGraph() {
+    var lo = Math.min(S.A.T0, S.B.T0), hi = Math.max(S.A.T0, S.B.T0);
+    if (S.view === "t") {
+      var y0 = Math.max(-10, Math.floor((lo - 6) / 10) * 10), y1 = Math.ceil((hi + 6) / 10) * 10;
+      var yt = []; for (var v = y0; v <= y1; v += 10) yt.push(v);
+      var F = Lab.frame(graph, { x: [0, T_END], y: [y0, y1], xLabel: "Time (s, illustrative)", yLabel: "Temperature (°C)", xTicks: [0, 15, 30, 45, 60, 75, 90], yTicks: yt, fmtX: function (v) { return v; }, fmtY: function (v) { return v; } });
+      if (S.contact) {
+        var Tf = finalT(S.A, S.B);
+        Lab.hline(F, Tf, "var(--ghost)", 1.5, "5 4");
+        Lab.tag(F, T_END - 1, Tf + (y1 - y0) * 0.03, "Tf = " + f1(Tf) + " °C", "var(--muted)", "end");
+      }
+      Lab.line(F, S.hist.map(function (p) { return [p[0], p[1]]; }), "var(--c1)", 3);
+      Lab.line(F, S.hist.map(function (p) { return [p[0], p[2]]; }), "var(--accent)", 3);
+      Lab.dot(F, S.t, S.TA, "var(--c1)"); Lab.dot(F, S.t, S.TB, "var(--accent)");
+      document.getElementById("g-title").textContent = "Temperature vs. time";
+    } else {
+      // Maxwell–Boltzmann-shaped energy distribution, kT in arbitrary units proportional to T in kelvins
+      var kA = (S.TA + 273.15) / 100, kB = (S.TB + 273.15) / 100;
+      var f = function (E, kT) { return 2 / Math.sqrt(Math.PI) * Math.pow(kT, -1.5) * Math.sqrt(E) * Math.exp(-E / kT); };
+      var G = Lab.frame(graph, { x: [0, 14], y: [0, 0.32], xLabel: "Kinetic energy of one particle (arbitrary units)", yLabel: "Fraction of particles", xTicks: [0, 2, 4, 6, 8, 10, 12, 14], yTicks: [0, 0.1, 0.2, 0.3], fmtX: function (v) { return v; }, fmtY: function () { return ""; } });
+      Lab.fn(G, function (E) { return f(E, kA); }, "var(--c1)", 3, null, 120);
+      Lab.fn(G, function (E) { return f(E, kB); }, "var(--accent)", 3, Math.abs(S.TA - S.TB) < 0.05 ? "7 5" : null, 120);
+      Lab.vline(G, 1.5 * kA, "var(--c1)", 1.5, "3 3"); Lab.vline(G, 1.5 * kB, "var(--accent)", 1.5, "3 3");
+      Lab.tag(G, 13.8, 0.29, "dashed lines: average KE", "var(--muted)", "end");
+      document.getElementById("g-title").textContent = "Spread of particle energies";
+    }
+  }
+
+  // ---------- Story ----------
+  function story() {
+    var li = [], h = "", A = S.A, B = S.B, d = S.TA - S.TB, eq = Math.abs(d) < 0.05;
+    var hot = d > 0 ? "A" : "B", cold = d > 0 ? "B" : "A";
+    var ca = CA(), cb = CB(), Tf = finalT(A, B), qa = ca * (S.TA - A.T0), qb = cb * (S.TB - B.T0);
+    if (!S.contact) {
+      li.push("An insulating wall separates the bodies, so their particles never collide with each other. No energy is transferred, and both temperatures stay put: A at " + f1(S.TA) + " °C, B at " + f1(S.TB) + " °C.");
+      li.push("Turn thermal contact on to let collisions at the boundary begin.");
+      h += "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+      h += "<p><b>AP answer:</b> heat transfer requires thermal contact: energy moves by collisions between particles of the two bodies, so with no contact there is no transfer even though the temperatures differ.</p>";
+      return h;
+    }
+    if (Math.abs(A.T0 - B.T0) < 0.05) {
+      li.push("Both bodies start at " + f1(A.T0) + " °C, so their particles have the same average kinetic energy. Particles at the boundary still collide, and in any one collision energy can move either way, but the exchanges balance: no net transfer.");
+      li.push("This is thermal equilibrium from the start. The different materials do not matter; only the temperatures do.");
+    } else {
+      li.push("At the start, body " + (A.T0 > B.T0 ? "A" : "B") + " is hotter, so its particles have the greater average kinetic energy. Where the bodies touch, particles collide; on average the more energetic particles lose energy and the less energetic ones gain it.");
+      if (S.t === 0) li.push("Press <b>Run</b> to start the clock. The arrow below the blocks shows the direction of net energy flow.");
+      else if (!eq) li.push("Now (t = " + Math.round(S.t) + " s): A is at " + f1(S.TA) + " °C and B at " + f1(S.TB) + " °C. Net energy is still flowing from " + hot + " to " + cold + ", more slowly than at first because the temperature difference is smaller.");
+      else li.push("<b>Thermal equilibrium.</b> Both bodies are at " + f1(Tf) + " °C. The average kinetic energies are equal. Collisions continue, but energy moves equally in both directions, so the net transfer is zero.");
+      li.push("Energy bookkeeping so far: q<sub>A</sub> = (" + A.m + " g)(" + MAT[A.mat].c + " J/(g·°C))(" + sgn(S.TA - A.T0, 1) + " °C) = " + J(qa) + " and q<sub>B</sub> = (" + B.m + " g)(" + MAT[B.mat].c + " J/(g·°C))(" + sgn(S.TB - B.T0, 1) + " °C) = " + J(qb) + ". They are equal in size and opposite in sign: the energy one body loses, the other gains.");
+      var big = ca > cb ? "A" : "B", small = ca > cb ? "B" : "A";
+      if (Math.abs(ca - cb) / Math.max(ca, cb) < 1e-9) li.push("The two bodies have the same heat capacity (" + Lab.fmt(ca, 0) + " J/°C each), so they change temperature by equal amounts and the final temperature is the simple average, " + f1(Tf) + " °C.");
+      else if (Math.abs(ca - cb) / Math.max(ca, cb) < 0.02) li.push("The two bodies have nearly the same heat capacity (m × c = " + Lab.fmt(ca, 1) + " J/°C for A vs. " + Lab.fmt(cb, 1) + " J/°C for B), so they change temperature by nearly equal amounts and the final temperature, " + f1(Tf) + " °C, is very close to the simple average.");
+      else li.push("Body " + big + " has the larger heat capacity (m × c = " + Lab.fmt(Math.max(ca, cb), 0) + " J/°C vs. " + Lab.fmt(Math.min(ca, cb), 0) + " J/°C), so the same energy changes its temperature less. The final temperature, " + f1(Tf) + " °C, lies closer to body " + big + "'s starting temperature, and body " + small + " makes the bigger swing.");
+    }
+    h += "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+    h += "<p><b>AP answer:</b> " + (Math.abs(A.T0 - B.T0) < 0.05 ? "the bodies are already at the same temperature, so their particles have the same average kinetic energy and there is no net energy transfer, even though collisions continue." :
+      "the particles of the hotter body have a greater average kinetic energy; collisions at the boundary transfer energy from the hotter body to the cooler one until the average kinetic energies, and so the temperatures, are equal (thermal equilibrium, here " + f1(Tf) + " °C).") + "</p>";
+    return h;
+  }
+
+  // ---------- Render / controls ----------
+  var scBtns = {}, stopFn = null;
+  var el = function (id) { return document.getElementById(id); };
+  function readouts() {
+    var qa = CA() * (S.TA - S.A.T0), qb = CB() * (S.TB - S.B.T0), d = S.TA - S.TB;
+    el("r-t").textContent = f1(S.TA) + " / " + f1(S.TB) + " °C";
+    el("r-t2").textContent = S.contact ? "final will be " + f1(finalT(S.A, S.B)) + " °C" : "no contact: no change";
+    el("r-qa").textContent = J(qa); el("r-qa2").textContent = Math.abs(qa) < 0.5 ? "no net transfer yet" : qa < 0 ? "A lost energy" : "A gained energy";
+    el("r-qb").textContent = J(qb); el("r-qb2").textContent = Math.abs(qb) < 0.5 ? "no net transfer yet" : qb < 0 ? "B lost energy" : "B gained energy";
+    el("r-st").textContent = !S.contact ? "None" : Math.abs(d) < 0.05 ? "Zero" : d > 0 ? "A → B" : "B → A";
+    el("r-st2").textContent = !S.contact ? "insulated" : Math.abs(d) < 0.05 ? "thermal equilibrium" : "ΔT between bodies " + f1(Math.abs(d)) + " °C";
+  }
+  function render(jitter) {
+    drawPV(jitter); drawGraph(); readouts();
+    if (!jitter) {
+      el("story").innerHTML = story();
+      el("s-ma").value = S.A.m; el("s-ta").value = S.A.T0; el("s-mb").value = S.B.m; el("s-tb").value = S.B.T0;
+      el("o-ma").textContent = S.A.m + " g"; el("o-ta").textContent = S.A.T0 + " °C"; el("o-mb").textContent = S.B.m + " g"; el("o-tb").textContent = S.B.T0 + " °C";
+      Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+      ["a", "b"].forEach(function (s) { el("mat-" + s).querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.v === S[s.toUpperCase()].mat ? "true" : "false"); }); });
+      el("b-contact").setAttribute("aria-pressed", S.contact ? "true" : "false");
+      el("b-contact").textContent = "Thermal contact: " + (S.contact ? "on" : "off");
+      el("b-run").textContent = S.run ? "Pause" : S.t >= T_END - 1e-6 ? "Run again" : "Run";
+      el("g-seg").querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.v === S.view ? "true" : "false"); });
+      el("legend").innerHTML = '<span class="l-c1">Body A</span><span class="l-ad">Body B</span><span class="l-c4">Energy transfer (collisions)</span>' + (S.view === "t" ? '<span class="l-ghost">Final temperature</span>' : "");
+    }
+  }
+  function stopRun() { if (stopFn) { stopFn(); stopFn = null; } S.run = false; }
+  function run() {
+    if (S.run) { stopRun(); render(); return; }
+    if (S.t >= T_END - 1e-6) restart();
+    S.run = true;
+    var t0 = S.t, last = S.t;
+    stopFn = Lab.animate(Math.max(400, 9000 * (T_END - t0) / T_END), function (k) {
+      var target = t0 + (T_END - t0) * k;
+      advance(target - last); last = target;
+      render(k < 1);
+    }, function () { stopFn = null; S.run = false; render(); });
+    render(true);
+  }
+  function pick(k) {
+    var x = SC[k];
+    S.key = k;
+    S.A = { mat: x.a[0], m: x.a[1], T0: x.a[2] }; S.B = { mat: x.b[0], m: x.b[1], T0: x.b[2] };
+    S.contact = !x.wall;
+    restart(); render();
+  }
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pick(k); });
+    el("sc").appendChild(b); scBtns[k] = b;
+  });
+  ["a", "b"].forEach(function (s) {
+    MORDER.forEach(function (m) {
+      var b = document.createElement("button"); b.type = "button"; b.dataset.v = m; b.textContent = MAT[m].n;
+      b.addEventListener("click", function () { S[s.toUpperCase()].mat = m; S.key = null; restart(); render(); });
+      el("mat-" + s).appendChild(b);
+    });
+  });
+  function slider(id, body, prop) {
+    el(id).addEventListener("input", function () { S[body][prop] = parseFloat(el(id).value); S.key = null; restart(); render(); });
+  }
+  slider("s-ma", "A", "m"); slider("s-ta", "A", "T0"); slider("s-mb", "B", "m"); slider("s-tb", "B", "T0");
+  el("b-run").addEventListener("click", run);
+  el("b-reset").addEventListener("click", function () { restart(); render(); });
+  el("b-contact").addEventListener("click", function () {
+    var was = S.run; stopRun();
+    S.contact = !S.contact; S.key = null;
+    render();
+    if (was) run();
+  });
+  el("g-seg").querySelectorAll("button").forEach(function (b) { b.addEventListener("click", function () { S.view = b.dataset.v; render(); }); });
+  pick("equal");
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Block X at 80 °C is placed in contact with block Y at 20 °C, and the pair is insulated from the surroundings. Which statement best describes what happens at the particle level?",
+      o: ["Particles of Y gain temperature from X until X runs out of heat.", "Cold moves from Y into X until the particles of both blocks stop moving.", "Particles of X, which have a greater average kinetic energy, collide with particles of Y and transfer energy until the average kinetic energies are equal.", "Every particle of X slows down and every particle of Y speeds up until all particles have the same speed."], c: 2,
+      w: "The hotter block's particles have greater average kinetic energy. Collisions at the boundary transfer energy, on average from X to Y, until the average kinetic energies (temperatures) are equal. Choice B treats cold as something that flows. Choice D is too strong: individual particles always have a spread of speeds." },
+    { s: "Two objects in contact have reached thermal equilibrium. Which statement is correct?",
+      o: ["The average kinetic energies of the particles in the two objects are equal, and particles continue to collide without a net transfer of energy.", "The particles of the two objects stop colliding with each other.", "The two objects contain equal amounts of thermal energy.", "The object with the larger mass has the higher temperature."], c: 0,
+      w: "At thermal equilibrium the temperatures, and so the average kinetic energies, are equal. Collisions keep happening, but energy moves equally in both directions. Choice B is a common misconception. Choice C is wrong because total thermal energy also depends on the amount of each object; equal temperature does not mean equal energy." },
+    { s: "A 50.0 g sample of water at 80.0 °C is mixed with 150.0 g of water at 20.0 °C in an insulated container. What is the final temperature?",
+      o: ["50.0 °C", "65.0 °C", "27.5 °C", "35.0 °C"], c: 3,
+      w: "Same substance, so the specific heats cancel: Tf = (50.0 × 80.0 + 150.0 × 20.0) ÷ 200.0 = 7000 ÷ 200.0 = 35.0 °C. Check: the hot water drops 45.0 °C and the cold water rises 15.0 °C; 50.0 × 45.0 = 150.0 × 15.0. Choice A is the simple average, which ignores the different masses. Choice B weights the temperatures the wrong way." },
+    { s: "Equal masses of aluminum, c = 0.897 J/(g·°C), and copper, c = 0.385 J/(g·°C), at different temperatures are placed in contact and insulated. Which statement is true as they reach thermal equilibrium?",
+      o: ["Both metals change temperature by the same number of degrees.", "The energy lost by the hotter metal equals the energy gained by the cooler metal, and the copper's temperature changes more.", "The aluminum's temperature changes more, because it has the larger specific heat.", "The copper gains more energy than the aluminum loses, because copper is a better conductor."], c: 1,
+      w: "Energy is conserved, so |q| is the same for both. With equal masses, ΔT = q/(mc) is larger for the metal with the smaller specific heat, copper. Choice C has the relationship backward: a larger specific heat means a smaller ΔT for the same energy. Choice D violates conservation of energy." },
+    { s: "Which statement correctly distinguishes temperature and heat?",
+      o: ["Temperature is the total energy of an object, and heat is its average energy.", "Heat and temperature are two names for the same quantity.", "Temperature is related to the average kinetic energy of an object's particles; heat is energy transferred between objects because of a temperature difference.", "Heat is a substance that flows out of hot objects, and temperature measures how much of it is left."], c: 2,
+      w: "Temperature is a property of one object, proportional to the average kinetic energy of its particles. Heat is energy in transfer, driven by a temperature difference. Choice A swaps the ideas. Choice D describes the historical caloric theory, which is wrong: heat is not a substance." },
+    { s: "A 20.0 g piece of iron, c = 0.449 J/(g·°C), at 100.0 °C is placed in 100.0 g of water, c = 4.18 J/(g·°C), at 20.0 °C in an insulated cup. Which describes the temperatures as the system reaches equilibrium?",
+      o: ["Both reach about 21.7 °C: the iron's temperature drops by about 78 °C while the water's rises by less than 2 °C.", "Both reach 60.0 °C, the average of the starting temperatures.", "The iron cools to 20.0 °C and the water stays at 20.0 °C, because the water absorbs all the heat without warming.", "The water warms to 100.0 °C, because the iron transfers all of its energy."], c: 0,
+      w: "Tf = (20.0 × 0.449 × 100.0 + 100.0 × 4.18 × 20.0) ÷ (20.0 × 0.449 + 100.0 × 4.18) = (898 + 8360) ÷ 426.98 = 21.7 °C. The water's heat capacity (418 J/°C) is far larger than the iron's (8.98 J/°C), so the same energy barely changes the water's temperature. Choice B ignores heat capacity. Choice C ignores that the water must gain the energy the iron loses." },
+    { s: "A block of iron and a beaker of water, both at 40 °C, are placed in contact. Which statement is correct?",
+      o: ["Energy flows from the iron to the water, because iron is a metal and a better conductor.", "Energy flows from the water to the iron, because water has the larger specific heat.", "The particles stop colliding at the boundary, because there is no temperature difference.", "Particles continue to collide and exchange energy, but there is no net transfer, and both stay at 40 °C."], c: 3,
+      w: "Equal temperatures mean equal average kinetic energies, so the system is already at thermal equilibrium. Collisions continue, but energy moves equally in both directions. Choices A and B use material properties that affect how fast or how much, not the direction; with no temperature difference there is no net flow. Choice C is the misconception that collisions stop." },
+    { s: "A hot metal block and a cold metal block are in contact. Which statement about the kinetic energies of individual particles is correct?",
+      o: ["Every particle in the hot block has more kinetic energy than every particle in the cold block.", "Some particles in the cold block have more kinetic energy than some particles in the hot block, but the average kinetic energy is greater in the hot block.", "All particles in a block have the same kinetic energy, set by the block's temperature.", "Particles in the cold block have no kinetic energy until they gain heat."], c: 1,
+      w: "Each body has a spread of particle energies, and the spreads overlap. Temperature reflects the average. That is why an individual collision can move energy from a cold-block particle to a hot-block particle, while the net flow is still hot to cold. Choices A and C ignore the distribution; choice D is wrong because particles above absolute zero are always moving." }
+  ];
+  Lab.quiz(Q, el("quiz"), el("score"), el("quiz-reset"));
+  Lab.nav("6.3");
+
+  // ---------- Self-check ----------
+  (function () {
+    var expect = { equal: 50.00, metal: 23.52, diff: 61.98, big: 27.78, same: 40.00 };
+    Object.keys(expect).forEach(function (k) {
+      var x = SC[k], a = { mat: x.a[0], m: x.a[1], T0: x.a[2] }, b = { mat: x.b[0], m: x.b[1], T0: x.b[2] };
+      var tf = finalT(a, b);
+      if (Math.abs(tf - expect[k]) > 0.006) console.error("Self-check: final temperature for " + k + " is " + tf + ", expected " + expect[k]);
+    });
+    // conservation along the simulated path and convergence by the end
+    var save = JSON.parse(JSON.stringify({ A: S.A, B: S.B, key: S.key, contact: S.contact }));
+    S.A = { mat: "cu", m: 50, T0: 100 }; S.B = { mat: "water", m: 100, T0: 20 }; S.contact = true; restart();
+    for (var i = 0; i < 9; i++) {
+      advance(10);
+      var net = CA() * (S.TA - S.A.T0) + CB() * (S.TB - S.B.T0);
+      if (Math.abs(net) > 1e-6) console.error("Self-check: energy not conserved at t = " + S.t + " (" + net + " J)");
+    }
+    if (Math.abs(S.TA - S.TB) > 0.05) console.error("Self-check: not at equilibrium by the end of the run");
+    S.A = save.A; S.B = save.B; S.key = save.key; S.contact = save.contact; restart(); render();
+    // quiz arithmetic
+    if (Math.abs((50 * 80 + 150 * 20) / 200 - 35) > 1e-9) console.error("Self-check: quiz 3");
+    if (Math.abs((20 * 0.449 * 100 + 100 * 4.18 * 20) / (20 * 0.449 + 100 * 4.18) - 21.68) > 0.006) console.error("Self-check: quiz 6");
+    var cs = Q.map(function (q) { return q.c; });
+    if (cs.filter(function (c, i) { return cs.indexOf(c) === i; }).length < 4) console.error("Self-check: quiz answer letters do not vary");
+  })();
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [6], topic: "6.3", compact: true, storageKey: "topic-6.3" });</script>
+</body>
+</html>

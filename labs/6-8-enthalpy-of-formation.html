@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enthalpy of Formation Study Lab</title>
+<meta name="description" content="Route a reaction through its elements on an enthalpy diagram, compute ΔH°rxn = ΣΔH°f(products) − ΣΔH°f(reactants) step by step, solve for a missing ΔH°f, and see what each classic mistake does to the answer.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.lab > *, .side > *, .group > *, section > * { min-width: 0; }
+.seg { max-width: 100%; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.seg button:disabled { opacity: .45; cursor: default; }
+.side .controls { grid-template-columns: 1fr; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btnrow button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.lab-bar > * { min-width: 0; max-width: 100%; }
+.note { font-size: .82rem; color: var(--muted); }
+.ledger table { min-width: 0; font-size: .9rem; }
+.ledger th, .ledger td { padding: 7px 10px; }
+.ledger td.n, .ledger th.n { text-align: right; font-family: var(--mono); font-size: .84rem; white-space: nowrap; }
+.ledger tr.tot td { font-weight: 600; border-top: 2px solid var(--rule); }
+.ledger tr.sel td { background: var(--accent-soft); }
+.bad { color: var(--bad); font-weight: 600; }
+.legend .l-up::before { background: var(--c1); } .legend .l-dn::before { background: var(--c2); } .legend .l-net::before { background: var(--accent); }
+.legend .l-up, .legend .l-dn, .legend .l-net { color: var(--muted); }
+#hf text.big { font-size: 13px; font-weight: 600; }
+@media (max-width: 520px) {
+  .lab-bar .eqn { white-space: normal; }
+  #hf text.lbl { font-size: 13px; }
+  #hf text.big { font-size: 14px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 6 · Topic 6.8</span>
+  <h1>Enthalpy of Formation Study Lab</h1>
+  <p class="lede">A standard enthalpy of formation, ΔH°f, is the enthalpy change to make one mole of a substance from its elements in their standard states. With a table of ΔH°f values you can find ΔH° for almost any reaction: products minus reactants, each times its coefficient. Below, every reaction is routed through its elements so you can see why that works.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Down to the elements and back</h2>
+    <p>Elements in their standard states sit at zero. Taking the reactants apart into elements is the reverse of forming them (−ΣΔH°f of reactants); building the products from those elements is +ΣΔH°f of products. The two legs add to ΔH°<sub>rxn</sub>. Values are standard textbook ΔH°f data at 25 °C.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Enthalpy path through the elements <small id="hf-sub"></small></h3>
+      <svg class="chart" id="hf" role="img" aria-label="Enthalpy diagram with reactants, elements at zero, and products, with arrows for each leg and the net enthalpy of reaction"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Reactions</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Change the equation</div>
+        <div class="btnrow">
+          <div class="seg" id="scale" role="group" aria-label="Multiply coefficients">
+            <button type="button" data-k="0.5">× ½</button><button type="button" data-k="1">× 1</button><button type="button" data-k="2">× 2</button>
+          </div>
+          <button type="button" id="b-rev" aria-pressed="false">Reverse</button>
+        </div>
+      </div>
+      <div class="group">
+        <div class="tag">Pick a substance</div>
+        <div class="seg" id="pick" role="group" aria-label="Substance"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-hf"><span id="l-hf">ΔH°f</span> <output id="o-hf"></output></label>
+          <input type="range" id="s-hf" step="0.1">
+          <span class="hint" id="h-hf"></span>
+        </div>
+      </div>
+      <div class="btnrow">
+        <button type="button" id="b-unk" aria-pressed="false">Hide its ΔH°f and solve for it</button>
+        <button type="button" id="b-restore">Restore table values</button>
+      </div>
+      <div class="group">
+        <div class="tag">Try a classic mistake</div>
+        <div class="seg" id="mist" role="group" aria-label="Mistake">
+          <button type="button" data-k="none">None</button><button type="button" data-k="coef">Forget coefficients</button><button type="button" data-k="back">Reactants − products</button><button type="button" data-k="gas">H₂O(g) for H₂O(l)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-up">Reactants → elements (−ΣΔH°f reactants)</span><span class="l-dn">Elements → products (+ΣΔH°f products)</span><span class="l-net">ΔH°rxn</span></div>
+    <div class="eqn" id="eq"></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Σ n·ΔH°f (products)</div><div class="v" id="r-p"></div></div>
+    <div class="stat"><div class="k">Σ n·ΔH°f (reactants)</div><div class="v" id="r-r"></div></div>
+    <div class="stat"><div class="k">ΔH°rxn</div><div class="v" id="r-h"></div><div class="sub" id="r-h2"></div></div>
+    <div class="stat"><div class="k" id="k-x">With the mistake</div><div class="v" id="r-x"></div><div class="sub" id="r-x2"></div></div>
+  </div>
+
+  <div class="card ledger" id="ledger"></div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Definition</span><h3>One mole, from elements, in standard states</h3><p>ΔH°f is the ΔH for a formation reaction: exactly 1 mol of product made from its elements in their most stable forms at 1 atm and 25 °C. For water: H₂(g) + ½O₂(g) → H₂O(l), ΔH°f = −285.8 kJ/mol. The ½ is allowed because the product must be 1 mol.</p></div>
+    <div class="card"><span class="tag">Zero</span><h3>Elements in standard states are zero</h3><p>Forming O₂(g) from O₂(g) is no reaction at all, so ΔH°f = 0. The same is true for Fe(s), C(graphite), H₂(g), N₂(g), Br₂(l). But O₃(g), Br₂(g), and C(diamond) are not the standard forms, so their ΔH°f values are not zero.</p></div>
+    <div class="card"><span class="tag">The equation</span><h3>Products minus reactants</h3><p>ΔH°<sub>rxn</sub> = ΣnΔH°f(products) − ΣmΔH°f(reactants), where n and m are coefficients. This equation is on the AP equations sheet. It is the opposite order from the bond-enthalpy method (broken − formed).</p></div>
+    <div class="card"><span class="tag">Why it works</span><h3>A path through the elements</h3><p>Any reaction can be rewritten as "take the reactants apart into elements, then build the products." Reversing a formation reaction flips its sign, so the first leg is −ΣΔH°f(reactants). Adding the legs is Hess's law (topic 6.9).</p></div>
+    <div class="card"><span class="tag">Sign of ΔH°f</span><h3>What a negative value means</h3><p>A negative ΔH°f (CO₂, −393.5) means the compound is lower in enthalpy than its elements: forming it releases heat. A positive value (NO, +90.3) means it is higher in enthalpy, so forming it from its elements absorbs heat.</p></div>
+    <div class="card"><span class="tag">Phases matter</span><h3>H₂O(l) and H₂O(g) are different</h3><p>ΔH°f of H₂O(l) is −285.8 kJ/mol; of H₂O(g), −241.8. The 44.0 kJ difference is the enthalpy of vaporization at 25 °C (at 100 °C it is 40.7 kJ/mol, the value used in topic 6.5). The method works for physical processes too: H₂O(l) → H₂O(g) has ΔH° = −241.8 − (−285.8) = +44.0 kJ.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Standard enthalpies of formation used in this lab</h2>
+    <p>Exam questions give you the ΔH°f values they expect you to use. You do not need to memorize values, only that elements in their standard states are zero.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table id="hftable">
+    <thead><tr><th>Substance</th><th>ΔH°f (kJ/mol)</th><th>Substance</th><th>ΔH°f (kJ/mol)</th><th>Substance</th><th>ΔH°f (kJ/mol)</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Enthalpies of formation on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points</h3>
+      <ul>
+        <li>Write the equation from the equations sheet, then substitute with coefficients shown: ΔH° = [1(−393.5) + 2(−285.8)] − [1(−74.8) + 2(0)].</li>
+        <li>Write 0 for elements in their standard states so the grader sees you know it.</li>
+        <li>Match the phase in the equation to the phase in the table (H₂O(l) vs. H₂O(g)).</li>
+        <li>For a missing ΔH°f, set up the same equation with the given ΔH°<sub>rxn</sub>, then solve for the single unknown. Check its sign makes sense.</li>
+        <li>Give units: kJ/mol<sub>rxn</sub> for ΔH°<sub>rxn</sub>. Then, if asked for heat for a given mass, continue with q = n<sub>rxn</sub> × ΔH (topic 6.6).</li>
+        <li>When writing a formation reaction, make exactly 1 mol of product and use fractions for the elements if needed.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Forgetting to multiply each ΔH°f by its coefficient.</li>
+        <li>Subtracting reactants − products, which flips the sign.</li>
+        <li>Using the wrong phase of water or another substance.</li>
+        <li>Assigning a nonzero value to an element in its standard state, or zero to a compound because it isn't in the table.</li>
+        <li>Writing a formation reaction that makes 2 mol of product, or that starts from atoms or compounds instead of elements in standard states.</li>
+        <li>Dropping a negative sign when substituting a negative ΔH°f into "− Σ reactants." Use brackets.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 6.8. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-6.html">Unit 6 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  // Standard enthalpies of formation, kJ/mol, 25 °C. el = element in its standard state (always 0).
+  var HF = {
+    "CH4(g)": -74.8, "O2(g)": 0, "CO2(g)": -393.5, "H2O(l)": -285.8, "H2O(g)": -241.8, "C3H8(g)": -103.8,
+    "NH3(g)": -46.1, "NO(g)": 90.3, "Al(s)": 0, "Fe2O3(s)": -824.2, "Al2O3(s)": -1675.7, "Fe(s)": 0,
+    "CaCO3(s)": -1206.9, "CaO(s)": -635.1, "C2H5OH(l)": -277.7
+  };
+  var ELEM = { "O2(g)": 1, "Al(s)": 1, "Fe(s)": 1 };
+  var TBL = ["CH4(g)", "C3H8(g)", "C2H5OH(l)", "CO2(g)", "H2O(l)", "H2O(g)", "NH3(g)", "NO(g)", "Fe2O3(s)", "Al2O3(s)", "CaCO3(s)", "CaO(s)", "O2(g)", "Fe(s)", "Al(s)"];
+  var RX = {
+    ch4: { label: "Burn methane", r: [[1, "CH4(g)"], [2, "O2(g)"]], p: [[1, "CO2(g)"], [2, "H2O(l)"]], H: -890.3,
+           ctx: "Combustion makes CO₂ and H₂O, two compounds far below their elements, so the products land deep below zero." },
+    c3h8: { label: "Burn propane", r: [[1, "C3H8(g)"], [5, "O2(g)"]], p: [[3, "CO2(g)"], [4, "H2O(l)"]], H: -2219.9,
+           ctx: "Grill fuel. Coefficients of 3 and 4 make the coefficient step matter a lot here." },
+    nh3: { label: "Oxidize ammonia", r: [[4, "NH3(g)"], [5, "O2(g)"]], p: [[4, "NO(g)"], [6, "H2O(g)"]], H: -905.2,
+           ctx: "The first step of making nitric acid. NO has a positive ΔH°f: it is above its elements." },
+    therm: { label: "Thermite", r: [[2, "Al(s)"], [1, "Fe2O3(s)"]], p: [[1, "Al2O3(s)"], [2, "Fe(s)"]], H: -851.5,
+           ctx: "Aluminum pulls oxygen away from iron oxide hot enough to melt the iron. Both metals are elements, so only the two oxides count." },
+    caco3: { label: "Decompose limestone", r: [[1, "CaCO3(s)"]], p: [[1, "CaO(s)"], [1, "CO2(g)"]], H: 178.3,
+           ctx: "The products together sit above the reactant, so the reaction is endothermic." },
+    vap: { label: "Boil water", r: [[1, "H2O(l)"]], p: [[1, "H2O(g)"]], H: 44.0,
+           ctx: "A physical process. The same products-minus-reactants equation gives the enthalpy of vaporization at 25 °C (it is 40.7 kJ/mol at the normal boiling point, 100 °C)." },
+    etoh: { label: "Burn ethanol", r: [[1, "C2H5OH(l)"], [3, "O2(g)"]], p: [[2, "CO2(g)"], [3, "H2O(l)"]], H: -1366.7,
+           ctx: "A liquid fuel. The oxygen inside ethanol is already bonded, so it needs only 3 O₂." }
+  };
+  var ORDER = ["ch4", "c3h8", "nh3", "therm", "caco3", "vap", "etoh"];
+
+  var S = { key: "ch4", scale: 1, rev: false, pick: "CH4(g)", val: {}, unk: false, mist: "none" };
+  var F = Lab.fmla;
+  function hf(k) { return S.val[k] != null ? S.val[k] : HF[k]; }
+  function n1(x) { return (Math.round(x * 10) / 10).toFixed(1); }
+  function sgn(x) { var r = Math.round(x * 10) / 10; return (r < 0 ? "−" : r > 0 ? "+" : "") + Math.abs(r).toFixed(1); }
+  function par(x) { var r = Math.round(x * 10) / 10; return r < 0 ? "(−" + Math.abs(r).toFixed(1) + ")" : "(" + r.toFixed(1) + ")"; }
+  function coefTxt(c) { return c === 0.5 ? "½" : c === 1.5 ? "3/2" : c === 2.5 ? "5/2" : String(c); }
+  function sp(k) { var m = k.match(/^(.*)\((s|l|g|aq)\)$/); return F(m[1]) + "(" + m[2] + ")"; }
+  function eqSide(list) { return list.map(function (t) { return (t[0] === 1 ? "" : coefTxt(t[0])) + sp(t[1]); }).join(" + "); }
+  function current() {
+    var r = RX[S.key], R = r.r, P = r.p;
+    if (S.rev) { var t = R; R = P; P = t; }
+    var f = S.scale;
+    return { r: r, R: R.map(function (x) { return [x[0] * f, x[1]]; }), P: P.map(function (x) { return [x[0] * f, x[1]]; }) };
+  }
+  function sum(list, opt) {
+    opt = opt || {};
+    return list.reduce(function (a, t) {
+      var k = t[1]; if (opt.gas && k === "H2O(l)") k = "H2O(g)";
+      return a + (opt.coef1 ? 1 : t[0]) * hf(k);
+    }, 0);
+  }
+  function hasWaterL(c) { return c.R.concat(c.P).some(function (t) { return t[1] === "H2O(l)"; }); }
+  function derive() {
+    var c = current(), Sp = sum(c.P), Sr = sum(c.R), H = Sp - Sr, x = null;
+    if (S.mist === "coef") x = sum(c.P, { coef1: true }) - sum(c.R, { coef1: true });
+    else if (S.mist === "back") x = Sr - Sp;
+    else if (S.mist === "gas" && hasWaterL(c)) x = sum(c.P, { gas: true }) - sum(c.R, { gas: true });
+    return { c: c, Sp: Sp, Sr: Sr, H: H, x: x };
+  }
+
+  // ---------- Diagram ----------
+  var svg = document.getElementById("hf");
+  var stop = null;
+  function niceStep(span) { var s = [20, 50, 100, 200, 250, 500, 1000, 2000]; for (var i = 0; i < s.length; i++) if (span / s[i] <= 7) return s[i]; return 2000; }
+  function draw(d, grow) {
+    var lo = Math.min(0, d.Sr, d.Sp), hi = Math.max(0, d.Sr, d.Sp), span = hi - lo, pad = span * 0.14 + 20;
+    var st = niceStep(span + 2 * pad), y0 = Math.floor((lo - pad) / st) * st, y1 = Math.ceil((hi + pad) / st) * st, ticks = [];
+    for (var t = y0; t <= y1 + 1e-9; t += st) ticks.push(t);
+    var Fr = Lab.frame(svg, { x: [0, 3], y: [y0, y1], yLabel: "Enthalpy, relative to elements (kJ)", yTicks: ticks, fmtY: function (v) { return v < 0 ? "−" + Math.abs(v) : String(v); }, width: 440, height: 340 });
+    Array.prototype.forEach.call(svg.querySelectorAll("text[transform]"), function (tx) { var y = tx.getAttribute("y"); tx.setAttribute("x", 9); tx.setAttribute("transform", "rotate(-90 9 " + y + ")"); });
+    var el = Lab.el, g = el("g", {}, svg);
+    function hl(x0, x1, y, color, w, dash) { el("line", { x1: Fr.sx(x0), x2: Fr.sx(x1), y1: Fr.sy(y), y2: Fr.sy(y), stroke: color, "stroke-width": w, "stroke-linecap": "round", "stroke-dasharray": dash || null }, g); }
+    function txt(x, y, s, cls, color, anchor, dy) { el("text", { x: Fr.sx(x), y: Fr.sy(y) + (dy || 0), "text-anchor": anchor || "middle", "class": cls || "lbl", style: "fill:" + (color || "var(--ink)") }, g, s); }
+    function arrow(x, ya, yb, color) {
+      var X = Fr.sx(x), A = Fr.sy(ya), B = Fr.sy(yb), dir = B > A ? 1 : -1;
+      if (Math.abs(B - A) < 10) return;
+      el("line", { x1: X, x2: X, y1: A, y2: B - dir * 9, stroke: color, "stroke-width": 3 }, g);
+      el("path", { d: "M" + (X - 6) + " " + (B - dir * 10) + " L" + X + " " + B + " L" + (X + 6) + " " + (B - dir * 10) + " Z", fill: color }, g);
+    }
+    function lab(y, other) { return y >= other ? -8 : 18; }   // put a level's name on the side away from its neighbor
+    hl(1.1, 1.9, 0, "var(--muted)", 4);
+    txt(1.5, 0, "Elements (0)", "lbl", "var(--ink)", "middle", lab(0, Math.min(d.Sr, d.Sp)));
+    hl(0.1, 0.82, d.Sr, "var(--accent)", 4);
+    txt(0.46, d.Sr, "Reactants", "lbl", "var(--ink)", "middle", lab(d.Sr, 0));
+    var ga = el("g", {}, svg);
+    function upd(k) {
+      while (ga.firstChild) ga.removeChild(ga.firstChild);
+      var gg = g; g = ga;
+      var k1 = Math.min(1, k * 2), k2 = Math.max(0, k * 2 - 1);
+      arrow(0.94, d.Sr, d.Sr + (0 - d.Sr) * k1, "var(--c1)");
+      if (k1 >= 1 && Math.abs(d.Sr) > 0.05 && !S.unk) txt(0.94, d.Sr / 2, sgn(-d.Sr), "big", "var(--c1)", "start", 4), ga.lastChild.setAttribute("x", Fr.sx(0.94) + 6);
+      if (k2 > 0) arrow(2.06, 0, d.Sp * k2, "var(--c2)");
+      if (k2 >= 1) {
+        if (Math.abs(d.Sp) > 0.05 && !S.unk) { txt(2.06, d.Sp / 2, sgn(d.Sp), "big", "var(--c2)", "end", 4); ga.lastChild.setAttribute("x", Fr.sx(2.06) - 6); }
+        hl(2.18, 2.82, d.Sp, "var(--accent)", 4);
+        txt(2.5, d.Sp, "Products", "lbl", "var(--ink)", "middle", d.Sp <= Math.min(d.Sr, 0) ? -8 : lab(d.Sp, 0));
+        hl(0.82, 2.98, d.Sr, "var(--ghost)", 1.5, "4 4");
+        arrow(2.92, d.Sr, d.Sp, "var(--accent)");
+        var below = Math.min(d.Sr, d.Sp);
+        txt(2.98, below, "ΔH° = " + sgn(d.H) + " kJ", "big", "var(--accent)", "end", 22);
+      }
+      g = gg;
+    }
+    if (stop) stop();
+    if (grow) stop = Lab.animate(1000, upd); else upd(1);
+  }
+
+  // ---------- Text ----------
+  var elHf = document.getElementById("s-hf");
+  function speciesList(c) { var seen = {}, out = []; c.R.concat(c.P).forEach(function (t) { if (!seen[t[1]]) { seen[t[1]] = 1; out.push(t[1]); } }); return out; }
+  function render(grow) {
+    var d = derive(), c = d.c, r = c.r, unkK = S.unk ? S.pick : null;
+    document.getElementById("eq").innerHTML = eqSide(c.R) + " → " + eqSide(c.P);
+    document.getElementById("hf-sub").textContent = r.label + (S.rev ? ", reversed" : "") + (S.scale !== 1 ? ", × " + coefTxt(S.scale) : "");
+    draw(d, grow);
+    function show(k) { return k === unkK ? "x" : sgn(hf(k)); }
+    function inList(l) { return l.some(function (t) { return t[1] === unkK; }); }
+    document.getElementById("r-p").textContent = inList(c.P) ? "contains x" : sgn(d.Sp) + " kJ";
+    document.getElementById("r-r").textContent = inList(c.R) ? "contains x" : sgn(d.Sr) + " kJ";
+    document.getElementById("r-h").textContent = sgn(d.H) + " kJ";
+    document.getElementById("r-h2").textContent = (d.H < 0 ? "exothermic" : d.H > 0 ? "endothermic" : "neither") + ", per mol of reaction as written";
+    var xv = document.getElementById("r-x"), xs = document.getElementById("r-x2");
+    if (S.mist === "none") { xv.textContent = "none chosen"; xs.textContent = "choose one under “Try a classic mistake”"; }
+    else if (d.x == null) { xv.textContent = "n/a"; xs.textContent = "no H₂O(l) in this reaction"; }
+    else { xv.innerHTML = "<span class='bad'>" + sgn(d.x) + " kJ</span>"; xs.textContent = Math.abs(d.x - d.H) < 0.05 ? "same answer here, by luck" : "wrong by " + n1(Math.abs(d.x - d.H)) + " kJ"; }
+
+    // ledger
+    var h = "<h3>Worked calculation</h3><div class='tbl-wrap'><table><thead><tr><th>Substance</th><th>Side</th><th class='n'>Coef.</th><th class='n'>ΔH°f (kJ/mol)</th><th class='n'>Coef. × ΔH°f</th></tr></thead><tbody>";
+    function rows(list, side) {
+      list.forEach(function (t) {
+        h += "<tr" + (t[1] === S.pick ? " class='sel'" : "") + "><td>" + sp(t[1]) + (ELEM[t[1]] ? " <span class='note'>element</span>" : "") + "</td><td>" + side + "</td><td class='n'>" + coefTxt(t[0]) + "</td><td class='n'>" + show(t[1]) + "</td><td class='n'>" + (t[1] === unkK ? coefTxt(t[0]) + "x" : sgn(t[0] * hf(t[1]))) + "</td></tr>";
+      });
+    }
+    rows(c.P, "products"); rows(c.R, "reactants");
+    h += "</tbody></table></div><ol class='steps' style='margin-top:10px'>";
+    var termP = c.P.map(function (t) { return (t[0] === 1 ? "" : coefTxt(t[0])) + (t[1] === unkK ? "(x)" : par(hf(t[1]))); }).join(" + ");
+    var termR = c.R.map(function (t) { return (t[0] === 1 ? "" : coefTxt(t[0])) + (t[1] === unkK ? "(x)" : par(hf(t[1]))); }).join(" + ");
+    if (!unkK) {
+      h += "<li>ΔH°<sub>rxn</sub> = ΣnΔH°f(products) − ΣmΔH°f(reactants)</li>";
+      h += "<li>= [" + termP + "] − [" + termR + "]</li>";
+      h += "<li>= (" + sgn(d.Sp) + ") − (" + sgn(d.Sr) + ") = <b>" + sgn(d.H) + " kJ/mol<sub>rxn</sub></b></li>";
+    } else {
+      var cu = 0, known = 0;
+      c.P.forEach(function (t) { if (t[1] === unkK) cu += t[0]; else known += t[0] * hf(t[1]); });
+      c.R.forEach(function (t) { if (t[1] === unkK) cu -= t[0]; else known -= t[0] * hf(t[1]); });
+      var xsol = (d.H - known) / cu;
+      h += "<li>Given ΔH°<sub>rxn</sub> = " + sgn(d.H) + " kJ. Unknown: x = ΔH°f of " + sp(unkK) + ".</li>";
+      h += "<li>" + sgn(d.H) + " = [" + termP + "] − [" + termR + "]</li>";
+      h += "<li>Collect the known terms: " + sgn(d.H) + " = " + sgn(known) + " " + (cu > 0 ? "+ " : "− ") + (Math.abs(cu) === 1 ? "" : coefTxt(Math.abs(cu))) + "x</li>";
+      h += "<li>x = (" + sgn(d.H) + " − (" + sgn(known) + ")) ÷ " + (cu > 0 ? "" : "(−" ) + coefTxt(Math.abs(cu)) + (cu > 0 ? "" : ")") + " = <b>" + sgn(xsol) + " kJ/mol</b></li>";
+    }
+    h += "</ol>";
+    document.getElementById("ledger").innerHTML = h;
+
+    // controls state
+    var picked = S.pick, isEl = !!ELEM[picked];
+    document.getElementById("l-hf").innerHTML = "ΔH°f of " + sp(picked);
+    document.getElementById("o-hf").textContent = S.unk ? "hidden" : sgn(hf(picked)) + " kJ/mol";
+    elHf.disabled = isEl || S.unk;
+    document.getElementById("h-hf").innerHTML = isEl ? "An element in its standard state: always 0, so it can't be edited." : S.unk ? "Hidden: the worked calculation solves for it." : "Table value " + sgn(HF[picked]) + " kJ/mol. Drag to see how ΔH° responds.";
+    document.getElementById("b-unk").disabled = isEl;
+    document.getElementById("b-unk").setAttribute("aria-pressed", S.unk ? "true" : "false");
+    document.getElementById("b-rev").setAttribute("aria-pressed", S.rev ? "true" : "false");
+
+    // story
+    var s = "<p><b>" + r.label + ".</b> " + r.ctx + "</p>";
+    s += (S.unk ? "<p>Leg 1 takes the reactants apart into elements (the reverse of forming them); leg 2 builds the products from those elements. One ΔH°f is hidden, so solve for it in the worked calculation. Together the legs give " : "<p>Leg 1 takes the reactants apart into elements: " + sgn(-d.Sr) + " kJ (the reverse of forming them). Leg 2 builds the products from those elements: " + sgn(d.Sp) + " kJ. Together: ") + sgn(d.H) + " kJ, " + (d.H < 0 ? "exothermic, because the products are lower in enthalpy than the reactants." : d.H > 0 ? "endothermic, because the products are higher in enthalpy than the reactants." : "neither exothermic nor endothermic, because the products and reactants are at the same enthalpy.") + "</p>";
+    if (S.rev || S.scale !== 1) s += "<p>You " + (S.rev ? "reversed the equation" : "") + (S.rev && S.scale !== 1 ? " and " : "") + (S.scale !== 1 ? "multiplied " + (S.rev ? "it" : "the equation") + " by " + coefTxt(S.scale) : "") + ". The products-minus-reactants method follows automatically: ΔH° is now " + sgn(d.H) + " kJ, which is the original " + sgn(r.H) + " kJ" + (S.rev ? ", with its sign flipped" : "") + (S.scale !== 1 ? ", times " + coefTxt(S.scale) : "") + ".</p>";
+    if (Object.keys(S.val).length) s += "<p>You edited a ΔH°f value. Making a product's ΔH°f more negative makes ΔH° more negative; making a reactant's more negative makes ΔH° more positive.</p>";
+    if (S.mist !== "none" && d.x != null) {
+      var why = S.mist === "coef" ? "Each ΔH°f is per mole of that substance, so it must be multiplied by the coefficient." : S.mist === "back" ? "Reactants minus products gives the right size but the wrong sign." : "The table has separate values for H₂O(l) and H₂O(g); the phase in the equation decides which to use.";
+      s += "<p>The mistake gives <span class='bad'>" + sgn(d.x) + " kJ</span> instead of " + sgn(d.H) + " kJ. " + why + "</p>";
+    }
+    s += S.unk ? "<p><b>AP answer:</b> substitute the given ΔH°<sub>rxn</sub> and every known ΔH°f (elements in their standard states count as 0) into ΔH°<sub>rxn</sub> = ΣnΔH°f(products) − ΣmΔH°f(reactants), then solve for the one unknown.</p>" : "<p><b>AP answer:</b> ΔH°<sub>rxn</sub> = ΣnΔH°f(products) − ΣmΔH°f(reactants) = (" + sgn(d.Sp) + " kJ) − (" + sgn(d.Sr) + " kJ) = " + sgn(d.H) + " kJ/mol<sub>rxn</sub>; elements in their standard states count as 0.</p>";
+    document.getElementById("story").innerHTML = s;
+
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    Array.prototype.forEach.call(document.querySelectorAll("#scale button"), function (b) { b.setAttribute("aria-pressed", +b.getAttribute("data-k") === S.scale ? "true" : "false"); });
+    Array.prototype.forEach.call(document.querySelectorAll("#mist button"), function (b) {
+      var k = b.getAttribute("data-k"); b.setAttribute("aria-pressed", k === S.mist ? "true" : "false");
+      if (k === "gas") b.disabled = !hasWaterL(c);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("#pick button"), function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-k") === S.pick ? "true" : "false"); });
+  }
+
+  // ---------- Controls ----------
+  function setSlider() {
+    var base = HF[S.pick], lo = Math.floor(base - 300), hi = Math.ceil(base + 300);
+    elHf.min = lo; elHf.max = hi; elHf.value = hf(S.pick);
+  }
+  function buildPick() {
+    var box = document.getElementById("pick"); box.innerHTML = "";
+    speciesList(current()).forEach(function (k) {
+      var b = document.createElement("button"); b.type = "button"; b.setAttribute("data-k", k); b.innerHTML = sp(k);
+      b.addEventListener("click", function () { S.pick = k; S.unk = false; setSlider(); render(false); });
+      box.appendChild(b);
+    });
+  }
+  function pickScenario(k) {
+    S.key = k; S.scale = 1; S.rev = false; S.val = {}; S.unk = false; S.mist = "none";
+    S.pick = RX[k].r[0][1];
+    if (ELEM[S.pick]) S.pick = RX[k].r[1][1];
+    buildPick(); setSlider(); render(true);
+  }
+  var scBtns = {};
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = RX[k].label; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pickScenario(k); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("#scale button"), function (b) {
+    b.addEventListener("click", function () { S.scale = +b.getAttribute("data-k"); render(true); });
+  });
+  document.getElementById("b-rev").addEventListener("click", function () { S.rev = !S.rev; render(true); });
+  Array.prototype.forEach.call(document.querySelectorAll("#mist button"), function (b) {
+    b.addEventListener("click", function () { S.mist = b.getAttribute("data-k"); render(false); });
+  });
+  elHf.addEventListener("input", function () {
+    var x = Math.round(parseFloat(elHf.value) * 10) / 10;
+    if (Math.abs(x - HF[S.pick]) < 0.05) delete S.val[S.pick]; else S.val[S.pick] = x;
+    render(false);
+  });
+  document.getElementById("b-unk").addEventListener("click", function () { if (ELEM[S.pick]) return; S.unk = !S.unk; render(false); });
+  document.getElementById("b-restore").addEventListener("click", function () { S.val = {}; setSlider(); render(false); });
+
+  (function () {
+    var tb = document.querySelector("#hftable tbody"), h = "";
+    for (var i = 0; i < TBL.length; i += 3) {
+      h += "<tr>";
+      for (var j = i; j < i + 3; j++) h += j < TBL.length ? "<td>" + sp(TBL[j]) + "</td><td><b>" + (HF[TBL[j]] === 0 ? "0" : sgn(HF[TBL[j]])) + "</b></td>" : "<td></td><td></td>";
+      h += "</tr>";
+    }
+    tb.innerHTML = h;
+  })();
+
+  pickScenario("ch4");
+
+  // ---------- Self-check ----------
+  (function selfCheck() {
+    var bad = [], save = JSON.stringify(S);
+    for (var e in ELEM) if (HF[e] !== 0) bad.push(e + " is an element but ΔHf ≠ 0");
+    ORDER.forEach(function (k) {
+      var r = RX[k], at = {};
+      function add(list, sg) { list.forEach(function (t) { var p = Lab.parseFormula(t[1].replace(/\((s|l|g|aq)\)$/, "")); for (var x in p) at[x] = (at[x] || 0) + sg * t[0] * p[x]; if (HF[t[1]] == null) bad.push(k + ": no ΔHf for " + t[1]); }); }
+      add(r.r, -1); add(r.p, 1);
+      for (var x in at) if (Math.abs(at[x]) > 1e-9) bad.push(k + ": " + x + " not balanced");
+      S.key = k; S.val = {}; S.rev = false; S.scale = 1;
+      var d = derive();
+      if (n1(d.H) !== n1(r.H)) bad.push(k + ": computed " + n1(d.H) + " vs expected " + r.H);
+      S.rev = true; S.scale = 2; if (Math.abs(derive().H + 2 * d.H) > 1e-6) bad.push(k + ": reverse/scale rule");
+    });
+    // a quiz value: 2CO + O2 → 2CO2 with ΔHf(CO) = −110.5 gives −566.0
+    if (n1(2 * HF["CO2(g)"] - 2 * -110.5) !== "-566.0") bad.push("quiz 1");
+    var o = JSON.parse(save); for (var q in o) S[q] = o[q];
+    if (bad.length) console.error("Self-check failed: " + bad.join("; "));
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Given ΔH°f values: CO(g) −110.5 kJ/mol and CO₂(g) −393.5 kJ/mol, what is ΔH° for 2CO(g) + O₂(g) → 2CO₂(g)?",
+      o: ["−283.0 kJ", "+566.0 kJ", "−566.0 kJ", "−1008.0 kJ"], c: 2,
+      w: "ΔH° = [2(−393.5)] − [2(−110.5) + 1(0)] = −787.0 + 221.0 = −566.0 kJ. O₂ is an element in its standard state, so it counts as 0. Choice A forgets the coefficients of 2 (it is the value per mole of CO₂). Choice B subtracts reactants − products." },
+    { s: "For C₂H₄(g) + 3O₂(g) → 2CO₂(g) + 2H₂O(l), ΔH° = −1411.0 kJ. Given ΔH°f of CO₂(g) = −393.5 kJ/mol and H₂O(l) = −285.8 kJ/mol, what is ΔH°f of C₂H₄(g)?",
+      o: ["+52.4 kJ/mol", "−52.4 kJ/mol", "−2769.6 kJ/mol", "+1411.0 kJ/mol"], c: 0,
+      w: "−1411.0 = [2(−393.5) + 2(−285.8)] − [x + 3(0)] = −1358.6 − x, so x = −1358.6 + 1411.0 = +52.4 kJ/mol. Choice B is the usual sign slip when moving x across the equals sign. Choice C adds −1411.0 to −1358.6 instead of solving." },
+    { s: "Which of the following substances has a standard enthalpy of formation equal to zero at 25 °C?",
+      o: ["O₃(g)", "Br₂(g)", "H₂O(l)", "Br₂(l)"], c: 3,
+      w: "ΔH°f = 0 only for an element in its most stable form at 1 atm and 25 °C. Bromine's standard state is the liquid, so Br₂(l) is 0. Br₂(g) is the element in a non-standard phase (choice B), and O₃(g) is not oxygen's standard form, O₂(g) (choice A). H₂O is a compound." },
+    { s: "Which equation represents the reaction whose ΔH° is the standard enthalpy of formation of methanol, CH₃OH(l)?",
+      o: ["2C(s) + 4H₂(g) + O₂(g) → 2CH₃OH(l)", "C(s) + 2H₂(g) + ½O₂(g) → CH₃OH(l)", "C(g) + 4H(g) + O(g) → CH₃OH(l)", "CO(g) + 2H₂(g) → CH₃OH(l)"], c: 1,
+      w: "A formation reaction makes exactly 1 mol of the compound from its elements in their standard states: graphite C(s), H₂(g), and O₂(g), using a fraction if needed. Choice A makes 2 mol, choice C starts from gaseous atoms (not standard states), and choice D starts from the compound CO." },
+    { s: "Given ΔH°f of H₂O(l) = −285.8 kJ/mol and H₂O(g) = −241.8 kJ/mol, what is ΔH° for H₂O(l) → H₂O(g), and what does its sign show?",
+      o: ["−44.0 kJ; vaporization releases heat", "−527.6 kJ; vaporization releases heat", "+44.0 kJ; vaporization absorbs heat", "0 kJ; a physical change has no enthalpy change"], c: 2,
+      w: "ΔH° = (−241.8) − (−285.8) = +44.0 kJ. Positive means heat is absorbed, which matches separating molecules against their intermolecular attractions. Choice A subtracts in the wrong order. Choice D is wrong because the method applies to physical processes too." },
+    { s: "The standard enthalpy of formation of NO(g) is +90.3 kJ/mol. Which statement is correct?",
+      o: ["Forming 1 mol of NO(g) from N₂(g) and O₂(g) absorbs 90.3 kJ, so NO is higher in enthalpy than its elements.", "Forming 1 mol of NO(g) releases 90.3 kJ, so NO is more stable than N₂ and O₂.", "NO is an element, because its ΔH°f is positive.", "The reaction N₂(g) + O₂(g) → 2NO(g) has ΔH° = +90.3 kJ."], c: 0,
+      w: "A positive ΔH°f means the formation reaction ½N₂ + ½O₂ → NO is endothermic: the compound sits above its elements. Choice D forgets that the equation makes 2 mol NO, so its ΔH° is 2 × 90.3 = +180.6 kJ. Choice B reverses the meaning of the sign." },
+    { s: "Given ΔH°f of SO₂(g) = −296.8 kJ/mol and SO₃(g) = −395.7 kJ/mol, what is ΔH° for SO₃(g) → SO₂(g) + ½O₂(g)?",
+      o: ["−98.9 kJ", "+197.8 kJ", "−692.5 kJ", "+98.9 kJ"], c: 3,
+      w: "ΔH° = [−296.8 + ½(0)] − [−395.7] = +98.9 kJ. The reaction breaks SO₃ down, so it is endothermic. Choice A subtracts in the wrong order. Choice B is the value for 2 mol of SO₃, and choice C adds the two values." },
+    { s: "For the thermite reaction 2Al(s) + Fe₂O₃(s) → Al₂O₃(s) + 2Fe(s), the ΔH°f values are Fe₂O₃(s) −824.2 kJ/mol and Al₂O₃(s) −1675.7 kJ/mol. What is ΔH°?",
+      o: ["−2499.9 kJ", "−851.5 kJ", "+851.5 kJ", "−1675.7 kJ"], c: 1,
+      w: "Al(s) and Fe(s) are elements in their standard states (0). ΔH° = [−1675.7 + 2(0)] − [2(0) + (−824.2)] = −851.5 kJ. Choice A adds the two oxides instead of subtracting. Choice D ignores the reactant oxide." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("6.8");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [6], topic: "6.8", compact: true, storageKey: "topic-6.8" });</script>
+</body>
+</html>

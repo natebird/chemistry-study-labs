@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heat Capacity and Calorimetry Study Lab</title>
+<meta name="description" content="Run coffee-cup calorimetry experiments: drop hot metal into water to find its specific heat, dissolve salts and neutralize acids to find ΔH, and see how heat loss to the room skews the results.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.group { display: grid; gap: 8px; }
+.ctlcard { display: grid; gap: 16px; }
+.ctlcard .controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; width: fit-content; max-width: 100%; }
+.seg button { border: 0; border-radius: 0; padding: 5px 11px; font-size: .84rem; font-family: var(--body); font-weight: 500; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btnrow button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.note { font-size: .82rem; color: var(--muted); }
+.answer { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.answer input { font: inherit; font-size: .95rem; width: 9em; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.answer input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.fb { font-size: .9rem; }
+.fb.ok { color: var(--good); } .fb.no { color: var(--bad); }
+.mode-m, .mode-d, .mode-n, .unk { display: none; }
+.is-m .mode-m, .is-d .mode-d, .is-n .mode-n { display: grid; }
+.is-unk .unk { display: grid; }
+.is-unk .not-unk { display: none; }
+.cmp { display: grid; gap: 10px; align-content: start; }
+.cmp .controls { grid-template-columns: 1fr 1fr; }
+@media (max-width: 860px) { .ctlcard .controls { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .ctlcard .controls, .cmp .controls { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 6 · Topic 6.4</span>
+  <h1>Heat Capacity and Calorimetry Study Lab</h1>
+  <p class="lede">You cannot measure the energy a reaction releases directly, but you can measure what it does to a known mass of water. Calorimetry turns a temperature change into an amount of energy with q = mcΔT, then uses conservation of energy, q<sub>process</sub> = −q<sub>water</sub>, to find a specific heat or an enthalpy change. Run the classic coffee-cup experiments and work the numbers step by step.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The coffee-cup calorimeter</h2>
+    <p>Pick an experiment, adjust the amounts, and press <b>Run</b>. The probe reads to 0.01 °C. Solutions are treated as having the specific heat of water, 4.18 J/(g·°C), and a density of 1.00 g/mL, and the cup itself is assumed to absorb no energy. Use the <b>heat lost to the room</b> slider to see how a leaky calorimeter skews the answer. Turn on <b>Unknown metal</b> to identify a metal from your own calculation.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Calorimeter <small id="cal-sub"></small></h3>
+      <svg class="chart" id="cal" role="img" aria-label="Two nested foam cups with a lid, stirrer, and temperature probe. The contents depend on the experiment."></svg>
+    </div>
+    <div class="card graph-card">
+      <h3>Temperature vs. time <small>probe data</small></h3>
+      <svg class="chart" id="graph" role="img" aria-label="Graph of the temperature in the calorimeter against time, before and after mixing."></svg>
+    </div>
+  </div>
+
+  <div class="card ctlcard" id="ctl">
+    <div class="group">
+      <div class="tag">Experiment</div>
+      <div class="scenarios" id="sc"></div>
+      <div class="eqn" id="eqn"></div>
+    </div>
+    <div class="btnrow">
+      <button type="button" class="primary" id="b-run">Run</button>
+      <button type="button" id="b-reset">Reset to t = 0</button>
+      <button type="button" id="b-unk" aria-pressed="false" style="display:none">Unknown metal: off</button>
+    </div>
+    <div class="group mode-m not-unk">
+      <div class="tag">Metal</div>
+      <div class="seg" id="metals"></div>
+    </div>
+    <div class="group mode-d">
+      <div class="tag">Salt</div>
+      <div class="seg" id="salts"></div>
+    </div>
+    <div class="controls mode-m">
+      <div class="ctl"><label for="s-mm">Mass of metal <output id="o-mm"></output></label><input type="range" id="s-mm" min="10" max="100" step="0.5"><span class="hint">Heated in a hot-water bath</span></div>
+      <div class="ctl"><label for="s-tm">Metal's starting temperature <output id="o-tm"></output></label><input type="range" id="s-tm" min="50" max="100" step="0.5"></div>
+      <div class="ctl"><label for="s-mw">Mass of water in the cup <output id="o-mw"></output></label><input type="range" id="s-mw" min="50" max="200" step="5"></div>
+    </div>
+    <div class="controls mode-d">
+      <div class="ctl"><label for="s-ms">Mass of salt <output id="o-ms"></output></label><input type="range" id="s-ms" min="1" max="15" step="0.25"><span class="hint">Weighed on a balance</span></div>
+      <div class="ctl"><label for="s-mw2">Mass of water <output id="o-mw2"></output></label><input type="range" id="s-mw2" min="50" max="200" step="5"></div>
+    </div>
+    <div class="controls mode-n">
+      <div class="ctl"><label for="s-va">Volume of 1.00 M HCl <output id="o-va"></output></label><input type="range" id="s-va" min="25" max="100" step="5"></div>
+      <div class="ctl"><label for="s-vb">Volume of 1.00 M NaOH <output id="o-vb"></output></label><input type="range" id="s-vb" min="25" max="100" step="5"></div>
+    </div>
+    <div class="controls">
+      <div class="ctl"><label for="s-t0">Starting temperature of the water <output id="o-t0"></output></label><input type="range" id="s-t0" min="18" max="26" step="0.1"></div>
+      <div class="ctl"><label for="s-loss">Heat lost to the room <output id="o-loss"></output></label><input type="range" id="s-loss" min="0" max="30" step="1"><span class="hint">0% is a perfect calorimeter</span></div>
+      <div class="ctl"><label for="s-t">Time <output id="o-t"></output></label><input type="range" id="s-t" min="0" max="240" step="1"><span class="hint">Mixing happens at t = 30 s</span></div>
+    </div>
+    <div class="group unk">
+      <div class="tag">Your answer</div>
+      <div class="answer">
+        <label for="ans">Specific heat of the metal, J/(g·°C):</label>
+        <input id="ans" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 0.450">
+        <button type="button" id="b-check">Check</button>
+        <button type="button" id="b-new">New unknown</button>
+      </div>
+      <div class="fb" id="fb" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Temperature change of the water</div><div class="v" id="r-dt"></div><div class="sub" id="r-dt2"></div></div>
+    <div class="stat"><div class="k">q<sub>water</sub> = mcΔT</div><div class="v" id="r-qw"></div><div class="sub" id="r-qw2"></div></div>
+    <div class="stat"><div class="k" id="r-qp-k">q for the process</div><div class="v" id="r-qp"></div><div class="sub" id="r-qp2"></div></div>
+    <div class="stat"><div class="k" id="r-res-k">Result</div><div class="v" id="r-res"></div><div class="sub" id="r-res2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Same energy, different substances <small id="cmp-sub"></small></h3>
+      <svg class="chart" id="cmp" role="img" aria-label="Bar chart of the temperature change of water, aluminum, iron, and copper when each absorbs the same amount of energy."></svg>
+    </div>
+    <div class="card cmp">
+      <h3>Specific heat vs. molar heat capacity</h3>
+      <p class="note">Add the same energy to equal amounts of four substances. Compare equal masses (specific heat, J/(g·°C)) or equal moles (molar heat capacity, J/(mol·°C)).</p>
+      <div class="seg" id="cmp-seg"><button type="button" data-v="g" aria-pressed="true">Equal masses</button><button type="button" data-v="mol" aria-pressed="false">Equal moles</button></div>
+      <div class="controls">
+        <div class="ctl"><label for="s-q">Energy added, q <output id="o-q"></output></label><input type="range" id="s-q" min="100" max="2000" step="50"></div>
+        <div class="ctl"><label for="s-amt">Amount of each <output id="o-amt"></output></label><input type="range" id="s-amt" min="10" max="100" step="5"></div>
+      </div>
+      <div class="note" id="cmp-note"></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">The equation</span><h3>q = mcΔT</h3><p>The energy to change the temperature of a sample is its mass times its specific heat times the temperature change, ΔT = T<sub>final</sub> − T<sub>initial</sub>. A positive q means the sample gained energy; negative means it lost energy. With moles instead of grams, q = nC<sub>m</sub>ΔT, using the molar heat capacity.</p></div>
+    <div class="card"><span class="tag">Same energy, different ΔT</span><h3>Specific heat capacity</h3><p>Specific heat is the energy needed to warm 1 g of a substance by 1 °C. Water's, 4.18 J/(g·°C), is unusually large, so the same energy changes the temperature of water far less than an equal mass of metal. Iron warms about 9 times as much as water for the same energy per gram.</p></div>
+    <div class="card"><span class="tag">First law</span><h3>q<sub>process</sub> = −q<sub>water</sub></h3><p>Energy is conserved. In an insulated calorimeter, whatever the reaction, dissolving salt, or hot metal loses, the water gains, and the reverse. Measure the water, flip the sign, and you have the process.</p></div>
+    <div class="card"><span class="tag">Reading the thermometer</span><h3>Direction from the temperature</h3><p>If the mixture's temperature rises, the dissolving or reacting system released energy: exothermic, ΔH &lt; 0. If it falls, the system absorbed energy: endothermic, ΔH &gt; 0.</p></div>
+    <div class="card"><span class="tag">Per mole</span><h3>From q to ΔH</h3><p>ΔH = q<sub>process</sub> ÷ moles of the limiting reactant (or of solute dissolved). Convert J to kJ. For a neutralization, the moles of water formed come from the limiting reactant, not from the total of both solutions.</p></div>
+    <div class="card"><span class="tag">Error analysis</span><h3>Heat lost to the room</h3><p>A real cup exchanges some energy with the room, so the measured |ΔT| is too small. Then |q<sub>water</sub>| is too small, and the calculated |ΔH| or specific heat comes out too small too.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Calorimetry cheat sheet</h2>
+    <p>Specific heats near room temperature, and the calculation path for each kind of experiment.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Substance</th><th>Specific heat, c (J/(g·°C))</th><th>Molar heat capacity, C<sub>m</sub> (J/(mol·°C))</th><th>ΔT for 1000 J into 50.0 g</th></tr></thead>
+    <tbody id="ctab"></tbody>
+  </table>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Experiment</th><th>Measure</th><th>Calculate</th><th>Answer</th></tr></thead>
+    <tbody>
+      <tr><td>Hot metal into water</td><td>m<sub>metal</sub>, T<sub>metal</sub>, m<sub>water</sub>, T<sub>water</sub>, T<sub>f</sub></td><td>q<sub>water</sub> = m<sub>w</sub>c<sub>w</sub>ΔT<sub>w</sub>; q<sub>metal</sub> = −q<sub>water</sub></td><td><b>c<sub>metal</sub> = q<sub>metal</sub> ÷ (m<sub>metal</sub>ΔT<sub>metal</sub>)</b></td></tr>
+      <tr><td>Dissolving a solid</td><td>m<sub>solute</sub>, m<sub>water</sub>, T<sub>i</sub>, T<sub>f</sub></td><td>q<sub>soln</sub> = (m<sub>water</sub> + m<sub>solute</sub>)cΔT; q<sub>dissolving</sub> = −q<sub>soln</sub></td><td><b>ΔH<sub>soln</sub> = q<sub>dissolving</sub> ÷ n<sub>solute</sub></b></td></tr>
+      <tr><td>Mixing acid and base</td><td>V and M of each, T<sub>i</sub>, T<sub>f</sub></td><td>q<sub>soln</sub> = (total volume × 1.00 g/mL)cΔT; q<sub>rxn</sub> = −q<sub>soln</sub></td><td><b>ΔH<sub>rxn</sub> = q<sub>rxn</sub> ÷ n<sub>limiting reactant</sub></b></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Calorimetry on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write q = mcΔT with numbers and units substituted: "q = (52.0 g)(4.18 J/(g·°C))(10.2 °C) = 2.22 × 10<sup>3</sup> J."</li>
+        <li>Use the total mass of the solution (water plus solute, or both solutions combined) when the problem says to treat the solution as water.</li>
+        <li>State the conservation step explicitly with signs: q<sub>rxn</sub> = −q<sub>soln</sub>.</li>
+        <li>Divide by moles of the limiting reactant (or of solute) and convert J to kJ for ΔH in kJ/mol. Give the sign.</li>
+        <li>Connect the sign to the observation: the temperature increased, so the process is exothermic and ΔH is negative.</li>
+        <li>For error questions, trace the effect: heat lost → |ΔT| too small → |q| too small → |ΔH| (or c) too small.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Plugging in a temperature instead of a temperature change. ΔT is T<sub>final</sub> − T<sub>initial</sub>.</li>
+        <li>Forgetting to flip the sign: q<sub>water</sub> is positive when the reaction is exothermic.</li>
+        <li>Using only the water's mass and leaving out the dissolved solid or the second solution.</li>
+        <li>Dividing by the total moles of acid plus base instead of the moles of the limiting reactant.</li>
+        <li>Mixing grams with molar heat capacity, or moles with specific heat. Match the units.</li>
+        <li>Thinking a larger volume of the same solutions gives a larger ΔT. Doubling both amounts doubles q and the mass, so ΔT stays the same.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 6.4. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-6.html">Unit 6 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  var CW = 4.18, T_MIX = 30, T_END = 240;
+  // Specific heats, J/(g·°C), near 25 °C.
+  var METALS = { al: { n: "Aluminum", s: "Al", c: 0.897 }, ti: { n: "Titanium", s: "Ti", c: 0.523 }, fe: { n: "Iron", s: "Fe", c: 0.449 }, cu: { n: "Copper", s: "Cu", c: 0.385 }, ag: { n: "Silver", s: "Ag", c: 0.235 }, pb: { n: "Lead", s: "Pb", c: 0.129 } };
+  var MORDER = ["al", "ti", "fe", "cu", "ag", "pb"];
+  // Enthalpies of solution, kJ/mol, dilute solution, 25 °C.
+  var SALTS = { nh4no3: { f: "NH4NO3", dH: 25.7, ions: "NH4^+(aq) + NO3^-(aq)" }, cacl2: { f: "CaCl2", dH: -81.3, ions: "Ca^2+(aq) + 2Cl^-(aq)" }, naoh: { f: "NaOH", dH: -44.5, ions: "Na^+(aq) + OH^-(aq)" } };
+  var SORDER = ["nh4no3", "cacl2", "naoh"];
+  // H3O+(aq) + OH-(aq) -> 2H2O(l): from ΔHf H2O(l) = -285.83, OH-(aq) = -229.99, H3O+ taken as H+(aq) = 0.
+  var DH_NEUT = -285.83 - (-229.99);
+  var CONC = 1.00;
+
+  var SC = {
+    fe:    { name: "Specific heat of a metal", mode: "m", metal: "fe", mm: 50, tm: 100, mw: 100, t0: 22, loss: 0 },
+    unk:   { name: "Unknown metal", mode: "m", unk: true, mm: 50, tm: 100, mw: 100, t0: 22, loss: 0 },
+    cold:  { name: "ΔH of a cold pack (NH₄NO₃)", mode: "d", salt: "nh4no3", ms: 8, mw2: 100, t0: 22, loss: 0 },
+    hot:   { name: "ΔH of a hot pack (CaCl₂)", mode: "d", salt: "cacl2", ms: 5, mw2: 100, t0: 22, loss: 0 },
+    neut:  { name: "HCl + NaOH neutralization", mode: "n", va: 50, vb: 50, t0: 22, loss: 0 },
+    excess:{ name: "Base in excess", mode: "n", va: 50, vb: 100, t0: 22, loss: 0 },
+    leak:  { name: "Leaky calorimeter", mode: "m", metal: "fe", mm: 50, tm: 100, mw: 100, t0: 22, loss: 15 }
+  };
+  var ORDER = ["fe", "unk", "cold", "hot", "neut", "excess", "leak"];
+
+  var S = { key: "fe", mode: "m", metal: "fe", unk: false, unkMetal: "fe", mm: 50, tm: 100, mw: 100, salt: "nh4no3", ms: 8, mw2: 100, va: 50, vb: 50, t0: 22, loss: 0, t: T_END, checked: false };
+
+  function r2(v) { return Math.round(v * 100) / 100; }
+  function sgn(v, d) { var s = Lab.fmt(Math.abs(v), d); return (v < 0 && +s !== 0 ? "−" : v > 0 && +s !== 0 ? "+" : "") + s; }
+  function sg3(v) { var a = Math.abs(v), s = Lab.sig(a, 3); return (v < 0 ? "−" : "") + s; }
+  function Jtxt(v) { return Math.abs(v) >= 1000 ? sg3(v / 1000) + " kJ" : sg3(v) + " J"; }
+  function metalKey() { return S.unk ? S.unkMetal : S.metal; }
+
+  // ---------- Model ----------
+  // returns ideal and measured final temperature, the probe reading (0.01 °C), and the worked calculation from the reading
+  function model() {
+    var L = S.loss / 100, o = { mode: S.mode, L: L, T0: S.t0, tau: 14 };
+    if (S.mode === "m") {
+      var me = METALS[metalKey()], Cm = S.mm * me.c, Cw = S.mw * CW;
+      o.tau = 12;
+      o.Tideal = (Cw * S.t0 + Cm * S.tm) / (Cw + Cm);
+      o.Tf = (Cw * S.t0 + (1 - L) * Cm * S.tm) / (Cw + (1 - L) * Cm);
+      o.read = r2(o.Tf);
+      o.dTw = r2(o.read - S.t0); o.mSoln = S.mw;
+      o.qw = S.mw * CW * o.dTw; o.qp = -o.qw;
+      o.dTm = r2(o.read - S.tm);
+      o.res = o.qp / (S.mm * o.dTm);          // specific heat from the data
+      o.trueRes = me.c;
+    } else if (S.mode === "d") {
+      var x = SALTS[S.salt], M = Lab.molarMass(x.f), n = S.ms / M, m = S.mw2 + S.ms;
+      o.tau = 20; o.n = n; o.M = M; o.mSoln = m;
+      o.Tideal = S.t0 - n * x.dH * 1000 / (m * CW);
+      o.Tf = S.t0 - (1 - L) * n * x.dH * 1000 / (m * CW);
+      o.read = r2(o.Tf); o.dTw = r2(o.read - S.t0);
+      o.qw = m * CW * o.dTw; o.qp = -o.qw;
+      o.res = o.qp / 1000 / n; o.trueRes = x.dH;
+    } else {
+      var na = S.va / 1000 * CONC, nb = S.vb / 1000 * CONC, nl = Math.min(na, nb), mt = (S.va + S.vb) * 1.00;
+      o.tau = 6; o.na = na; o.nb = nb; o.n = nl; o.mSoln = mt;
+      o.Tideal = S.t0 - nl * DH_NEUT * 1000 / (mt * CW);
+      o.Tf = S.t0 - (1 - L) * nl * DH_NEUT * 1000 / (mt * CW);
+      o.read = r2(o.Tf); o.dTw = r2(o.read - S.t0);
+      o.qw = mt * CW * o.dTw; o.qp = -o.qw;
+      o.res = o.qp / 1000 / nl; o.trueRes = DH_NEUT;
+    }
+    var f = S.t <= T_MIX ? 0 : 1 - Math.exp(-(S.t - T_MIX) / o.tau);
+    o.f = f; o.T = S.t0 + f * (o.read - S.t0);
+    o.done = S.t >= T_MIX + 8 * o.tau;
+    return o;
+  }
+
+  // ---------- Calorimeter drawing ----------
+  var cal = document.getElementById("cal");
+  function drawCal(o) {
+    var E = Lab.el;
+    cal.setAttribute("viewBox", "0 0 440 330");
+    while (cal.firstChild) cal.removeChild(cal.firstChild);
+    var cx = 180;
+    // two nested cups
+    E("path", { d: "M70 80 L290 80 L262 300 L98 300 Z", fill: "var(--surface)", stroke: "var(--muted)", "stroke-width": 2 }, cal);
+    E("path", { d: "M82 88 L278 88 L252 292 L108 292 Z", fill: "var(--surface)", stroke: "var(--ink)", "stroke-width": 2 }, cal);
+    var lvl = 150;
+    var lx0 = 82 + (278 - 82 - (252 - 108)) / 2 * (lvl - 88) / (292 - 88), lx1 = 278 - (278 - 82 - (252 - 108)) / 2 * (lvl - 88) / (292 - 88);
+    var warmth = Math.max(-1, Math.min(1, (o.T - S.t0) / 10));
+    E("path", { d: "M" + lx0 + " " + lvl + " L" + lx1 + " " + lvl + " L252 292 L108 292 Z", fill: "var(--accent-soft)" }, cal);
+    if (Math.abs(warmth) > 0.01) E("path", { d: "M" + lx0 + " " + lvl + " L" + lx1 + " " + lvl + " L252 292 L108 292 Z", fill: warmth > 0 ? "var(--c1)" : "var(--accent)", "fill-opacity": Math.abs(warmth) * 0.35 }, cal);
+    // lid, stirrer, probe
+    E("rect", { x: 60, y: 66, width: 240, height: 14, rx: 4, fill: "var(--ghost)" }, cal);
+    E("line", { x1: 130, x2: 130, y1: 30, y2: 270, stroke: "var(--muted)", "stroke-width": 3 }, cal);
+    E("path", { d: "M114 270 L146 270", stroke: "var(--muted)", "stroke-width": 4 }, cal);
+    E("text", { x: 122, y: 26, "text-anchor": "middle", style: "fill:var(--muted)" }, cal, "stirrer");
+    E("line", { x1: 240, x2: 240, y1: 40, y2: 262, stroke: "var(--ink)", "stroke-width": 5, "stroke-linecap": "round" }, cal);
+    E("path", { d: "M240 40 L240 20 L330 20", fill: "none", stroke: "var(--ink)", "stroke-width": 1.5 }, cal);
+    E("rect", { x: 330, y: 4, width: 104, height: 40, rx: 6, fill: "var(--ink)" }, cal);
+    E("text", { x: 382, y: 31, "text-anchor": "middle", style: "fill:var(--surface);font-family:var(--mono);font-size:17px" }, cal, o.T.toFixed(2) + " °C");
+    E("text", { x: 382, y: 60, "text-anchor": "middle", style: "fill:var(--muted)" }, cal, "temperature probe");
+    // contents
+    var mixed = S.t > T_MIX;
+    if (S.mode === "m") {
+      var me = METALS[metalKey()], sz = 20 + 18 * Math.sqrt(S.mm / 100);
+      var by = mixed ? 286 - sz : 30, bx = mixed ? cx - sz / 2 + 4 : 350;
+      if (!mixed) {
+        E("text", { x: 380, y: 110, "text-anchor": "middle", style: "fill:var(--muted)" }, cal, S.tm >= 100 ? "in boiling-water bath" : "in hot-water bath");
+        by = 120; bx = 380 - sz / 2;
+      }
+      E("rect", { x: bx, y: by, width: sz, height: sz, rx: 3, fill: "var(--c3)", "fill-opacity": 0.85, stroke: "var(--ink)" }, cal);
+      E("text", { x: bx + sz / 2, y: by + sz / 2 + 4, "text-anchor": "middle", style: "fill:var(--surface);font-weight:600" }, cal, S.unk ? "?" : me.s);
+      if (!mixed) E("text", { x: 380, y: by + sz + 18, "text-anchor": "middle", style: "fill:var(--ink)" }, cal, S.tm.toFixed(1) + " °C");
+      E("text", { x: cx + 6, y: 316, "text-anchor": "middle", "class": "lbl", style: "fill:var(--accent)" }, cal, S.mw + " g water");
+    } else if (S.mode === "d") {
+      var x = SALTS[S.salt], left = Math.round(12 * (1 - o.f));
+      if (!mixed) {
+        E("text", { x: 380, y: 110, "text-anchor": "middle", style: "fill:var(--muted)" }, cal, S.ms.toFixed(2) + " g " + x.f);
+        for (var i = 0; i < 12; i++) E("rect", { x: 356 + (i % 4) * 12, y: 120 + Math.floor(i / 4) * 12, width: 10, height: 10, rx: 2, fill: i % 2 ? "var(--c3)" : "var(--c1)" }, cal);
+      } else {
+        for (var j = 0; j < left; j++) E("rect", { x: cx - 18 + (j % 4) * 11, y: 280 - Math.floor(j / 4) * 11, width: 10, height: 10, rx: 2, fill: j % 2 ? "var(--c3)" : "var(--c1)" }, cal);
+        var s = 5;
+        for (var k = 0; k < Math.round(20 * o.f); k++) { s = (s * 9301 + 49297) % 233280; var px = 120 + (s / 233280) * 120; s = (s * 9301 + 49297) % 233280; var py = 165 + (s / 233280) * 95; E("circle", { cx: px, cy: py, r: 4, fill: k % 2 ? "var(--c3)" : "var(--c1)" }, cal); }
+      }
+      E("text", { x: cx + 6, y: 316, "text-anchor": "middle", "class": "lbl", style: "fill:var(--accent)" }, cal, S.mw2 + " g water" + (mixed ? " + " + S.ms.toFixed(2) + " g salt" : ""));
+    } else {
+      if (!mixed) {
+        E("text", { x: 380, y: 110, "text-anchor": "middle", style: "fill:var(--muted)" }, cal, S.vb + " mL NaOH");
+        E("rect", { x: 352, y: 118, width: 56, height: 70, rx: 4, fill: "var(--accent-soft)", stroke: "var(--ink)" }, cal);
+        E("text", { x: cx + 6, y: 316, "text-anchor": "middle", "class": "lbl", style: "fill:var(--accent)" }, cal, S.va + " mL 1.00 M HCl in cup");
+      } else {
+        E("text", { x: cx + 6, y: 316, "text-anchor": "middle", "class": "lbl", style: "fill:var(--accent)" }, cal, (S.va + S.vb) + " mL mixture = " + (S.va + S.vb) + " g");
+        E("text", { x: cx + 10, y: 215, "text-anchor": "middle", style: "fill:var(--ink)" }, cal, o.f < 0.98 ? "H₃O⁺ + OH⁻ → 2H₂O" : "reaction complete");
+      }
+    }
+    if (S.loss > 0 && mixed) E("text", { x: 20, y: 316, style: "fill:var(--bad)" }, cal, S.loss + "% leaks");
+    document.getElementById("cal-sub").textContent = !mixed ? "before mixing" : o.done ? "final reading" : "mixing";
+  }
+
+  // ---------- Graph ----------
+  var graph = document.getElementById("graph");
+  function drawGraph(o) {
+    var lo = Math.min(S.t0, o.read, o.Tideal), hi = Math.max(S.t0, o.read, o.Tideal), span = Math.max(hi - lo, 1);
+    var step = span > 12 ? 5 : span > 5 ? 2 : span > 2 ? 1 : 0.5;
+    var y0 = Math.floor((lo - span * 0.15) / step) * step, y1 = Math.ceil((hi + span * 0.2) / step) * step;
+    var yt = []; for (var v = y0; v <= y1 + 1e-9; v += step) yt.push(Math.round(v * 100) / 100);
+    var F = Lab.frame(graph, { x: [0, T_END], y: [y0, y1], xLabel: "Time (s)", yLabel: "Temperature (°C)", xTicks: [0, 30, 60, 90, 120, 150, 180, 210, 240], yTicks: yt, fmtX: function (v) { return v; }, fmtY: function (v) { return step < 1 ? v.toFixed(1) : v; } });
+    Lab.vline(F, T_MIX, "var(--ghost)", 1, "3 3");
+    Lab.tag(F, T_MIX + 3, y1 - (y1 - y0) * 0.04, "mix", "var(--muted)");
+    if (S.loss > 0 && !(S.unk && !S.checked)) {
+      Lab.hline(F, o.Tideal, "var(--ghost)", 1.5, "5 4");
+      Lab.tag(F, T_END - 4, o.Tideal + (o.Tideal > S.t0 ? 1 : -1) * (y1 - y0) * 0.04 + (o.Tideal > S.t0 ? 0 : -(y1 - y0) * 0.02), "with no heat loss", "var(--muted)", "end");
+    }
+    var pts = [], col = o.read >= S.t0 ? "var(--c1)" : "var(--accent)";
+    for (var t = 0; t <= S.t + 1e-9; t += 1) { var f = t <= T_MIX ? 0 : 1 - Math.exp(-(t - T_MIX) / o.tau); pts.push([t, S.t0 + f * (o.read - S.t0)]); }
+    Lab.line(F, pts, col, 3);
+    Lab.dot(F, S.t, o.T, col);
+    if (o.done) Lab.tag(F, T_END - 4, o.read + (o.read >= S.t0 ? -1 : 1) * (y1 - y0) * 0.07, "Tf = " + o.read.toFixed(2) + " °C", "var(--ink)", "end");
+  }
+
+  // ---------- Worked steps ----------
+  function steps(o) {
+    var L = [];
+    if (S.mode === "m") {
+      L.push("q<sub>water</sub> = m<sub>w</sub>c<sub>w</sub>ΔT<sub>w</sub> = (" + S.mw.toFixed(1) + " g)(4.18 J/(g·°C))(" + o.read.toFixed(2) + " − " + S.t0.toFixed(2) + " = " + o.dTw.toFixed(2) + " °C) = " + Jtxt(o.qw) + ".");
+      L.push("q<sub>metal</sub> = −q<sub>water</sub> = " + Jtxt(o.qp) + ". The metal lost the energy the water gained.");
+      L.push("c<sub>metal</sub> = q<sub>metal</sub> ÷ (m<sub>metal</sub>ΔT<sub>metal</sub>) = " + Jtxt(o.qp) + " ÷ [(" + S.mm.toFixed(1) + " g)(" + o.read.toFixed(2) + " − " + S.tm.toFixed(2) + " = " + o.dTm.toFixed(2) + " °C)] = <b>" + Lab.sig(o.res, 3) + " J/(g·°C)</b>.");
+    } else if (S.mode === "d") {
+      var x = SALTS[S.salt];
+      L.push("q<sub>soln</sub> = mcΔT = (" + S.mw2.toFixed(1) + " g + " + S.ms.toFixed(2) + " g = " + o.mSoln.toFixed(2) + " g)(4.18 J/(g·°C))(" + o.dTw.toFixed(2) + " °C) = " + Jtxt(o.qw) + ".");
+      L.push("q<sub>dissolving</sub> = −q<sub>soln</sub> = " + Jtxt(o.qp) + ".");
+      L.push("n = " + S.ms.toFixed(2) + " g ÷ " + o.M.toFixed(2) + " g/mol = " + Lab.sig(o.n, 3) + " mol " + Lab.fmla(x.f) + ".");
+      L.push("ΔH<sub>soln</sub> = " + sg3(o.qp / 1000) + " kJ ÷ " + Lab.sig(o.n, 3) + " mol = <b>" + sg3(o.res) + " kJ/mol</b>.");
+    } else {
+      L.push("mol HCl = (1.00 mol/L)(" + (S.va / 1000).toFixed(4) + " L) = " + o.na.toFixed(4) + " mol; mol NaOH = (1.00 mol/L)(" + (S.vb / 1000).toFixed(4) + " L) = " + o.nb.toFixed(4) + " mol. " + (Math.abs(o.na - o.nb) < 1e-12 ? "Neither is in excess" : (o.na < o.nb ? "HCl" : "NaOH") + " is limiting") + ", so " + o.n.toFixed(4) + " mol H₂O forms.");
+      L.push("q<sub>soln</sub> = mcΔT = (" + o.mSoln.toFixed(1) + " g)(4.18 J/(g·°C))(" + o.dTw.toFixed(2) + " °C) = " + Jtxt(o.qw) + ".");
+      L.push("q<sub>rxn</sub> = −q<sub>soln</sub> = " + Jtxt(o.qp) + ".");
+      L.push("ΔH<sub>rxn</sub> = " + sg3(o.qp / 1000) + " kJ ÷ " + o.n.toFixed(4) + " mol = <b>" + sg3(o.res) + " kJ/mol</b> of water formed.");
+    }
+    return '<ol class="steps">' + L.map(function (s) { return "<li>" + s + "</li>"; }).join("") + "</ol>";
+  }
+
+  // ---------- Story ----------
+  function story(o) {
+    var h = "", li = [], up = o.read > S.t0;
+    if (S.t <= T_MIX) {
+      li.push("The probe reads a steady " + S.t0.toFixed(2) + " °C before mixing. Recording a stable starting temperature is the first measurement in every calorimetry experiment.");
+      li.push(S.mode === "m" ? "The metal waits in a " + (S.tm >= 100 ? "boiling-water" : "hot-water") + " bath at " + S.tm.toFixed(1) + " °C. Predict: will the water's temperature change by a lot or a little?" : S.mode === "d" ? "Predict: will dissolving " + Lab.fmla(SALTS[S.salt].f) + " warm or cool the water?" : "Predict: neutralization releases energy, so which way will the probe move?");
+      h += "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+      h += "<p><b>AP answer:</b> in an insulated calorimeter, q<sub>process</sub> = −q<sub>water</sub>, and q<sub>water</sub> = mcΔT is found from the measured temperature change.</p>";
+      return h;
+    }
+    if (!o.done) {
+      li.push("Mixing has started; the probe reads " + o.T.toFixed(2) + " °C and is still changing. Wait for the reading to level off before recording T<sub>f</sub>.");
+      h += "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+      h += "<p><b>AP answer:</b> record the maximum (or minimum) temperature reached; ΔT = T<sub>final</sub> − T<sub>initial</sub>.</p>";
+      return h;
+    }
+    if (S.mode === "m") {
+      var me = METALS[metalKey()];
+      li.push("The water warmed from " + S.t0.toFixed(2) + " °C to " + o.read.toFixed(2) + " °C (ΔT = " + sgn(o.dTw, 2) + " °C) while the metal cooled from " + S.tm.toFixed(1) + " °C to the same final temperature (ΔT = " + sgn(o.dTm, 2) + " °C). Both end at thermal equilibrium.");
+      li.push("The metal's temperature changed far more than the water's, yet the energies are equal in size. That is the meaning of a small specific heat: a little energy per gram moves the temperature a long way.");
+      if (S.unk && !S.checked) li.push("Work the numbers from the readings and type your specific heat above. The identity of the metal is revealed when you check.");
+      else h += "";
+    } else if (S.mode === "d") {
+      li.push("The solution " + (up ? "warmed" : "cooled") + " from " + S.t0.toFixed(2) + " °C to " + o.read.toFixed(2) + " °C, so the dissolving " + Lab.fmla(SALTS[S.salt].f) + " " + (up ? "released energy to the water: exothermic, ΔH<sub>soln</sub> &lt; 0." : "absorbed energy from the water: endothermic, ΔH<sub>soln</sub> &gt; 0."));
+      li.push("Use the total mass of the solution (water + solute) in q = mcΔT, since the dissolved salt warms or cools along with the water.");
+    } else {
+      li.push("Mixing raised the temperature from " + S.t0.toFixed(2) + " °C to " + o.read.toFixed(2) + " °C: the neutralization is exothermic.");
+      if (Math.abs(o.na - o.nb) > 1e-12) li.push("One reactant is in excess. The excess solution does not react, but it still has to be warmed, so it adds mass and makes ΔT smaller. ΔH per mole of water is unchanged.");
+      else li.push("Equal moles of HCl and NaOH react completely. Doubling both volumes would double q and the mass together, so ΔT would stay the same.");
+    }
+    if (!(S.unk && !S.checked)) {
+      h += "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>" + "<p><b>Worked calculation from the probe readings:</b></p>" + steps(o);
+      if (S.loss > 0) {
+        var what = S.mode === "m" ? "specific heat" : "ΔH";
+        h += "<p>With " + S.loss + "% of the energy exchanged with the room, the measured |ΔT| is smaller than it would be in a perfect calorimeter (" + sgn(o.Tideal - S.t0, 2) + " °C), so the calculated " + what + " (" + (S.mode === "m" ? Lab.sig(o.res, 3) + " J/(g·°C)" : sg3(o.res) + " kJ/mol") + ") is too small in magnitude compared with the true value (" + (S.mode === "m" ? o.trueRes + " J/(g·°C)" : sgn(o.trueRes, 1) + " kJ/mol") + ").</p>";
+      } else {
+        h += "<p class=\"note\">The small difference from the accepted value (" + (S.mode === "m" ? o.trueRes + " J/(g·°C)" : sgn(o.trueRes, 1) + " kJ/mol") + ") comes only from rounding the probe reading to 0.01 °C.</p>";
+      }
+    } else {
+      h += "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+      h += "<ol class=\"steps\"><li>q<sub>water</sub> = m<sub>w</sub>c<sub>w</sub>ΔT<sub>w</sub>.</li><li>q<sub>metal</sub> = −q<sub>water</sub>.</li><li>c<sub>metal</sub> = q<sub>metal</sub> ÷ (m<sub>metal</sub>ΔT<sub>metal</sub>), where ΔT<sub>metal</sub> = T<sub>f</sub> − " + S.tm.toFixed(1) + " °C is negative.</li></ol>";
+    }
+    var ap = S.mode === "m" ? "q<sub>metal</sub> = −q<sub>water</sub>, so c<sub>metal</sub> = −(m<sub>w</sub>c<sub>w</sub>ΔT<sub>w</sub>) ÷ (m<sub>metal</sub>ΔT<sub>metal</sub>)" + (S.unk && !S.checked ? "." : " = " + Lab.sig(o.res, 3) + " J/(g·°C).") :
+      S.mode === "d" ? "the temperature " + (up ? "increased, so dissolving is exothermic" : "decreased, so dissolving is endothermic") + "; ΔH<sub>soln</sub> = −(mcΔT) ÷ n<sub>solute</sub> = " + sg3(o.res) + " kJ/mol." :
+      "q<sub>rxn</sub> = −(mcΔT) of the combined solution; dividing by the moles of the limiting reactant gives ΔH<sub>rxn</sub> = " + sg3(o.res) + " kJ/mol.";
+    h += "<p><b>AP answer:</b> " + ap + "</p>";
+    return h;
+  }
+
+  // ---------- Compare card ----------
+  var SUBS = [{ n: "Water", f: "H2O", c: 4.18 }, { n: "Aluminum", f: "Al", c: 0.897 }, { n: "Iron", f: "Fe", c: 0.449 }, { n: "Copper", f: "Cu", c: 0.385 }];
+  SUBS.forEach(function (s) { s.M = Lab.molarMass(s.f); s.Cm = s.c * s.M; });
+  var C = { mode: "g", q: 1000, amt: 50 };
+  function drawCmp() {
+    var vals = SUBS.map(function (s) { return C.mode === "g" ? C.q / (C.amt * s.c) : C.q / (C.amt / 100 * s.Cm); });
+    var mx = Math.max.apply(null, vals), step = mx > 100 ? 50 : mx > 40 ? 20 : mx > 20 ? 10 : mx > 8 ? 5 : mx > 4 ? 2 : 1;
+    var top = Math.ceil(mx * 1.15 / step) * step, yt = []; for (var v = 0; v <= top + 1e-9; v += step) yt.push(v);
+    var F = Lab.frame(document.getElementById("cmp"), { x: [0, 4], y: [0, top], xLabel: "", yLabel: "Temperature change, ΔT (°C)", xTicks: [], yTicks: yt, fmtY: function (v) { return v; } });
+    var cols = ["var(--accent)", "var(--c2)", "var(--c1)", "var(--c3)"];
+    SUBS.forEach(function (s, i) {
+      Lab.rect(F, i + 0.18, 0, i + 0.82, vals[i], cols[i], 0.85);
+      Lab.el("text", { x: F.sx(i + 0.5), y: F.sy(vals[i]) - 6, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, F.svg, Lab.sig(vals[i], 3) + " °C");
+      Lab.el("text", { x: F.sx(i + 0.5), y: F.H - F.M.b + 16, "text-anchor": "middle", style: "fill:var(--ink)" }, F.svg, s.n);
+      Lab.el("text", { x: F.sx(i + 0.5), y: F.H - F.M.b + 30, "text-anchor": "middle" }, F.svg, C.mode === "g" ? "c = " + s.c : "Cm = " + s.Cm.toFixed(1));
+    });
+    document.getElementById("cmp-sub").textContent = C.q + " J into " + (C.mode === "g" ? C.amt + " g" : (C.amt / 100).toFixed(2) + " mol") + " of each";
+    document.getElementById("o-q").textContent = C.q + " J";
+    document.getElementById("o-amt").textContent = C.mode === "g" ? C.amt + " g" : (C.amt / 100).toFixed(2) + " mol";
+    document.getElementById("s-q").value = C.q; document.getElementById("s-amt").value = C.amt;
+    document.getElementById("cmp-seg").querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.v === C.mode ? "true" : "false"); });
+    document.getElementById("cmp-note").innerHTML = C.mode === "g" ?
+      "ΔT = q ÷ (mc). Per gram, water needs the most energy to warm, so it changes least: copper's ΔT is " + Lab.fmt(4.18 / 0.385, 1) + " times water's." :
+      "ΔT = q ÷ (nC<sub>m</sub>). Per mole, the three metals are nearly alike (about 24–25 J/(mol·°C)); water's molar heat capacity, 75.3 J/(mol·°C), is still about three times larger.";
+  }
+  document.getElementById("cmp-seg").querySelectorAll("button").forEach(function (b) { b.addEventListener("click", function () { C.mode = b.dataset.v; drawCmp(); }); });
+  document.getElementById("s-q").addEventListener("input", function () { C.q = +this.value; drawCmp(); });
+  document.getElementById("s-amt").addEventListener("input", function () { C.amt = +this.value; drawCmp(); });
+  document.getElementById("ctab").innerHTML = SUBS.map(function (s) { return "<tr><td>" + s.n + "</td><td><b>" + s.c + "</b></td><td>" + s.Cm.toFixed(1) + "</td><td>" + Lab.sig(1000 / (50 * s.c), 3) + " °C</td></tr>"; }).join("") +
+    "<tr><td>Titanium</td><td><b>0.523</b></td><td>" + (0.523 * Lab.molarMass("Ti")).toFixed(1) + "</td><td>" + Lab.sig(1000 / (50 * 0.523), 3) + " °C</td></tr>" +
+    "<tr><td>Silver</td><td><b>0.235</b></td><td>" + (0.235 * Lab.molarMass("Ag")).toFixed(1) + "</td><td>" + Lab.sig(1000 / (50 * 0.235), 3) + " °C</td></tr>" +
+    "<tr><td>Lead</td><td><b>0.129</b></td><td>" + (0.129 * Lab.molarMass("Pb")).toFixed(1) + "</td><td>" + Lab.sig(1000 / (50 * 0.129), 3) + " °C</td></tr>";
+
+  // ---------- Render / controls ----------
+  var el = function (id) { return document.getElementById(id); };
+  var scBtns = {}, stopAnim = null;
+  function sliders() {
+    [["s-mm", "mm"], ["s-tm", "tm"], ["s-mw", "mw"], ["s-ms", "ms"], ["s-mw2", "mw2"], ["s-va", "va"], ["s-vb", "vb"], ["s-t0", "t0"], ["s-loss", "loss"], ["s-t", "t"]].forEach(function (p) { el(p[0]).value = S[p[1]]; });
+    el("o-mm").textContent = S.mm.toFixed(1) + " g"; el("o-tm").textContent = S.tm.toFixed(1) + " °C"; el("o-mw").textContent = S.mw + " g";
+    el("o-ms").textContent = S.ms.toFixed(2) + " g"; el("o-mw2").textContent = S.mw2 + " g";
+    el("o-va").textContent = S.va + " mL"; el("o-vb").textContent = S.vb + " mL";
+    el("o-t0").textContent = S.t0.toFixed(1) + " °C"; el("o-loss").textContent = S.loss + "%"; el("o-t").textContent = Math.round(S.t) + " s";
+  }
+  function render() {
+    var o = model();
+    var ctl = el("ctl");
+    ctl.classList.toggle("is-m", S.mode === "m"); ctl.classList.toggle("is-d", S.mode === "d"); ctl.classList.toggle("is-n", S.mode === "n"); ctl.classList.toggle("is-unk", S.mode === "m" && S.unk);
+    el("b-unk").style.display = S.mode === "m" ? "" : "none";
+    el("b-unk").setAttribute("aria-pressed", S.unk ? "true" : "false"); el("b-unk").textContent = "Unknown metal: " + (S.unk ? "on" : "off");
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    el("metals").querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.v === S.metal ? "true" : "false"); });
+    el("salts").querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.v === S.salt ? "true" : "false"); });
+    sliders();
+    drawCal(o); drawGraph(o);
+    var hide = S.mode === "m" && S.unk && !S.checked;
+    el("eqn").innerHTML = S.mode === "m" ? "q<sub>metal</sub> + q<sub>water</sub> = 0 &nbsp; (" + (S.unk ? "unknown metal" : METALS[S.metal].n + ", c = " + METALS[S.metal].c + " J/(g·°C)") + ")" :
+      S.mode === "d" ? Lab.fmla(SALTS[S.salt].f) + "(s) → " + SALTS[S.salt].ions.split(" + ").map(function (t) { var m = t.match(/^(\d*)(.*)\(aq\)$/); return m[1] + Lab.fmla(m[2]) + "(aq)"; }).join(" + ") + " &nbsp; ΔH<sub>soln</sub> = ?" :
+      "HCl(aq) + NaOH(aq) → NaCl(aq) + H<sub>2</sub>O(l) &nbsp; net ionic: H<sub>3</sub>O<sup>+</sup>(aq) + OH<sup>−</sup>(aq) → 2H<sub>2</sub>O(l)";
+    var col = o.read >= S.t0 ? "l-c1" : "l-ad";
+    el("legend").innerHTML = '<span class="' + col + '">Probe temperature</span><span class="l-ghost">Mixing time' + (S.loss > 0 ? "; ideal final temperature" : "") + "</span>";
+    var dT = o.T - S.t0, done = o.done;
+    el("r-dt").textContent = sgn(dT, 2) + " °C";
+    el("r-dt2").textContent = done ? "Tf = " + o.read.toFixed(2) + " °C" : S.t <= T_MIX ? "not mixed yet" : "still changing";
+    var qwNow = o.mSoln * CW * dT;
+    el("r-qw").textContent = Jtxt(qwNow);
+    el("r-qw2").textContent = "m = " + Lab.fmt(o.mSoln, S.mode === "d" ? 2 : 1) + " g, c = 4.18";
+    el("r-qp-k").innerHTML = S.mode === "m" ? "q<sub>metal</sub> = −q<sub>water</sub>" : S.mode === "d" ? "q<sub>dissolving</sub> = −q<sub>soln</sub>" : "q<sub>rxn</sub> = −q<sub>soln</sub>";
+    el("r-qp").textContent = Jtxt(-qwNow);
+    el("r-qp2").textContent = Math.abs(qwNow) < 0.5 ? "no transfer yet" : qwNow > 0 ? "process released energy" : "process absorbed energy";
+    el("r-res-k").textContent = S.mode === "m" ? "Specific heat of the metal" : S.mode === "d" ? "ΔH of solution" : "ΔH per mole of water";
+    el("r-res").textContent = !done ? "—" : hide ? "?" : S.mode === "m" ? Lab.sig(o.res, 3) + " J/(g·°C)" : sg3(o.res) + " kJ/mol";
+    el("r-res2").textContent = !done ? "wait for the final reading" : hide ? "calculate it yourself" : "accepted: " + (S.mode === "m" ? o.trueRes : sgn(o.trueRes, 1));
+    el("story").innerHTML = story(o);
+  }
+  function stop() { if (stopAnim) { stopAnim(); stopAnim = null; } }
+  function setT(t) { S.t = Math.max(0, Math.min(T_END, t)); render(); }
+  function run() {
+    stop();
+    var from = S.t >= T_END - 0.5 ? 0 : S.t;
+    stopAnim = Lab.animate(4000 * (T_END - from) / T_END + 200, function (k) { setT(from + (T_END - from) * k); }, function () { stopAnim = null; });
+  }
+  function newUnknown() {
+    var pool = MORDER.filter(function (k) { return k !== S.unkMetal; });
+    S.unkMetal = pool[Math.floor(Math.random() * pool.length)];
+    S.mm = 40 + Math.round(Math.random() * 120) / 2; S.mw = 100; S.t0 = 20 + Math.round(Math.random() * 40) / 10; S.tm = 100;
+    S.checked = false; el("ans").value = ""; el("fb").textContent = ""; el("fb").className = "fb";
+  }
+  function pick(k) {
+    stop();
+    var x = SC[k];
+    S.key = k; S.mode = x.mode; S.loss = x.loss; S.t0 = x.t0; S.unk = !!x.unk;
+    if (x.mode === "m") { S.mm = x.mm; S.tm = x.tm; S.mw = x.mw; if (x.metal) S.metal = x.metal; }
+    if (x.mode === "d") { S.salt = x.salt; S.ms = x.ms; S.mw2 = x.mw2; }
+    if (x.mode === "n") { S.va = x.va; S.vb = x.vb; }
+    if (S.unk) newUnknown();
+    S.t = 0; render(); run();
+  }
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pick(k); });
+    el("sc").appendChild(b); scBtns[k] = b;
+  });
+  MORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.dataset.v = k; b.textContent = METALS[k].n;
+    b.addEventListener("click", function () { stop(); S.metal = k; S.key = null; render(); });
+    el("metals").appendChild(b);
+  });
+  SORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.dataset.v = k; b.innerHTML = Lab.fmla(SALTS[k].f);
+    b.addEventListener("click", function () { stop(); S.salt = k; S.key = null; render(); });
+    el("salts").appendChild(b);
+  });
+  [["s-mm", "mm"], ["s-tm", "tm"], ["s-mw", "mw"], ["s-ms", "ms"], ["s-mw2", "mw2"], ["s-va", "va"], ["s-vb", "vb"], ["s-t0", "t0"], ["s-loss", "loss"]].forEach(function (p) {
+    el(p[0]).addEventListener("input", function () { stop(); S[p[1]] = parseFloat(el(p[0]).value); S.key = null; if (S.unk) { S.checked = false; el("fb").textContent = ""; } render(); });
+  });
+  el("s-t").addEventListener("input", function () { stop(); setT(parseFloat(el("s-t").value)); });
+  el("b-run").addEventListener("click", run);
+  el("b-reset").addEventListener("click", function () { stop(); setT(0); });
+  el("b-unk").addEventListener("click", function () { stop(); S.unk = !S.unk; S.key = null; if (S.unk) newUnknown(); S.t = 0; render(); run(); });
+  el("b-new").addEventListener("click", function () { stop(); newUnknown(); S.t = 0; render(); run(); });
+  el("b-check").addEventListener("click", function () {
+    var o = model(), fb = el("fb");
+    var v = parseFloat(String(el("ans").value).replace(/[^0-9.eE\-]/g, ""));
+    if (!o.done) { fb.className = "fb no"; fb.textContent = "Let the run finish so you have a final temperature."; return; }
+    if (!isFinite(v) || v <= 0) { fb.className = "fb no"; fb.textContent = "Type a specific heat in J/(g·°C), such as 0.450."; return; }
+    var me = METALS[S.unkMetal], ok = Math.abs(v - o.res) / o.res <= 0.02 || Math.abs(v - me.c) / me.c <= 0.02;
+    S.checked = true;
+    if (ok) { fb.className = "fb ok"; fb.textContent = "Correct. The data give " + Lab.sig(o.res, 3) + " J/(g·°C), which matches " + me.n.toLowerCase() + " (" + me.c + " J/(g·°C))."; }
+    else {
+      var hint = Math.abs(v - o.qw / (S.mm * (o.read - S.t0))) / v < 0.02 ? " It looks like the water's ΔT was used for the metal." : Math.abs(v + o.res) / o.res < 0.02 ? " Check the sign: the metal's ΔT is negative and so is its q." : "";
+      fb.className = "fb no"; fb.textContent = "Not quite. The data give " + Lab.sig(o.res, 3) + " J/(g·°C), which matches " + me.n.toLowerCase() + "." + hint + " The worked steps are below.";
+    }
+    render();
+  });
+  pick("fe");
+  drawCmp();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "How much energy is absorbed when 50.0 g of water is heated from 20.0 °C to 35.0 °C? The specific heat of water is 4.18 J/(g·°C).",
+      o: ["3.14 J", "3.14 kJ", "7.32 kJ", "4.18 kJ"], c: 1,
+      w: "q = mcΔT = (50.0 g)(4.18 J/(g·°C))(15.0 °C) = 3135 J = 3.14 kJ. Choice C uses the final temperature, 35.0 °C, instead of the change in temperature. Choice A drops the factor of 1000 between J and kJ." },
+    { s: "A 25.0 g piece of metal at 100.0 °C is placed in 50.0 g of water at 20.0 °C in an insulated cup. The final temperature is 24.0 °C. What is the specific heat of the metal?",
+      o: ["0.418 J/(g·°C)", "8.36 J/(g·°C)", "0.220 J/(g·°C)", "0.440 J/(g·°C)"], c: 3,
+      w: "q(water) = (50.0)(4.18)(4.0) = 836 J, so q(metal) = −836 J. ΔT(metal) = 24.0 − 100.0 = −76.0 °C. c = −836 J ÷ [(25.0 g)(−76.0 °C)] = 0.440 J/(g·°C). Choice A uses 80.0 °C (the difference in starting temperatures) as the metal's ΔT. Choice B uses the water's ΔT for the metal. Choice C uses the water's mass." },
+    { s: "When 2.00 g of NaOH (molar mass 40.00 g/mol) dissolves in 50.0 g of water in a coffee-cup calorimeter, the temperature rises by 10.2 °C. Assume the solution's specific heat is 4.18 J/(g·°C). What is ΔH of solution for NaOH?",
+      o: ["−44.3 kJ/mol", "+44.3 kJ/mol", "−2.22 kJ/mol", "−42.6 kJ/mol"], c: 0,
+      w: "q(soln) = (52.0 g)(4.18)(10.2) = 2217 J, so q(dissolving) = −2.217 kJ. n = 2.00 ÷ 40.00 = 0.0500 mol. ΔH = −2.217 kJ ÷ 0.0500 mol = −44.3 kJ/mol. Choice B has the sign of the water. Choice C forgets to divide by moles. Choice D uses only the 50.0 g of water and leaves out the dissolved NaOH." },
+    { s: "A student measures ΔH for an exothermic dissolution in a calorimeter that is not well insulated, so some energy escapes to the room. How does this affect the calculated value of ΔH?",
+      o: ["ΔH is more negative than the true value, because the energy lost is added to q.", "ΔH is unaffected, because energy is conserved.", "ΔH is less negative than the true value, because the measured temperature increase is too small.", "ΔH is positive, because energy left the system."], c: 2,
+      w: "Energy that escapes never warms the solution, so the measured ΔT is too small. Then q(soln) is too small, and q(dissolving) = −q(soln) is less negative than the true value, so |ΔH| comes out too small. Energy is conserved overall (choice B), but the calorimeter does not capture all of it." },
+    { s: "Equal masses of water, c = 4.18 J/(g·°C), and iron, c = 0.449 J/(g·°C), each absorb the same amount of energy. How do their temperature changes compare?",
+      o: ["They are equal, because the same energy was absorbed.", "The iron's temperature change is about 9.3 times that of the water.", "The water's temperature change is about 9.3 times that of the iron.", "It cannot be determined without the starting temperatures."], c: 1,
+      w: "ΔT = q ÷ (mc). With q and m the same, ΔT is inversely proportional to c, so ΔT(iron) ÷ ΔT(water) = 4.18 ÷ 0.449 = 9.3. Choice C reverses the relationship. The starting temperatures do not matter for ΔT (choice D)." },
+    { s: "50.0 mL of 1.00 M HCl and 50.0 mL of 1.00 M NaOH, both at 22.0 °C, are mixed in a calorimeter. The temperature rises by 6.7 °C. Assume 100.0 g of solution with c = 4.18 J/(g·°C). What is ΔH per mole of water formed?",
+      o: ["+56 kJ/mol", "−2.8 kJ/mol", "−28 kJ/mol", "−56 kJ/mol"], c: 3,
+      w: "q(soln) = (100.0)(4.18)(6.7) = 2.8 × 10³ J, so q(rxn) = −2.8 kJ. Moles of water formed = moles of the limiting reactant = (1.00)(0.0500) = 0.0500 mol. ΔH = −2.8 kJ ÷ 0.0500 mol = −56 kJ/mol. Choice C divides by 0.100 mol, the total moles of acid plus base. Choice B does not divide by moles." },
+    { s: "The molar heat capacity of copper is 24.5 J/(mol·°C). How much energy is needed to raise the temperature of 2.00 mol of copper by 10.0 °C?",
+      o: ["490 J", "245 J", "49.0 J", "3.11 × 10⁴ J"], c: 0,
+      w: "With moles and molar heat capacity, q = nC(m)ΔT = (2.00 mol)(24.5 J/(mol·°C))(10.0 °C) = 490 J. Choice B uses 1 mol. Choice D converts to grams (127.1 g) and then multiplies by the molar heat capacity, mixing a mass with a per-mole quantity." },
+    { s: "In a calorimetry experiment, the temperature is recorded every 30 s. It starts at 21.0 °C, rises to a maximum of 27.4 °C, then slowly falls to 26.8 °C by the end as the cup loses energy to the room. Which ΔT best represents the energy released by the reaction?",
+      o: ["5.8 °C", "27.4 °C", "6.4 °C", "0.6 °C"], c: 2,
+      w: "The maximum temperature is the closest measure of the temperature the mixture reached before losses to the room took over, so ΔT = 27.4 − 21.0 = 6.4 °C. Choice A uses the last reading, which already includes energy lost to the room. Choice B is a temperature, not a change in temperature." }
+  ];
+  Lab.quiz(Q, el("quiz"), el("score"), el("quiz-reset"));
+  Lab.nav("6.4");
+
+  // ---------- Self-check ----------
+  (function () {
+    var save = JSON.parse(JSON.stringify(S));
+    function chk(name, got, exp, tol) { if (!(Math.abs(got - exp) <= tol)) console.error("Self-check: " + name + " = " + got + ", expected " + exp); }
+    // 50.0 g Fe at 100.0 °C into 100.0 g water at 22.0 °C -> Tf = 25.98 °C, c from data ≈ 0.449
+    S.mode = "m"; S.unk = false; S.metal = "fe"; S.mm = 50; S.tm = 100; S.mw = 100; S.t0 = 22; S.loss = 0; S.t = T_END;
+    var o = model(); chk("Fe example Tf", o.read, 25.98, 0.005); chk("Fe example c", o.res, 0.449, 0.002);
+    // heat loss scales the recovered specific heat by (1 - L) before rounding
+    S.loss = 15; o = model(); chk("Leaky c", o.Tf > 0 ? (S.mw * CW * (o.Tf - S.t0)) / (S.mm * (S.tm - o.Tf)) : 0, 0.85 * 0.449, 1e-9);
+    // 8.00 g NH4NO3 in 100.0 g water -> dT = -5.69 °C
+    S.mode = "d"; S.salt = "nh4no3"; S.ms = 8; S.mw2 = 100; S.loss = 0; o = model(); chk("NH4NO3 dT", o.dTw, -5.69, 0.005);
+    if (Math.abs(o.res - 25.7) > 0.3) console.error("Self-check: NH4NO3 ΔH from data " + o.res);
+    // 50.0 mL + 50.0 mL of 1.00 M -> dT = +6.68 °C; 50.0 + 100.0 mL -> 4.45 °C
+    S.mode = "n"; S.va = 50; S.vb = 50; o = model(); chk("Neutralization dT", o.dTw, 6.68, 0.005); chk("ΔH neut", DH_NEUT, -55.84, 1e-9);
+    S.vb = 100; o = model(); chk("Excess base dT", o.dTw, 4.45, 0.005);
+    // every mode: q_process = -q_water
+    ["m", "d", "n"].forEach(function (m) { S.mode = m; var x = model(); if (Math.abs(x.qp + x.qw) > 1e-9) console.error("Self-check: q signs in mode " + m); });
+    for (var k in save) S[k] = save[k];
+    // quiz arithmetic
+    chk("Q1", 50.0 * 4.18 * 15.0, 3135, 1e-6);
+    chk("Q2", 50.0 * 4.18 * 4.0 / (25.0 * 76.0), 0.440, 0.0005);
+    chk("Q3", -(52.0 * 4.18 * 10.2) / 1000 / 0.0500, -44.3, 0.05);
+    chk("Q5", 4.18 / 0.449, 9.3, 0.05);
+    chk("Q6", -(100.0 * 4.18 * 6.7) / 1000 / 0.0500, -56, 0.5);
+    chk("Q7", 2.00 * 24.5 * 10.0, 490, 1e-9);
+    var cs = Q.map(function (q) { return q.c; });
+    if (cs.filter(function (c, i) { return cs.indexOf(c) === i; }).length < 4) console.error("Self-check: quiz answer letters do not vary");
+  })();
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [6], topic: "6.4", compact: true, storageKey: "topic-6.4" });</script>
+</body>
+</html>
