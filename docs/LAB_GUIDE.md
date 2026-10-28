@@ -74,3 +74,12 @@ Terms live in `assets/glossary/unit-N.js` (written separately). Each lab's Key t
 ## Checks before a lab is done
 
 Open it in headless Chromium (Playwright is installed: `require('playwright')`, `chromium.launch()`), at desktop (1280 px) and phone (390 px) widths, in light and dark (`localStorage.setItem("chem-theme","dark")`): no console errors, every scenario button and slider works, the story updates, the quiz grades, nothing overflows horizontally, and SVG text is legible. Look at a screenshot.
+
+## Lessons from Units 1–4
+
+- **Build in a self-check.** The best labs carry a small check at the end of their script that verifies their own data and logs `console.error` when something is wrong: equations balance in atoms and charge, oxidation numbers sum to the charge, conjugate pairs differ by one H⁺, computed answers match hand-typed expected values. Plant one wrong value once to confirm the check fires, then remove it.
+- **Generate, don't type, anything derivable.** Balanced equations, net ionic equations, mole tables, and worked steps should be computed from the data so they can't drift from the numbers on screen.
+- **Name the simplifications.** Where the page simplifies (H₂SO₄ treated as fully dissociating, single vs. double arrows, illustrative constants), say so in one line on the page.
+- **Scope claims need a source.** Only say "the exam does / doesn't test X" if the CED says so; otherwise phrase it as "most often tested" or leave it out. The equations sheet is at https://apcentral.collegeboard.org/media/pdf/ap-chemistry-equations-sheet.pdf.
+- **The glossary is written.** `assets/glossary/unit-N.js` has terms for every topic in all nine units; check your Key terms section shows them, and don't edit the glossary files.
+- **Keep testing compact.** View only a few screenshots and grep files rather than printing them whole; very long sessions can't be resumed if interrupted.
