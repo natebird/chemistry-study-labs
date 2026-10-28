@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catalysis Study Lab</title>
+<meta name="description" content="Compare catalyzed and uncatalyzed energy profiles, see how a lower barrier lets far more collisions succeed, and trace the catalyst through homogeneous, acid, surface and enzyme mechanisms as it is used and regenerated.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+#lab-sec > *, .lab > *, .side > *, .group > * { min-width: 0; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v.small { font-size: 1rem; }
+.note { font-size: .82rem; color: var(--muted); }
+#prof text.lbl, #dist text.lbl { paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.step { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.step .n { font-family: var(--mono); font-size: .76rem; color: var(--muted); min-width: 4.2em; }
+.step .eqn { flex: 1 1 240px; min-width: 0; white-space: normal; }
+.step .mol { font-size: .76rem; color: var(--muted); }
+.step .mol b { color: var(--accent); }
+.eqn .cat { color: var(--accent); font-weight: 700; }
+.eqn .int { color: var(--c3); font-weight: 700; }
+.kind { font-size: .9rem; }
+.ctlcard .controls { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.stat { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 860px) { .readout { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 860px) { .ctlcard .controls { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .ctlcard .controls { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 5 · Topic 5.11</span>
+  <h1>Catalysis Study Lab</h1>
+  <p class="lede">A catalyst speeds up a reaction by opening a different pathway, a new mechanism with a lower activation energy, and it comes out of that mechanism unchanged. Compare catalyzed and uncatalyzed profiles, see how many more collisions succeed, and follow the catalyst through four kinds of mechanisms as it is used and regenerated.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Catalyzed vs. uncatalyzed</h2>
+    <p>Pick a kind of catalysis. The profile overlays the uncatalyzed path (dashed) and the catalyzed path, which has one hump per step of the catalyzed mechanism. The right-hand graph shows which collisions have enough energy for each path. Adjust the barriers and temperature with the sliders. Energies are illustrative values in kJ/mol.</p>
+  </div>
+
+  <div class="card side">
+    <div class="group">
+      <div class="tag">Kind of catalysis</div>
+      <div class="scenarios" id="sc"></div>
+      <p class="kind" id="kind"></p>
+    </div>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Energy profiles <small id="prof-sub"></small></h3>
+      <svg class="chart" id="prof" role="img" aria-label="Energy profiles of the uncatalyzed path (one peak) and the catalyzed path (one peak per step), with the same reactants and products"></svg>
+      <div class="legend"><span class="l-ghost">Uncatalyzed path</span><span class="l-ad">Catalyzed path</span><span class="l-c1">E<sub>a</sub> uncatalyzed</span><span class="l-c2">E<sub>a</sub> catalyzed</span></div>
+    </div>
+    <div class="card graph-card">
+      <h3>Collision energies <small>schematic, not to scale</small></h3>
+      <svg class="chart" id="dist" role="img" aria-label="Distribution of collision energies with the two activation energies marked; the extra collisions that succeed only on the catalyzed path are shaded"></svg>
+      <p class="note">Orange: collisions that succeed either way. Green: collisions that succeed only on the catalyzed path. Real tails are far thinner; the readouts use real numbers.</p>
+    </div>
+  </div>
+
+  <div class="card side">
+    <div class="group">
+      <div class="tag">The catalyzed mechanism</div>
+      <div class="eqn" id="overall"></div>
+      <div class="group" id="steps"></div>
+      <p class="note" id="tracker"></p>
+    </div>
+  </div>
+
+  <div class="card side ctlcard">
+    <div class="controls">
+      <div class="ctl">
+        <label for="s-eu"><span>E<sub>a</sub>, uncatalyzed</span> <output id="o-eu"></output></label>
+        <input type="range" id="s-eu" min="30" max="200" step="5">
+        <span class="hint">Single-step path</span>
+      </div>
+      <div class="ctl">
+        <label for="s-ec"><span>E<sub>a</sub>, catalyzed</span> <output id="o-ec"></output></label>
+        <input type="range" id="s-ec" min="10" max="190" step="5">
+        <span class="hint">Highest barrier on the new path</span>
+      </div>
+      <div class="ctl">
+        <label for="s-dh"><span>ΔH (both paths)</span> <output id="o-dh"></output></label>
+        <input type="range" id="s-dh" min="-200" max="100" step="5">
+        <span class="hint">Set by reactants and products</span>
+      </div>
+      <div class="ctl">
+        <label for="s-t"><span>Temperature</span> <output id="o-t"></output></label>
+        <input type="range" id="s-t" min="250" max="400" step="2">
+        <span class="hint">Same for both paths</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">E<sub>a</sub> uncatalyzed → catalyzed</div><div class="v small" id="r-ea"></div><div class="sub" id="r-ea2"></div></div>
+    <div class="stat"><div class="k">ΔH</div><div class="v small" id="r-dh"></div><div class="sub">unchanged by the catalyst</div></div>
+    <div class="stat"><div class="k">Successful collisions</div><div class="v small" id="r-f"></div><div class="sub" id="r-f2"></div></div>
+    <div class="stat"><div class="k">Catalyst at the end</div><div class="v small" id="r-cat"></div><div class="sub" id="r-cat2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">Simplifications: the catalyzed profile is a sketch with its first step drawn as the largest barrier; the factor of extra successful collisions is estimated with e<sup>−E<sub>a</sub>/RT</sup> and ignores any change in how often collisions happen or how well they are oriented. Arrhenius-type calculations are not assessed on the AP exam.</p>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">How it works</span><h3>A new path, not a lower hill</h3><p>A catalyst does not push down the original barrier. It provides a different mechanism whose highest barrier is lower, and/or it increases the number of effective collisions, for example by holding reactants in a good orientation.</p></div>
+    <div class="card"><span class="tag">Used and regenerated</span><h3>Net amount unchanged</h3><p>The catalyst is often consumed in the rate-determining step and regenerated in a later step, so its net concentration stays constant. Because it can be a reactant in the slow step, it can appear in the rate law.</p></div>
+    <div class="card"><span class="tag">Same start and finish</span><h3>ΔH does not change</h3><p>Reactants and products are the same with or without the catalyst, so ΔH is the same. Only the path between them, and the activation energy, changes. The forward and reverse barriers drop by the same amount.</p></div>
+    <div class="card"><span class="tag">Binding</span><h3>Catalyst–reactant intermediates</h3><p>Many catalysts, including most enzymes, bind the reactant to form a new intermediate (like an enzyme–substrate complex) that is oriented well or reacts with a lower barrier.</p></div>
+    <div class="card"><span class="tag">Acid–base catalysis</span><h3>Proton on, proton off</h3><p>An acid catalyst donates H<sup>+</sup> to a reactant (or a base removes one), creating a new, more reactive intermediate. The proton is returned in a later step.</p></div>
+    <div class="card"><span class="tag">Surface catalysis</span><h3>Bonding to a surface</h3><p>Reactants bind to (adsorb on) a solid surface, such as nickel or platinum, where bonds like H–H are weakened or broken. New bound intermediates react on the surface, and the product leaves, freeing the site.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Four kinds of catalysis</h2>
+    <p>Generated from the mechanisms in the lab: where the catalyst is used, where it comes back, and what the new intermediates are.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Kind</th><th>Overall reaction</th><th>Catalyst</th><th>Used in</th><th>Regenerated in</th><th>New intermediates</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Catalysis on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Say the catalyst provides an alternative reaction pathway (a different mechanism) with a lower activation energy.</li>
+        <li>Connect to collisions: with a lower E<sub>a</sub>, a greater fraction of collisions have enough energy, so the rate increases.</li>
+        <li>Identify a catalyst in a mechanism by its pattern: consumed in an early step and regenerated in a later step, absent from the overall equation.</li>
+        <li>When sketching, keep the reactant and product levels the same for both paths and make the catalyzed path's highest barrier lower. It may have more peaks.</li>
+        <li>For surface or enzyme catalysis, describe the reactant binding to the catalyst to form an intermediate.</li>
+        <li>If a catalyst appears in the rate law, explain that it is a reactant in the rate-determining step even though it is regenerated.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying a catalyst "lowers the activation energy of the reaction" without mentioning the new pathway or mechanism.</li>
+        <li>Saying a catalyst changes ΔH, or drawing the catalyzed products at a different level.</li>
+        <li>Saying a catalyst is not used up "because it does not react." It does react; it is regenerated.</li>
+        <li>Confusing a catalyst with an intermediate: catalysts are there at the start, intermediates are not.</li>
+        <li>Claiming a catalyst gives the particles more kinetic energy or raises the temperature.</li>
+        <li>Thinking a catalyst only speeds up the forward reaction. The reverse barrier is lowered by the same amount.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 5.11. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-5.html">Unit 5 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var R_J = Lab.CONST.R_J;
+
+  // ---------- Kinds of catalysis ----------
+  // Steps: r, p as { species: coefficient }. names: display labels for species that are not plain formulas.
+  // eu, ec, dh: illustrative barriers and ΔH (kJ/mol). cat: hand-typed catalyst (self-check). check: false skips the atom-balance check (enzyme symbols).
+  var SC = {
+    homo: { name: "Homogeneous: I⁻ and H₂O₂", eu: 75, ec: 55, dh: -195, cat: "I^-", check: true,
+      kind: "The catalyst, I<sup>−</sup>, is dissolved in the same solution as the reactant (same phase). It takes an oxygen atom from one H<sub>2</sub>O<sub>2</sub> to form the intermediate IO<sup>−</sup>, which then reacts with a second H<sub>2</sub>O<sub>2</sub>.",
+      overall: { r: { H2O2: 2 }, p: { H2O: 2, O2: 1 } },
+      steps: [ { r: { H2O2: 1, "I^-": 1 }, p: { H2O: 1, "IO^-": 1 } }, { r: { H2O2: 1, "IO^-": 1 }, p: { H2O: 1, O2: 1, "I^-": 1 } } ] },
+    acid: { name: "Acid–base: HCOOH with H⁺", eu: 130, ec: 85, dh: 30, cat: "H^+", check: true,
+      kind: "An acid catalyst donates H<sup>+</sup> to formic acid. The protonated intermediate loses water much more easily than neutral HCOOH would, and the last step gives the proton back.",
+      overall: { r: { HCOOH: 1 }, p: { CO: 1, H2O: 1 } },
+      steps: [ { r: { HCOOH: 1, "H^+": 1 }, p: { "HCOOH2^+": 1 } }, { r: { "HCOOH2^+": 1 }, p: { "HCO^+": 1, H2O: 1 } }, { r: { "HCO^+": 1 }, p: { CO: 1, "H^+": 1 } } ] },
+    surf: { name: "Surface: C₂H₄ + H₂ on Ni", eu: 180, ec: 60, dh: -135, cat: "Ni", check: true,
+      kind: "Gas molecules bind to sites on a solid nickel surface (a different phase). H<sub>2</sub> splits into H atoms bonded to the surface, ethene bonds to the surface too, and the bound species combine one H at a time before ethane leaves.",
+      names: { Ni: "Ni(surface site)", NiH: "H–Ni", NiC2H4: "C<sub>2</sub>H<sub>4</sub>–Ni", NiC2H5: "C<sub>2</sub>H<sub>5</sub>–Ni" },
+      overall: { r: { C2H4: 1, H2: 1 }, p: { C2H6: 1 } },
+      steps: [ { r: { H2: 1, Ni: 2 }, p: { NiH: 2 } }, { r: { C2H4: 1, Ni: 1 }, p: { NiC2H4: 1 } }, { r: { NiC2H4: 1, NiH: 1 }, p: { NiC2H5: 1, Ni: 1 } }, { r: { NiC2H5: 1, NiH: 1 }, p: { C2H6: 1, Ni: 2 } } ] },
+    enz: { name: "Enzyme: E + S", eu: 90, ec: 40, dh: -40, cat: "E", check: false,
+      kind: "The substrate S binds in the enzyme's active site to form the enzyme–substrate complex ES, a new intermediate in which the substrate is held in a favorable orientation and reacts with a lower barrier. The product leaves and the enzyme is free again.",
+      names: { E: "E (enzyme)", S: "S (substrate)", ES: "ES (complex)", P: "P (product)" },
+      overall: { r: { S: 1 }, p: { P: 1 } },
+      steps: [ { r: { E: 1, S: 1 }, p: { ES: 1 }, rev: true }, { r: { ES: 1 }, p: { E: 1, P: 1 } } ] }
+  };
+  var ORDER = ["homo", "acid", "surf", "enz"];
+  var S = { key: "homo", eu: 75, ec: 55, dh: -100, T: 298 };
+
+  // ---------- Mechanism helpers ----------
+  function label(m, s) { return (m.names && m.names[s]) || Lab.fmla(s); }
+  function speciesOf(m) {
+    var out = [];
+    m.steps.forEach(function (st) { [st.r, st.p].forEach(function (o) { Object.keys(o).forEach(function (s) { if (out.indexOf(s) < 0) out.push(s); }); }); });
+    return out;
+  }
+  function netOf(m) {
+    var n = {};
+    m.steps.forEach(function (st) {
+      Object.keys(st.r).forEach(function (s) { n[s] = (n[s] || 0) - st.r[s]; });
+      Object.keys(st.p).forEach(function (s) { n[s] = (n[s] || 0) + st.p[s]; });
+    });
+    return n;
+  }
+  function roleOf(m, s) {
+    var n = netOf(m)[s];
+    if (n < 0) return "reactant";
+    if (n > 0) return "product";
+    for (var i = 0; i < m.steps.length; i++) { if (m.steps[i].p[s]) return "intermediate"; if (m.steps[i].r[s]) return "catalyst"; }
+    return "?";
+  }
+  function addsUp(m) {
+    var n = netOf(m), o = {}, k;
+    Object.keys(m.overall.r).forEach(function (s) { o[s] = -m.overall.r[s]; });
+    Object.keys(m.overall.p).forEach(function (s) { o[s] = m.overall.p[s]; });
+    for (k in n) if ((n[k] || 0) !== (o[k] || 0)) return false;
+    for (k in o) if ((n[k] || 0) !== (o[k] || 0)) return false;
+    return true;
+  }
+  function chargeOf(s) { var c = String(s).match(/\^(\d*)([+\-])$/); return c ? (c[2] === "-" ? -1 : 1) * (c[1] ? +c[1] : 1) : 0; }
+  function balanced(r, p) {
+    var a = {}, q = 0;
+    Object.keys(r).forEach(function (s) { var f = Lab.parseFormula(s); for (var e in f) a[e] = (a[e] || 0) + f[e] * r[s]; q += chargeOf(s) * r[s]; });
+    Object.keys(p).forEach(function (s) { var f = Lab.parseFormula(s); for (var e in f) a[e] = (a[e] || 0) - f[e] * p[s]; q -= chargeOf(s) * p[s]; });
+    for (var e in a) if (a[e] !== 0) return false;
+    return q === 0;
+  }
+  function sideHTML(m, o, mark) {
+    return Object.keys(o).map(function (s) {
+      var r = roleOf(m, s), t = (o[s] > 1 ? o[s] : "") + label(m, s);
+      return mark && (r === "catalyst" || r === "intermediate") ? '<span class="' + (r === "catalyst" ? "cat" : "int") + '">' + t + "</span>" : t;
+    }).join(" + ");
+  }
+  function catalystInfo(m) {
+    var cat = speciesOf(m).filter(function (s) { return roleOf(m, s) === "catalyst"; })[0], used = [], back = [];
+    m.steps.forEach(function (st, i) { if (st.r[cat]) used.push(i + 1); if (st.p[cat]) back.push(i + 1); });
+    return { cat: cat, used: used, back: back, inter: speciesOf(m).filter(function (s) { return roleOf(m, s) === "intermediate"; }) };
+  }
+
+  // ---------- Energy model ----------
+  // Uncatalyzed: one smooth peak. Catalyzed: n humps; step 1 is drawn as the largest barrier, later humps step down toward the products.
+  var XS = 0.07, XE = 0.93;
+  function cosStep(t) { return (1 - Math.cos(Math.PI * Math.max(0, Math.min(1, t)))) / 2; }
+  function catLevels(ec, dh, n) {
+    var L = [0], T = [ec], I1 = 0.45 * ec + 0.4 * Math.min(dh, 0) + 0.3 * Math.max(dh, 0);
+    I1 = Math.min(I1, ec - 8);
+    for (var k = 1; k < n; k++) L.push(I1 + (dh - I1) * (k - 1) / (n - 1));
+    L.push(dh);
+    for (var j = 1; j < n; j++) { var base = Math.max(L[j], L[j + 1]); T.push(base + Math.min(0.4 * (ec - base), 0.6 * ec)); }
+    return { L: L, T: T };
+  }
+  function pathAt(x, lv) {
+    var n = lv.T.length, w = (XE - XS) / n;
+    if (x <= XS) return 0;
+    if (x >= XE) return lv.L[n];
+    var i = Math.min(n - 1, Math.floor((x - XS) / w)), x0 = XS + i * w, h = w / 2;
+    if (x <= x0 + h) return lv.L[i] + (lv.T[i] - lv.L[i]) * cosStep((x - x0) / h);
+    return lv.T[i] + (lv.L[i + 1] - lv.T[i]) * cosStep((x - x0 - h) / h);
+  }
+  function stepBarriers(lv) { return lv.T.map(function (t, i) { return t - lv.L[i]; }); }
+  function fraction(ea, T) { return Math.exp(-ea * 1000 / (R_J * T)); }
+  function steps(a) { return (a.length > 1 ? "steps " + a.slice(0, -1).join(", ") + " and " + a[a.length - 1] : "step " + a[0]); }
+  function kj(v, sign) { return (sign && v > 0 ? "+" : "") + String(v).replace("-", "−"); }
+
+  // ---------- Drawing ----------
+  var svgP = document.getElementById("prof"), svgD = document.getElementById("dist");
+  function drawProfile(m) {
+    var n = m.steps.length, lv = catLevels(S.ec, S.dh, n), unc = { L: [0, S.dh], T: [S.eu] };
+    var lo = Math.min(0, S.dh), hi = Math.max(S.eu, S.ec);
+    var y0 = Math.floor((lo - 30) / 50) * 50, y1 = Math.ceil((hi + 30) / 50) * 50, yT = [];
+    for (var v = y0; v <= y1; v += 50) yT.push(v);
+    var F = Lab.frame(svgP, { x: [0, 1], y: [y0, y1], width: 440, height: 330, xLabel: "Reaction coordinate", yLabel: "Potential energy (kJ/mol)",
+      xTicks: [], yTicks: yT, fmtY: function (v) { return String(v).replace("-", "−"); } });
+    Lab.line(F, [[0, 0], [0.62, 0]], "var(--muted)", 1, "4 4");
+    Lab.fn(F, function (x) { return pathAt(x, unc); }, "var(--ghost)", 3, "7 5", 200);
+    Lab.fn(F, function (x) { return pathAt(x, lv); }, "var(--accent)", 3.5, null, 300);
+    var xu = 0.5, xc = XS + 0.5 * (XE - XS) / n;
+    Lab.arrow(F, xu + 0.03, 0, xu + 0.03, S.eu, "var(--c1)");
+    Lab.tag(F, xu + 0.05, S.eu - (y1 - y0) * 0.03, "Eₐ = " + S.eu, "var(--c1)", "start");
+    Lab.arrow(F, xc, 0, xc, S.ec, "var(--c2)");
+    Lab.tag(F, xc - 0.015, S.ec / 2 + 4, "Eₐ = " + S.ec, "var(--c2)", "end");
+    Lab.tag(F, 0.01, -(y1 - y0) * 0.06, "Reactants", "var(--ink)", "start");
+    Lab.tag(F, 0.99, S.dh + (y1 - y0) * (S.dh > -40 ? 0.04 : -0.06), "Products", "var(--ink)", "end");
+    for (var i = 1; i < n; i++) Lab.el("circle", { cx: F.sx(XS + i * (XE - XS) / n), cy: F.sy(lv.L[i]), r: 4, fill: "var(--c3)" }, F.svg);
+    document.getElementById("prof-sub").textContent = "catalyzed path: " + n + " steps, " + (n - 1) + " intermediate" + (n > 2 ? "s" : "");
+    return lv;
+  }
+  function shape(E, T) { var s = 1.25 * T / 298; return E / (s * s) * Math.exp(-E / s); }
+  function eaToX(ea) { return 1.0 + ea / 200 * 5.4; }
+  function drawDist() {
+    var F = Lab.frame(svgD, { x: [0, 9], y: [0, 0.42], width: 440, height: 330, xLabel: "Collision energy →", yLabel: "Fraction of collisions", xTicks: [], yTicks: [] });
+    function fill(a, b, col, op) {
+      var pts = [[a, 0]]; for (var i = 0; i <= 60; i++) { var x = a + (b - a) * i / 60; pts.push([x, shape(x, S.T)]); } pts.push([b, 0]);
+      Lab.el("path", { d: pts.map(function (p, i) { return (i ? "L" : "M") + F.sx(p[0]).toFixed(1) + " " + F.sy(p[1]).toFixed(1); }).join(" ") + " Z", fill: col, opacity: op }, F.g);
+    }
+    var xu = eaToX(S.eu), xc = eaToX(S.ec);
+    fill(xc, xu, "var(--c2)", 0.35);
+    fill(xu, 9, "var(--c1)", 0.4);
+    Lab.fn(F, function (x) { return shape(x, S.T); }, "var(--accent)", 3, null, 160);
+    Lab.vline(F, xu, "var(--c1)", 2); Lab.vline(F, xc, "var(--c2)", 2);
+    Lab.tag(F, xu + 0.1, 0.39, "Eₐ uncat.", "var(--c1)", "start");
+    Lab.tag(F, xc - 0.1, 0.39, "Eₐ cat.", "var(--c2)", "end");
+    Lab.tag(F, 8.9, 0.32, S.T + " K", "var(--accent)", "end");
+  }
+
+  // ---------- Story ----------
+  function story(m, lv) {
+    var info = catalystInfo(m), fu = fraction(S.eu, S.T), fc = fraction(S.ec, S.T), n = m.steps.length, li = [];
+    li.push("<b>New pathway:</b> the uncatalyzed reaction climbs " + S.eu + " kJ/mol in one step. The catalyzed mechanism takes " + n + " steps; its largest barrier is " + S.ec + " kJ/mol, so the catalyst lowers the activation energy by " + (S.eu - S.ec) + " kJ/mol. The extra humps are the extra elementary steps.");
+    li.push("<b>Same ΔH:</b> both paths start at the reactants and end at the products, " + kj(S.dh, true) + " kJ/mol. The reverse barriers drop by the same " + (S.eu - S.ec) + " kJ/mol (from " + (S.eu - S.dh) + " to " + (S.ec - S.dh) + "), so a catalyst speeds up the reverse reaction too.");
+    li.push("<b>More successful collisions:</b> at " + S.T + " K, about " + Lab.sci(fc, 2, true) + " of collisions clear the catalyzed barrier, compared with " + Lab.sci(fu, 2, true) + " for the uncatalyzed one: roughly " + Lab.sci(fc / fu, 2) + " times as many. The temperature and the collision energies are the same; the bar is lower.");
+    li.push("<b>The catalyst, " + label(m, info.cat) + ":</b> used in " + steps(info.used) + ", regenerated in " + steps(info.back) + ". Its net amount does not change, and it does not appear in the overall equation. New intermediates involving the catalyst: " + info.inter.map(function (s) { return label(m, s); }).join(", ") + ".");
+    if (S.key === "enz") li.push("<b>Enzymes</b> hold the substrate in the active site in a favorable orientation, which both lowers the barrier and makes a larger share of collisions effective.");
+    if (S.key === "surf") li.push("<b>Surface catalysis:</b> the H–H bond (436 kJ/mol) breaks on the metal surface while new H–Ni bonds form, which is far easier than breaking it in a gas-phase collision.");
+    if (S.key === "acid") li.push("<b>Acid catalysis:</b> H<sup>+</sup> is a reactant in step 1, so if that step is rate-determining the rate law includes [H<sup>+</sup>] even though H<sup>+</sup> is a catalyst.");
+    var ap = "The catalyst provides an alternative mechanism (" + n + " steps, with " + label(m, info.cat) + " consumed in step " + info.used[0] + " and regenerated in step " + info.back[info.back.length - 1] + ") whose activation energy is lower (" + S.ec + " vs. " + S.eu + " kJ/mol). A greater fraction of collisions have energy at least E<sub>a</sub>, so the rate increases; ΔH is unchanged.";
+    return "<ul><li>" + li.join("</li><li>") + "</li></ul><p><b>AP answer:</b> " + ap + "</p>";
+  }
+
+  // ---------- Render ----------
+  var elEu = document.getElementById("s-eu"), elEc = document.getElementById("s-ec"), elDh = document.getElementById("s-dh"), elT = document.getElementById("s-t"), scBtns = {};
+  function constrain(changed) {
+    var floor = Math.max(0, S.dh) + 10;
+    if (S.ec < floor) S.ec = Math.ceil(floor / 5) * 5;
+    if (S.eu < S.ec + 10) { if (changed === "ec") S.eu = Math.min(200, S.ec + 10); else S.ec = S.eu - 10; }
+    if (S.ec < floor) { S.ec = Math.ceil(floor / 5) * 5; S.eu = Math.max(S.eu, S.ec + 10); }
+  }
+  function render() {
+    var m = SC[S.key], info = catalystInfo(m);
+    elEu.value = S.eu; elEc.value = S.ec; elDh.value = S.dh; elT.value = S.T;
+    document.getElementById("o-eu").textContent = S.eu + " kJ/mol";
+    document.getElementById("o-ec").textContent = S.ec + " kJ/mol";
+    document.getElementById("o-dh").textContent = kj(S.dh, true) + " kJ/mol";
+    document.getElementById("o-t").textContent = S.T + " K";
+    document.getElementById("kind").innerHTML = m.kind;
+    var lv = drawProfile(m); drawDist();
+    document.getElementById("overall").innerHTML = "Overall: " + sideHTML(m, m.overall.r) + " → " + sideHTML(m, m.overall.p);
+    document.getElementById("steps").innerHTML = m.steps.map(function (st, i) {
+      var tags = [];
+      if (st.r[info.cat]) tags.push("<b>catalyst used</b>");
+      if (st.p[info.cat]) tags.push("<b>catalyst regenerated</b>");
+      return '<div class="step"><span class="n">Step ' + (i + 1) + '</span><span class="eqn">' + sideHTML(m, st.r, true) + (st.rev ? " ⇌ " : " → ") + sideHTML(m, st.p, true) + '</span><span class="mol">' + tags.join(", ") + '</span></div>';
+    }).join("");
+    document.getElementById("tracker").innerHTML = '<span style="color:var(--accent);font-weight:600">Blue</span>: catalyst. <span style="color:var(--c3);font-weight:600">Purple</span>: intermediates. Both cancel when the steps are added, leaving the overall equation.';
+    var fu = fraction(S.eu, S.T), fc = fraction(S.ec, S.T);
+    document.getElementById("r-ea").textContent = S.eu + " → " + S.ec + " kJ/mol";
+    document.getElementById("r-ea2").textContent = "lowered by " + (S.eu - S.ec) + " kJ/mol";
+    document.getElementById("r-dh").textContent = kj(S.dh, true) + " kJ/mol";
+    document.getElementById("r-f").innerHTML = "× " + Lab.sci(fc / fu, 2);
+    document.getElementById("r-f2").textContent = "catalyzed vs. uncatalyzed at " + S.T + " K";
+    document.getElementById("r-cat").innerHTML = label(m, info.cat);
+    document.getElementById("r-cat2").textContent = "used in " + steps(info.used) + "; back in " + steps(info.back);
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    document.getElementById("story").innerHTML = story(m, lv);
+  }
+  function pick(k) { var m = SC[k]; S.key = k; S.eu = m.eu; S.ec = m.ec; S.dh = m.dh; S.T = 298; render(); }
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pick(k); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  elEu.addEventListener("input", function () { S.eu = +elEu.value; constrain("eu"); render(); });
+  elEc.addEventListener("input", function () { S.ec = +elEc.value; constrain("ec"); render(); });
+  elDh.addEventListener("input", function () { S.dh = +elDh.value; constrain("dh"); render(); });
+  elT.addEventListener("input", function () { S.T = +elT.value; render(); });
+  pick("homo");
+
+  document.getElementById("tbody").innerHTML = ORDER.map(function (k) {
+    var m = SC[k], info = catalystInfo(m);
+    return "<tr><td>" + m.name.split(":")[0] + "</td><td>" + sideHTML(m, m.overall.r) + " → " + sideHTML(m, m.overall.p) + "</td><td><b>" + label(m, info.cat) + "</b></td><td>" + steps(info.used) + "</td><td>" + steps(info.back) + "</td><td>" + info.inter.map(function (s) { return label(m, s); }).join(", ") + "</td></tr>";
+  }).join("");
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "A catalyst is added to a reaction mixture at constant temperature. How does the energy profile of the catalyzed pathway compare with the uncatalyzed one?",
+      o: ["The activation energy is lower and ΔH is more negative.", "The activation energy is the same, but the products are at lower energy.", "The highest barrier is lower, and the reactant and product energies are unchanged, so ΔH is the same.", "The activation energy is higher, but more collisions occur."], c: 2,
+      w: "A catalyst opens a new pathway with a lower barrier, but the reactants and products are the same substances, so their energies, and ΔH, do not change. Choices A and B both wrongly move the product level." },
+    { s: "The reaction 2Ce⁴⁺ + Tl⁺ → 2Ce³⁺ + Tl³⁺ is proposed to occur by Step 1: Ce⁴⁺ + Mn²⁺ → Ce³⁺ + Mn³⁺. Step 2: Ce⁴⁺ + Mn³⁺ → Ce³⁺ + Mn⁴⁺. Step 3: Mn⁴⁺ + Tl⁺ → Tl³⁺ + Mn²⁺. Which species is a catalyst?",
+      o: ["Mn²⁺", "Mn³⁺", "Mn⁴⁺", "Ce³⁺"], c: 0,
+      w: "Mn<sup>2+</sup> is consumed in step 1 and regenerated in step 3, and it is not in the overall equation. Mn<sup>3+</sup> and Mn<sup>4+</sup> (choices B and C) are intermediates: each is made in one step and used in a later one. Ce<sup>3+</sup> is a product." },
+    { s: "Which statement best explains why adding a catalyst increases the rate of a reaction?",
+      o: ["The catalyst increases the average kinetic energy of the reactant particles.", "The catalyst shifts the reaction to produce products with lower energy.", "The catalyst is consumed, so the reactants are used up faster.", "The catalyst provides a different reaction pathway with a lower activation energy, so a greater fraction of collisions are successful."], c: 3,
+      w: "With a lower barrier, more of the collisions at the same temperature have at least E<sub>a</sub>, so more collisions lead to reaction. Choice A describes raising the temperature, not adding a catalyst. Choice C is false: the catalyst is regenerated." },
+    { s: "In a catalyzed mechanism, the catalyst is a reactant in the rate-determining step. Which statement about the catalyst is correct?",
+      o: ["Its concentration decreases steadily until the reaction stops.", "It is consumed in one step and regenerated in a later step, so its net amount is unchanged; it may appear in the rate law.", "It cannot appear in the rate law because it is not in the overall equation.", "It is an intermediate, because it does not appear in the overall equation."], c: 1,
+      w: "Catalysts are often used in the slow step and given back afterward, so their net amount stays constant. Because they react in the slow step, their concentration can appear in the rate law (as [H<sup>+</sup>] does in many acid-catalyzed reactions). Choice C is a common trap, and choice D confuses catalysts with intermediates." },
+    { s: "Ethene reacts with hydrogen gas much faster in the presence of powdered nickel. Which statement best describes the role of the nickel?",
+      o: ["Nickel reacts with ethene to form a new product, so the overall reaction changes.", "Nickel raises the temperature of the gases so that more collisions occur.", "Nickel dissolves in the gas mixture, making it a homogeneous catalyst.", "H₂ and C₂H₄ bond to the nickel surface, forming bound intermediates that react with a lower activation energy; the surface sites are freed again at the end."], c: 3,
+      w: "This is surface (heterogeneous) catalysis: reactants adsorb on the metal, the H–H bond is broken on the surface, and the bound species react in new elementary steps before ethane leaves. The overall reaction, C<sub>2</sub>H<sub>4</sub> + H<sub>2</sub> → C<sub>2</sub>H<sub>6</sub>, is unchanged (so choice A is wrong), and the solid nickel is a different phase from the gases (so choice C is wrong)." },
+    { s: "For an acid-catalyzed reaction, the first step is HCOOH + H⁺ → HCOOH₂⁺. What does this step show about acid–base catalysis?",
+      o: ["The catalyst transfers a proton to the reactant, creating a new intermediate that reacts more easily.", "The acid is a product of the overall reaction.", "The acid lowers ΔH by donating a proton.", "The proton is permanently consumed, so more acid must be added to keep the reaction going."], c: 0,
+      w: "In acid–base catalysis a reactant gains (or loses) a proton, forming a new intermediate, here HCOOH<sub>2</sub><sup>+</sup>, and new elementary steps. The proton is returned in a later step, so choice D is wrong, and a catalyst never changes ΔH (choice C)." },
+    { s: "An enzyme speeds up the conversion of a substrate, S, to a product, P. The mechanism is E + S ⇌ ES, then ES → E + P. Which statement is correct?",
+      o: ["ES is a catalyst, because it does not appear in the overall reaction.", "E is an intermediate, because it is produced in the second step.", "ES is an intermediate in which the substrate is bound to the enzyme's active site, often in an orientation that favors reaction.", "The enzyme is consumed, so it appears in the overall reaction S + E → P."], c: 2,
+      w: "ES is formed in step 1 and used in step 2, so it is an intermediate, and binding in the active site holds the substrate in a favorable orientation. E is the catalyst: it is present at the start, used in step 1 and regenerated in step 2. Choice B looks only at step 2 and ignores the order of the steps." },
+    { s: "The energy profile of a catalyzed reaction has three peaks, while the uncatalyzed reaction has one. Which conclusion is justified?",
+      o: ["The catalyzed reaction must be slower, because it has more steps.", "The catalyzed reaction proceeds by a different mechanism with more elementary steps, and its largest barrier is lower than the uncatalyzed barrier.", "The catalyst adds energy to the system in three stages.", "The catalyzed and uncatalyzed reactions have different overall equations."], c: 1,
+      w: "Each peak is an elementary step, so the catalyst has changed the mechanism. More steps do not mean slower: what matters is that the highest barrier on the new path is lower. Choice A is the trap. The overall equation (choice D) is the same with or without the catalyst." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("5.11");
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    ORDER.forEach(function (k) {
+      var m = SC[k], info = catalystInfo(m);
+      if (!addsUp(m)) bad.push(k + " steps do not add up");
+      if (m.check) {
+        m.steps.forEach(function (st, i) { if (!balanced(st.r, st.p)) bad.push(k + " step " + (i + 1) + " unbalanced"); });
+        if (!balanced(m.overall.r, m.overall.p)) bad.push(k + " overall unbalanced");
+      }
+      if (info.cat !== m.cat) bad.push(k + " catalyst is " + info.cat);
+      if (info.used[0] >= info.back[info.back.length - 1]) bad.push(k + " catalyst regenerated before it is used");
+      if (m.ec >= m.eu) bad.push(k + " catalyzed barrier not lower");
+    });
+    // every slider combination must give a catalyzed sketch whose first step is the largest barrier and highest peak,
+    // with every peak above both neighboring levels
+    for (var n = 2; n <= 4; n++) for (var dh = -200; dh <= 100; dh += 5) for (var ec = Math.max(0, dh) + 10; ec <= 190; ec += 5) {
+      var lv = catLevels(ec, dh, n), b = stepBarriers(lv);
+      for (var i = 0; i < n; i++) {
+        if (!(lv.T[i] > lv.L[i] && lv.T[i] > lv.L[i + 1])) { bad.push("sketch peak " + n + "/" + dh + "/" + ec); i = n; }
+        else if (i > 0 && (b[i] > b[0] || lv.T[i] > lv.T[0])) { bad.push("sketch order " + n + "/" + dh + "/" + ec); i = n; }
+      }
+      if (bad.length > 5) break;
+    }
+    if (Q.map(function (q) { return q.c; }).join("") !== "20313021") bad.push("quiz keys changed");
+    if (bad.length) console.error("5.11 self-check failed: " + bad.slice(0, 8).join("; "));
+  })();
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [5], topic: "5.11", compact: true, storageKey: "topic-5.11" });</script>
+</body>
+</html>

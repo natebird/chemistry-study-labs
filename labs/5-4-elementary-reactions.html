@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elementary Reactions Study Lab</title>
+<meta name="description" content="Build elementary steps from colliding particles, read each step's rate law straight from its coefficients, count possible collision partners in a particle box to see why, and learn when the coefficient shortcut does not work.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 14px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.side .controls { grid-template-columns: 1fr 1fr; }
+.ordrow { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: .9rem; }
+.ordrow > span { min-width: 10em; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v { font-size: 1.05rem; }
+.eqn { white-space: normal; }
+.law { font-family: var(--mono); font-size: 1.05rem; background: var(--accent-soft); border-radius: 8px; padding: 8px 12px; }
+.law.warn { background: var(--bad-soft); color: var(--bad); }
+.plegend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted); }
+.plegend span { display: inline-flex; align-items: center; gap: 5px; }
+.plegend i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+.note { font-size: .82rem; color: var(--muted); }
+@media (max-width: 520px) { .side .controls { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 5 · Topic 5.4</span>
+  <h1>Elementary Reactions Study Lab</h1>
+  <p class="lede">An elementary reaction happens in one event, exactly as written: one particle falls apart, or two (rarely three) particles collide. Because the equation describes the collision itself, its coefficients give the rate law directly. Here you build elementary steps, read their rate laws, count collision partners in a particle box to see why the shortcut works, and meet the overall equations where it fails.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The collision builder</h2>
+    <p>Pick a classic step, or build your own collision from particles of X and Y. The top picture shows the event; the particle box below counts how many different groups of particles could make that collision. Double a population and watch the count, and so the rate, change by the factor the rate law predicts.</p>
+  </div>
+
+  <div class="card group">
+    <div class="tag">Classic cases</div>
+    <div class="scenarios" id="sc"></div>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>The event <small id="ev-sub"></small></h3>
+      <svg class="chart" id="ev" role="img" aria-label="Particles moving together to collide in one elementary step"></svg>
+      <div class="eqn" id="eqn"></div>
+      <div class="law" id="law"></div>
+    </div>
+    <div class="card side">
+      <div class="tag">Build a step (custom)</div>
+      <div class="ordrow"><span>Particles of X in the collision</span><div class="seg" id="seg-x" role="group" aria-label="Number of X particles"></div></div>
+      <div class="ordrow"><span>Particles of Y in the collision</span><div class="seg" id="seg-y" role="group" aria-label="Number of Y particles"></div></div>
+      <div class="ordrow"><span>Is the equation elementary?</span><div class="seg" id="seg-el" role="group" aria-label="Elementary or overall"><button type="button" data-v="1">Elementary step</button><button type="button" data-v="0">Overall reaction</button></div></div>
+      <h3 style="margin-top:4px">Particle box <small class="note" id="box-sub"></small></h3>
+      <svg class="chart" id="box" role="img" aria-label="A box of X and Y particles with lines joining each group that could collide in this step"></svg>
+      <div class="plegend"><span><i style="background:var(--c1)"></i>X</span><span><i style="background:var(--c2)"></i>Y</span><span><i style="background:var(--ghost)"></i>line = one possible collision group</span></div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-nx">X particles in the box <output id="o-nx"></output></label>
+          <input type="range" id="s-nx" min="1" max="12" step="1">
+        </div>
+        <div class="ctl">
+          <label for="s-ny">Y particles in the box <output id="o-ny"></output></label>
+          <input type="range" id="s-ny" min="1" max="12" step="1">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Molecularity</div><div class="v" id="r-mol"></div><div class="sub" id="r-mol2"></div></div>
+    <div class="stat"><div class="k">Overall order</div><div class="v" id="r-ord"></div><div class="sub" id="r-ord2"></div></div>
+    <div class="stat"><div class="k">Possible collision groups</div><div class="v" id="r-pairs"></div><div class="sub" id="r-pairs2"></div></div>
+    <div class="stat"><div class="k">If [X] doubles</div><div class="v" id="r-dbl"></div><div class="sub" id="r-dbl2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">Simplifications: the box is a frozen snapshot; counting groups stands in for how often those particles meet. Real collisions also need enough energy and the right orientation (topic 5.5), which sets the size of k but not the form of the rate law.</p>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Definition</span><h3>One event, as written</h3><p>An elementary reaction (elementary step) is a single molecular event: the particles on the left collide (or one particle breaks apart) and the particles on the right come out. Most overall reactions are made of several elementary steps, called a mechanism (topic 5.7).</p></div>
+    <div class="card"><span class="tag">The shortcut</span><h3>Coefficients become exponents</h3><p>For an elementary step only, the rate law comes from the stoichiometry of the collision: aA + bB → products has rate = k[A]<sup>a</sup>[B]<sup>b</sup>. The order in each reactant equals its coefficient.</p></div>
+    <div class="card"><span class="tag">Molecularity</span><h3>How many particles collide</h3><p>Unimolecular (one particle, first order): A → products. Bimolecular (two, second order): A + B or 2A. Termolecular (three, third order): rare, because three particles must meet at the same instant.</p></div>
+    <div class="card"><span class="tag">Why it works</span><h3>Counting meetings</h3><p>The chance that an A is at a given spot is proportional to [A]; the chance that an A and a B are there together is proportional to [A][B]. Two A's together: [A]<sup>2</sup>. So the collision frequency, and the rate, follow the coefficients.</p></div>
+    <div class="card"><span class="tag">Trap</span><h3>Overall equations are different</h3><p>You cannot read a rate law from an overall balanced equation. 2NO<sub>2</sub> + F<sub>2</sub> → 2NO<sub>2</sub>F has rate = k[NO<sub>2</sub>][F<sub>2</sub>], found by experiment. Only if a problem says a step is elementary may you use its coefficients.</p></div>
+    <div class="card"><span class="tag">Rare events</span><h3>Three at once</h3><p>Elementary steps with three or more particles colliding at once are rare, and four-particle collisions are not considered realistic. An overall equation with many reactant particles, such as 2H<sub>2</sub> + O<sub>2</sub> → 2H<sub>2</sub>O, is expected to happen in several steps (that one is in fact a chain of steps involving H, O, and OH).</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Elementary step cheat sheet</h2>
+    <p>Every row assumes the equation is a single elementary step. The rate laws and doubling factors are generated from the coefficients.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Elementary step</th><th>Molecularity</th><th>Rate law</th><th>Overall order</th><th>Double the first reactant → rate ×</th></tr></thead>
+    <tbody id="cheat"></tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Elementary reactions on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Say why you may use the coefficients: "Because this step is elementary, the rate law follows from its stoichiometry: rate = k[NO<sub>2</sub>]<sup>2</sup>."</li>
+        <li>Name the molecularity correctly: 2NO<sub>2</sub> → NO<sub>3</sub> + NO is bimolecular (two particles), even though only one kind of particle is involved.</li>
+        <li>Explain rare termolecular steps with particles: three particles must collide at the same instant, which is far less likely than two.</li>
+        <li>When a question gives only an overall equation, say the rate law must be determined experimentally.</li>
+        <li>Connect concentration to collision frequency: doubling [A] doubles how often A meets B.</li>
+        <li>Give the overall order as the sum of the coefficients of the reactants in the step.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Using coefficients of an overall equation as orders.</li>
+        <li>Including products in the rate law of an elementary step. Only the colliding reactants appear.</li>
+        <li>Calling 2A → products "unimolecular" because it has one kind of reactant. Count particles, not kinds.</li>
+        <li>Writing rate = 2k[A] for 2A → products. The coefficient becomes an exponent: rate = k[A]<sup>2</sup>.</li>
+        <li>Thinking a step with four reactant particles could be elementary.</li>
+        <li>Mixing up molecularity (a property of an elementary step) with the measured order of an overall reaction.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 5.4. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-5.html">Unit 5 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Steps ----------
+  // X, Y: reactant formulas; x, y: how many of each collide; prod: product side [formula, coefficient].
+  // elem: whether the equation is a single elementary step. exp: for an overall reaction, the experimental rate law (orders in X, Y).
+  var STEPS = {
+    o3:   { name: "O₃ → O₂ + O (unimolecular)", X: "O3", Y: null, x: 1, y: 0, prod: [["O2", 1], ["O", 1]], elem: true },
+    noo3: { name: "NO + O₃ (bimolecular)", X: "NO", Y: "O3", x: 1, y: 1, prod: [["NO2", 1], ["O2", 1]], elem: true },
+    no2:  { name: "2NO₂ → NO₃ + NO (bimolecular)", X: "NO2", Y: null, x: 2, y: 0, prod: [["NO3", 1], ["NO", 1]], elem: true },
+    ter:  { name: "2NO + O₂ (termolecular, rare)", X: "NO", Y: "O2", x: 2, y: 1, prod: [["NO2", 2]], elem: true },
+    trap: { name: "Trap: overall 2NO₂ + F₂", X: "NO2", Y: "F2", x: 2, y: 1, prod: [["NO2F", 2]], elem: false, exp: [1, 1] },
+    custom: { name: "", X: "X", Y: "Y", x: 1, y: 1, prod: [["products", 0]], elem: true }
+  };
+  var MOL = ["", "unimolecular", "bimolecular", "termolecular"];
+
+  var el = function (id) { return document.getElementById(id); };
+  function nm(f) { return f === "products" ? "products" : Lab.fmla(f); }
+  function uni(f) { return f.replace(/\d/g, function (d) { return "₀₁₂₃₄₅₆₇₈₉"[+d]; }); }
+  function coef(n) { return n > 1 ? n : ""; }
+  function C(n, r) { if (n < r) return 0; var v = 1; for (var i = 0; i < r; i++) v = v * (n - i) / (i + 1); return v; }
+
+  var S = { st: "noo3", nx: 6, ny: 6 };
+  var key = "noo3";
+  function T() { return STEPS[S.st]; }
+  function total(s) { return s.x + s.y; }
+
+  function eqnTxt(s) {
+    var L = [];
+    if (s.x) L.push(coef(s.x) + nm(s.X));
+    if (s.y) L.push(coef(s.y) + nm(s.Y));
+    var R = s.prod.map(function (p) { return (p[1] > 1 ? p[1] : "") + nm(p[0]); });
+    return L.join(" + ") + " → " + R.join(" + ");
+  }
+  function lawTxt(s, a, b) {
+    var t = "rate = k";
+    if (a) t += "[" + nm(s.X) + "]" + (a > 1 ? "<sup>" + a + "</sup>" : "");
+    if (b) t += "[" + nm(s.Y) + "]" + (b > 1 ? "<sup>" + b + "</sup>" : "");
+    return t;
+  }
+  // number of distinct groups of particles in the box that could make this collision
+  function groups(s, nx, ny) { return C(nx, s.x) * (s.y ? C(ny, s.y) : 1); }
+
+  // ---------- Event drawing ----------
+  var stop = function () {};
+  function drawEvent(p) {
+    var s = T(), svg = el("ev"), W = 440, H = 200;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var parts = [], i;
+    for (i = 0; i < s.x; i++) parts.push({ f: s.X, c: "var(--c1)" });
+    for (i = 0; i < s.y; i++) parts.push({ f: s.Y, c: "var(--c2)" });
+    var n = parts.length, cx = W / 2, cy = H / 2 + 4, R0 = 150, r = 22;
+    if (n > 3) {
+      Lab.el("text", { x: cx, y: cy, "text-anchor": "middle", "class": "lbl", style: "fill:var(--bad); font-size:14px" }, svg, n + " particles at once: not a realistic elementary step");
+      return;
+    }
+    if (!s.elem) {
+      Lab.el("text", { x: cx, y: 24, "text-anchor": "middle", "class": "lbl", style: "fill:var(--bad)" }, svg, "An overall equation does not show a single collision");
+    }
+    var e = Math.min(1, p / 0.8), flash = p > 0.8 ? (p - 0.8) / 0.2 : 0;
+    parts.forEach(function (q, j) {
+      var ang = n === 1 ? -Math.PI / 2 : (Math.PI * 2 * j / n) + (n === 2 ? 0 : -Math.PI / 2);
+      var d = n === 1 ? 0 : (R0 * (1 - e) + (r + 2) * (n === 2 ? 1 : 1.15));
+      var x = cx + Math.cos(ang) * d * (n === 2 ? 1 : 0.9), y = cy + Math.sin(ang) * d * 0.55;
+      if (n > 1 && e < 1) Lab.el("path", { d: "M" + (x + Math.cos(ang) * (r + 6)) + " " + (y + Math.sin(ang) * (r + 6) * 0.55) + " l" + (Math.cos(ang) * 22) + " " + (Math.sin(ang) * 12), stroke: "var(--ghost)", "stroke-width": 2, "stroke-dasharray": "3 3" }, svg);
+      Lab.el("circle", { cx: x, cy: y, r: r, fill: q.c, stroke: "var(--surface)", "stroke-width": 2 }, svg);
+      Lab.el("text", { x: x, y: y + 4, "text-anchor": "middle", style: "fill:var(--surface); font-weight:600; font-size:12px" }, svg, uni(q.f));
+    });
+    if (n === 1) {
+      var w = 8 * Math.sin(p * Math.PI * 6) * (1 - flash);
+      Lab.el("path", { d: "M" + (cx - 34 - w) + " " + (cy - 18) + " l-10 -8 M" + (cx + 34 + w) + " " + (cy - 18) + " l10 -8", stroke: "var(--muted)", "stroke-width": 2 }, svg);
+    }
+    if (flash > 0) Lab.el("circle", { cx: cx, cy: cy, r: 40 + 30 * flash, fill: "none", stroke: "var(--c4)", "stroke-width": 3, opacity: 1 - flash }, svg);
+    Lab.el("text", { x: cx, y: H - 8, "text-anchor": "middle", style: "fill:var(--muted)" }, svg, n === 1 ? "one particle breaks apart on its own" : n === 2 ? "two particles must meet" : "three particles must meet at the same instant");
+  }
+
+  // ---------- Particle box ----------
+  function drawBox() {
+    var s = T(), svg = el("box"), W = 440, H = 220;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    Lab.el("rect", { x: 2, y: 2, width: W - 4, height: H - 4, rx: 10, fill: "none", stroke: "var(--rule)", "stroke-width": 2 }, svg);
+    // fixed pseudo-random positions on a jittered grid so the picture is stable
+    var slots = [], cols = 8, rows = 4;
+    for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) {
+      var h = ((r * 7 + c * 13) * 2654435761 >>> 0) / 4294967296, h2 = ((r * 11 + c * 5 + 3) * 2246822519 >>> 0) / 4294967296;
+      slots.push([30 + c * 54 + (h - 0.5) * 22, 30 + r * 52 + (h2 - 0.5) * 18]);
+    }
+    var order = [5, 18, 27, 2, 12, 23, 30, 9, 16, 0, 21, 14, 7, 28, 25, 3, 19, 11, 31, 6, 13, 24, 1, 17], X = [], Y = [];
+    var useY = s.y > 0;
+    for (var i = 0; i < S.nx; i++) X.push(slots[order[i]]);
+    if (useY) for (i = 0; i < S.ny; i++) Y.push(slots[order[12 + i]]);
+    var lines = Lab.el("g", { opacity: 0.55 }, svg);
+    var n = total(s), cnt = 0, LIMIT = 220;
+    function seg(a, b) { if (cnt++ < LIMIT) Lab.el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: "var(--ghost)", "stroke-width": 1 }, lines); }
+    if (n <= 3 && s.elem) {
+      if (s.x === 1 && s.y === 1) X.forEach(function (a) { Y.forEach(function (b) { seg(a, b); }); });
+      else if (s.x === 2 && s.y === 0) X.forEach(function (a, i) { X.forEach(function (b, j) { if (j > i) seg(a, b); }); });
+      else if (s.x === 1 && s.y === 2) X.forEach(function (a) { Y.forEach(function (b, i) { Y.forEach(function (c, j) { if (j > i) { seg(a, b); seg(a, c); } }); }); });
+      else if (s.x === 2 && s.y === 1) Y.forEach(function (a) { X.forEach(function (b, i) { X.forEach(function (c, j) { if (j > i) { seg(a, b); seg(a, c); } }); }); });
+      else if (s.x === 0 && s.y === 2) Y.forEach(function (a, i) { Y.forEach(function (b, j) { if (j > i) seg(a, b); }); });
+      else if (s.x === 3 || s.y === 3) { var P = s.x === 3 ? X : Y; P.forEach(function (a, i) { P.forEach(function (b, j) { if (j > i) seg(a, b); }); }); }
+      else if (s.x === 0 && s.y === 1) Y.forEach(function (a) { Lab.el("circle", { cx: a[0], cy: a[1], r: 17, fill: "none", stroke: "var(--ghost)", "stroke-width": 1.5 }, lines); });
+    }
+    if (s.x === 1 && s.y === 0) X.forEach(function (a) { Lab.el("circle", { cx: a[0], cy: a[1], r: 17, fill: "none", stroke: "var(--ghost)", "stroke-width": 1.5 }, lines); });
+    X.forEach(function (a) { Lab.el("circle", { cx: a[0], cy: a[1], r: 10, fill: "var(--c1)", stroke: "var(--surface)", "stroke-width": 1.5 }, svg); });
+    Y.forEach(function (a) { Lab.el("circle", { cx: a[0], cy: a[1], r: 10, fill: "var(--c2)", stroke: "var(--surface)", "stroke-width": 1.5 }, svg); });
+  }
+
+  // ---------- Story ----------
+  function story() {
+    var s = T(), n = total(s), h = "", li = [];
+    var g = groups(s, S.nx, S.ny), g2 = groups(s, 2 * S.nx, S.ny);
+    h += "<p><b>" + eqnTxt(s) + "</b>" + (s.elem ? " as a single elementary step." : " as an overall reaction.") + "</p>";
+    if (n > 3) {
+      li.push("A step with " + n + " reactant particles would need " + n + " particles to collide at the same instant. That essentially never happens, so this cannot be an elementary step; a reaction like this goes through a mechanism of smaller steps.");
+    } else if (!s.elem) {
+      li.push("This is the overall equation. Its coefficients (2 and 1) do <b>not</b> give the rate law. Experiments show " + lawTxt(s, s.exp[0], s.exp[1]) + ", first order in each reactant, because the reaction happens in two steps and the first, slower step is NO<sub>2</sub> + F<sub>2</sub> → NO<sub>2</sub>F + F.");
+      li.push("The particle box is left blank of collision lines: no single collision of 2 NO<sub>2</sub> and 1 F<sub>2</sub> makes the products.");
+    } else {
+      var who = [];
+      if (s.x) who.push(s.x + " " + nm(s.X));
+      if (s.y) who.push(s.y + " " + nm(s.Y));
+      li.push("<b>" + MOL[n].charAt(0).toUpperCase() + MOL[n].slice(1) + ":</b> " + (n === 1 ? "one " + nm(s.x ? s.X : s.Y) + " particle reacts on its own, so the rate is simply proportional to how many there are: " : "the step needs " + who.join(" and ") + " to collide, so the rate is proportional to how often that group meets: ") + lawTxt(s, s.x, s.y) + ", overall order " + n + ".");
+      li.push("<b>Particle box:</b> with " + S.nx + " X" + (s.y ? " and " + S.ny + " Y" : "") + " there " + (g === 1 ? "is" : "are") + " <b>" + g + "</b> " + (n === 1 ? (g === 1 ? "particle" : "different particles") + " that could react" : (g === 1 ? "group" : "different groups") + " that could collide") + ". Doubling X to " + (2 * S.nx) + " gives " + g2 + (g > 0 ? ", × " + Lab.sig(g2 / g, 3) : " (the box has too few particles for even one complete group, so add more to see the factor)") + ". " +
+        (g === 0 ? "" : s.x === 1 ? "That is exactly × 2, matching first order in X." : s.x === 2 ? "With a few particles that is a bit more than × 4, because a particle cannot collide with itself; for the 10²³ particles in a real sample the factor is × 4, matching second order in X." : s.x === 0 ? "X is not in this step, so its population makes no difference." : "For a real sample the factor is × 8, matching third order in X."));
+      if (n === 3) li.push("Termolecular steps are rare: three particles must arrive at the same spot at the same instant. Most reactions that look like they need three particles go through two bimolecular steps instead.");
+      if (S.st === "no2") li.push("Two particles of the same substance still make a bimolecular step. The rate law is k[NO<sub>2</sub>]<sup>2</sup>, not 2k[NO<sub>2</sub>]: the coefficient becomes an exponent.");
+      if (S.st === "ter") li.push("Many textbooks treat 2NO + O<sub>2</sub> → 2NO<sub>2</sub> as termolecular because its measured rate law, k[NO]<sup>2</sup>[O<sub>2</sub>], matches; chemists still debate whether it really happens in one step.");
+    }
+    h += "<ul>" + li.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
+    var ap;
+    if (n > 3) ap = "elementary steps involving the simultaneous collision of three or more particles are rare, and four is not realistic, so this equation must be the sum of several steps.";
+    else if (!s.elem) ap = "the rate law of an overall reaction cannot be written from its balanced equation; it must be determined experimentally. Only for an elementary step do the coefficients give the orders.";
+    else ap = "because the step is elementary, its rate law follows from the stoichiometry of the particles taking part: " + lawTxt(s, s.x, s.y) + ". " + (n === 1 ? "Each particle reacts on its own, so the rate is proportional to how many there are per liter." : "The frequency of the collision is proportional to the concentration of each particle that must be present, once for each particle.");
+    h += "<p><b>AP answer:</b> " + ap + "</p>";
+    return h;
+  }
+
+  function render(anim) {
+    var s = T(), n = total(s);
+    el("eqn").innerHTML = eqnTxt(s) + (s.elem ? "   (elementary step)" : "   (overall reaction)");
+    var L = el("law");
+    if (n > 3) { L.className = "law warn"; L.innerHTML = "Not an elementary step: too many particles"; }
+    else if (!s.elem) { L.className = "law warn"; L.innerHTML = "Can't use coefficients. Measured: " + lawTxt(s, s.exp[0], s.exp[1]); }
+    else { L.className = "law"; L.innerHTML = lawTxt(s, s.x, s.y); }
+    el("ev-sub").textContent = n <= 3 ? MOL[n] : "";
+    segX.forEach(function (b, i) { b.setAttribute("aria-pressed", S.st === "custom" && i === s.x ? "true" : "false"); });
+    segY.forEach(function (b, i) { b.setAttribute("aria-pressed", S.st === "custom" && i === s.y ? "true" : "false"); });
+    el("seg-el").querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", (b.dataset.v === "1") === s.elem ? "true" : "false"); });
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", key === k ? "true" : "false"); });
+    el("s-nx").value = S.nx; el("s-ny").value = S.ny;
+    el("o-nx").textContent = S.nx; el("o-ny").textContent = S.ny;
+    el("s-ny").disabled = !s.y;
+    el("o-ny").textContent = s.y ? S.ny : "not in step";
+    el("box-sub").innerHTML = "X = " + nm(s.X || "X") + (s.y ? ", Y = " + nm(s.Y) : "");
+    drawBox();
+    var ok = n <= 3 && s.elem, g = groups(s, S.nx, S.ny), g2 = groups(s, 2 * S.nx, S.ny);
+    el("r-mol").textContent = n > 3 ? "not elementary" : !s.elem ? "n/a (overall)" : MOL[n];
+    el("r-mol2").textContent = n > 3 ? n + " particles at once" : !s.elem ? "molecularity applies only to elementary steps" : n + " particle" + (n > 1 ? "s" : "") + " in the event";
+    var o = ok ? n : !s.elem && n <= 3 ? s.exp[0] + s.exp[1] : null;
+    el("r-ord").textContent = o == null ? "—" : ["zero", "first", "second", "third"][o];
+    el("r-ord2").textContent = ok ? "= sum of the coefficients" : !s.elem && n <= 3 ? "from experiment, not coefficients" : "";
+    el("r-pairs").textContent = ok ? g : "—";
+    el("r-pairs2").innerHTML = ok ? "in this snapshot of the box" : "";
+    var f = ok ? Math.pow(2, s.x) : !s.elem && n <= 3 ? Math.pow(2, s.exp[0]) : null;
+    el("r-dbl").textContent = f == null ? "—" : "rate × " + f;
+    el("r-dbl2").innerHTML = f == null ? "" : ok ? "2<sup>" + s.x + "</sup>, from the coefficient of X" : "from the measured order, not the coefficient 2";
+    el("story").innerHTML = story();
+    stop();
+    if (anim) stop = Lab.animate(1100, drawEvent); else drawEvent(1);
+  }
+
+  // ---------- Controls ----------
+  var segX = [], segY = [];
+  [0, 1, 2, 3].forEach(function (k) {
+    var a = document.createElement("button"); a.type = "button"; a.textContent = k;
+    a.addEventListener("click", function () { custom(k, null); }); el("seg-x").appendChild(a); segX.push(a);
+    var b = document.createElement("button"); b.type = "button"; b.textContent = k;
+    b.addEventListener("click", function () { custom(null, k); }); el("seg-y").appendChild(b); segY.push(b);
+  });
+  function custom(x, y) {
+    var c = STEPS.custom, s = T();
+    if (S.st !== "custom") { c.x = s.x; c.y = s.y; c.elem = true; }
+    if (x != null) c.x = x;
+    if (y != null) c.y = y;
+    if (c.x + c.y === 0) { if (x != null) c.y = 1; else c.x = 1; }
+    S.st = "custom"; key = null; render(true);
+  }
+  el("seg-el").querySelectorAll("button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var want = b.dataset.v === "1";
+      if (want === T().elem) return;
+      if (want) { go(S.st === "trap" ? "ter" : S.st); return; }
+      go("trap");
+    });
+  });
+  el("s-nx").addEventListener("input", function () { S.nx = +el("s-nx").value; render(false); });
+  el("s-ny").addEventListener("input", function () { S.ny = +el("s-ny").value; render(false); });
+
+  var scBtns = {};
+  ["o3", "noo3", "no2", "ter", "trap"].forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = STEPS[k].name;
+    b.addEventListener("click", function () { go(k); });
+    el("sc").appendChild(b); scBtns[k] = b;
+  });
+  function go(k) { S.st = k; key = k; S.nx = k === "ter" || k === "trap" ? 4 : 6; S.ny = k === "ter" || k === "trap" ? 3 : 6; render(true); }
+
+  // ---------- Cheat sheet (generated) ----------
+  (function () {
+    var rows = ["o3", "noo3", "no2", "ter"].map(function (k) { return STEPS[k]; });
+    rows.push({ X: "H", Y: "Br2", x: 1, y: 1, prod: [["HBr", 1], ["Br", 1]], elem: true });
+    rows.push({ X: "I", Y: null, x: 2, y: 0, prod: [["I2", 1]], elem: true });
+    el("cheat").innerHTML = rows.map(function (s) {
+      var n = total(s);
+      return "<tr><td>" + eqnTxt(s) + "</td><td>" + MOL[n] + "</td><td><b>" + lawTxt(s, s.x, s.y) + "</b></td><td>" + n + "</td><td>× " + Math.pow(2, s.x) + "</td></tr>";
+    }).join("");
+  })();
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    Object.keys(STEPS).forEach(function (k) {
+      var s = STEPS[k]; if (k === "custom") return;
+      var L = {}, R = {};
+      [[s.X, s.x], [s.Y, s.y]].forEach(function (p) { if (!p[0] || !p[1]) return; var c = Lab.parseFormula(p[0]); for (var e in c) L[e] = (L[e] || 0) + p[1] * c[e]; });
+      s.prod.forEach(function (p) { var c = Lab.parseFormula(p[0]); for (var e in c) R[e] = (R[e] || 0) + p[1] * c[e]; });
+      Object.keys(L).concat(Object.keys(R)).forEach(function (e) { if ((L[e] || 0) !== (R[e] || 0)) bad.push(k + " unbalanced in " + e); });
+    });
+    // pair counting: for large populations, doubling must approach 2^(coefficient)
+    [[1, 1], [2, 0], [2, 1], [1, 2]].forEach(function (c) {
+      var s = { x: c[0], y: c[1] }, r = groups(s, 2e6, 1e6) / groups(s, 1e6, 1e6);
+      if (Math.abs(r - Math.pow(2, c[0])) > 1e-3) bad.push("group count " + c);
+    });
+    if (groups({ x: 1, y: 1 }, 6, 6) !== 36 || groups({ x: 2, y: 0 }, 6, 6) !== 15) bad.push("box counts");
+    if (bad.length) console.error("5.4 self-check failed: " + bad.join("; "));
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "The elementary step NO₂(g) + NO₂(g) → NO₃(g) + NO(g) occurs in the mechanism for a reaction. What is the rate law for this step?",
+      o: ["rate = k[NO₂]", "rate = 2k[NO₂]", "rate = k[NO₃][NO]", "rate = k[NO₂]²"], c: 3,
+      w: "For an elementary step the rate law follows from the colliding particles: two NO₂ particles collide, so rate = k[NO₂]². Choice B turns the coefficient into a multiplier instead of an exponent, and choice C uses the products." },
+    { s: "Assuming 2NO(g) + Br₂(g) → 2NOBr(g) occurs in a single elementary step, which describes the step?",
+      o: ["Bimolecular; rate = k[NO][Br₂]", "Termolecular; rate = k[NO]²[Br₂]", "Bimolecular; rate = k[NO]²[Br₂]", "Termolecular; rate = k[NOBr]²"], c: 1,
+      w: "Three particles (2 NO and 1 Br₂) would have to collide at once, so the step is termolecular, and the rate law follows its coefficients: k[NO]²[Br₂], third order overall. Choice A counts kinds of particles instead of particles." },
+    { s: "Which statement best explains why elementary steps that involve three reactant particles are rare?",
+      o: ["Three particles never have enough combined energy to react.", "Three particles rarely collide at exactly the same instant, compared with the frequency of two-particle collisions.", "Termolecular steps always have the largest activation energy.", "Three-particle steps would violate conservation of mass."], c: 1,
+      w: "A termolecular step needs all three particles to arrive at the same place at the same moment, which is far less likely than a two-particle collision. Energy (choices A and C) is a separate requirement, and such a step can be balanced like any other (choice D)." },
+    { s: "The overall reaction 2NO₂(g) + F₂(g) → 2NO₂F(g) is studied. A student claims the rate law must be rate = k[NO₂]²[F₂]. Which response is correct?",
+      o: ["The claim is correct because rate laws always follow the balanced equation.", "The claim is correct only if the reaction is zero order in F₂.", "The rate law of an overall reaction must be determined by experiment; coefficients give orders only for an elementary step.", "The claim is incorrect because products must appear in the rate law."], c: 2,
+      w: "Coefficients give the rate law only for a single elementary step. This overall reaction is measured to be rate = k[NO₂][F₂], first order in each reactant. Choice A is the trap the student fell into, and choice D confuses a rate law with an equilibrium expression." },
+    { s: "For the elementary step A + B → C, [A] is doubled and [B] is tripled at constant temperature. By what factor does the rate change?",
+      o: ["× 6", "× 5", "× 12", "× 18"], c: 0,
+      w: "Rate = k[A][B] for this bimolecular step, so the rate changes by 2 × 3 = 6. Choice B adds the factors, and choice D would need the step to be second order in B." },
+    { s: "Two containers of equal volume hold particles for the elementary step X + Y → XY. Container 1 holds 4 X and 4 Y particles; container 2 holds 8 X and 4 Y particles, at the same temperature. How does the rate in container 2 compare with container 1?",
+      o: ["The same, because the number of Y particles is the same", "Four times as fast, because there are twice as many X particles", "Half as fast, because the X particles get in each other's way", "Twice as fast, because each Y has twice as many X particles it can collide with"], c: 3,
+      w: "Rate = k[X][Y]. Doubling [X] with [Y] unchanged doubles the number of possible X–Y collisions (32 instead of 16), so the rate doubles. Choice B would be right only if the step were second order in X." },
+    { s: "Which elementary step is first order overall?",
+      o: ["N₂O₄(g) → 2NO₂(g)", "2NO₂(g) → N₂O₄(g)", "NO(g) + O₃(g) → NO₂(g) + O₂(g)", "H(g) + H(g) + M(g) → H₂(g) + M(g)"], c: 0,
+      w: "Only a unimolecular step, with a single reactant particle, is first order: rate = k[N₂O₄]. Choices B and C are bimolecular (second order), and choice D is termolecular (third order), even though M is unchanged." },
+    { s: "Which statement about the elementary step 2I(g) → I₂(g) is correct?",
+      o: ["It is unimolecular because only iodine atoms are involved, so rate = k[I].", "It is bimolecular, and rate = k[I₂].", "It is bimolecular, and rate = k[I]².", "It is unimolecular, and rate = k[I]²."], c: 2,
+      w: "Two I atoms must collide, so the step is bimolecular, and its rate law follows the coefficient: rate = k[I]². Molecularity counts particles, not kinds of particles (choices A and D), and the product does not appear in the rate law (choice B)." }
+  ];
+
+  go("noo3");
+  Lab.quiz(Q, el("quiz"), el("score"), el("quiz-reset"));
+  Lab.nav("5.4");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [5], topic: "5.4", compact: true, storageKey: "topic-5.4" });</script>
+</body>
+</html>

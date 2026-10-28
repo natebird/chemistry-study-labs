@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Concentration Changes Over Time Study Lab</title>
+<meta name="description" content="Plot concentration, ln of concentration, and 1/concentration against time to find which graph is linear, read the rate constant from its slope, use the integrated rate laws, and see why only a first-order reaction has a constant half-life.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.side .controls { grid-template-columns: 1fr 1fr; }
+.ctl[hidden], .group[hidden] { display: none; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v { font-size: 1.05rem; }
+.tests { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.tests .card { padding: 12px; display: grid; gap: 6px; align-content: start; }
+.tests .card.lin { border-color: var(--good); box-shadow: 0 0 0 2px var(--good-soft); }
+.tests h3 { font-size: 1rem; display: flex; justify-content: space-between; gap: 6px; flex-wrap: wrap; align-items: baseline; }
+.tests h3 small { font-family: var(--mono); font-size: .76rem; color: var(--muted); font-weight: 500; }
+.tests .fit { font-size: .82rem; color: var(--muted); }
+.tests .fit b { color: var(--good); }
+.calc .row span:last-child { font-family: var(--mono); font-size: .84rem; text-align: right; }
+.calc .row span:first-child { min-width: 0; }
+.fb { font-size: .9rem; } .fb.ok { color: var(--good); } .fb.no { color: var(--bad); }
+.note { font-size: .82rem; color: var(--muted); }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+@media (max-width: 860px) { .tests { grid-template-columns: 1fr; } }
+.eqn { white-space: normal; }
+@media (max-width: 520px) { .side .controls { grid-template-columns: 1fr; } .calc .row { flex-direction: column; gap: 2px; } .calc .row span:last-child { text-align: left; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 5 · Topic 5.3</span>
+  <h1>Concentration Changes Over Time Study Lab</h1>
+  <p class="lede">A concentration–time data set holds the rate law inside it. Graph [A], ln[A], and 1/[A] against time: whichever plot is a straight line tells you the order (zero, first, or second), and its slope gives the rate constant. Here you run the three-plot test on classic reactions, use the integrated rate laws from the equation sheet, and watch half-lives.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The three-plot test</h2>
+    <p>Pick a reaction. The big graph shows the data and the half-lives; the three small graphs replot the same data. The straight one (outlined in green, R² closest to 1) identifies the order. Slide the time cursor to use the integrated rate law. In the mystery run, decide the order yourself.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3><span id="g-title"></span> <small id="g-sub"></small></h3>
+      <svg class="chart" id="g" role="img" aria-label="Concentration versus time data with the fitted curve and successive half-lives marked"></svg>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Classic cases</div>
+        <div class="scenarios" id="sc"></div>
+        <div class="eqn" id="eqn"></div>
+      </div>
+      <div class="group" id="g-order">
+        <div class="tag">Order (free controls)</div>
+        <div class="seg" id="ord-seg" role="group" aria-label="Reaction order"></div>
+      </div>
+      <div class="group" id="g-claim" hidden>
+        <div class="tag">Your claim for the mystery data</div>
+        <div class="btnrow"><div class="seg" id="claim-seg" role="group" aria-label="Your claim for the order"></div><button type="button" id="b-new">New mystery</button></div>
+        <div class="fb" id="fb" aria-live="polite"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-a0">Starting amount <output id="o-a0"></output></label>
+          <input type="range" id="s-a0" min="0.5" max="2" step="0.25">
+          <span class="hint">× the case's starting value</span>
+        </div>
+        <div class="ctl">
+          <label for="s-k">Rate constant <output id="o-k"></output></label>
+          <input type="range" id="s-k" min="0.5" max="2" step="0.25">
+          <span class="hint">× the case's k</span>
+        </div>
+        <div class="ctl">
+          <label for="s-t">Time cursor <output id="o-t"></output></label>
+          <input type="range" id="s-t" min="0" max="100" step="1">
+          <span class="hint">For the integrated rate law below</span>
+        </div>
+        <div class="ctl">
+          <label>Measurement scatter</label>
+          <div class="seg" id="noise-seg" role="group" aria-label="Measurement scatter"><button type="button" data-v="0">Off</button><button type="button" data-v="1">±2%</button></div>
+          <span class="hint">Real data never sit exactly on a line</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tests" id="tests">
+    <div class="card" id="c0"><h3>[A] vs. t <small>zero order if linear</small></h3><svg class="chart" id="p0" role="img" aria-label="Concentration versus time"></svg><div class="fit" id="f0"></div></div>
+    <div class="card" id="c1"><h3>ln[A] vs. t <small>first order if linear</small></h3><svg class="chart" id="p1" role="img" aria-label="Natural log of concentration versus time"></svg><div class="fit" id="f1"></div></div>
+    <div class="card" id="c2"><h3>1/[A] vs. t <small>second order if linear</small></h3><svg class="chart" id="p2" role="img" aria-label="Reciprocal of concentration versus time"></svg><div class="fit" id="f2"></div></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Order (from the linear plot)</div><div class="v" id="r-ord"></div><div class="sub" id="r-ord2"></div></div>
+    <div class="stat"><div class="k">Rate constant from the slope</div><div class="v" id="r-k"></div><div class="sub" id="r-k2"></div></div>
+    <div class="stat"><div class="k">Half-lives on the graph</div><div class="v" id="r-half"></div><div class="sub" id="r-half2"></div></div>
+    <div class="stat"><div class="k">Amount at the cursor</div><div class="v" id="r-at"></div><div class="sub" id="r-at2"></div></div>
+  </div>
+
+  <div class="card calc" id="calc" aria-live="polite"></div>
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">Simplifications: data are generated from the integrated rate law (with optional random scatter) and rate constants are illustrative or approximate. Only the first-order half-life equation, t<sub>½</sub> = 0.693/k, is on the AP equation sheet; this page reads zero- and second-order half-lives off the curve to show that they change.</p>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">The test</span><h3>Find the straight line</h3><p>Plot [A], ln[A], and 1/[A] against time. Exactly one should be linear. [A] linear means zero order, ln[A] linear means first order, 1/[A] linear means second order in A.</p></div>
+    <div class="card"><span class="tag">Slope → k</span><h3>Watch the sign</h3><p>Zero order: slope of [A] vs. t = −k. First order: slope of ln[A] vs. t = −k. Second order: slope of 1/[A] vs. t = +k, because 1/[A] grows as [A] shrinks. k itself is always positive.</p></div>
+    <div class="card"><span class="tag">Equation sheet</span><h3>Integrated rate laws</h3><p>[A]<sub>t</sub> − [A]<sub>0</sub> = −kt; ln[A]<sub>t</sub> − ln[A]<sub>0</sub> = −kt; 1/[A]<sub>t</sub> − 1/[A]<sub>0</sub> = kt. Each is a straight line y = mx + b in the variable that makes it linear. Use them to find a concentration at a time, or the time to reach a concentration.</p></div>
+    <div class="card"><span class="tag">First order</span><h3>Constant half-life</h3><p>For a first-order reaction the half-life is the same no matter how much is left: t<sub>½</sub> = 0.693/k. After n half-lives, (½)<sup>n</sup> of the starting amount remains. For zero and second order, the half-life changes as the reaction goes on.</p></div>
+    <div class="card"><span class="tag">Nuclear</span><h3>Radioactive decay</h3><p>Every radioactive decay is first order: each nucleus has the same chance of decaying per unit time, so the decay rate is proportional to the number of nuclei. That is why each isotope has a fixed half-life.</p></div>
+    <div class="card"><span class="tag">Shape of [A] vs. t</span><h3>Curves you can recognize</h3><p>Zero order: a straight downward line that hits zero. First order: an exponential decay. Second order: drops fast at first, then has a long, slow tail. Only the linear-plot test proves the order; shapes just hint at it.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Integrated rate law cheat sheet</h2>
+    <p>Everything in the first three rows after the rate law is on the AP equation sheet or follows directly from it.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th></th><th>Zero order</th><th>First order</th><th>Second order</th></tr></thead>
+    <tbody>
+      <tr><td>Rate law</td><td>rate = k</td><td>rate = k[A]</td><td>rate = k[A]<sup>2</sup></td></tr>
+      <tr><td>Integrated form</td><td>[A]<sub>t</sub> − [A]<sub>0</sub> = −kt</td><td>ln[A]<sub>t</sub> − ln[A]<sub>0</sub> = −kt</td><td>1/[A]<sub>t</sub> − 1/[A]<sub>0</sub> = kt</td></tr>
+      <tr><td>Linear plot</td><td><b>[A] vs. t</b></td><td><b>ln[A] vs. t</b></td><td><b>1/[A] vs. t</b></td></tr>
+      <tr><td>Slope</td><td>−k</td><td>−k</td><td>+k</td></tr>
+      <tr><td>Units of k</td><td>M s<sup>−1</sup></td><td>s<sup>−1</sup></td><td>M<sup>−1</sup> s<sup>−1</sup></td></tr>
+      <tr><td>Half-life</td><td>gets shorter as [A] falls</td><td><b>constant: t<sub>½</sub> = 0.693/k</b></td><td>gets longer as [A] falls</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Concentration–time data on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Justify the order with the graph: "The plot of ln[A] versus time is linear, so the reaction is first order with respect to A."</li>
+        <li>Get k from the slope with the right sign and units: "slope = −0.0115 s<sup>−1</sup>, so k = 0.0115 s<sup>−1</sup>."</li>
+        <li>For a first-order half-life, write t<sub>½</sub> = 0.693/k and substitute with units.</li>
+        <li>Use the integrated law that matches the order, and keep ln and log separate: the equation sheet uses ln.</li>
+        <li>For "how long until 12.5% remains" with first order, count half-lives: 100 → 50 → 25 → 12.5% is three half-lives.</li>
+        <li>When data show equal times for each halving, say so: a constant half-life is evidence of first order.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Reporting k as negative because the slope of ln[A] vs. t is negative.</li>
+        <li>Choosing the order from the shape of the [A] vs. t curve alone. A first- and a second-order curve can look alike over a short time.</li>
+        <li>Using log (base 10) instead of ln.</li>
+        <li>Using t<sub>½</sub> = 0.693/k for a reaction that is not first order.</li>
+        <li>Forgetting that the 1/[A] plot for second order slopes upward.</li>
+        <li>Mixing time units: if k is in min<sup>−1</sup>, t must be in minutes.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 5.3. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-5.html">Unit 5 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Cases ----------
+  // sp: species shown in brackets; q: quantity label; u: concentration unit; tu: time unit; a0, k, tmax: base values.
+  var CASES = {
+    n2o5: { name: "N₂O₅ (first order)", eqn: "2N<sub>2</sub>O<sub>5</sub>(g) → 4NO<sub>2</sub>(g) + O<sub>2</sub>(g)    rate = k[N<sub>2</sub>O<sub>5</sub>]", sp: "N2O5", u: "M", tu: "s", order: 1, a0: 0.0200, k: 6.2e-4, tmax: 4000 },
+    no2:  { name: "NO₂ (second order)", eqn: "2NO<sub>2</sub>(g) → 2NO(g) + O<sub>2</sub>(g)    rate = k[NO<sub>2</sub>]<sup>2</sup>", sp: "NO2", u: "M", tu: "s", order: 2, a0: 0.0100, k: 0.54, tmax: 1500 },
+    nh3:  { name: "NH₃ on hot tungsten (zero order)", eqn: "2NH<sub>3</sub>(g) → N<sub>2</sub>(g) + 3H<sub>2</sub>(g)  on a W surface    rate = k", sp: "NH3", u: "M", tu: "s", order: 0, a0: 0.0100, k: 1.0e-5, tmax: 900 },
+    i131: { name: "I-131 decay (first order)", eqn: "<sup>131</sup>I → <sup>131</sup>Xe + β    t<sub>½</sub> = 8.0 days", sp: "I-131", u: "mg", tu: "day", order: 1, a0: 100, k: 0.693 / 8.0, tmax: 40, nuclear: true },
+    mys:  { name: "Mystery data", eqn: "A → products    (order hidden)", sp: "A", u: "M", tu: "min", order: 1, a0: 0.500, k: 0.05, tmax: 60, mystery: true },
+    free: { name: "", eqn: "A → products", sp: "A", u: "M", tu: "s", order: 1, a0: 0.100, k: 0.693 / 150, tmax: 600 }
+  };
+  var ORD = ["zero", "first", "second"];
+
+  // ---------- Helpers ----------
+  var el = function (id) { return document.getElementById(id); };
+  function nm(f) { return f === "I-131" ? "I-131" : Lab.fmla(f); }
+  function br(f) { return f === "I-131" ? "m(I-131)" : "[" + nm(f) + "]"; }
+  function num(v, n) { return Lab.sci(v, n || 3, Math.abs(v) < 0.01 && v !== 0); }
+  function sgn(v, n) { return (v < 0 ? "−" : "") + num(Math.abs(v), n); }
+  function tu(c, p) { return c.tu === "day" ? (p ? "day<sup>" + p + "</sup>" : "days") : c.tu + (p ? "<sup>" + p + "</sup>" : ""); }
+  function kUnits(c, o) { return o === 0 ? c.u + " " + tu(c, "−1") : o === 1 ? tu(c, "−1") : c.u + "<sup>−1</sup> " + tu(c, "−1"); }
+  function tStr(c, t) { return Lab.sig(t, 3) + " " + (c.tu === "day" ? "days" : c.tu); }
+  // seeded scatter so the data do not jump on every redraw
+  function rng(seed) { var s = seed >>> 0; return function () { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+
+  // ---------- State ----------
+  var S = { cs: "n2o5", order: 1, aM: 1, kM: 1, tf: 0.25, noise: false, seed: 7, claim: null };
+  var key = "n2o5";
+
+  function C() { return CASES[S.cs]; }
+  function A0() { return C().a0 * S.aM; }
+  function K() { return C().k * S.kM; }
+  function At(t) {
+    var a0 = A0(), k = K();
+    if (S.order === 0) return Math.max(0, a0 - k * t);
+    if (S.order === 1) return a0 * Math.exp(-k * t);
+    return a0 / (1 + k * a0 * t);
+  }
+  function data() {
+    var c = C(), r = rng(S.seed), pts = [];
+    for (var i = 0; i <= 10; i++) {
+      var t = c.tmax * i / 10, a = At(t);
+      var z = (r() + r() + r() - 1.5) * 0.024;           // roughly ±2 % scatter
+      if (S.noise && i > 0) a *= 1 + z;
+      if (a > 0.015 * A0()) pts.push([t, a]);
+    }
+    return pts;
+  }
+  function fit(pts) {
+    var n = pts.length, sx = 0, sy = 0, sxx = 0, sxy = 0, syy = 0;
+    pts.forEach(function (p) { sx += p[0]; sy += p[1]; sxx += p[0] * p[0]; sxy += p[0] * p[1]; syy += p[1] * p[1]; });
+    var m = (n * sxy - sx * sy) / (n * sxx - sx * sx), b = (sy - m * sx) / n;
+    var ss = syy - sy * sy / n, res = 0;
+    pts.forEach(function (p) { var e = p[1] - (m * p[0] + b); res += e * e; });
+    return { m: m, b: b, r2: ss > 0 ? 1 - res / ss : 1 };
+  }
+  var TRANS = [function (a) { return a; }, Math.log, function (a) { return 1 / a; }];
+  function halvings() {   // successive times at which A falls to A0/2, A0/4, A0/8 ...
+    var a0 = A0(), k = K(), out = [], c = C();
+    for (var j = 1; j <= 6; j++) {
+      var a = a0 / Math.pow(2, j), t;
+      if (S.order === 0) t = (a0 - a) / k; else if (S.order === 1) t = Math.log(a0 / a) / k; else t = (1 / a - 1 / a0) / k;
+      if (t > c.tmax) break;
+      out.push(t);
+    }
+    return out;
+  }
+  function niceTicks(lo, hi, n) {
+    var span = hi - lo, step = Math.pow(10, Math.floor(Math.log10(span / n))), err = span / n / step;
+    if (err >= 5) step *= 5; else if (err >= 2) step *= 2;
+    var out = []; for (var v = Math.ceil(lo / step) * step; v <= hi + 1e-12; v += step) out.push(+v.toPrecision(10));
+    return out;
+  }
+  function tickFmt(v) { var a = Math.abs(v); return (a === 0 ? "0" : a < 1e-3 ? v.toExponential(1) : String(+v.toPrecision(3))).replace("-", "−"); }
+
+  // ---------- Drawing ----------
+  function drawMain(pts, fits, lin) {
+    var c = C(), a0 = A0(), Y = niceTicks(0, a0 * 1.05, 5), ymax = Y[Y.length - 1] < a0 ? a0 * 1.1 : Y[Y.length - 1];
+    var X = niceTicks(0, c.tmax, 6);
+    var F = Lab.frame(el("g"), { x: [0, c.tmax], y: [0, ymax], xLabel: "Time (" + (c.tu === "day" ? "days" : c.tu) + ")", yLabel: (c.nuclear ? "Mass of I-131" : "[" + c.sp.replace(/\d/g, function (d) { return "₀₁₂₃₄₅₆₇₈₉"[+d]; }) + "]") + " (" + c.u + ")",
+      xTicks: X, yTicks: Y, fmtX: tickFmt, fmtY: tickFmt, width: 460, height: 330 });
+    // half-life guides
+    var H = halvings(), prev = 0;
+    H.forEach(function (t, j) {
+      var a = a0 / Math.pow(2, j + 1);
+      Lab.line(F, [[t, 0], [t, a], [0, a]], "var(--c3)", 1.2, "3 4");
+      var mid = (prev + t) / 2;
+      if (j < 4) Lab.el("text", { x: F.sx(mid), y: F.sy(a) - 6, "text-anchor": "middle", style: "fill:var(--c3); font-size:10.5px; font-weight:600" }, F.svg, Lab.sig(t - prev, 3).replace(/\.0+$/, ""));
+      prev = t;
+    });
+    Lab.fn(F, At, "var(--c1)", 2.6, null, 160);
+    pts.forEach(function (p) { Lab.el("circle", { cx: F.sx(p[0]), cy: F.sy(p[1]), r: 4.2, fill: "var(--surface)", stroke: "var(--ink)", "stroke-width": 1.8 }, F.g); });
+    var tc = c.tmax * S.tf;
+    Lab.dot(F, tc, At(tc), "var(--accent)", true);
+    el("g-title").innerHTML = c.nuclear ? "Mass of I-131 vs. time" : "[" + nm(c.sp) + "] vs. time";
+    el("g-sub").textContent = "numbers on the purple steps = each half-life";
+    el("legend").innerHTML = '<span class="l-c1">' + ORD[S.order] + "-order curve</span><span style=\"color:var(--ink)\">data points</span><span class=\"l-c3\">successive half-lives</span>";
+  }
+  function drawTests(pts, fits, lin) {
+    var c = C();
+    [0, 1, 2].forEach(function (j) {
+      var tp = pts.map(function (p) { return [p[0], TRANS[j](p[1])]; });
+      var ys = tp.map(function (p) { return p[1]; }), lo = Math.min.apply(null, ys), hi = Math.max.apply(null, ys), pad = (hi - lo) * 0.08 || 1;
+      var Y = niceTicks(lo - pad, hi + pad, 4);
+      var F = Lab.frame(el("p" + j), { x: [0, c.tmax], y: [Math.min(lo - pad, Y[0]), Math.max(hi + pad, Y[Y.length - 1])], xLabel: "t", yLabel: ["[A]", "ln[A]", "1/[A]"][j], xTicks: niceTicks(0, c.tmax, 4), yTicks: Y, fmtX: tickFmt, fmtY: tickFmt, width: 320, height: 230 });
+      var f = fits[j];
+      Lab.line(F, [[0, f.b], [c.tmax, f.b + f.m * c.tmax]], j === lin ? "var(--good)" : "var(--ghost)", 2, j === lin ? null : "5 4");
+      tp.forEach(function (p) { Lab.el("circle", { cx: F.sx(p[0]), cy: F.sy(p[1]), r: 3.6, fill: j === lin ? "var(--good)" : "var(--c1)", stroke: "var(--surface)", "stroke-width": 1 }, F.g); });
+      el("c" + j).classList.toggle("lin", j === lin);
+      el("f" + j).innerHTML = "R² = " + (j === lin ? "<b>" + f.r2.toFixed(4) + "</b>" : f.r2.toFixed(4)) + " · slope = " + sgn(f.m) + (j === lin ? " → <b>linear</b>" : " → curved");
+    });
+  }
+
+  function calc(fits, lin) {
+    var c = C(), t = c.tmax * S.tf, a0 = A0(), k = K(), o = S.order, h = "", Q = c.u;
+    var kTxt = num(k) + " " + kUnits(c, o), tTxt = tStr(c, t), at = At(t);
+    function row(a, b) { return '<div class="row"><span>' + a + "</span><span>" + b + "</span></div>"; }
+    var hidden = c.mystery && !S.solved;
+    h += "<h3 style=\"margin-bottom:2px\">Integrated rate law at t = " + tTxt + (hidden ? " (shown once you identify the order)" : "") + "</h3>";
+    if (hidden) return h + row("Pick the order of the mystery reaction above", "?");
+    if (o === 0) {
+      h += row("Zero order: [A]<sub>t</sub> − [A]<sub>0</sub> = −kt", "[A]<sub>t</sub> = [A]<sub>0</sub> − kt");
+      h += row("Substitute", num(a0) + " − (" + kTxt + ")(" + tTxt + ")");
+      h += row("Result", (a0 - k * t > 0 ? num(at) + " " + Q : "0 (used up at t = " + tStr(c, a0 / k) + ")"));
+    } else if (o === 1) {
+      h += row("First order: ln[A]<sub>t</sub> − ln[A]<sub>0</sub> = −kt", "ln[A]<sub>t</sub> = ln[A]<sub>0</sub> − kt");
+      h += row("Substitute", "ln(" + num(a0) + ") − (" + kTxt + ")(" + tTxt + ")");
+      h += row("Evaluate", Lab.fmt(Math.log(a0), 3).replace("-", "−") + " − " + Lab.fmt(k * t, 3) + " = " + Lab.fmt(Math.log(a0) - k * t, 3).replace("-", "−"));
+      h += row("Undo the ln", "[A]<sub>t</sub> = e<sup>" + Lab.fmt(Math.log(a0) - k * t, 3).replace("-", "−") + "</sup> = " + num(at) + " " + Q);
+      h += row("Half-life", "t<sub>½</sub> = 0.693/k = 0.693 / " + num(k) + " = " + tStr(c, 0.693 / k));
+    } else {
+      h += row("Second order: 1/[A]<sub>t</sub> − 1/[A]<sub>0</sub> = kt", "1/[A]<sub>t</sub> = 1/[A]<sub>0</sub> + kt");
+      h += row("Substitute", "1/" + num(a0) + " + (" + kTxt + ")(" + tTxt + ")");
+      h += row("Evaluate", num(1 / a0) + " + " + num(k * t) + " = " + num(1 / a0 + k * t) + " " + Q + "<sup>−1</sup>");
+      h += row("Take the reciprocal", "[A]<sub>t</sub> = " + num(at) + " " + Q);
+    }
+    return h;
+  }
+
+  function eqnOf(c) { return c.nuclear ? "<sup>131</sup>I → <sup>131</sup>Xe + β    t<sub>½</sub> = " + tStr(c, 0.693 / K()) : c.eqn; }
+  function story(pts, fits, lin) {
+    var c = C(), o = S.order, f = fits[lin], H = halvings(), h = "", li = [];
+    var hidden = c.mystery && !S.solved;
+    var kFit = o === 2 ? f.m : -f.m;
+    h += "<p><b>" + eqnOf(c) + ".</b> " + pts.length + " data points" + (S.noise ? " with about ±2% measurement scatter" : "") + ".</p>";
+    if (hidden) {
+      li.push("Compare the three replots. Which one is a straight line? The R² values help: the linear plot has R² closest to 1. Then pick that order above.");
+      if (S.claim != null && S.claim !== o) li.push("Not " + ORD[S.claim] + " order: the " + ["[A]", "ln[A]", "1/[A]"][S.claim] + " vs. t plot curves (R² = " + fits[S.claim].r2.toFixed(4) + ").");
+    } else {
+      li.push("<b>The " + ["[A]", "ln[A]", "1/[A]"][lin] + " vs. t plot is linear</b> (R² = " + f.r2.toFixed(4) + "), so the reaction is <b>" + ORD[o] + " order</b> in " + nm(c.sp) + ". The other two plots curve.");
+      li.push("<b>Slope → k:</b> slope = " + sgn(f.m) + " " + kUnits(c, o) + ". For " + ORD[o] + " order the slope is " + (o === 2 ? "+k" : "−k") + ", so k = " + num(kFit) + " " + kUnits(c, o) + (S.noise ? " (the true value is " + num(K()) + "; the scatter shifts the fit slightly)" : "") + ".");
+      if (H.length >= 2) {
+        var steps = H.map(function (t, i) { return Lab.sig(t - (i ? H[i - 1] : 0), 3); });
+        li.push("<b>Half-lives:</b> successive halvings take " + steps.join(", ") + " " + (c.tu === "day" ? "days" : c.tu) + ". " +
+          (o === 1 ? "They are all equal: a constant half-life is the signature of first order, and 0.693/k = " + tStr(c, 0.693 / K()) + "." :
+           o === 0 ? "They get shorter, because a zero-order reaction removes the same amount per unit time, so each smaller half disappears faster." :
+           "They get longer (each one doubles), because the rate depends on [A]², so it slows sharply as [A] falls."));
+      }
+      if (c.nuclear) li.push("Radioactive decay is always first order. After 5 half-lives (" + tStr(c, 5 * 0.693 / K()) + "), (½)<sup>5</sup> = 1/32 of the I-131 remains: " + num(A0() / 32) + " " + c.u + " of " + num(A0()) + "." + (S.kM !== 1 ? " (The rate-constant slider is a what-if here: a real isotope's half-life is fixed; I-131's is 8.0 days.)" : ""));
+      if (c.mystery) li.push("Mystery solved: the data were generated as " + ORD[o] + " order with k = " + num(K()) + " " + kUnits(c, o) + ".");
+    }
+    h += "<ul>" + li.map(function (s) { return "<li>" + s + "</li>"; }).join("") + "</ul>";
+    var ap = hidden ? "graph [A], ln[A], and 1/[A] versus time. The plot that is linear gives the order (zero, first, or second), and its slope gives k (slope = −k for the first two, +k for 1/[A])." :
+      "the plot of " + ["[A]", "ln[A]", "1/[A]"][lin] + " versus time is linear, so the reaction is " + ORD[o] + " order with respect to " + nm(c.sp) + ", and k = " + (o === 2 ? "slope" : "−slope") + " = " + num(kFit) + " " + kUnits(c, o) + "." + (o === 1 ? " Its half-life is constant, t<sub>½</sub> = 0.693/k." : "");
+    h += "<p><b>AP answer:</b> " + ap + "</p>";
+    return h;
+  }
+
+  function render() {
+    var c = C(), pts = data(), fits = [0, 1, 2].map(function (j) { return fit(pts.map(function (p) { return [p[0], TRANS[j](p[1])]; })); });
+    var lin = S.order;
+    drawMain(pts, fits, lin);
+    var hidden = c.mystery && !S.solved;
+    if (hidden) { [0, 1, 2].forEach(function (j) { el("c" + j).classList.remove("lin"); }); }
+    drawTests(pts, fits, hidden ? -1 : lin);
+    if (hidden) [0, 1, 2].forEach(function (j) { el("f" + j).innerHTML = "R² = " + fits[j].r2.toFixed(4) + " · slope = " + sgn(fits[j].m); });
+    el("eqn").innerHTML = eqnOf(c);
+    el("o-a0").innerHTML = num(A0()) + " " + c.u;
+    el("o-k").innerHTML = num(K());
+    el("o-t").textContent = tStr(c, c.tmax * S.tf);
+    el("s-a0").value = S.aM; el("s-k").value = S.kM; el("s-t").value = Math.round(S.tf * 100);
+    el("g-order").hidden = !!c.mystery; el("g-claim").hidden = !c.mystery;
+    ordBtns.forEach(function (b, i) { b.setAttribute("aria-pressed", i === S.order ? "true" : "false"); });
+    claimBtns.forEach(function (b, i) { b.setAttribute("aria-pressed", i === S.claim ? "true" : "false"); });
+    el("noise-seg").querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", (b.dataset.v === "1") === S.noise ? "true" : "false"); });
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", key === k ? "true" : "false"); });
+    var f = fits[lin], kFit = S.order === 2 ? f.m : -f.m, H = halvings();
+    el("r-ord").textContent = hidden ? "?" : ORD[S.order];
+    el("r-ord2").innerHTML = hidden ? "decide from the three plots" : ["[A]", "ln[A]", "1/[A]"][lin] + " vs. t is linear";
+    el("r-k").innerHTML = hidden ? "?" : num(kFit);
+    el("r-k2").innerHTML = hidden ? "" : kUnits(c, S.order) + " (" + (S.order === 2 ? "= slope" : "= −slope") + ")";
+    el("r-half").innerHTML = H.length ? H.map(function (t, i) { return Lab.sig(t - (i ? H[i - 1] : 0), 3); }).slice(0, 3).join(", ") : "—";
+    el("r-half2").innerHTML = H.length < 2 ? "fewer than two halvings fit on the graph" : (hidden ? "first, second, third half-life" : S.order === 1 ? "constant: first order" : S.order === 0 ? "shrinking: zero order" : "growing: second order");
+    var tc = c.tmax * S.tf;
+    el("r-at").innerHTML = num(At(tc)) + " " + c.u;
+    el("r-at2").innerHTML = "at t = " + tStr(c, tc) + "; " + Lab.sig(100 * At(tc) / A0(), 3) + "% remains";
+    el("calc").innerHTML = calc(fits, lin);
+    el("story").innerHTML = story(pts, fits, lin);
+  }
+
+  // ---------- Controls ----------
+  var ordBtns = [], claimBtns = [];
+  [0, 1, 2].forEach(function (o) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = ORD[o];
+    b.addEventListener("click", function () {
+      if (S.order === o) return;
+      // switch to a generic reaction with a k that keeps the run on the graph
+      var cur = C(), fr = CASES.free;
+      fr.tu = cur.mystery ? "s" : cur.tu; fr.u = cur.nuclear ? "M" : cur.u; fr.tu = cur.nuclear ? "s" : fr.tu; fr.tmax = cur.nuclear || cur.mystery ? 600 : cur.tmax;
+      fr.a0 = cur.nuclear || cur.mystery ? 0.100 : cur.a0; fr.order = o;
+      fr.k = o === 0 ? 0.9 * fr.a0 / fr.tmax : o === 1 ? 0.693 / (fr.tmax / 4) : 6 / (fr.a0 * fr.tmax);
+      fr.eqn = "A → products    rate = k" + (o === 0 ? "" : o === 1 ? "[A]" : "[A]<sup>2</sup>");
+      S.cs = "free"; S.order = o; S.aM = 1; S.kM = 1; key = null; render();
+    });
+    el("ord-seg").appendChild(b); ordBtns.push(b);
+    var cb = document.createElement("button"); cb.type = "button"; cb.textContent = ORD[o];
+    cb.addEventListener("click", function () {
+      S.claim = o;
+      var fb = el("fb");
+      if (o === S.order) { S.solved = true; fb.className = "fb ok"; fb.textContent = "Correct: the " + ["[A]", "ln[A]", "1/[A]"][o] + " plot is the linear one."; }
+      else {
+        var pts = data(), r2 = [0, 1, 2].map(function (j) { return fit(pts.map(function (p) { return [p[0], TRANS[j](p[1])]; })).r2; });
+        fb.className = "fb no";
+        fb.textContent = r2[o] >= r2[S.order] ? "Not quite. With so little of A used up, the scatter makes more than one plot look straight. Raise the rate constant so more of A reacts, then compare the plots again." : "Not quite: look for the plot with R² closest to 1.";
+      }
+      render();
+    });
+    el("claim-seg").appendChild(cb); claimBtns.push(cb);
+  });
+  el("s-a0").addEventListener("input", function () { S.aM = +el("s-a0").value; render(); });
+  el("s-k").addEventListener("input", function () { S.kM = +el("s-k").value; render(); });
+  el("s-t").addEventListener("input", function () { S.tf = +el("s-t").value / 100; render(); });
+  el("noise-seg").querySelectorAll("button").forEach(function (b) { b.addEventListener("click", function () { S.noise = b.dataset.v === "1"; render(); }); });
+  el("b-new").addEventListener("click", function () { go("mys"); });
+
+  var scBtns = {};
+  ["n2o5", "no2", "nh3", "i131", "mys"].forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = CASES[k].name;
+    b.addEventListener("click", function () { go(k); });
+    el("sc").appendChild(b); scBtns[k] = b;
+  });
+  var stop = function () {};
+  function go(k) {
+    stop();
+    var c = CASES[k];
+    if (c.mystery) {
+      c.order = Math.floor(Math.random() * 3);
+      c.k = c.order === 0 ? 0.9 * c.a0 / c.tmax * (0.7 + 0.3 * Math.random()) : c.order === 1 ? (0.693 / (c.tmax / 4)) * (0.7 + 0.6 * Math.random()) : (6 / (c.a0 * c.tmax)) * (0.7 + 0.6 * Math.random());
+      S.noise = true; S.seed = Math.floor(Math.random() * 1e6); S.claim = null; S.solved = false;
+      el("fb").textContent = ""; el("fb").className = "fb";
+    } else { S.noise = false; S.seed = 7; }
+    S.cs = k; S.order = c.order; S.aM = 1; S.kM = 1; key = k;
+    stop = Lab.animate(700, function (e) { S.tf = 0.5 * e; render(); });
+  }
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [], save = JSON.stringify(S);
+    ["n2o5", "no2", "nh3", "i131"].forEach(function (k) {
+      S.cs = k; S.order = CASES[k].order; S.aM = 1; S.kM = 1; S.noise = false;
+      var pts = data(), fits = [0, 1, 2].map(function (j) { return fit(pts.map(function (p) { return [p[0], TRANS[j](p[1])]; })); });
+      var best = fits.map(function (f) { return f.r2; }).indexOf(Math.max(fits[0].r2, fits[1].r2, fits[2].r2));
+      if (best !== S.order) bad.push(k + ": the linear plot is not the true order");
+      var kf = S.order === 2 ? fits[2].m : -fits[S.order].m;
+      if (Math.abs(kf / K() - 1) > 1e-6) bad.push(k + ": slope does not give k");
+      if (S.order === 1) { var H = halvings(); if (Math.abs(H[0] - 0.693 / K()) / H[0] > 0.001) bad.push(k + ": half-life"); }
+    });
+    // hand-worked quiz values
+    if (Math.abs(0.693 / 0.0231 - 30.0) > 0.05) bad.push("quiz t1/2");
+    if (Math.abs(0.80 / 8 - 0.10) > 1e-12) bad.push("quiz 3 half-lives");
+    if (Math.abs(1 / (1 / 0.50 + 0.20 * 15) - 0.20) > 1e-9) bad.push("quiz second order");
+    if (Math.abs(Math.exp(Math.log(0.400) - 0.0100 * 50) - 0.243) > 0.0005) bad.push("quiz first order");
+    S = JSON.parse(save);
+    if (bad.length) console.error("5.3 self-check failed: " + bad.join("; "));
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "For the reaction A → products, a plot of ln[A] versus time is a straight line with a slope of −0.0231 min⁻¹. What is the half-life of the reaction?",
+      o: ["0.0160 min", "43.3 min", "30.0 min", "15.0 min"], c: 2,
+      w: "A linear ln[A] plot means first order, and k = −slope = 0.0231 min⁻¹. t½ = 0.693/k = 0.693/0.0231 min⁻¹ = 30.0 min. Choice B is 1/k, and choice A multiplies instead of dividing." },
+    { s: "Data for the decomposition of a reactant X give a straight line when 1/[X] is plotted against time. Which statement is correct?",
+      o: ["The reaction is first order in X, and the slope equals −k.", "The reaction is second order in X, and the slope equals k.", "The reaction is zero order in X, and the slope equals −k.", "The reaction is second order in X, and the slope equals −k."], c: 1,
+      w: "1/[X] − 1/[X]₀ = kt has the form y = kx + b, so a linear 1/[X] plot means second order with slope +k. The plot rises because 1/[X] increases as [X] falls. Choice D has the sign wrong; choice A describes the ln[X] plot." },
+    { s: "A first-order reaction starts with [A]₀ = 0.80 M and has a half-life of 10. s. What is [A] after 30. s?",
+      o: ["0.10 M", "0.27 M", "0.20 M", "0.40 M"], c: 0,
+      w: "30 s is three half-lives: 0.80 → 0.40 → 0.20 → 0.10 M. Choice B divides by 3, a common slip; choice C stops after two half-lives." },
+    { s: "A reaction is second order in A with k = 0.20 M⁻¹ min⁻¹. If [A]₀ = 0.50 M, what is [A] after 15 min?",
+      o: ["0.025 M", "0.30 M", "5.0 M", "0.20 M"], c: 3,
+      w: "1/[A] = 1/[A]₀ + kt = 1/0.50 + (0.20)(15) = 2.0 + 3.0 = 5.0 M⁻¹, so [A] = 0.20 M. Choice C is 1/[A]; the last step is taking the reciprocal. Choice A uses the first-order equation, 0.50 × e^(−3.0), which does not apply to a second-order reaction." },
+    { s: "Which observation is the best evidence that a reaction is first order with respect to reactant A?",
+      o: ["The concentration of A decreases over time.", "The time required for [A] to fall from 0.80 M to 0.40 M equals the time required for it to fall from 0.40 M to 0.20 M.", "A plot of [A] versus time is linear.", "The rate decreases as the reaction proceeds."], c: 1,
+      w: "Only a first-order reaction has a constant half-life, independent of concentration. Choices A and D are true of almost every reaction, and choice C is the signature of zero order." },
+    { s: "A reaction is first order with k = 0.0100 s⁻¹ and [A]₀ = 0.400 M. What is [A] after 50.0 s?",
+      o: ["0.243 M", "0.200 M", "0.126 M", "0.659 M"], c: 0,
+      w: "ln[A] = ln(0.400) − (0.0100 s⁻¹)(50.0 s) = −0.916 − 0.500 = −1.416, so [A] = e^(−1.416) = 0.243 M. Choice B assumes 50 s is one half-life (it is 0.693/0.0100 = 69.3 s). Choice C uses log instead of ln, and choice D adds kt instead of subtracting it, so [A] would grow." },
+    { s: "The isotope phosphorus-32 has a half-life of 14.3 days. A sample contains 80.0 mg of P-32. About how much P-32 remains after 57.2 days?",
+      o: ["20.0 mg", "40.0 mg", "5.00 mg", "10.0 mg"], c: 2,
+      w: "Radioactive decay is first order, so the half-life is constant. 57.2 ÷ 14.3 = 4 half-lives: 80.0 → 40.0 → 20.0 → 10.0 → 5.00 mg. Choice D stops after three half-lives." },
+    { s: "For a zero-order reaction, a plot of [A] versus time is linear with a slope of −2.0 × 10⁻³ M/s. Which statement is correct?",
+      o: ["k = 2.0 × 10⁻³ s⁻¹ and the half-life is constant.", "k = −2.0 × 10⁻³ M/s, because the slope is negative.", "k = 2.0 × 10⁻³ M/s, and the rate stays the same as [A] decreases.", "k = 2.0 × 10⁻³ M⁻¹ s⁻¹, and the rate decreases as [A] decreases."], c: 2,
+      w: "For zero order, [A]ₜ = [A]₀ − kt, so k = −slope = 2.0 × 10⁻³ M/s, and rate = k does not depend on [A]. Rate constants are positive (choice B), s⁻¹ and a constant half-life belong to first order (choice A), and M⁻¹ s⁻¹ belongs to second order (choice D)." }
+  ];
+
+  go("n2o5");
+  Lab.quiz(Q, el("quiz"), el("score"), el("quiz-reset"));
+  Lab.nav("5.3");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [5], topic: "5.3", compact: true, storageKey: "topic-5.3" });</script>
+</body>
+</html>

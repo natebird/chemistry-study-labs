@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Multistep Reaction Energy Profile Study Lab</title>
+<meta name="description" content="Build the energy profile of a two- or three-step mechanism from each step's activation energy and ΔH, find the intermediates and the rate-determining step, and test yourself on reading the peaks and valleys.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+#lab-sec > *, .lab > *, .side > *, .group > * { min-width: 0; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"], .seg button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v.small { font-size: 1rem; }
+.note { font-size: .82rem; color: var(--muted); }
+#prof text.lbl { paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.step { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.step .n { font-family: var(--mono); font-size: .76rem; color: var(--muted); min-width: 4.2em; }
+.step .eqn { flex: 1 1 200px; min-width: 0; }
+.step .mol { font-size: .76rem; color: var(--muted); }
+.step.slow .eqn { box-shadow: inset 4px 0 0 var(--c1); }
+.step.slow .mol { color: var(--c1); font-weight: 600; }
+.fb { font-size: .9rem; }
+.fb.ok { color: var(--good); } .fb.no { color: var(--bad); }
+.ctl label span.sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; }
+.is-quiz .ans { visibility: hidden; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 5 · Topic 5.10</span>
+  <h1>Multistep Reaction Energy Profile Study Lab</h1>
+  <p class="lede">A mechanism with several elementary steps has an energy profile with several peaks: one transition state per step, with an intermediate sitting in the valley between each pair. Build profiles step by step from each step's activation energy and ΔH, find the rate-determining step, and practice reading the overall energy change.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The multistep profile builder</h2>
+    <p>Pick a mechanism or set each step's activation energy and ΔH with the sliders; the profile is assembled one step at a time, each starting where the last one ended. Turn on <b>Test me</b> to hide the answers and identify the slow step yourself. Energies are illustrative values in kJ/mol, measured relative to the reactants.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Energy profile <small id="prof-sub"></small></h3>
+      <svg class="chart" id="prof" role="img" aria-label="Multistep reaction energy profile with one peak per elementary step and a valley for each intermediate"></svg>
+      <div class="legend"><span class="l-ad">Profile</span><span class="l-c1">E<sub>a</sub> of slowest step</span><span class="l-c3">E<sub>a</sub> of other steps</span><span class="l-c2">Overall ΔH</span></div>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Mechanism</div>
+        <div class="scenarios" id="sc"></div>
+        <div class="group" id="steps"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Test me</div>
+        <div class="btnrow">
+          <button type="button" id="b-quiz" aria-pressed="false">Test me: off</button>
+          <span class="note">Which step is rate-determining?</span>
+        </div>
+        <div class="btnrow" id="guess"></div>
+        <div class="fb" id="fb" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card side">
+    <div class="btnrow">
+      <span class="tag">Number of steps</span>
+      <span class="seg btnrow" id="nsteps"><button type="button" data-n="2">2 steps</button><button type="button" data-n="3">3 steps</button></span>
+    </div>
+    <div class="controls" id="ctls"></div>
+  </div>
+
+  <div class="readout ans">
+    <div class="stat"><div class="k">Rate-determining step</div><div class="v small" id="r-rds"></div><div class="sub" id="r-rds2"></div></div>
+    <div class="stat"><div class="k">Overall ΔH</div><div class="v small" id="r-dh"></div><div class="sub" id="r-dh2"></div></div>
+    <div class="stat"><div class="k">Intermediates (valleys)</div><div class="v small" id="r-int"></div><div class="sub" id="r-int2"></div></div>
+    <div class="stat"><div class="k">Highest point above reactants</div><div class="v small" id="r-top"></div><div class="sub" id="r-top2"></div></div>
+  </div>
+
+  <div class="story ans" id="story" aria-live="polite"></div>
+  <p class="note">Convention used here, the usual textbook and AP-style rule: the rate-determining step is the step with the largest activation energy, measured from the level where that step starts (the reactants or an intermediate). It always agrees with a fuller analysis when each intermediate lies below the level before it, and it agrees for every preset; the explanation flags slider settings where it does not. Profiles are smooth sketches; real barrier shapes differ.</p>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Count the peaks</span><h3>One peak per step</h3><p>Each elementary step passes through its own transition state, so a two-step mechanism has two peaks and a three-step mechanism has three. The number of peaks tells you the number of steps.</p></div>
+    <div class="card"><span class="tag">Count the valleys</span><h3>Intermediates sit in valleys</h3><p>Between two peaks the energy dips to a local minimum: the intermediate. It is more stable than the transition states on either side, so it lasts long enough that it can sometimes be detected.</p></div>
+    <div class="card"><span class="tag">Measure each step</span><h3>Step activation energies</h3><p>A step's E<sub>a</sub> is measured from where that step starts (reactants or the intermediate valley before it) up to that step's own peak, not from the reactants.</p></div>
+    <div class="card"><span class="tag">Slowest step</span><h3>The biggest step barrier</h3><p>The step with the largest activation energy is the slowest and is rate-determining. It is not always the tallest peak on the graph, and it is not always the first step.</p></div>
+    <div class="card"><span class="tag">Overall energy change</span><h3>ΔH from start to finish</h3><p>Overall ΔH is the energy of the products minus the energy of the reactants. It equals the sum of the steps' ΔH values. Individual steps can be endothermic even when the overall reaction is exothermic.</p></div>
+    <div class="card"><span class="tag">Matching a mechanism</span><h3>Profile ↔ steps</h3><p>A fast step drawn first means a small first barrier; a slow second step means a large barrier out of the intermediate valley. When asked to sketch a profile for a mechanism, match peak count, relative barrier sizes, and the final ΔH.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Reading a multistep profile</h2>
+    <p>Every quantity is a vertical distance. Name the two levels before you subtract.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Quantity</th><th>From → to</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Number of elementary steps</td><td>Count peaks</td><td>One transition state per step</td></tr>
+      <tr><td>Number of intermediates</td><td>Count valleys between peaks</td><td>Steps − 1 for a simple sequence</td></tr>
+      <tr><td>E<sub>a</sub> of step n</td><td><b>Start of step n → peak n</b></td><td>Start of step 1 is the reactants; later steps start at the previous intermediate</td></tr>
+      <tr><td>ΔH of step n</td><td><b>Start of step n → end of step n</b></td><td>Negative if the step goes downhill</td></tr>
+      <tr><td>Overall ΔH</td><td><b>Reactants → products</b></td><td>Sum of the step ΔH values; peaks do not matter</td></tr>
+      <tr><td>Rate-determining step</td><td>Largest step E<sub>a</sub></td><td>Its rate law sets the overall rate law (topics 5.8 and 5.9)</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Multistep profiles on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Draw exactly as many peaks as there are elementary steps, with a valley for each intermediate.</li>
+        <li>Make the slow step's barrier (measured from its starting level) visibly the largest.</li>
+        <li>Put the products at the correct height relative to the reactants for the overall ΔH, and label reactants, intermediates and products.</li>
+        <li>Justify the rate-determining step with the energy profile: "Step 2 has the larger activation energy, so it is slower."</li>
+        <li>For a fast first step that reaches equilibrium, draw a small first barrier so the intermediate can easily go back to reactants.</li>
+        <li>Connect the profile to the rate law: the slow step on the graph is the one whose rate law sets the overall rate law.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Measuring every step's E<sub>a</sub> from the reactants instead of from the start of that step.</li>
+        <li>Assuming the tallest peak is always the slow step. If an earlier step drops into a deep valley, the climb out of that valley can be the largest barrier even though its peak is lower.</li>
+        <li>Calling a valley a transition state, or a peak an intermediate.</li>
+        <li>Drawing one peak for a two-step mechanism.</li>
+        <li>Using a step's ΔH as the overall ΔH.</li>
+        <li>Thinking that the first step must be the slowest.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 5.10. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-5.html">Unit 5 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Scenarios ----------
+  // st: [[Ea, ΔH] per step] in kJ/mol (illustrative). eq: optional elementary steps to show. rds: hand-typed expected slow step (1-based) for the self-check.
+  var SC = {
+    first:  { name: "Slow first step", st: [[90, 30], [25, -90]], rds: 1,
+      eq: ["NO<sub>2</sub> + NO<sub>2</sub> → NO<sub>3</sub> + NO", "NO<sub>3</sub> + CO → NO<sub>2</sub> + CO<sub>2</sub>"] },
+    second: { name: "Fast equilibrium, slow second step", st: [[20, -10], [75, -95]], rds: 2,
+      eq: ["2NO ⇌ N<sub>2</sub>O<sub>2</sub>", "N<sub>2</sub>O<sub>2</sub> + O<sub>2</sub> → 2NO<sub>2</sub>"] },
+    tall:   { name: "Tallest peak is not the slow step", st: [[70, -60], [95, -20], [40, -30]], rds: 2 },
+    endo:   { name: "Endothermic overall", st: [[90, 50], [30, 10]], rds: 1 },
+    three:  { name: "Three steps, slow last", st: [[50, 20], [30, -40], [80, -50]], rds: 3 }
+  };
+  var ORDER = ["first", "second", "tall", "endo", "three"];
+  var S = { key: "first", st: [], quiz: false, guess: null };
+
+  // ---------- Model ----------
+  // Levels: L[0] = 0 (reactants), TS[i] = L[i] + Ea_i, L[i+1] = L[i] + ΔH_i. x positions: plateau, then one segment of width W per step.
+  var XS = 0.07, XE = 0.93;
+  function levels(st) {
+    var L = [0], T = [];
+    st.forEach(function (s, i) { T.push(L[i] + s[0]); L.push(L[i] + s[1]); });
+    return { L: L, T: T };
+  }
+  function cosStep(t) { return (1 - Math.cos(Math.PI * Math.max(0, Math.min(1, t)))) / 2; }
+  function energyAt(x, st) {
+    var lv = levels(st), n = st.length, w = (XE - XS) / n;
+    if (x <= XS) return 0;
+    if (x >= XE) return lv.L[n];
+    var i = Math.min(n - 1, Math.floor((x - XS) / w)), x0 = XS + i * w, h = w / 2;
+    if (x <= x0 + h) return lv.L[i] + (lv.T[i] - lv.L[i]) * cosStep((x - x0) / h);
+    return lv.T[i] + (lv.L[i + 1] - lv.T[i]) * cosStep((x - x0 - h) / h);
+  }
+  function peakX(i, n) { return XS + (i + 0.5) * (XE - XS) / n; }
+  function valleyX(i, n) { return XS + i * (XE - XS) / n; }
+  function rdsOf(st) { var b = 0; st.forEach(function (s, i) { if (s[0] > st[b][0]) b = i; }); return b; }
+  // Fuller check (energetic span): each TS measured from the lowest level before it. Presets are chosen so it agrees with rdsOf.
+  function spanOf(st) { var lv = levels(st), b = 0, sb = -1e9; st.forEach(function (s, i) { var sp = lv.T[i] - Math.min.apply(null, lv.L.slice(0, i + 1)); if (sp > sb) { sb = sp; b = i; } }); return b; }
+  function tie(st) { var m = st[rdsOf(st)][0]; return st.filter(function (s) { return s[0] === m; }).length > 1; }
+  function kj(v) { return (v > 0 ? "+" : "") + String(v).replace("-", "−"); }
+
+  // ---------- Drawing ----------
+  var svg = document.getElementById("prof");
+  function draw() {
+    var st = S.st, n = st.length, lv = levels(st), r = rdsOf(st);
+    var lo = Math.min.apply(null, lv.L), hi = Math.max.apply(null, lv.T);
+    var y0 = Math.floor((lo - 30) / 50) * 50, y1 = Math.ceil((hi + 30) / 50) * 50, yT = [];
+    for (var v = y0; v <= y1; v += 50) yT.push(v);
+    var F = Lab.frame(svg, { x: [0, 1], y: [y0, y1], width: 440, height: 330, xLabel: "Reaction coordinate", yLabel: "Potential energy (kJ/mol)",
+      xTicks: [], yTicks: yT, fmtY: function (v) { return String(v).replace("-", "−"); } });
+    Lab.line(F, [[0, 0], [1, 0]], "var(--muted)", 1, "4 4");
+    Lab.fn(F, function (x) { return energyAt(x, st); }, "var(--accent)", 3.5, null, 240);
+    for (var i = 0; i < n; i++) {
+      var xp = peakX(i, n), xa = xp;
+      // dashed guide from this step's starting level to the arrow
+      Lab.line(F, [[valleyX(i, n), lv.L[i]], [xa + 0.01, lv.L[i]]], "var(--muted)", 1, "3 3");
+      if (!S.quiz) {
+        var col = i === r ? "var(--c1)" : "var(--c3)";
+        Lab.arrow(F, xa, lv.L[i], xa, lv.T[i], col);
+        Lab.tag(F, xa - 0.012, (lv.L[i] + lv.T[i]) / 2 + 4, "Eₐ" + (i + 1) + " = " + st[i][0], col, "end");
+      }
+      Lab.tag(F, xp, lv.T[i] + (y1 - y0) * 0.035, "TS" + (i + 1), "var(--ink)", "middle");
+      if (i > 0) Lab.tag(F, valleyX(i, n), lv.L[i] - (y1 - y0) * 0.06, "I" + i, "var(--c3)", "middle");
+    }
+    Lab.tag(F, 0.01, (y1 - y0) * 0.03, "R", "var(--ink)", "start");
+    Lab.tag(F, 0.955, lv.L[n] + (y1 - y0) * 0.03, "P", "var(--ink)", "end");
+    if (!S.quiz && Math.abs(lv.L[n]) >= 8) {
+      Lab.line(F, [[XE - 0.06, 0], [1, 0]], "var(--c2)", 1, "3 3");
+      Lab.arrow(F, 0.982, 0, 0.982, lv.L[n], "var(--c2)");
+    }
+    if (!S.quiz) Lab.tag(F, 0.965, lv.L[n] / 2 + 4, "ΔH = " + kj(lv.L[n]), "var(--c2)", "end");
+    document.getElementById("prof-sub").textContent = n + " steps, " + n + " peaks, " + (n - 1) + " valley" + (n > 2 ? "s" : "");
+  }
+
+  // ---------- Story ----------
+  function story() {
+    var st = S.st, n = st.length, lv = levels(st), r = rdsOf(st), li = [];
+    st.forEach(function (s, i) {
+      li.push("<b>Step " + (i + 1) + "</b> starts at " + (i ? "intermediate I" + i + " (" + kj(lv.L[i]) + " kJ/mol)" : "the reactants (0)") + ", climbs " + s[0] + " kJ/mol to TS" + (i + 1) + " at " + kj(lv.T[i]) +
+        ", and ends " + (i === n - 1 ? "at the products" : "in the valley of I" + (i + 1)) + " at " + kj(lv.L[i + 1]) + ". Step ΔH = " + kj(s[1]) + " kJ/mol (" + (s[1] < 0 ? "exothermic" : s[1] > 0 ? "endothermic" : "thermoneutral") + ").");
+    });
+    var hiI = 0; lv.T.forEach(function (t, i) { if (t > lv.T[hiI]) hiI = i; });
+    li.push("<b>Rate-determining step:</b> step " + (r + 1) + " has the largest barrier, " + st[r][0] + " kJ/mol" + (tie(st) ? " (tied with another step, so neither is clearly slower; adjust a slider to break the tie)" : "") + "." +
+      (hiI !== r && spanOf(st) === r ? " Notice that the highest peak is TS" + (hiI + 1) + ", not TS" + (r + 1) + ": step " + (r + 1) + " starts from a deep valley, so its climb is the largest even though its peak is lower." : ""));
+    var sp = spanOf(st);
+    if (sp !== r && !tie(st)) {
+      var lowI = 0; for (var q = 1; q <= sp; q++) if (lv.L[q] < lv.L[lowI]) lowI = q;
+      li.push("<b>Caution (beyond the AP exam):</b> the simple rule and a fuller analysis disagree for this profile. TS" + (sp + 1) + " sits " + (lv.T[sp] - lv.L[lowI]) + " kJ/mol above " + (lowI ? "I" + lowI : "the reactants") + ", the lowest level before it. When the earlier steps are fast and reversible, the higher intermediates stay in near-equilibrium with that level, so step " + (sp + 1) + "'s effective barrier is measured from there, and step " + (sp + 1) + " would be the slow step. The presets are drawn so both readings agree; keeping each intermediate below the level before it guarantees that.");
+    }
+    li.push("<b>Overall ΔH</b> = " + st.map(function (s) { return "(" + kj(s[1]) + ")"; }).join(" + ") + " = " + kj(lv.L[n]) + " kJ/mol, so the overall reaction is " + (lv.L[n] < 0 ? "exothermic" : lv.L[n] > 0 ? "endothermic" : "neither exothermic nor endothermic") + "." +
+      (st.some(function (s) { return (s[1] > 0) !== (lv.L[n] > 0) && s[1] !== 0; }) ? " At least one step goes the other way; individual steps do not have to match the overall sign." : ""));
+    if (S.key === "second") li.push("<b>Fast equilibrium first:</b> step 1's small barriers in both directions (" + st[0][0] + " forward, " + (st[0][0] - st[0][1]) + " back) let the intermediate form and fall apart quickly, which is the situation the pre-equilibrium approximation (topic 5.9) describes.");
+    var ap = "The profile has " + n + " peaks, so the mechanism has " + n + " elementary steps and " + (n - 1) + " intermediate" + (n > 2 ? "s" : "") + ". Step " + (r + 1) + " has the largest activation energy (" + st[r][0] + " kJ/mol, measured from " + (r ? "I" + r : "the reactants") + " to TS" + (r + 1) + "), so it is the rate-determining step; overall ΔH = " + kj(lv.L[n]) + " kJ/mol.";
+    return "<ul><li>" + li.join("</li><li>") + "</li></ul><p><b>AP answer:</b> " + ap + "</p>";
+  }
+
+  // ---------- Render ----------
+  var scBtns = {};
+  function buildControls() {
+    var box = document.getElementById("ctls"); box.innerHTML = "";
+    S.st.forEach(function (s, i) {
+      [["ea", "E<sub>a</sub>, step " + (i + 1), 10, 150, "From the start of step " + (i + 1)], ["dh", "ΔH, step " + (i + 1), -120, 120, "End minus start of step " + (i + 1)]].forEach(function (c, j) {
+        var d = document.createElement("div"); d.className = "ctl";
+        d.innerHTML = '<label for="s-' + c[0] + i + '"><span>' + c[1] + '</span> <output id="o-' + c[0] + i + '"></output></label><input type="range" id="s-' + c[0] + i + '" min="' + c[2] + '" max="' + c[3] + '" step="5"><span class="hint">' + c[4] + '</span>';
+        box.appendChild(d);
+        d.querySelector("input").addEventListener("input", function (ev) {
+          S.key = null; S.guess = null;
+          S.st[i][j] = +ev.target.value;
+          if (S.st[i][0] < Math.max(0, S.st[i][1]) + 5) S.st[i][0] = Math.min(150, Math.max(0, S.st[i][1]) + 5);
+          render();
+        });
+      });
+    });
+  }
+  function render() {
+    var st = S.st, n = st.length, lv = levels(st), r = rdsOf(st);
+    st.forEach(function (s, i) {
+      document.getElementById("s-ea" + i).value = s[0]; document.getElementById("o-ea" + i).textContent = s[0] + " kJ/mol";
+      document.getElementById("s-dh" + i).value = s[1]; document.getElementById("o-dh" + i).textContent = kj(s[1]) + " kJ/mol";
+    });
+    var bs = document.querySelectorAll("#nsteps button");
+    for (var i = 0; i < bs.length; i++) bs[i].setAttribute("aria-pressed", +bs[i].getAttribute("data-n") === n ? "true" : "false");
+    draw();
+    var eq = S.key && SC[S.key].eq;
+    document.getElementById("steps").innerHTML = st.map(function (s, i) {
+      var slow = !S.quiz && i === r;
+      return '<div class="step' + (slow ? " slow" : "") + '"><span class="n">Step ' + (i + 1) + '</span><span class="eqn">' + (eq ? eq[i] : "E<sub>a</sub> " + s[0] + ", ΔH " + kj(s[1])) + '</span><span class="mol">' + (S.quiz ? "" : slow ? "slow" : "fast") + '</span></div>';
+    }).join("");
+    document.getElementById("guess").innerHTML = "";
+    st.forEach(function (s, i) {
+      var b = document.createElement("button"); b.type = "button"; b.textContent = "Step " + (i + 1);
+      b.setAttribute("aria-pressed", S.guess === i ? "true" : "false");
+      b.addEventListener("click", function () {
+        S.guess = i;
+        var fb = document.getElementById("fb"), ok = i === rdsOf(S.st);
+        fb.className = "fb " + (ok ? "ok" : "no");
+        fb.innerHTML = (ok ? "Correct. Step " + (i + 1) + " has the largest barrier measured from where it starts (" + S.st[i][0] + " kJ/mol)." :
+          "Not quite. Measure each climb from the start of its own step: " + S.st.map(function (q, k) { return "step " + (k + 1) + ": " + q[0]; }).join(", ") + " kJ/mol.") +
+          (spanOf(S.st) !== rdsOf(S.st) && !tie(S.st) ? " For this slider setting a fuller analysis disagrees with the simple rule; see the caution below." : "");
+        if (S.quiz) { S.quiz = false; render(); }
+      });
+      document.getElementById("guess").appendChild(b);
+    });
+    document.getElementById("r-rds").textContent = "Step " + (r + 1);
+    document.getElementById("r-rds2").textContent = "Eₐ = " + st[r][0] + " kJ/mol" + (tie(st) ? " (tie)" : "");
+    document.getElementById("r-dh").textContent = kj(lv.L[n]) + " kJ/mol";
+    document.getElementById("r-dh2").textContent = lv.L[n] < 0 ? "exothermic" : lv.L[n] > 0 ? "endothermic" : "neither";
+    document.getElementById("r-int").textContent = n - 1;
+    document.getElementById("r-int2").textContent = lv.L.slice(1, n).map(function (l, i) { return "I" + (i + 1) + " at " + kj(l); }).join(", ");
+    var top = Math.max.apply(null, lv.T), ti = lv.T.indexOf(top);
+    document.getElementById("r-top").textContent = kj(top) + " kJ/mol";
+    document.getElementById("r-top2").textContent = "TS" + (ti + 1);
+    var qb = document.getElementById("b-quiz"); qb.setAttribute("aria-pressed", S.quiz ? "true" : "false"); qb.textContent = "Test me: " + (S.quiz ? "on" : "off");
+    document.getElementById("lab-sec").classList.toggle("is-quiz", S.quiz);
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    document.getElementById("story").innerHTML = story();
+  }
+  function pick(k) {
+    S.key = k; S.guess = null; S.st = SC[k].st.map(function (s) { return s.slice(); });
+    document.getElementById("fb").textContent = "";
+    buildControls(); render();
+  }
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pick(k); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("#nsteps button"), function (b) {
+    b.addEventListener("click", function () {
+      var n = +b.getAttribute("data-n");
+      if (n === S.st.length) return;
+      S.key = null; S.guess = null;
+      if (n === 3) S.st.push([40, -30]); else S.st = S.st.slice(0, 2);
+      document.getElementById("fb").textContent = "";
+      buildControls(); render();
+    });
+  });
+  document.getElementById("b-quiz").addEventListener("click", function () { S.quiz = !S.quiz; S.guess = null; document.getElementById("fb").textContent = ""; render(); });
+  pick("first");
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "A reaction energy profile shows two peaks between the reactants and the products, with one valley between them. How many elementary steps and intermediates does the mechanism have?",
+      o: ["Two steps and one intermediate", "Two steps and two intermediates", "One step and two transition states", "Three steps and one intermediate"], c: 0,
+      w: "Each peak is the transition state of one elementary step, so two peaks means two steps. The single valley between them is the one intermediate. Choice B counts the reactants or products as intermediates, which they are not." },
+    { s: "A profile has these energies (kJ/mol): reactants 0, first peak 60, valley −40, second peak 50, products −90. Which step is rate-determining, and why?",
+      o: ["Step 1, because it is the first step.", "Step 1, because its peak, at 60 kJ/mol, is the highest point on the graph.", "Step 2, because its activation energy, 90 kJ/mol, is larger than step 1's 60 kJ/mol.", "Step 2, because its ΔH, −50 kJ/mol, is more negative than step 1's."], c: 2,
+      w: "Step 1 climbs 60 − 0 = 60 kJ/mol; step 2 climbs 50 − (−40) = 90 kJ/mol out of the deep intermediate valley. The larger step barrier marks the slower step. Choice B is the trap: the highest peak is not always the largest barrier. Choice D uses ΔH, which does not set the rate." },
+    { s: "For the profile in the previous question (reactants 0, peaks at 60 and 50, valley −40, products −90 kJ/mol), what is the overall ΔH?",
+      o: ["−40 kJ/mol", "−90 kJ/mol", "+60 kJ/mol", "−50 kJ/mol"], c: 1,
+      w: "Overall ΔH = products − reactants = −90 − 0 = −90 kJ/mol; the peaks do not enter. As a check, the step ΔH values are −40 (0 to −40) and −50 (−40 to −90), which sum to −90. Choices A and D are the ΔH values of single steps." },
+    { s: "For the same profile (reactants 0, first peak 60, valley −40, second peak 50, products −90 kJ/mol), what is the activation energy of step 2?",
+      o: ["50 kJ/mol", "10 kJ/mol", "140 kJ/mol", "90 kJ/mol"], c: 3,
+      w: "Step 2 starts at the intermediate (−40 kJ/mol) and climbs to its peak (50 kJ/mol): 50 − (−40) = 90 kJ/mol. Choice A measures from the reactants, the most common error. Choice B drops the negative sign of the valley, and choice C is the reverse barrier from the products, 50 − (−90)." },
+    { s: "Which statement best describes the valley between two peaks on a multistep energy profile?",
+      o: ["It represents a reaction intermediate, which is lower in energy than the transition states on either side of it.", "It represents a transition state, which can be isolated from the reaction mixture.", "It represents the products of the overall reaction.", "It represents the activation energy of the slow step."], c: 0,
+      w: "A local minimum between peaks is an intermediate: made by one step and used by the next, and more stable than either neighboring transition state. Choice B mixes up the two: transition states are peaks and cannot be isolated." },
+    { s: "A mechanism has a fast first step and a slow second step, and the overall reaction is exothermic. Which description of its energy profile is consistent with this?",
+      o: ["One peak, with the products below the reactants", "Two peaks, with the products above the reactants", "Two peaks; the second step's barrier, measured from the intermediate, is larger than the first step's; the products are below the reactants", "Two peaks; the first step's barrier is larger than the second's; the products are below the reactants"], c: 2,
+      w: "Two steps mean two peaks. The slow step has the larger activation energy, so the climb out of the intermediate valley must be the bigger one, and an exothermic reaction ends below where it started. Choice D would make step 1 the slow step." },
+    { s: "In a two-step mechanism, step 1 has ΔH = +40 kJ/mol and step 2 has ΔH = −90 kJ/mol. Which statement about the overall reaction is correct?",
+      o: ["It is endothermic, because the first step is endothermic.", "It is endothermic by 130 kJ/mol.", "Its ΔH cannot be found without the activation energies.", "It is exothermic, with ΔH = −50 kJ/mol."], c: 3,
+      w: "Overall ΔH is the sum of the steps: +40 + (−90) = −50 kJ/mol, so the reaction is exothermic overall even though step 1 is endothermic. Activation energies (choice C) affect rates, not ΔH." },
+    { s: "A mechanism has three elementary steps. Which feature should a correctly drawn energy profile for it have?",
+      o: ["Three valleys between the reactants and the products", "Three peaks and two valleys between the reactants and the products", "One peak for each intermediate", "The highest peak for the first step"], c: 1,
+      w: "Three steps give three transition states (peaks), and the two intermediates sit in the two valleys between them. Choice A counts one valley too many, and choice D assumes the first step is always slowest." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("5.10");
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    ORDER.forEach(function (k) {
+      var st = SC[k].st, n = st.length, lv = levels(st);
+      if (rdsOf(st) + 1 !== SC[k].rds || tie(st)) bad.push(k + " slow step");
+      if (spanOf(st) !== rdsOf(st)) bad.push(k + " simple rule disagrees with energetic span");
+      st.forEach(function (s, i) {
+        if (s[0] < Math.max(0, s[1]) + 5) bad.push(k + " step " + (i + 1) + " barrier below its end");
+        // the drawn curve must peak at TS[i] and dip to the levels at the valleys
+        if (Math.abs(energyAt(peakX(i, n), st) - lv.T[i]) > 1e-9) bad.push(k + " peak " + (i + 1));
+        if (Math.abs(energyAt(valleyX(i, n), st) - lv.L[i]) > 1e-9) bad.push(k + " valley " + i);
+      });
+      var sum = 0; st.forEach(function (s) { sum += s[1]; });
+      if (sum !== lv.L[n] || Math.abs(energyAt(1, st) - sum) > 1e-9) bad.push(k + " overall ΔH");
+    });
+    if (levels(SC.tall.st).T.indexOf(Math.max.apply(null, levels(SC.tall.st).T)) === rdsOf(SC.tall.st)) bad.push("tall: tallest peak should not be the slow step");
+    // quiz 2-4 and 7 arithmetic
+    if (60 - 0 !== 60 || 50 - -40 !== 90 || -90 - 0 !== -90 || -40 + -50 !== -90 || 50 - -90 !== 140 || 40 + -90 !== -50) bad.push("quiz arithmetic");
+    if (Q.map(function (q) { return q.c; }).join("") !== "02130231") bad.push("quiz keys changed");
+    if (bad.length) console.error("5.10 self-check failed: " + bad.join("; "));
+  })();
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [5], topic: "5.10", compact: true, storageKey: "topic-5.10" });</script>
+</body>
+</html>

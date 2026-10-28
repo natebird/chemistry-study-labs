@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pre-Equilibrium Approximation Study Lab</title>
+<meta name="description" content="Derive rate laws step by step for mechanisms with a fast, reversible first step, then speed up the slow step to see when the pre-equilibrium approximation holds and when it breaks.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+#lab-sec > *, .lab > *, .side > *, .group > * { min-width: 0; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v.small { font-size: 1rem; }
+.note { font-size: .82rem; color: var(--muted); }
+.step { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.step .n { font-family: var(--mono); font-size: .76rem; color: var(--muted); min-width: 4.2em; }
+.step .eqn { flex: 1 1 220px; min-width: 0; }
+.step .mol { font-size: .76rem; color: var(--muted); }
+.step.slow .eqn { box-shadow: inset 4px 0 0 var(--c1); }
+.step.slow .mol { color: var(--c1); font-weight: 600; }
+.step.fast .eqn { box-shadow: inset 4px 0 0 var(--c2); }
+ol.steps li { padding: 2px 0; }
+ol.steps li.hide { display: none; }
+ol.steps li .eqn { display: block; margin-top: 4px; white-space: normal; }
+.final { display: block; margin-top: 4px; border: 2px solid var(--accent); border-radius: 8px; padding: 8px 12px; font-family: var(--mono); background: var(--accent-soft); }
+.ctlcard .controls { grid-template-columns: 1fr; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 5 · Topic 5.9</span>
+  <h1>Pre-Equilibrium Approximation Study Lab</h1>
+  <p class="lede">When a fast, reversible step comes before the slow step, the slow step's rate law contains an intermediate, and a measured rate law cannot. The fix is to treat the fast first step as being at equilibrium, solve for the intermediate, and substitute. Walk through that derivation for five classic mechanisms, then speed up the slow step to see when the approximation is trustworthy.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The pre-equilibrium derivation</h2>
+    <p>Pick a mechanism and press <b>Next step</b> to build the rate law one move at a time. The graph tests the approximation: the model computes the true rate from all the elementary steps and compares it with the pre-equilibrium prediction. Drag the slider to make step 2 faster or slower compared with the reverse of step 1. Rate constants and concentrations are illustrative.</p>
+  </div>
+
+  <div class="card side">
+    <div class="group">
+      <div class="tag">Mechanism</div>
+      <div class="scenarios" id="sc"></div>
+      <div class="eqn" id="overall"></div>
+      <div class="group" id="steps"></div>
+    </div>
+  </div>
+
+  <div class="lab">
+    <div class="card side">
+      <h3>Derivation <small class="note" id="d-count"></small></h3>
+      <ol class="steps" id="deriv"></ol>
+      <div class="btnrow">
+        <button type="button" class="primary" id="b-next">Next step</button>
+        <button type="button" id="b-all">Show all steps</button>
+        <button type="button" id="b-hide">Start over</button>
+      </div>
+    </div>
+    <div class="card graph-card">
+      <h3>Does the approximation hold? <small>true rate ÷ predicted rate</small></h3>
+      <svg class="chart" id="valid" role="img" aria-label="Ratio of the true rate to the pre-equilibrium prediction and to the first-step-limited prediction, as step 2 gets faster relative to the reverse of step 1"></svg>
+      <div class="legend"><span class="l-ad">÷ pre-equilibrium prediction</span><span class="l-c1">÷ "step 1 is slow" prediction</span></div>
+    </div>
+  </div>
+
+  <div class="card side ctlcard">
+    <div class="controls">
+      <div class="ctl">
+        <label for="s-m"><span>Speed of step 2 compared with reverse of step 1</span> <output id="o-m"></output></label>
+        <input type="range" id="s-m" min="-3" max="3" step="0.1">
+        <span class="hint">Left: step 2 is much slower, so step 1 has time to reach equilibrium. Right: step 2 grabs the intermediate before it can fall apart.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Pre-equilibrium rate law</div><div class="v small" id="r-law"></div><div class="sub" id="r-law2"></div></div>
+    <div class="stat"><div class="k">Orders from the full model</div><div class="v small" id="r-ord"></div><div class="sub">doubling each concentration</div></div>
+    <div class="stat"><div class="k">True rate ÷ prediction</div><div class="v small" id="r-ratio"></div><div class="sub" id="r-ratio2"></div></div>
+    <div class="stat"><div class="k">Intermediate</div><div class="v small" id="r-int"></div><div class="sub" id="r-int2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">How the model works: for each set of concentrations, it finds the intermediate concentration at which the intermediate is made exactly as fast as it is used (by step 1's reverse and by step 2), then takes the overall rate as the rate of step 2. The pre-equilibrium prediction ignores the drain from step 2, which is why it fails when step 2 is fast.</p>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">The problem</span><h3>The slow step has an intermediate</h3><p>If the slow step is not the first step, its rate law usually includes an intermediate made in an earlier step. Its concentration cannot be set or measured like a reactant's, so it cannot stay in the final rate law.</p></div>
+    <div class="card"><span class="tag">The assumption</span><h3>Fast step at equilibrium</h3><p>If step 1 is fast and reversible and step 2 is slow, step 1 runs forward and backward many times before step 2 removes much intermediate. So step 1's forward and reverse rates are taken as equal.</p></div>
+    <div class="card"><span class="tag">The algebra</span><h3>Set rates equal, solve, substitute</h3><p>Write k<sub>1</sub>[reactants] = k<sub>−1</sub>[products of step 1], solve for the intermediate, and substitute into the slow step's rate law. The constants combine: k = k<sub>2</sub>k<sub>1</sub>/k<sub>−1</sub>.</p></div>
+    <div class="card"><span class="tag">Equilibrium link</span><h3>k<sub>1</sub>/k<sub>−1</sub> = K<sub>1</sub></h3><p>The ratio of the forward and reverse rate constants of the fast step is that step's equilibrium constant. This is also why the equilibrium expression for an elementary step looks like its rate laws (topic 7.1).</p></div>
+    <div class="card"><span class="tag">Surprises</span><h3>Products and odd orders</h3><p>The final rate law can contain a product with a negative order, as in rate = k[O<sub>3</sub>]<sup>2</sup>[O<sub>2</sub>]<sup>−1</sup> for ozone, because O<sub>2</sub> drives step 1 backward and lowers the intermediate.</p></div>
+    <div class="card"><span class="tag">When it fails</span><h3>Step 2 must be slow</h3><p>If step 2 uses the intermediate faster than step 1 can reverse, step 1 is no longer at equilibrium, and the rate approaches the rate of step 1 itself (the topic 5.8 case). The graph shows the switch.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Pre-equilibrium mechanisms at a glance</h2>
+    <p>Each row follows the same three moves: slow-step rate law, equilibrium expression for the fast step, substitution.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Overall</th><th>Fast equilibrium (step 1)</th><th>Slow step</th><th>Intermediate from step 1</th><th>Rate law</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  </div>
+  <p class="note">This table is generated from the same mechanism data the lab uses. In every row, k = k<sub>2</sub>k<sub>1</sub>/k<sub>−1</sub>.</p>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Pre-equilibrium on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Start from the slow step's rate law and name the intermediate in it.</li>
+        <li>State the assumption: "Because step 1 is fast and reversible, its forward and reverse rates are equal."</li>
+        <li>Write that equality with rate constants, k<sub>1</sub>[NO]<sup>2</sup> = k<sub>−1</sub>[N<sub>2</sub>O<sub>2</sub>], and solve for the intermediate.</li>
+        <li>Substitute and collect constants into one observed k. Show the final rate law contains only species whose concentrations can be measured.</li>
+        <li>Compare the result with the experimental rate law and say whether the mechanism is consistent.</li>
+        <li>Check that the steps add up to the overall equation.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Leaving the intermediate in the final rate law.</li>
+        <li>Writing the rate law from the fast step because it comes first.</li>
+        <li>Inverting the equilibrium ratio: K<sub>1</sub> = k<sub>1</sub>/k<sub>−1</sub>, not k<sub>−1</sub>/k<sub>1</sub>. For 2NO ⇌ N<sub>2</sub>O<sub>2</sub>, [N<sub>2</sub>O<sub>2</sub>] = (k<sub>1</sub>/k<sub>−1</sub>)[NO]<sup>2</sup>.</li>
+        <li>Dropping a product that is also in step 1 (like O<sub>2</sub> in the ozone mechanism); it belongs in the denominator.</li>
+        <li>Forgetting the exponent when the intermediate's coefficient is 2: from I<sub>2</sub> ⇌ 2I, [I]<sup>2</sup> = K[I<sub>2</sub>].</li>
+        <li>Using the overall coefficients as orders. The pre-equilibrium result often matches them by coincidence (2NO + O<sub>2</sub>), but not always (2O<sub>3</sub> → 3O<sub>2</sub>).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 5.9. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-5.html">Unit 5 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Mechanisms ----------
+  // steps[0] is the fast reversible step (k1, k-1); steps[1] is the slow step (k2); any later steps are fast.
+  // I: the intermediate made in step 1 and used in step 2. law: species that may appear in the rate law.
+  // expect: hand-typed orders of the final rate law (self-check).
+  var MX = {
+    no2: { name: "2NO + O₂", overall: { r: { NO: 2, O2: 1 }, p: { NO2: 2 } }, I: "N2O2",
+      steps: [ { r: { NO: 2 }, p: { N2O2: 1 } }, { r: { N2O2: 1, O2: 1 }, p: { NO2: 2 } } ],
+      law: ["NO", "O2"], expect: { NO: 2, O2: 1 } },
+    hi: { name: "H₂ + I₂", overall: { r: { H2: 1, I2: 1 }, p: { HI: 2 } }, I: "I",
+      steps: [ { r: { I2: 1 }, p: { I: 2 } }, { r: { I: 2, H2: 1 }, p: { HI: 2 } } ],
+      law: ["H2", "I2"], expect: { H2: 1, I2: 1 } },
+    nobr: { name: "2NO + Br₂", overall: { r: { NO: 2, Br2: 1 }, p: { NOBr: 2 } }, I: "NOBr2",
+      steps: [ { r: { NO: 1, Br2: 1 }, p: { NOBr2: 1 } }, { r: { NOBr2: 1, NO: 1 }, p: { NOBr: 2 } } ],
+      law: ["NO", "Br2"], expect: { NO: 2, Br2: 1 } },
+    o3: { name: "2O₃ → 3O₂", overall: { r: { O3: 2 }, p: { O2: 3 } }, I: "O",
+      steps: [ { r: { O3: 1 }, p: { O2: 1, O: 1 } }, { r: { O: 1, O3: 1 }, p: { O2: 2 } } ],
+      law: ["O3", "O2"], expect: { O3: 2, O2: -1 } },
+    noh2: { name: "2NO + 2H₂ (three steps)", overall: { r: { NO: 2, H2: 2 }, p: { N2: 1, H2O: 2 } }, I: "N2O2",
+      steps: [ { r: { NO: 2 }, p: { N2O2: 1 } }, { r: { N2O2: 1, H2: 1 }, p: { N2O: 1, H2O: 1 } }, { r: { N2O: 1, H2: 1 }, p: { N2: 1, H2O: 1 } } ],
+      law: ["NO", "H2"], expect: { NO: 2, H2: 1 } }
+  };
+  var ORDER = ["no2", "hi", "nobr", "o3", "noh2"];
+  var K1 = 50, KM1 = 5000, C0 = 0.010; // illustrative step-1 constants and base concentrations (M)
+  var S = { key: "no2", m: -2, shown: 1 };
+
+  // ---------- Formatting ----------
+  function term(s, n) { return (n > 1 ? n : "") + Lab.fmla(s); }
+  function side(o) { return Object.keys(o).map(function (s) { return term(s, o[s]); }).join(" + "); }
+  function conc(o) { return Object.keys(o).map(function (s) { return "[" + Lab.fmla(s) + "]" + (o[s] !== 1 ? "<sup>" + fmtOrd(o[s]) + "</sup>" : ""); }).join(""); }
+  function fmtOrd(v) {
+    var r = Math.round(v * 2) / 2, s = Math.abs(r) % 1 ? (Math.abs(r) * 2) + "/2" : String(Math.abs(r));
+    return (r < 0 ? "−" : "") + s;
+  }
+  function without(o, sp) { var c = {}; Object.keys(o).forEach(function (s) { if (s !== sp) c[s] = o[s]; }); return c; }
+  function lawHTML(ord) {
+    var num = "", den = "";
+    Object.keys(ord).forEach(function (s) {
+      var v = ord[s]; if (!v) return;
+      var t = "[" + Lab.fmla(s) + "]" + (Math.abs(v) !== 1 ? "<sup>" + fmtOrd(Math.abs(v)) + "</sup>" : "");
+      if (v > 0) num += t; else den += t;
+    });
+    return "rate = " + (den ? "k" + num + "/" + den : "k" + num);
+  }
+  function chargeOf(s) { var c = String(s).match(/\^(\d*)([+\-])$/); return c ? (c[2] === "-" ? -1 : 1) * (c[1] ? +c[1] : 1) : 0; }
+  function balanced(r, p) {
+    var a = {}, q = 0;
+    Object.keys(r).forEach(function (s) { var f = Lab.parseFormula(s); for (var e in f) a[e] = (a[e] || 0) + f[e] * r[s]; q += chargeOf(s) * r[s]; });
+    Object.keys(p).forEach(function (s) { var f = Lab.parseFormula(s); for (var e in f) a[e] = (a[e] || 0) - f[e] * p[s]; q -= chargeOf(s) * p[s]; });
+    for (var e in a) if (a[e] !== 0) return false;
+    return q === 0;
+  }
+  function addsUp(mx) {
+    var n = {}, o = {}, k;
+    mx.steps.forEach(function (st) {
+      Object.keys(st.r).forEach(function (s) { n[s] = (n[s] || 0) - st.r[s]; });
+      Object.keys(st.p).forEach(function (s) { n[s] = (n[s] || 0) + st.p[s]; });
+    });
+    Object.keys(mx.overall.r).forEach(function (s) { o[s] = -mx.overall.r[s]; });
+    Object.keys(mx.overall.p).forEach(function (s) { o[s] = mx.overall.p[s]; });
+    for (k in n) if ((n[k] || 0) !== (o[k] || 0)) return false;
+    for (k in o) if ((n[k] || 0) !== (o[k] || 0)) return false;
+    return true;
+  }
+
+  // ---------- Symbolic pre-equilibrium result ----------
+  // [I]^ν = K1 × Π[step-1 reactants] / Π[other step-1 products]; substitute into rate = k2 Π[step-2 reactants].
+  function preEq(mx) {
+    var s1 = mx.steps[0], s2 = mx.steps[1], I = mx.I, nu = s1.p[I], n2 = s2.r[I], ord = {};
+    var f = n2 / nu;
+    Object.keys(s2.r).forEach(function (s) { if (s !== I) ord[s] = (ord[s] || 0) + s2.r[s]; });
+    Object.keys(s1.r).forEach(function (s) { ord[s] = (ord[s] || 0) + f * s1.r[s]; });
+    Object.keys(s1.p).forEach(function (s) { if (s !== I) ord[s] = (ord[s] || 0) - f * s1.p[s]; });
+    return { ord: ord, nu: nu, n2: n2 };
+  }
+  function k2For(mx, m) {
+    // choose k2 so that rate(step 2) / rate(reverse of step 1) = 10^m at the base concentrations
+    var s1 = mx.steps[0], s2 = mx.steps[1], I = mx.I, num = KM1, den = 1;
+    Object.keys(s1.p).forEach(function (s) { if (s !== mx.I) num *= Math.pow(C0, s1.p[s]); });
+    Object.keys(s2.r).forEach(function (s) { if (s !== I) den *= Math.pow(C0, s2.r[s]); });
+    return Math.pow(10, m) * num / den;
+  }
+
+  // ---------- Full model (steady state of the intermediate) ----------
+  function rateOf(st, c, k, rev) { var r = k, o = rev ? st.p : st.r; Object.keys(o).forEach(function (s) { r *= Math.pow(c[s] || 0, o[s]); }); return r; }
+  function model(mx, cs, k2) {
+    var s1 = mx.steps[0], s2 = mx.steps[1], I = mx.I;
+    function f(x) {
+      var c = {}; for (var s in cs) c[s] = cs[s]; c[I] = x;
+      return s1.p[I] * (rateOf(s1, c, K1) - rateOf(s1, c, KM1, true)) - s2.r[I] * rateOf(s2, c, k2);
+    }
+    var lo = 0, hi = 1e-12;
+    while (f(hi) > 0) hi *= 2;
+    for (var i = 0; i < 200; i++) { var mid = (lo + hi) / 2; if (f(mid) > 0) lo = mid; else hi = mid; }
+    var x = (lo + hi) / 2, c = {}; for (var s in cs) c[s] = cs[s]; c[I] = x;
+    return { I: x, rate: rateOf(s2, c, k2), rev: rateOf(s1, c, KM1, true), fwd: rateOf(s1, c, K1), r2: rateOf(s2, c, k2) };
+  }
+  function baseConc(mx) { var c = {}; mx.law.forEach(function (s) { c[s] = C0; }); return c; }
+  function predicted(mx, cs, k2) { var p = preEq(mx), r = k2 * K1 / KM1; Object.keys(p.ord).forEach(function (s) { r *= Math.pow(cs[s], p.ord[s]); }); return r; }
+  function step1Limited(mx, cs) { return rateOf(mx.steps[0], cs, K1); }
+  function modelOrders(mx, k2) {
+    var b = baseConc(mx), r0 = model(mx, b, k2).rate, out = {};
+    mx.law.forEach(function (s) { var c = baseConc(mx); c[s] = 2 * C0; out[s] = Math.log(model(mx, c, k2).rate / r0) / Math.log(2); });
+    return out;
+  }
+
+  // ---------- Derivation text ----------
+  function derivation(mx) {
+    var s1 = mx.steps[0], s2 = mx.steps[1], I = mx.I, p = preEq(mx), fI = Lab.fmla(I);
+    var other = without(s1.p, I), rest2 = without(s2.r, I);
+    var Ipow = "[" + fI + "]" + (p.nu > 1 ? "<sup>" + p.nu + "</sup>" : "");
+    var sol = Ipow + " = (k<sub>1</sub>/k<sub>−1</sub>)" + conc(s1.r) + (Object.keys(other).length ? "/" + conc(other) : "");
+    var L = [];
+    L.push("<b>Start with the slow step.</b> Step 2 is rate-determining and elementary, so" + '<span class="eqn">rate = k<sub>2</sub>' + conc(s2.r) + "</span>");
+    L.push("<b>Spot the intermediate.</b> " + fI + " is made in step 1 and used in step 2, so it cannot stay in the rate law. Everything else in the rate law must be a reactant or product whose concentration can be measured.");
+    L.push("<b>Assume step 1 is at equilibrium.</b> It is fast and reversible, so its forward and reverse rates are equal:" + '<span class="eqn">k<sub>1</sub>' + conc(s1.r) + " = k<sub>−1</sub>" + conc(s1.p) + "</span>");
+    L.push("<b>Solve for the intermediate.</b>" + '<span class="eqn">' + sol + "</span>" + (Object.keys(other).length ? "The other product of step 1 ends up in the denominator: more of it pushes step 1 backward and lowers [" + fI + "]." : ""));
+    L.push("<b>Substitute</b> into the slow-step rate law" + (p.n2 === p.nu ? " (it contains " + Ipow + ", exactly what you solved for)" : "") + ":" +
+      '<span class="eqn">rate = k<sub>2</sub> × (k<sub>1</sub>/k<sub>−1</sub>)' + conc(s1.r) + (Object.keys(other).length ? "/" + conc(other) : "") + (Object.keys(rest2).length ? " × " + conc(rest2) : "") + "</span>");
+    L.push("<b>Combine the constants</b> and collect the concentration terms. The observed rate constant is k = k<sub>2</sub>k<sub>1</sub>/k<sub>−1</sub>:" + '<span class="final">' + lawHTML(p.ord) + "</span>");
+    return L;
+  }
+
+  // ---------- Drawing ----------
+  var svg = document.getElementById("valid");
+  function draw(mx) {
+    var F = Lab.frame(svg, { x: [-3, 3], y: [0, 1.1], width: 440, height: 300, xLabel: "log₁₀ (rate of step 2 ÷ rate of reverse step 1)", yLabel: "True rate ÷ prediction",
+      xTicks: [-3, -2, -1, 0, 1, 2, 3], yTicks: [0, 0.25, 0.5, 0.75, 1], fmtX: function (v) { return String(v).replace("-", "−"); }, fmtY: function (v) { return v; } });
+    Lab.rect(F, -3, 0, -1, 1.1, "var(--good)", 0.08);
+    Lab.tag(F, -2.95, 1.04, "approximation good", "var(--good)", "start");
+    var b = baseConc(mx), a = [], c = [];
+    for (var i = 0; i <= 60; i++) {
+      var m = -3 + 6 * i / 60, k2 = k2For(mx, m), r = model(mx, b, k2);
+      a.push([m, r.rate / predicted(mx, b, k2)]); c.push([m, r.rate / step1Limited(mx, b)]);
+    }
+    Lab.line(F, a, "var(--accent)", 3);
+    Lab.line(F, c, "var(--c1)", 2.5, "7 5");
+    var k2 = k2For(mx, S.m), r0 = model(mx, b, k2), y = r0.rate / predicted(mx, b, k2);
+    Lab.dot(F, Math.log10(r0.r2 / r0.rev), y, "var(--accent)", true);
+    return { k2: k2, r: r0, y: y };
+  }
+
+  // ---------- Story ----------
+  function story(mx, g, ord) {
+    var p = preEq(mx), x = g.r.r2 / g.r.rev, li = [];
+    li.push("<b>Right now</b> step 2 removes the intermediate at " + (x < 1 ? "1/" + Lab.sig(1 / x, 2) : Lab.sig(x, 2) + " times") + " the rate that the reverse of step 1 does. " +
+      (x < 0.1 ? "Step 1 runs backward far more often than step 2 drains it, so step 1 stays essentially at equilibrium. The true rate is " + Lab.fmt(100 * g.y, 1) + "% of the pre-equilibrium prediction." :
+       x < 10 ? "The two drains are comparable, so step 1 is pulled off equilibrium and neither simple rate law is exact. The true rate is " + Lab.fmt(100 * g.y, 0) + "% of the pre-equilibrium prediction." :
+       "Step 2 grabs the intermediate almost as soon as it forms, so step 1 never reaches equilibrium. Now step 1 is effectively the slow step and the rate approaches k<sub>1</sub>" + conc(mx.steps[0].r) + ", the topic 5.8 result."));
+    li.push("<b>Orders from the full model</b> at this setting (non-integer orders mean no simple rate law fits): " + mx.law.map(function (s) { return Lab.fmla(s) + " " + (Math.abs(ord[s] - Math.round(ord[s])) < 0.01 ? fmtOrd(ord[s]) : ord[s].toFixed(2).replace("-", "−")); }).join(", ") +
+      ". The pre-equilibrium rate law predicts " + mx.law.map(function (s) { return Lab.fmla(s) + " " + fmtOrd(p.ord[s] || 0); }).join(", ") + ".");
+    if ((p.ord[mx.law[1]] || 0) < 0 || (p.ord[mx.law[0]] || 0) < 0) li.push("<b>Negative order:</b> a product of step 1 sits in the denominator. Adding it shifts the fast equilibrium back toward the reactants, lowering the intermediate and slowing the reaction.");
+    if (mx.steps.length > 2) li.push("<b>Step 3 is fast and comes after the slow step,</b> so it does not affect the rate law. It only finishes off the second intermediate, N<sub>2</sub>O.");
+    if (p.nu > 1) li.push("<b>Coefficient 2 on the intermediate:</b> step 1 makes 2 " + Lab.fmla(mx.I) + ", so the equilibrium expression gives [" + Lab.fmla(mx.I) + "]<sup>2</sup>, which is exactly what the slow step needs.");
+    var ap = "Step 2 is slow and contains the intermediate " + Lab.fmla(mx.I) + ". Assuming the fast step 1 is at equilibrium, k<sub>1</sub>" + conc(mx.steps[0].r) + " = k<sub>−1</sub>" + conc(mx.steps[0].p) +
+      ", so substituting for [" + Lab.fmla(mx.I) + "] gives " + lawHTML(p.ord) + " with k = k<sub>2</sub>k<sub>1</sub>/k<sub>−1</sub>.";
+    return "<ul><li>" + li.join("</li><li>") + "</li></ul><p><b>AP answer:</b> " + ap + "</p>";
+  }
+
+  // ---------- Render ----------
+  var elM = document.getElementById("s-m"), scBtns = {};
+  function render() {
+    var mx = MX[S.key], p = preEq(mx), L = derivation(mx);
+    document.getElementById("overall").innerHTML = "Overall: " + side(mx.overall.r) + " → " + side(mx.overall.p);
+    document.getElementById("steps").innerHTML = mx.steps.map(function (st, i) {
+      return '<div class="step ' + (i === 1 ? "slow" : "fast") + '"><span class="n">Step ' + (i + 1) + '</span><span class="eqn">' + side(st.r) + (i === 0 ? " ⇌ " : " → ") + side(st.p) + '</span><span class="mol">' + (i === 0 ? "fast, reversible (k<sub>1</sub>, k<sub>−1</sub>)" : i === 1 ? "slow (k<sub>2</sub>)" : "fast") + '</span></div>';
+    }).join("");
+    var ol = document.getElementById("deriv");
+    ol.innerHTML = L.map(function (h, i) { return '<li class="' + (i < S.shown ? "" : "hide") + '">' + h + "</li>"; }).join("");
+    document.getElementById("d-count").textContent = "step " + Math.min(S.shown, L.length) + " of " + L.length;
+    document.getElementById("b-next").disabled = S.shown >= L.length;
+    elM.value = S.m;
+    var x = Math.pow(10, S.m);
+    document.getElementById("o-m").textContent = x >= 1 ? "× " + Lab.sig(x, 2) : "1/" + Lab.sig(1 / x, 2);
+    var g = draw(mx), ord = modelOrders(mx, g.k2);
+    document.getElementById("r-law").innerHTML = lawHTML(p.ord);
+    document.getElementById("r-law2").innerHTML = "k = k<sub>2</sub>k<sub>1</sub>/k<sub>−1</sub>";
+    document.getElementById("r-ord").innerHTML = mx.law.map(function (s) { return Lab.fmla(s) + ": " + ord[s].toFixed(2).replace("-", "−"); }).join(", ");
+    document.getElementById("r-ratio").textContent = g.y.toFixed(3);
+    var rr = document.getElementById("r-ratio2"); rr.textContent = g.y > 0.9 ? "approximation holds" : g.y > 0.5 ? "approximation is rough" : "approximation fails";
+    rr.style.color = g.y > 0.9 ? "var(--good)" : "var(--bad)";
+    document.getElementById("r-int").innerHTML = Lab.fmla(mx.I);
+    document.getElementById("r-int2").innerHTML = Lab.sci(g.r.I, 2, true) + " M at steady state";
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    document.getElementById("story").innerHTML = story(mx, g, ord);
+  }
+  function pick(k) { S.key = k; S.shown = 1; S.m = -2; render(); }
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = MX[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pick(k); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  elM.addEventListener("input", function () { S.m = +elM.value; render(); });
+  document.getElementById("b-next").addEventListener("click", function () { S.shown++; render(); });
+  document.getElementById("b-all").addEventListener("click", function () { S.shown = 99; render(); });
+  document.getElementById("b-hide").addEventListener("click", function () { S.shown = 1; render(); });
+  pick("no2");
+
+  // cheat-sheet table, generated from the same data
+  document.getElementById("tbody").innerHTML = ORDER.map(function (k) {
+    var mx = MX[k], s1 = mx.steps[0], other = without(s1.p, mx.I), p = preEq(mx);
+    return "<tr><td>" + side(mx.overall.r) + " → " + side(mx.overall.p) + "</td><td>" + side(s1.r) + " ⇌ " + side(s1.p) + "</td><td>" + side(mx.steps[1].r) + " → " + side(mx.steps[1].p) + "</td><td>[" + Lab.fmla(mx.I) + "]" + (p.nu > 1 ? "<sup>" + p.nu + "</sup>" : "") + " = K" + conc(s1.r) + (Object.keys(other).length ? "/" + conc(other) : "") + "</td><td><b>" + lawHTML(p.ord) + "</b></td></tr>";
+  }).join("");
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "For 2NO(g) + O₂(g) → 2NO₂(g), a proposed mechanism is Step 1: 2NO ⇌ N₂O₂ (fast equilibrium). Step 2: N₂O₂ + O₂ → 2NO₂ (slow). What rate law does this mechanism predict?",
+      o: ["rate = k[N₂O₂][O₂]", "rate = k[NO]²[O₂]", "rate = k[NO]²", "rate = k[NO][O₂]"], c: 1,
+      w: "The slow step gives rate = k<sub>2</sub>[N<sub>2</sub>O<sub>2</sub>][O<sub>2</sub>]. From the fast equilibrium, [N<sub>2</sub>O<sub>2</sub>] = (k<sub>1</sub>/k<sub>−1</sub>)[NO]<sup>2</sup>, so rate = k[NO]<sup>2</sup>[O<sub>2</sub>]. Choice A leaves the intermediate in the rate law. Choice C is the rate law of the forward fast step alone." },
+    { s: "The decomposition of ozone, 2O₃(g) → 3O₂(g), is proposed to occur by Step 1: O₃ ⇌ O₂ + O (fast equilibrium). Step 2: O + O₃ → 2O₂ (slow). Which rate law is consistent with this mechanism?",
+      o: ["rate = k[O₃]²", "rate = k[O][O₃]", "rate = k[O₃]", "rate = k[O₃]²/[O₂]"], c: 3,
+      w: "From step 1, [O] = K[O<sub>3</sub>]/[O<sub>2</sub>]. Substituting into rate = k<sub>2</sub>[O][O<sub>3</sub>] gives rate = k[O<sub>3</sub>]<sup>2</sup>/[O<sub>2</sub>]. Choice A forgets the O<sub>2</sub> produced in step 1, which belongs in the denominator. Choice B still contains the intermediate O." },
+    { s: "For H₂(g) + I₂(g) → 2HI(g), a proposed mechanism is Step 1: I₂ ⇌ 2I (fast equilibrium). Step 2: H₂ + 2I → 2HI (slow). What rate law does it predict?",
+      o: ["rate = k[H₂][I₂]", "rate = k[H₂][I]²", "rate = k[I₂]", "rate = k[H₂][I₂]^(1/2)"], c: 0,
+      w: "The equilibrium gives [I]<sup>2</sup> = K[I<sub>2</sub>]. The slow step's rate law, k<sub>2</sub>[H<sub>2</sub>][I]<sup>2</sup>, then becomes k[H<sub>2</sub>][I<sub>2</sub>]. Choice B keeps the intermediate. Choice D takes a square root that is not needed, because the slow step uses [I]<sup>2</sup>, exactly what the equilibrium supplies." },
+    { s: "In deriving a rate law from a mechanism whose slow step is step 2, why must the concentration of an intermediate be replaced?",
+      o: ["Intermediates always have a concentration of exactly zero.", "Intermediates react only in fast steps, so they cannot affect the rate.", "An intermediate is not a reactant or product whose concentration is set or measured in the experiment, so the experimental rate law cannot contain it.", "The rate law of an elementary step never includes more than one species."], c: 2,
+      w: "Rate laws are tested against experiments in which only reactant (and sometimes product) concentrations are controlled. An intermediate's concentration is small and not directly controlled, so it must be expressed in terms of those species. Choice A is too strong: the intermediate is present while the reaction runs. Choice B is false here, because the intermediate is a reactant in the slow step." },
+    { s: "Which assumption is the basis of the pre-equilibrium approximation?",
+      o: ["The forward and reverse rates of a fast, reversible step that comes before the slow step are equal.", "The slow step is at equilibrium.", "The intermediate's concentration equals the reactant's concentration.", "All steps in the mechanism have the same rate constant."], c: 0,
+      w: "Because step 1 is fast in both directions and step 2 is slow, step 1 has time to reach equilibrium, so k<sub>1</sub>[reactants] = k<sub>−1</sub>[products of step 1]. Choice B is the trap: the slow step runs essentially one way and is not at equilibrium." },
+    { s: "A mechanism has Step 1: A + B ⇌ C (fast equilibrium; forward rate constant k₁, reverse k₋₁) and Step 2: C + B → D (slow; rate constant k₂). The observed rate law is rate = k[A][B]². How is the observed rate constant k related to the step rate constants?",
+      o: ["k = k₁k₂", "k = k₂", "k = k₋₁k₂/k₁", "k = k₁k₂/k₋₁"], c: 3,
+      w: "From step 1, [C] = (k<sub>1</sub>/k<sub>−1</sub>)[A][B]. Substituting into rate = k<sub>2</sub>[C][B] gives (k<sub>2</sub>k<sub>1</sub>/k<sub>−1</sub>)[A][B]<sup>2</sup>. Choice C inverts the equilibrium ratio, a common algebra slip." },
+    { s: "The experimental rate law for 2NO(g) + Br₂(g) → 2NOBr(g) is rate = k[NO]²[Br₂]. Which mechanism is consistent with it?",
+      o: ["Step 1: Br₂ → 2Br (slow). Step 2: 2(Br + NO → NOBr) (fast).", "Step 1: NO + Br₂ → NOBr + Br (slow). Step 2: Br + NO → NOBr (fast).", "Step 1: NO + Br₂ ⇌ NOBr₂ (fast equilibrium). Step 2: NOBr₂ + NO → 2NOBr (slow).", "Step 1: NO + Br₂ → NOBr₂ (slow). Step 2: NOBr₂ + NO → 2NOBr (fast)."], c: 2,
+      w: "In choice C, [NOBr<sub>2</sub>] = K[NO][Br<sub>2</sub>], and the slow step gives rate = k<sub>2</sub>[NOBr<sub>2</sub>][NO] = k[NO]<sup>2</sup>[Br<sub>2</sub>]. Choices B and D both have slow first steps that predict k[NO][Br<sub>2</sub>], and choice A predicts k[Br<sub>2</sub>]." },
+    { s: "For the ozone mechanism with rate = k[O₃]²/[O₂], what happens to the rate if [O₂] is doubled while [O₃] is held constant?",
+      o: ["It doubles.", "It is cut in half.", "It does not change, because O₂ is a product.", "It quadruples."], c: 1,
+      w: "The reaction is order −1 in O<sub>2</sub>, so doubling [O<sub>2</sub>] multiplies the rate by 2<sup>−1</sup> = 1/2. Physically, extra O<sub>2</sub> shifts the fast equilibrium O<sub>3</sub> ⇌ O<sub>2</sub> + O to the left, lowering [O]. Choice C assumes products never appear in rate laws, which this mechanism shows is not always true." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("5.9");
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    ORDER.forEach(function (k) {
+      var mx = MX[k], p = preEq(mx);
+      mx.steps.forEach(function (st, i) { if (!balanced(st.r, st.p)) bad.push(k + " step " + (i + 1) + " unbalanced"); });
+      if (!balanced(mx.overall.r, mx.overall.p)) bad.push(k + " overall unbalanced");
+      if (!addsUp(mx)) bad.push(k + " steps do not add up");
+      if (p.n2 !== p.nu) bad.push(k + " derivation text assumes equal intermediate exponents");
+      mx.law.forEach(function (s) { if ((p.ord[s] || 0) !== mx.expect[s]) bad.push(k + " symbolic order in " + s); });
+      Object.keys(p.ord).forEach(function (s) { if (p.ord[s] && mx.law.indexOf(s) < 0) bad.push(k + " rate law has unlisted " + s); });
+      // the full model must agree with the pre-equilibrium rate law when step 2 is slow, and with step 1 when it is fast
+      var slow = modelOrders(mx, k2For(mx, -3)), fast = modelOrders(mx, k2For(mx, 4)), b = baseConc(mx);
+      mx.law.forEach(function (s) {
+        if (Math.abs(slow[s] - mx.expect[s]) > 0.01) bad.push(k + " model order in " + s + " = " + slow[s].toFixed(3));
+        if (Math.abs(fast[s] - (mx.steps[0].r[s] || 0)) > 0.01) bad.push(k + " fast-limit order in " + s + " = " + fast[s].toFixed(3));
+      });
+      var r = model(mx, b, k2For(mx, 0)).rate / predicted(mx, b, k2For(mx, 0));
+      if (Math.abs(r - 0.5) > 1e-3) bad.push(k + " ratio at equal drains = " + r);
+    });
+    if (Q.map(function (q) { return q.c; }).join("") !== "13020321") bad.push("quiz keys changed");
+    if (bad.length) console.error("5.9 self-check failed: " + bad.join("; "));
+  })();
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [5], topic: "5.9", compact: true, storageKey: "topic-5.9" });</script>
+</body>
+</html>

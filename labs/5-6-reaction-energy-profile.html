@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reaction Energy Profile Study Lab</title>
+<meta name="description" content="Shape the energy profile of an elementary reaction, read off the activation energy, ΔH and the reverse barrier, walk the atoms through the transition state, and see why heating speeds up a reaction.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+#lab-sec > *, .lab > *, .side > *, .group > * { min-width: 0; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.side .controls { grid-template-columns: 1fr 1fr; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.note { font-size: .82rem; color: var(--muted); }
+svg.mol { width: 100%; height: auto; display: block; border-top: 1px dashed var(--rule); margin-top: 4px; }
+svg.mol .atom { stroke: var(--surface); stroke-width: 1.5; }
+svg.mol .albl { font-size: 13px; font-weight: 600; fill: var(--surface); }
+#prof text.lbl, #dist text.lbl { paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+@media (max-width: 520px) { .side .controls { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 5 · Topic 5.6</span>
+  <h1>Reaction Energy Profile Study Lab</h1>
+  <p class="lede">In an elementary reaction, old bonds stretch and break while new ones form. On the way, the atoms pass through a high-energy arrangement called the transition state, and the energy needed to reach it is the activation energy. Shape an energy profile, walk the atoms over the barrier, and change the temperature to see why only some collisions succeed.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The energy profile builder</h2>
+    <p>Pick a classic case or set the activation energy and ΔH yourself. Drag <b>Reaction progress</b> (or press Play) to move the atoms of A–B + C → A + B–C along the reaction coordinate. The right-hand graph shows how collision energies spread out at the temperature you choose. Energies are illustrative teaching values, measured relative to the reactants.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Energy profile <small id="prof-sub">A–B + C → A + B–C</small></h3>
+      <svg class="chart" id="prof" role="img" aria-label="Reaction energy profile: potential energy versus reaction coordinate, with the activation energy, ΔH and reverse activation energy marked"></svg>
+      <svg class="mol" id="mol" role="img" aria-label="The three atoms A, B and C at the current point along the reaction coordinate"></svg>
+    </div>
+    <div class="card graph-card">
+      <h3>Collision energies <small>schematic, not to scale</small></h3>
+      <svg class="chart" id="dist" role="img" aria-label="Distribution of collision energies at the chosen temperature and at 298 K, with the collisions above the activation energy shaded"></svg>
+      <p class="note">The shaded tail is the share of collisions with energy at least E<sub>a</sub>. Real tails are far thinner than drawn; the readouts below use the actual numbers.</p>
+    </div>
+  </div>
+
+  <div class="card side">
+    <div class="group">
+      <div class="tag">Classic cases</div>
+      <div class="scenarios" id="sc"></div>
+    </div>
+    <div class="controls">
+      <div class="ctl">
+        <label for="s-ea"><span>Activation energy, E<sub>a</sub></span> <output id="o-ea"></output></label>
+        <input type="range" id="s-ea" min="10" max="200" step="5">
+        <span class="hint">Reactants to transition state</span>
+      </div>
+      <div class="ctl">
+        <label for="s-dh"><span>Enthalpy change, ΔH</span> <output id="o-dh"></output></label>
+        <input type="range" id="s-dh" min="-150" max="150" step="5">
+        <span class="hint">Products minus reactants</span>
+      </div>
+      <div class="ctl">
+        <label for="s-t"><span>Temperature</span> <output id="o-t"></output></label>
+        <input type="range" id="s-t" min="250" max="400" step="2">
+        <span class="hint">Compared with 298 K (dashed)</span>
+      </div>
+      <div class="ctl">
+        <label for="s-p"><span>Reaction progress</span> <output id="o-p"></output></label>
+        <input type="range" id="s-p" min="0" max="1" step="0.01">
+        <span class="hint">Position along the reaction coordinate</span>
+      </div>
+    </div>
+    <div class="btnrow">
+      <button type="button" class="primary" id="b-play">Play the collision</button>
+      <button type="button" id="b-ts">Jump to transition state</button>
+      <button type="button" id="b-lbl" aria-pressed="true">Labels: on</button>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-ad">Energy profile</span><span class="l-c1">E<sub>a</sub> (forward)</span><span class="l-c2">ΔH</span><span class="l-c3">E<sub>a</sub> (reverse)</span><span class="l-ghost">298 K curve</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">E<sub>a</sub>, forward</div><div class="v" id="r-ea"></div><div class="sub">transition state − reactants</div></div>
+    <div class="stat"><div class="k">ΔH</div><div class="v" id="r-dh"></div><div class="sub" id="r-dh2"></div></div>
+    <div class="stat"><div class="k">E<sub>a</sub>, reverse</div><div class="v" id="r-er"></div><div class="sub">transition state − products</div></div>
+    <div class="stat"><div class="k">Collisions with E ≥ E<sub>a</sub></div><div class="v" id="r-f"></div><div class="sub" id="r-f2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">Simplifications: one elementary step with a smooth barrier; energies in kJ/mol relative to the reactants; the fraction of collisions is estimated with e<sup>−E<sub>a</sub>/RT</sup>, which is the idea behind the Arrhenius equation. Arrhenius calculations are not assessed on the AP exam.</p>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Bonds</span><h3>Break some, form some</h3><p>An elementary reaction happens in one collision. During it, some bonds in the reactants break and new bonds in the products form. Breaking bonds costs energy before the new bonds pay it back, which is why there is a barrier at all.</p></div>
+    <div class="card"><span class="tag">The x-axis</span><h3>Reaction coordinate</h3><p>The horizontal axis tracks how far the atoms have rearranged from reactants to products. It is not time and it is not concentration. The vertical axis is potential energy.</p></div>
+    <div class="card"><span class="tag">The peak</span><h3>Transition state</h3><p>The highest point on the path for a step. Old bonds are partly broken and new bonds partly formed. It exists for an instant and cannot be isolated, which is what separates it from an intermediate (topic 5.7).</p></div>
+    <div class="card"><span class="tag">Two barriers</span><h3>Forward and reverse E<sub>a</sub></h3><p>E<sub>a</sub>(forward) is measured from the reactants up to the transition state; E<sub>a</sub>(reverse) from the products up to the same peak. They are linked: E<sub>a</sub>(reverse) = E<sub>a</sub>(forward) − ΔH. For an exothermic reaction the reverse barrier is the larger one.</p></div>
+    <div class="card"><span class="tag">Temperature</span><h3>More collisions clear the bar</h3><p>Heating does not lower E<sub>a</sub>. It shifts the spread of collision energies so a larger fraction of collisions reach the transition state. Particles also collide a little more often, but the energy effect is the main reason the rate rises.</p></div>
+    <div class="card"><span class="tag">Arrhenius equation</span><h3>The math behind it</h3><p>The Arrhenius equation, k = Ae<sup>−E<sub>a</sub>/RT</sup>, ties the rate constant to E<sub>a</sub> and T: a higher barrier means a smaller k, and a higher T means a larger k. The CED states that calculations with it are not assessed, and it is not on the equations sheet. Know the relationship in words.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Reading an energy profile</h2>
+    <p>Every quantity on a single-step profile is a vertical distance between three levels: reactants (R), transition state (TS) and products (P).</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Quantity</th><th>Measure from → to</th><th>Sign</th><th>What it tells you</th></tr></thead>
+    <tbody>
+      <tr><td>E<sub>a</sub>, forward</td><td><b>R → TS</b></td><td>Always positive</td><td>Energy colliding reactants must have; a larger E<sub>a</sub> means a slower step at the same temperature</td></tr>
+      <tr><td>E<sub>a</sub>, reverse</td><td><b>P → TS</b></td><td>Always positive</td><td>Barrier for products turning back into reactants; equals E<sub>a</sub>(fwd) − ΔH</td></tr>
+      <tr><td>ΔH</td><td><b>R → P</b></td><td>Negative if P is below R (exothermic); positive if P is above R (endothermic)</td><td>Overall energy released or absorbed; it does not set the rate</td></tr>
+      <tr><td>Transition state</td><td>Top of the peak</td><td>—</td><td>Partial bonds; highest energy; not an isolable species</td></tr>
+      <tr><td>Effect of raising T</td><td>Profile unchanged</td><td>—</td><td>Larger fraction of collisions have E ≥ E<sub>a</sub>, so k and the rate increase</td></tr>
+      <tr><td>Effect of adding more reactant</td><td>Profile unchanged</td><td>—</td><td>More collisions per second, so the rate of an elementary step increases, but k and E<sub>a</sub> stay the same</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Energy profiles on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>When you draw a profile, label the axes (potential energy vs. reaction coordinate), put the products at the correct height relative to the reactants, and draw one smooth peak for one elementary step.</li>
+        <li>Mark E<sub>a</sub> with an arrow from the reactant level to the top of the peak, and ΔH with an arrow from reactants to products.</li>
+        <li>For temperature questions, say the fraction (or number) of collisions with energy greater than or equal to E<sub>a</sub> increases. Mention the energy distribution, not just "particles move faster."</li>
+        <li>Use the relationship E<sub>a</sub>(reverse) = E<sub>a</sub>(forward) − ΔH, and show the subtraction with signs.</li>
+        <li>Connect the barrier to bonds: energy is needed to begin breaking reactant bonds before product bonds form.</li>
+        <li>State that the transition state is the highest-energy arrangement along the reaction coordinate.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Measuring E<sub>a</sub> from the bottom of the graph or from the products instead of from the reactants.</li>
+        <li>Saying a higher temperature lowers the activation energy. E<sub>a</sub> stays the same; only catalysts change the path (topic 5.11).</li>
+        <li>Thinking a very exothermic reaction must be fast. ΔH and E<sub>a</sub> are independent; a reaction can release a lot of energy and still be slow.</li>
+        <li>Getting the sign of ΔH backward: products lower than reactants means ΔH is negative.</li>
+        <li>Calling the transition state an intermediate. An intermediate sits in a valley and can sometimes be detected; a transition state sits on a peak.</li>
+        <li>Reading the x-axis as time.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 5.6. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-5.html">Unit 5 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var R_J = Lab.CONST.R_J; // 8.314 J/(mol·K)
+
+  // ---------- Model ----------
+  // The profile runs from x = 0 (reactants) to x = 1 (products). Reactant plateau to X0, transition state at XT, product plateau from X1.
+  var X0 = 0.15, XT = 0.5, X1 = 0.85;
+  function cosStep(t) { return (1 - Math.cos(Math.PI * Math.max(0, Math.min(1, t)))) / 2; }
+  function energy(x, ea, dh) {
+    if (x <= X0) return 0;
+    if (x <= XT) return ea * cosStep((x - X0) / (XT - X0));
+    if (x <= X1) return ea + (dh - ea) * cosStep((x - XT) / (X1 - XT));
+    return dh;
+  }
+  function fraction(ea, T) { return Math.exp(-ea * 1000 / (R_J * T)); }
+
+  var SC = {
+    exo:  { name: "Exothermic", ea: 75, dh: -100, T: 298 },
+    endo: { name: "Endothermic", ea: 120, dh: 60, T: 298 },
+    low:  { name: "Low barrier (fast)", ea: 25, dh: -40, T: 298 },
+    high: { name: "High barrier (slow)", ea: 180, dh: -40, T: 298 },
+    warm: { name: "Heat it 10 K (298 → 308 K)", ea: 50, dh: -60, T: 308 },
+    bigdh: { name: "Very exothermic, still slow", ea: 160, dh: -150, T: 298 }
+  };
+  var ORDER = ["exo", "endo", "low", "high", "warm", "bigdh"];
+  var S = { key: "exo", ea: 75, dh: -100, T: 298, p: 0, labels: true, bumped: false };
+
+  function kj(v, sign) { return (sign && v > 0 ? "+" : "") + String(v).replace("-", "−") + " kJ/mol"; }
+
+  // ---------- Drawing: energy profile ----------
+  var svgP = document.getElementById("prof");
+  function drawProfile() {
+    var ea = S.ea, dh = S.dh;
+    var F = Lab.frame(svgP, { x: [0, 1], y: [-170, 230], width: 440, height: 320, xLabel: "Reaction coordinate", yLabel: "Potential energy (kJ/mol)",
+      xTicks: [], yTicks: [-150, -100, -50, 0, 50, 100, 150, 200], fmtY: function (v) { return String(v).replace("-", "−"); } });
+    // level guides
+    Lab.line(F, [[0, 0], [0.98, 0]], "var(--muted)", 1, "4 4");
+    Lab.line(F, [[0.42, dh], [1, dh]], "var(--muted)", 1, "4 4");
+    Lab.line(F, [[0.36, ea], [0.64, ea]], "var(--muted)", 1, "4 4");
+    Lab.fn(F, function (x) { return energy(x, ea, dh); }, "var(--accent)", 3.5, null, 160);
+    if (S.labels) {
+      Lab.arrow(F, 0.44, 0, 0.44, ea, "var(--c1)");
+      Lab.tag(F, 0.41, ea / 2 + 6, "Eₐ = " + ea, "var(--c1)", "end");
+      if (ea - dh >= 8) { Lab.arrow(F, 0.58, dh, 0.58, ea, "var(--c3)"); Lab.tag(F, 0.6, (ea + dh) / 2 + 6, "Eₐ(rev) = " + (ea - dh), "var(--c3)", "start"); }
+      if (Math.abs(dh) >= 8) { Lab.arrow(F, 0.93, 0, 0.93, dh, "var(--c2)"); }
+      Lab.tag(F, 0.91, Math.abs(dh) >= 30 ? dh / 2 - 4 : (dh >= 0 ? dh + 34 : dh - 34), "ΔH = " + (dh > 0 ? "+" : "") + String(dh).replace("-", "−"), "var(--c2)", "end");
+      Lab.tag(F, 0.02, 12, "Reactants", "var(--ink)", "start");
+      Lab.tag(F, 0.985, dh >= 0 ? dh + 12 : dh - 20, "Products", "var(--ink)", "end");
+      Lab.tag(F, 0.5, ea + 14, "Transition state", "var(--ink)", "middle");
+    }
+    // the moving system
+    Lab.el("circle", { cx: F.sx(S.p), cy: F.sy(energy(S.p, ea, dh)), r: 7, fill: "var(--c4)", stroke: "var(--surface)", "stroke-width": 2 }, F.svg);
+  }
+
+  // ---------- Drawing: three atoms ----------
+  var svgM = document.getElementById("mol");
+  function drawMol() {
+    var W = 440, H = 90;
+    svgM.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svgM.firstChild) svgM.removeChild(svgM.firstChild);
+    var q = cosStep((S.p - X0) / (X1 - X0)); // 0 = reactants, 1 = products
+    var bond = 60, far = 150;
+    var dAB = bond + (far - bond) * Math.max(0, (q - 0.5) * 2) + 18 * Math.sin(Math.PI * q);
+    var dBC = far - (far - bond) * Math.min(1, q * 2) + 18 * Math.sin(Math.PI * q);
+    var xB = 220; // B stays centered; A and C move
+    var xA = xB - dAB, xC = xB + dBC, y = 46;
+    function bondLine(x1, x2, partial) {
+      Lab.el("line", { x1: x1, y1: y, x2: x2, y2: y, stroke: "var(--ink)", "stroke-width": partial ? 2 : 4, "stroke-dasharray": partial ? "5 5" : null }, svgM);
+    }
+    var abState = q < 0.3 ? "full" : q < 0.7 ? "partial" : "none";
+    var bcState = q > 0.7 ? "full" : q > 0.3 ? "partial" : "none";
+    if (abState !== "none") bondLine(xA, xB, abState === "partial");
+    if (bcState !== "none") bondLine(xB, xC, bcState === "partial");
+    [[xA, "A", "var(--c2)"], [xB, "B", "var(--c1)"], [xC, "C", "var(--c3)"]].forEach(function (a) {
+      Lab.el("circle", { cx: a[0], cy: y, r: 17, fill: a[2], "class": "atom" }, svgM);
+      Lab.el("text", { x: a[0], y: y + 5, "text-anchor": "middle", "class": "albl" }, svgM, a[1]);
+    });
+    var lab = q < 0.05 ? "Reactants: A–B approaches C" : q < 0.3 ? "A–B bond stretching as C closes in" : q < 0.7 ? "Transition state region: A···B···C, both bonds partial" : q < 0.95 ? "B–C bond forming, A leaving" : "Products: A + B–C";
+    Lab.el("text", { x: W / 2, y: 84, "text-anchor": "middle", style: "fill:var(--muted)" }, svgM, lab);
+    return lab;
+  }
+
+  // ---------- Drawing: collision-energy distribution (schematic) ----------
+  var svgD = document.getElementById("dist");
+  function shape(E, T) { var s = 1.25 * T / 298; return E / (s * s) * Math.exp(-E / s); }
+  function eaToX(ea) { return 1.0 + ea / 200 * 5.4; }
+  function drawDist() {
+    var F = Lab.frame(svgD, { x: [0, 9], y: [0, 0.42], width: 440, height: 320, xLabel: "Collision energy →", yLabel: "Fraction of collisions",
+      xTicks: [], yTicks: [] });
+    var xe = eaToX(S.ea), pts = [[xe, 0]];
+    for (var i = 0; i <= 80; i++) { var x = xe + (9 - xe) * i / 80; pts.push([x, shape(x, S.T)]); }
+    pts.push([9, 0]);
+    Lab.el("path", { d: pts.map(function (p, i) { return (i ? "L" : "M") + F.sx(p[0]).toFixed(1) + " " + F.sy(p[1]).toFixed(1); }).join(" ") + " Z", fill: "var(--c1)", opacity: 0.35 }, F.g);
+    Lab.fn(F, function (x) { return shape(x, 298); }, "var(--ghost)", 2, "6 5", 120);
+    Lab.fn(F, function (x) { return shape(x, S.T); }, "var(--accent)", 3, null, 120);
+    Lab.vline(F, xe, "var(--c1)", 2);
+    Lab.tag(F, xe + 0.12, 0.39, "Eₐ", "var(--c1)", "start");
+    Lab.tag(F, 8.9, 0.36, S.T + " K", "var(--accent)", "end");
+    if (S.T !== 298) Lab.tag(F, 8.9, 0.33, "298 K dashed", "var(--muted)", "end");
+  }
+
+  // ---------- Story ----------
+  function story(molLabel) {
+    var ea = S.ea, dh = S.dh, er = ea - dh, f = fraction(ea, S.T), r = f / fraction(ea, 298);
+    var kind = dh < 0 ? "exothermic" : dh > 0 ? "endothermic" : "thermoneutral";
+    var li = [];
+    li.push("<b>Activation energy:</b> the reactants must gain " + ea + " kJ/mol to reach the transition state. That is the vertical distance from the reactant level up to the top of the peak.");
+    if (dh < 0) li.push("<b>ΔH = " + kj(dh, true) + ":</b> the products sit " + (-dh) + " kJ/mol <i>below</i> the reactants, so the reaction is exothermic and releases energy. Forming the new bonds releases more energy than breaking the old ones absorbed.");
+    else if (dh > 0) li.push("<b>ΔH = " + kj(dh, true) + ":</b> the products sit " + dh + " kJ/mol <i>above</i> the reactants, so the reaction is endothermic and absorbs energy.");
+    else li.push("<b>ΔH = 0:</b> products and reactants are at the same level. Real reactions rarely land exactly here; this is just the boundary between exothermic and endothermic.");
+    li.push("<b>Reverse barrier:</b> E<sub>a</sub>(rev) = E<sub>a</sub>(fwd) − ΔH = " + ea + " − (" + String(dh).replace("-", "−") + ") = " + er + " kJ/mol. " +
+      (er > ea ? "The reverse barrier is larger, as it always is for an exothermic step." : er < ea ? "The reverse barrier is smaller, as it always is for an endothermic step." : "The two barriers are equal because ΔH = 0."));
+    li.push("<b>At " + S.T + " K</b>, about " + Lab.sci(f, 2, true) + " of collisions have at least E<sub>a</sub>" +
+      (S.T === 298 ? "." : ", which is " + (r >= 1 ? Lab.sig(r, 3) + " times the fraction at 298 K" : "only " + Lab.sig(r, 2) + " times the fraction at 298 K") + ". The barrier did not move; the spread of collision energies did.") +
+      (ea >= 150 ? " With a barrier this high, almost no collisions succeed, so this step is very slow at room temperature." : ea <= 30 ? " With a barrier this low, a far larger share of collisions succeed than for a typical barrier, so this step is fast." : ""));
+    if (S.bumped) li.push("<b>Note:</b> E<sub>a</sub> was raised so the peak stays above the products. The transition state can never be lower than either the reactants or the products.");
+    if (S.key === "bigdh") li.push("<b>Why this case matters:</b> ΔH is large and negative, yet the step is slow. How much energy a reaction releases says nothing about how fast it goes; the rate depends on E<sub>a</sub>.");
+    li.push("<b>Atoms right now:</b> " + molLabel + ".");
+    var ap = "E<sub>a</sub> is measured from the reactants to the transition state (" + ea + " kJ/mol) and ΔH from the reactants to the products (" + kj(dh, true) + ")" +
+      ", so E<sub>a</sub>(reverse) = " + er + " kJ/mol. " +
+      (S.T > 298 ? "Raising the temperature increases the rate because a larger fraction of collisions have energy ≥ E<sub>a</sub>; E<sub>a</sub> itself does not change." :
+       S.T < 298 ? "Lowering the temperature slows the reaction because a smaller fraction of collisions have energy ≥ E<sub>a</sub>; E<sub>a</sub> itself does not change." :
+       "A higher temperature would increase the rate because a larger fraction of collisions would have energy ≥ E<sub>a</sub>; E<sub>a</sub> itself would not change.");
+    return "<ul><li>" + li.join("</li><li>") + "</li></ul><p><b>AP answer:</b> " + ap + "</p>";
+  }
+
+  // ---------- Render ----------
+  var elEa = document.getElementById("s-ea"), elDh = document.getElementById("s-dh"), elT = document.getElementById("s-t"), elP = document.getElementById("s-p");
+  var scBtns = {};
+  function render() {
+    elEa.value = S.ea; elDh.value = S.dh; elT.value = S.T; elP.value = S.p;
+    document.getElementById("o-ea").textContent = S.ea + " kJ/mol";
+    document.getElementById("o-dh").textContent = kj(S.dh, true);
+    document.getElementById("o-t").textContent = S.T + " K";
+    document.getElementById("o-p").textContent = Math.round(S.p * 100) + "%";
+    drawProfile();
+    var ml = drawMol();
+    drawDist();
+    var f = fraction(S.ea, S.T), r = f / fraction(S.ea, 298);
+    document.getElementById("r-ea").textContent = S.ea + " kJ/mol";
+    document.getElementById("r-dh").textContent = kj(S.dh, true);
+    document.getElementById("r-dh2").textContent = S.dh < 0 ? "exothermic" : S.dh > 0 ? "endothermic" : "neither";
+    document.getElementById("r-er").textContent = (S.ea - S.dh) + " kJ/mol";
+    document.getElementById("r-f").innerHTML = Lab.sci(f, 2, true);
+    document.getElementById("r-f2").textContent = S.T === 298 ? "at 298 K" : "× " + Lab.sig(r, 3) + " vs. 298 K";
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    var bl = document.getElementById("b-lbl"); bl.setAttribute("aria-pressed", S.labels ? "true" : "false"); bl.textContent = "Labels: " + (S.labels ? "on" : "off");
+    document.getElementById("story").innerHTML = story(ml);
+  }
+  function fixBarrier() {
+    S.bumped = false;
+    if (S.ea < S.dh + 10) { S.ea = Math.min(200, Math.ceil((S.dh + 10) / 5) * 5); S.bumped = true; }
+  }
+  var stopAnim = null;
+  function pick(k) {
+    var x = SC[k]; S.key = k; S.ea = x.ea; S.dh = x.dh; S.T = x.T; S.bumped = false; render();
+  }
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pick(k); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  elEa.addEventListener("input", function () { S.key = null; S.ea = +elEa.value; fixBarrier(); render(); });
+  elDh.addEventListener("input", function () { S.key = null; S.dh = +elDh.value; fixBarrier(); render(); });
+  elT.addEventListener("input", function () { S.key = null; S.T = +elT.value; render(); });
+  elP.addEventListener("input", function () { if (stopAnim) stopAnim(); S.p = +elP.value; render(); });
+  document.getElementById("b-play").addEventListener("click", function () {
+    if (stopAnim) stopAnim();
+    stopAnim = Lab.animate(3200, function (t) { S.p = Math.round(t * 100) / 100; render(); }, function () { stopAnim = null; });
+  });
+  document.getElementById("b-ts").addEventListener("click", function () { if (stopAnim) stopAnim(); S.p = XT; render(); });
+  document.getElementById("b-lbl").addEventListener("click", function () { S.labels = !S.labels; render(); });
+  pick("exo");
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "An energy profile for an elementary reaction shows the reactants at 40 kJ/mol, the transition state at 150 kJ/mol, and the products at 10 kJ/mol. What is the activation energy for the reverse reaction?",
+      o: ["110 kJ/mol", "140 kJ/mol", "30 kJ/mol", "150 kJ/mol"], c: 1,
+      w: "The reverse reaction starts at the products, so E<sub>a</sub>(rev) = TS − products = 150 − 10 = 140 kJ/mol. Choice A (110 kJ/mol) is the forward activation energy, measured from the reactants. Choice D reads the peak height from zero instead of measuring a difference." },
+    { s: "For the same profile (reactants 40 kJ/mol, transition state 150 kJ/mol, products 10 kJ/mol), which statement about the forward reaction is correct?",
+      o: ["ΔH = +30 kJ/mol, so the reaction is endothermic.", "ΔH = −110 kJ/mol, because energy is released going down from the peak.", "ΔH = −140 kJ/mol, so the reaction is exothermic.", "ΔH = −30 kJ/mol, so the reaction is exothermic."], c: 3,
+      w: "ΔH = products − reactants = 10 − 40 = −30 kJ/mol. The products are lower, so energy is released and the reaction is exothermic. Choice A has the subtraction backward. Choices B and C measure from the transition state, which does not set ΔH." },
+    { s: "The rate of an elementary reaction increases when the temperature is raised from 298 K to 318 K. Which statement best explains this?",
+      o: ["A larger fraction of collisions have energy greater than or equal to the activation energy.", "The activation energy decreases as the temperature increases.", "The reaction becomes more exothermic at higher temperature.", "The transition state is lower in energy at higher temperature."], c: 0,
+      w: "Heating shifts the distribution of collision energies toward higher values, so a larger fraction of collisions can reach the transition state. Choices B and D are the classic trap: the energy profile, including E<sub>a</sub>, does not change with temperature; only a catalyst provides a lower-energy path." },
+    { s: "An elementary reaction has a forward activation energy of 90 kJ/mol and ΔH = +60 kJ/mol. What is the activation energy of the reverse reaction?",
+      o: ["150 kJ/mol", "60 kJ/mol", "30 kJ/mol", "90 kJ/mol"], c: 2,
+      w: "E<sub>a</sub>(rev) = E<sub>a</sub>(fwd) − ΔH = 90 − 60 = 30 kJ/mol. The products are 60 kJ/mol above the reactants, so they are only 30 kJ/mol below the peak. Choice A adds ΔH, which would be right only if the reaction were exothermic by 60 kJ/mol." },
+    { s: "Which statement correctly describes the transition state of an elementary reaction?",
+      o: ["It is the highest-energy arrangement of atoms along the reaction coordinate, with bonds partly broken and partly formed.", "It is a stable species that can be isolated once it forms.", "It is a reaction intermediate that appears in a valley of the energy profile.", "It has lower energy than the reactants in an exothermic reaction."], c: 0,
+      w: "The transition state sits at the top of the barrier, where old bonds are partly broken and new ones partly formed, and it lasts only an instant. Choice C confuses it with an intermediate, which sits in a valley between two peaks in a multistep mechanism. Choice D is never true: the peak is above both reactants and products." },
+    { s: "For an exothermic elementary reaction, how does the activation energy of the reverse reaction compare with that of the forward reaction?",
+      o: ["They are equal, because both directions pass through the same transition state.", "The reverse activation energy is smaller by |ΔH|.", "The reverse activation energy is larger by |ΔH|.", "The comparison depends on the temperature."], c: 2,
+      w: "The products of an exothermic reaction lie below the reactants, so climbing from the products to the shared transition state takes |ΔH| more energy. E<sub>a</sub>(rev) = E<sub>a</sub>(fwd) − ΔH, and ΔH is negative. Choice A is a trap: the peak is shared, but the starting levels differ. Choice D is wrong because E<sub>a</sub> values do not depend on temperature." },
+    { s: "A graph shows the distribution of collision energies for a gas sample at T₁ and at a higher temperature T₂, with the activation energy marked on the energy axis. Which statement about the two curves is correct?",
+      o: ["The activation energy is farther to the left on the T₂ curve.", "The T₂ curve is taller and narrower, so more collisions have exactly the average energy.", "The area under the T₂ curve beyond Eₐ is larger, while Eₐ is at the same position for both.", "The total area under the T₂ curve is larger, because there are more collisions."], c: 2,
+      w: "At the higher temperature the curve flattens and shifts right, so a larger share of the area lies beyond E<sub>a</sub>, but E<sub>a</sub> is a property of the reaction path and stays put. Choice B describes the lower-temperature curve. Choice D is a trap: each curve shows fractions of the same sample, so the total areas are equal." },
+    { s: "On a reaction energy profile, what does the horizontal axis (the reaction coordinate) represent?",
+      o: ["The time elapsed since the reactants were mixed", "The progress of the atoms rearranging from reactants, through the transition state, to products", "The concentration of the reactants as the reaction proceeds", "The temperature of the reaction mixture"], c: 1,
+      w: "The reaction coordinate tracks how far the atoms have rearranged, which combines the many bond-stretching and bond-forming motions into one axis. Choice A is the most common misreading: the profile says nothing about how long the reaction takes." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("5.6");
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    // the drawn curve must give back the numbers in the readouts
+    ORDER.forEach(function (k) {
+      var x = SC[k], max = -1e9, xmax = 0;
+      for (var i = 0; i <= 1000; i++) { var e = energy(i / 1000, x.ea, x.dh); if (e > max) { max = e; xmax = i / 1000; } }
+      if (Math.abs(max - x.ea) > 1e-6 || Math.abs(xmax - XT) > 1e-9) bad.push(k + ": peak");
+      if (energy(0, x.ea, x.dh) !== 0 || energy(1, x.ea, x.dh) !== x.dh) bad.push(k + ": levels");
+      if (x.ea <= x.dh) bad.push(k + ": barrier below products");
+    });
+    // 298 -> 308 K with Ea = 50 kJ/mol roughly doubles the fraction (hand value 1.93)
+    var r = fraction(50, 308) / fraction(50, 298);
+    if (Math.abs(r - 1.93) > 0.01) bad.push("ratio " + r);
+    // quiz arithmetic
+    if (150 - 10 !== 140 || 10 - 40 !== -30 || 90 - 60 !== 30) bad.push("quiz arithmetic");
+    var keys = Q.map(function (q) { return q.c; });
+    if (keys.join("") !== "13020221") bad.push("quiz keys changed: " + keys.join(""));
+    if (bad.length) console.error("5.6 self-check failed: " + bad.join("; "));
+  })();
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [5], topic: "5.6", compact: true, storageKey: "topic-5.6" });</script>
+</body>
+</html>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reaction Mechanism and Rate Law Study Lab</title>
+<meta name="description" content="Run initial-rate trials on a simulated reaction, work out the experimental rate law, and test which proposed mechanism's slow step predicts it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+#lab-sec > *, .lab > *, .side > *, .group > * { min-width: 0; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v.small { font-size: 1rem; }
+.note { font-size: .82rem; color: var(--muted); }
+.step { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.step .n { font-family: var(--mono); font-size: .76rem; color: var(--muted); min-width: 4.2em; }
+.step .eqn { flex: 1 1 220px; min-width: 0; }
+.step .mol { font-size: .76rem; color: var(--muted); }
+.step.slow .eqn { box-shadow: inset 4px 0 0 var(--c1); }
+.step.slow .mol { color: var(--c1); font-weight: 600; }
+.verdict { font-weight: 600; }
+.verdict.ok { color: var(--good); } .verdict.no { color: var(--bad); }
+#trials table { min-width: 420px; }
+#trials td, #trials th { padding: 6px 10px; font-family: var(--mono); font-size: .84rem; }
+#trials th { font-family: var(--body); }
+#trials tr.new td { background: var(--accent-soft); }
+.ctlcard .controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 860px) { .ctlcard .controls { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .ctlcard .controls { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 5 · Topic 5.8</span>
+  <h1>Reaction Mechanism and Rate Law Study Lab</h1>
+  <p class="lede">A reaction can only go as fast as its slowest step. When the first step of a mechanism is the slow one, the rate law of the whole reaction is just the rate law of that step, written from its coefficients. Run initial-rate experiments, find the experimental rate law, and test which proposed mechanism predicts it.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The rate-law detective</h2>
+    <p>Pick a reaction. Three initial-rate trials are already in the table; add your own with the sliders. The "true" mechanism is hidden inside a simulation that produces the rates, so the data behave like real measurements. Then choose a proposed mechanism and see whether its slow step predicts the rate law the data show. Rate constants and concentrations are illustrative.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Initial rates by trial <small id="g-sub"></small></h3>
+      <svg class="chart" id="bars" role="img" aria-label="Bar chart of the initial rate measured in each trial"></svg>
+      <div class="tbl-wrap" id="trials"></div>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Reaction</div>
+        <div class="scenarios" id="sc"></div>
+        <div class="eqn" id="overall"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Proposed mechanism to test</div>
+        <div class="scenarios" id="cand"></div>
+        <div id="steps" class="group"></div>
+        <div class="note" id="sumnote"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card side ctlcard">
+    <div class="tag">Design a trial</div>
+    <div class="controls" id="ctls"></div>
+    <div class="btnrow">
+      <button type="button" class="primary" id="b-run">Run trial</button>
+      <button type="button" id="b-reset">Reset to the three standard trials</button>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Experimental rate law</div><div class="v small" id="r-exp"></div><div class="sub" id="r-exp2"></div></div>
+    <div class="stat"><div class="k">Predicted by slow step</div><div class="v small" id="r-pred"></div><div class="sub" id="r-pred2"></div></div>
+    <div class="stat"><div class="k">Consistent?</div><div class="v small" id="r-ok"></div><div class="sub" id="r-ok2"></div></div>
+    <div class="stat"><div class="k">Rate constant (trial 1)</div><div class="v small" id="r-k"></div><div class="sub" id="r-k2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">How the data are made: the hidden mechanism's elementary steps are integrated numerically, with the fast steps given rate constants so large that they use up whatever the slow step makes almost instantly, and the rate is read as (1/ν)Δ[product]/Δt once the fast steps have caught up. Small differences (under 1%) from round numbers are like measurement noise.</p>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Elementary steps</span><h3>Coefficients become orders</h3><p>For an elementary step only, the rate law comes straight from the equation: A + B → products has rate = k[A][B]; 2A → products has rate = k[A]<sup>2</sup>. This works because the step happens in one collision of exactly those particles.</p></div>
+    <div class="card"><span class="tag">Overall reactions</span><h3>Not from the overall equation</h3><p>An overall equation is usually not elementary, so its coefficients do not give the rate law. The rate law must come from experiment or from a mechanism.</p></div>
+    <div class="card"><span class="tag">Bottleneck</span><h3>Rate-determining step</h3><p>The slowest step limits the overall rate, like the slowest station on an assembly line. Fast steps after it simply use up what it makes as soon as it is made.</p></div>
+    <div class="card"><span class="tag">The rule for 5.8</span><h3>Slow first step: copy it</h3><p>When the first step is the slow one (or every step is irreversible and the slow step involves only reactants), the overall rate law is the slow step's rate law. Species that react only in later fast steps do not appear in it.</p></div>
+    <div class="card"><span class="tag">Judging a mechanism</span><h3>Two tests</h3><p>A mechanism is plausible if (1) its steps add up to the overall balanced equation and (2) its predicted rate law matches the experimental one. Passing both makes it consistent with the evidence, not proven; another mechanism might also pass.</p></div>
+    <div class="card"><span class="tag">Coming next</span><h3>Slow step with an intermediate</h3><p>If the slow step is not first, its rate law usually contains an intermediate, which cannot appear in a measured rate law. Topic 5.9 shows how the pre-equilibrium approximation replaces it.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Slow step → rate law</h2>
+    <p>The classic mechanisms in this lab. In each, the rate law is read from the slow first step only.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Overall reaction</th><th>Slow (rate-determining) step</th><th>Predicted rate law</th><th>What does not appear, and why</th></tr></thead>
+    <tbody>
+      <tr><td>NO<sub>2</sub> + CO → NO + CO<sub>2</sub></td><td>NO<sub>2</sub> + NO<sub>2</sub> → NO<sub>3</sub> + NO</td><td><b>rate = k[NO<sub>2</sub>]<sup>2</sup></b></td><td>CO reacts only in the fast second step: zero order</td></tr>
+      <tr><td>2NO<sub>2</sub> + F<sub>2</sub> → 2NO<sub>2</sub>F</td><td>NO<sub>2</sub> + F<sub>2</sub> → NO<sub>2</sub>F + F</td><td><b>rate = k[NO<sub>2</sub>][F<sub>2</sub>]</b></td><td>The second NO<sub>2</sub> reacts in the fast step, so NO<sub>2</sub> is first order, not second</td></tr>
+      <tr><td>2NO + 2H<sub>2</sub> → N<sub>2</sub> + 2H<sub>2</sub>O</td><td>2NO + H<sub>2</sub> → N<sub>2</sub>O + H<sub>2</sub>O</td><td><b>rate = k[NO]<sup>2</sup>[H<sub>2</sub>]</b></td><td>The second H<sub>2</sub> reacts in the fast step, so H<sub>2</sub> is first order</td></tr>
+      <tr><td>(CH<sub>3</sub>)<sub>3</sub>CBr + OH<sup>−</sup> → (CH<sub>3</sub>)<sub>3</sub>COH + Br<sup>−</sup></td><td>(CH<sub>3</sub>)<sub>3</sub>CBr → (CH<sub>3</sub>)<sub>3</sub>C<sup>+</sup> + Br<sup>−</sup></td><td><b>rate = k[(CH<sub>3</sub>)<sub>3</sub>CBr]</b></td><td>OH<sup>−</sup> reacts only in the fast step: zero order</td></tr>
+      <tr><td>Any reaction that is itself one elementary step</td><td>The reaction as written</td><td><b>rate = k × (each reactant)<sup>coefficient</sup></b></td><td>Only valid if the reaction really is elementary</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Mechanisms and rate laws on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write the rate law of the slow step and say why it applies: "Step 1 is the rate-determining step, so the rate law is the rate law of step 1."</li>
+        <li>Compare orders species by species with the experimental rate law: "The mechanism predicts second order in NO<sub>2</sub> and zero order in CO, which matches the data."</li>
+        <li>When choosing between mechanisms, give the reason the rejected one fails (its slow step gives the wrong orders, or its steps do not add up).</li>
+        <li>From initial-rate data, change one concentration at a time: if doubling [X] doubles the rate, first order; quadruples, second order; no change, zero order.</li>
+        <li>Report k with units that match the overall order: M<sup>−1</sup> s<sup>−1</sup> for second order, M<sup>−2</sup> s<sup>−1</sup> for third order, s<sup>−1</sup> for first order.</li>
+        <li>Use the language "consistent with" rather than "proves."</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Writing the rate law from the overall equation's coefficients. 2NO<sub>2</sub> + F<sub>2</sub> → 2NO<sub>2</sub>F is first order in NO<sub>2</sub>, not second.</li>
+        <li>Including a reactant that only appears in a fast step after the slow step.</li>
+        <li>Picking the fast step as rate-determining because it "does more."</li>
+        <li>Forgetting to check that the steps add up to the overall equation before comparing rate laws.</li>
+        <li>Thinking a zero-order reactant is not needed. It is consumed; its concentration just does not affect the rate.</li>
+        <li>Writing a rate law that contains an intermediate. Measured rate laws contain only species whose concentrations you can set (topic 5.9 handles that case).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 5.8. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-5.html">Unit 5 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Reactions and candidate mechanisms ----------
+  // Steps: r, p as { species: coefficient }; slow: true marks the rate-determining step; mult: how many times the step runs per overall reaction.
+  // trueMech: index of the candidate used to generate the data. ks: rate constant of its slow step (units follow its order).
+  // c0: concentrations for trial 1 (M). expect: hand-typed orders for the self-check.
+  var RX = {
+    no2co: { name: "NO₂ + CO", overall: { r: { NO2: 1, CO: 1 }, p: { NO: 1, CO2: 1 } }, ks: 0.50, c0: { NO2: 0.020, CO: 0.020 }, trueMech: 1, expect: { NO2: 2, CO: 0 },
+      cands: [
+        { name: "I: one step", steps: [ { r: { NO2: 1, CO: 1 }, p: { NO: 1, CO2: 1 }, slow: true } ] },
+        { name: "II: 2NO₂ slow", steps: [ { r: { NO2: 2 }, p: { NO3: 1, NO: 1 }, slow: true }, { r: { NO3: 1, CO: 1 }, p: { NO2: 1, CO2: 1 } } ] },
+        { name: "III: NO₂ splits", steps: [ { r: { NO2: 1 }, p: { NO: 1, O: 1 }, slow: true }, { r: { O: 1, CO: 1 }, p: { CO2: 1 } } ] }
+      ] },
+    no2f2: { name: "2NO₂ + F₂", overall: { r: { NO2: 2, F2: 1 }, p: { NO2F: 2 } }, ks: 0.80, c0: { NO2: 0.020, F2: 0.020 }, trueMech: 0, expect: { NO2: 1, F2: 1 },
+      cands: [
+        { name: "I: NO₂ + F₂ slow", steps: [ { r: { NO2: 1, F2: 1 }, p: { NO2F: 1, F: 1 }, slow: true }, { r: { F: 1, NO2: 1 }, p: { NO2F: 1 } } ] },
+        { name: "II: one step", steps: [ { r: { NO2: 2, F2: 1 }, p: { NO2F: 2 }, slow: true } ] },
+        { name: "III: F₂ splits", steps: [ { r: { F2: 1 }, p: { F: 2 }, slow: true }, { r: { F: 1, NO2: 1 }, p: { NO2F: 1 }, mult: 2 } ] }
+      ] },
+    noh2: { name: "2NO + 2H₂", overall: { r: { NO: 2, H2: 2 }, p: { N2: 1, H2O: 2 } }, ks: 50, c0: { NO: 0.020, H2: 0.020 }, trueMech: 2, expect: { NO: 2, H2: 1 },
+      cands: [
+        { name: "I: one step", steps: [ { r: { NO: 2, H2: 2 }, p: { N2: 1, H2O: 2 }, slow: true } ] },
+        { name: "II: 2NO slow", steps: [ { r: { NO: 2 }, p: { N2O2: 1 }, slow: true }, { r: { N2O2: 1, H2: 1 }, p: { N2O: 1, H2O: 1 } }, { r: { N2O: 1, H2: 1 }, p: { N2: 1, H2O: 1 } } ] },
+        { name: "III: 2NO + H₂ slow", steps: [ { r: { NO: 2, H2: 1 }, p: { N2O: 1, H2O: 1 }, slow: true }, { r: { N2O: 1, H2: 1 }, p: { N2: 1, H2O: 1 } } ] }
+      ] },
+    sn1: { name: "(CH₃)₃CBr + OH⁻", overall: { r: { "(CH3)3CBr": 1, "OH^-": 1 }, p: { "(CH3)3COH": 1, "Br^-": 1 } }, ks: 0.020, c0: { "(CH3)3CBr": 0.020, "OH^-": 0.020 }, trueMech: 1, expect: { "(CH3)3CBr": 1, "OH^-": 0 },
+      cands: [
+        { name: "I: one step", steps: [ { r: { "(CH3)3CBr": 1, "OH^-": 1 }, p: { "(CH3)3COH": 1, "Br^-": 1 }, slow: true } ] },
+        { name: "II: C–Br breaks first", steps: [ { r: { "(CH3)3CBr": 1 }, p: { "(CH3)3C^+": 1, "Br^-": 1 }, slow: true }, { r: { "(CH3)3C^+": 1, "OH^-": 1 }, p: { "(CH3)3COH": 1 } } ] }
+      ] }
+  };
+  var ORDER = ["no2co", "no2f2", "noh2", "sn1"];
+  var KFAST = 1e5;
+  var S = { key: "no2co", cand: 0, c: {}, trials: [] };
+
+  // ---------- Equation helpers ----------
+  function term(s, n) { return (n > 1 ? n : "") + Lab.fmla(s); }
+  function side(obj) { return Object.keys(obj).map(function (s) { return term(s, obj[s]); }).join(" + "); }
+  function chargeOf(s) { var c = String(s).match(/\^(\d*)([+\-])$/); return c ? (c[2] === "-" ? -1 : 1) * (c[1] ? +c[1] : 1) : 0; }
+  function balanced(r, p) {
+    var a = {}, q = 0;
+    Object.keys(r).forEach(function (s) { var f = Lab.parseFormula(s); for (var e in f) a[e] = (a[e] || 0) + f[e] * r[s]; q += chargeOf(s) * r[s]; });
+    Object.keys(p).forEach(function (s) { var f = Lab.parseFormula(s); for (var e in f) a[e] = (a[e] || 0) - f[e] * p[s]; q -= chargeOf(s) * p[s]; });
+    for (var e in a) if (a[e] !== 0) return false;
+    return q === 0;
+  }
+  function netOf(steps) {
+    var n = {};
+    steps.forEach(function (st) {
+      var m = st.mult || 1;
+      Object.keys(st.r).forEach(function (s) { n[s] = (n[s] || 0) - st.r[s] * m; });
+      Object.keys(st.p).forEach(function (s) { n[s] = (n[s] || 0) + st.p[s] * m; });
+    });
+    return n;
+  }
+  function addsUp(steps, overall) {
+    var n = netOf(steps), o = {}, k;
+    Object.keys(overall.r).forEach(function (s) { o[s] = -overall.r[s]; });
+    Object.keys(overall.p).forEach(function (s) { o[s] = overall.p[s]; });
+    for (k in n) if ((n[k] || 0) !== (o[k] || 0)) return false;
+    for (k in o) if ((n[k] || 0) !== (o[k] || 0)) return false;
+    return true;
+  }
+  function molecularity(st) {
+    var n = 0; Object.keys(st.r).forEach(function (s) { n += st.r[s]; });
+    return ["", "unimolecular", "bimolecular", "termolecular"][n] || n + " particles";
+  }
+  // Predicted orders: the slow step's coefficients. Flags an intermediate in the slow step (a topic 5.9 case).
+  function predicted(rx, cand) {
+    var slow = cand.steps.filter(function (s) { return s.slow; })[0], ord = {}, inter = [];
+    Object.keys(rx.overall.r).forEach(function (s) { ord[s] = 0; });
+    Object.keys(slow.r).forEach(function (s) { if (s in rx.overall.r) ord[s] = slow.r[s]; else inter.push(s); });
+    return { ord: ord, inter: inter, slow: slow, slowIndex: cand.steps.indexOf(slow) };
+  }
+  function lawHTML(ord) {
+    var t = Object.keys(ord).filter(function (s) { return ord[s] > 0; }).map(function (s) { return "[" + Lab.fmla(s) + "]" + (ord[s] > 1 ? "<sup>" + ord[s] + "</sup>" : ""); }).join("");
+    return "rate = k" + t;
+  }
+  function overallOrder(ord) { var n = 0; for (var s in ord) n += ord[s]; return n; }
+  function kUnits(n) { return n === 1 ? "s<sup>−1</sup>" : n === 0 ? "M s<sup>−1</sup>" : "M<sup>−" + (n - 1 === 1 ? "1" : n - 1) + "</sup> s<sup>−1</sup>"; }
+
+  // ---------- The hidden experiment ----------
+  // Integrates the true mechanism (slow step k = ks, every other step k = KFAST) from the trial concentrations
+  // until the fast steps reach steady state, then reads rate = (1/ν) d[product]/dt for the first overall product.
+  function measure(rx, conc) {
+    var mech = rx.cands[rx.trueMech].steps, sp = [], idx = {};
+    mech.forEach(function (st) { [st.r, st.p].forEach(function (o) { Object.keys(o).forEach(function (s) { if (!(s in idx)) { idx[s] = sp.length; sp.push(s); } }); }); });
+    var c = sp.map(function (s) { return conc[s] || 0; });
+    function deriv(x) {
+      var d = sp.map(function () { return 0; });
+      mech.forEach(function (st) {
+        var r = st.slow ? rx.ks : KFAST;
+        Object.keys(st.r).forEach(function (s) { r *= Math.pow(Math.max(0, x[idx[s]]), st.r[s]); });
+        Object.keys(st.r).forEach(function (s) { d[idx[s]] -= st.r[s] * r; });
+        Object.keys(st.p).forEach(function (s) { d[idx[s]] += st.p[s] * r; });
+      });
+      return d;
+    }
+    var cmin = 1, cmax = 0;
+    Object.keys(rx.overall.r).forEach(function (s) { cmin = Math.min(cmin, conc[s]); cmax = Math.max(cmax, conc[s]); });
+    var tEnd = 10 / (KFAST * cmin), dt = 0.25 / (KFAST * cmax * 2), N = Math.ceil(tEnd / dt);
+    dt = tEnd / N;
+    function add(a, b, h) { return a.map(function (v, i) { return v + b[i] * h; }); }
+    for (var i = 0; i < N; i++) {
+      var k1 = deriv(c), k2 = deriv(add(c, k1, dt / 2)), k3 = deriv(add(c, k2, dt / 2)), k4 = deriv(add(c, k3, dt));
+      c = c.map(function (v, q) { return Math.max(0, v + dt / 6 * (k1[q] + 2 * k2[q] + 2 * k3[q] + k4[q])); });
+    }
+    var P = Object.keys(rx.overall.p)[0];
+    return deriv(c)[idx[P]] / rx.overall.p[P];
+  }
+  function reacts(rx) { return Object.keys(rx.overall.r); }
+  function standardTrials(rx) {
+    var A = reacts(rx), base = {}, out = [];
+    A.forEach(function (s) { base[s] = rx.c0[s]; });
+    out.push(base);
+    A.forEach(function (s) { var t = {}; A.forEach(function (q) { t[q] = base[q]; }); t[s] = base[s] * 2; out.push(t); });
+    return out.map(function (c) { return { c: c, rate: measure(rx, c) }; });
+  }
+  // Experimental orders from the standard trials (trial 1 vs. the trial that doubled one reactant).
+  function expOrders(rx) {
+    var A = reacts(rx), ord = {}, raw = {};
+    A.forEach(function (s, i) {
+      var t1 = S.trials[0], t2 = S.trials[i + 1];
+      raw[s] = Math.log(t2.rate / t1.rate) / Math.log(t2.c[s] / t1.c[s]);
+      ord[s] = Math.round(raw[s]);
+    });
+    return { ord: ord, raw: raw };
+  }
+
+  // ---------- Drawing ----------
+  var svg = document.getElementById("bars");
+  function drawBars() {
+    var rx = RX[S.key], A = reacts(rx), ymax = 0;
+    S.trials.forEach(function (t) { ymax = Math.max(ymax, t.rate); });
+    var e = Math.floor(Math.log10(ymax)), unit = Math.pow(10, e), top = Math.ceil(ymax / unit * 1.18 * 2) / 2;
+    var yT = []; for (var v = 0; v <= top + 1e-9; v += top > 6 ? 2 : top > 3 ? 1 : 0.5) yT.push(v);
+    var F = Lab.bars(svg, { x: [0.4, S.trials.length + 0.6], y: [0, top], width: 440, height: 300, xLabel: "Trial", yLabel: "Initial rate (× 10^" + e + " M/s)",
+      xTicks: S.trials.map(function (t, i) { return i + 1; }), yTicks: yT, fmtX: function (v) { return v; }, fmtY: function (v) { return v; },
+      bars: S.trials.map(function (t, i) {
+        var col = "var(--ghost)";
+        if (i > 0) A.forEach(function (s, j) { if (Math.abs(t.c[s] - S.trials[0].c[s]) > 1e-9) col = j === 0 ? "var(--c1)" : "var(--c3)"; });
+        if (i === 0) col = "var(--accent)";
+        return { x: i + 1, y: t.rate / unit, color: col, label: "×" + Lab.sig(t.rate / S.trials[0].rate, 2), width: 0.55 };
+      }) });
+    var yl = svg.querySelectorAll("text.lbl"); // replace caret label with a superscript-looking one
+    for (var i = 0; i < yl.length; i++) if (/\^/.test(yl[i].textContent)) yl[i].textContent = "Initial rate (× 10" + String(e).replace("-", "⁻").replace(/\d/g, function (d) { return "⁰¹²³⁴⁵⁶⁷⁸⁹"[d]; }) + " M/s)";
+    document.getElementById("g-sub").textContent = "bar labels: rate ÷ trial 1 rate";
+    return F;
+  }
+  function tableHTML() {
+    var rx = RX[S.key], A = reacts(rx);
+    return "<table><thead><tr><th>Trial</th>" + A.map(function (s) { return "<th>[" + Lab.fmla(s) + "]<sub>0</sub> (M)</th>"; }).join("") + "<th>Initial rate (M/s)</th></tr></thead><tbody>" +
+      S.trials.map(function (t, i) {
+        return "<tr" + (i >= A.length + 1 && i === S.trials.length - 1 ? ' class="new"' : "") + "><td>" + (i + 1) + "</td>" + A.map(function (s) { return "<td>" + t.c[s].toFixed(3) + "</td>"; }).join("") + "<td>" + Lab.sci(t.rate, 3, true) + "</td></tr>";
+      }).join("") + "</tbody></table>";
+  }
+
+  // ---------- Story ----------
+  function story(rx, cand, pr, ex, ok, sums) {
+    var A = reacts(rx), li = [];
+    A.forEach(function (s, i) {
+      var r = S.trials[i + 1].rate / S.trials[0].rate;
+      li.push("<b>Trials 1 and " + (i + 2) + ":</b> doubling [" + Lab.fmla(s) + "] while holding the rest constant multiplies the rate by " + Lab.sig(r, 3) + " ≈ 2<sup>" + ex.ord[s] + "</sup>, so the reaction is " + ["zero", "first", "second", "third"][ex.ord[s]] + " order in " + Lab.fmla(s) + ".");
+    });
+    if (S.trials.length > A.length + 1) {
+      var t = S.trials[S.trials.length - 1], pred = S.trials[0].rate;
+      A.forEach(function (s) { pred *= Math.pow(t.c[s] / S.trials[0].c[s], ex.ord[s]); });
+      li.push("<b>Your trial " + S.trials.length + ":</b> the experimental rate law predicts " + Lab.sci(pred, 3, true) + " M/s; the simulation measured " + Lab.sci(t.rate, 3, true) + " M/s. " + (Math.abs(t.rate / pred - 1) < 0.02 ? "They agree, so the rate law holds for these concentrations too." : "They differ, which would mean the rate law needs another look."));
+    }
+    li.push("<b>Mechanism " + cand.name.split(":")[0] + ":</b> " + (cand.steps.length === 1 ? "a single elementary step, so its rate law comes from its own coefficients" : "step " + (pr.slowIndex + 1) + " is slow, so it sets the rate law") + ": " + lawHTML(pr.ord) + "." +
+      (pr.inter.length ? " But the slow step contains the intermediate " + pr.inter.map(Lab.fmla).join(", ") + ", so this is a topic 5.9 case." : ""));
+    if (!sums) li.push("<b>Its steps do not add up</b> to the overall equation, so it fails before rate laws are even compared.");
+    else if (!ok) {
+      var diffs = A.filter(function (s) { return pr.ord[s] !== ex.ord[s]; }).map(function (s) { return "it predicts order " + pr.ord[s] + " in " + Lab.fmla(s) + " but the data show " + ex.ord[s]; });
+      li.push("<b>Mismatch:</b> " + diffs.join("; ") + ". Reject this mechanism.");
+    } else li.push("<b>Match:</b> the steps add up and the slow step predicts the orders the data show. Species that react only after the slow step (" + A.filter(function (s) { return pr.ord[s] < rx.overall.r[s]; }).map(Lab.fmla).join(", ") + ") have lower orders than their overall coefficients.");
+    var good = rx.cands[rx.trueMech];
+    var ap = ok ? "Mechanism " + cand.name.split(":")[0] + " is consistent with the data: its steps add up to the overall equation, and its rate-determining step (" + side(pr.slow.r) + " → " + side(pr.slow.p) + ") gives " + lawHTML(pr.ord) + ", the experimental rate law."
+      : "Mechanism " + cand.name.split(":")[0] + " is not consistent: " + (sums ? "its slow step gives " + lawHTML(pr.ord) + ", but the data give " + lawHTML(ex.ord) + "." : "its steps do not add up to the overall equation.") + " Try " + good.name.split(":")[0] + ".";
+    return "<ul><li>" + li.join("</li><li>") + "</li></ul><p><b>AP answer:</b> " + ap + "</p>";
+  }
+
+  // ---------- Render ----------
+  var scBtns = {};
+  function render() {
+    var rx = RX[S.key], cand = rx.cands[S.cand], A = reacts(rx);
+    document.getElementById("overall").innerHTML = side(rx.overall.r) + " → " + side(rx.overall.p);
+    var cbs = document.querySelectorAll("#cand button");
+    for (var i = 0; i < cbs.length; i++) cbs[i].setAttribute("aria-pressed", i === S.cand ? "true" : "false");
+    document.getElementById("steps").innerHTML = cand.steps.map(function (st, i) {
+      return '<div class="step' + (st.slow && cand.steps.length > 1 ? " slow" : "") + '"><span class="n">' + (cand.steps.length > 1 ? "Step " + (i + 1) : "Only step") + '</span><span class="eqn">' + (st.mult ? st.mult + " × (" : "") + side(st.r) + " → " + side(st.p) + (st.mult ? ")" : "") + '</span><span class="mol">' + molecularity(st) + (cand.steps.length > 1 ? (st.slow ? ", slow" : ", fast") : "") + '</span></div>';
+    }).join("");
+    var sums = addsUp(cand.steps, rx.overall);
+    document.getElementById("sumnote").innerHTML = sums ? "The steps add up to the overall equation." : "The steps do not add up to the overall equation.";
+    var pr = predicted(rx, cand), ex = expOrders(rx);
+    var ok = sums && !pr.inter.length && A.every(function (s) { return pr.ord[s] === ex.ord[s]; });
+    drawBars();
+    document.getElementById("trials").innerHTML = tableHTML();
+    document.getElementById("r-exp").innerHTML = lawHTML(ex.ord);
+    document.getElementById("r-exp2").textContent = "from trials 1–" + (A.length + 1);
+    document.getElementById("r-pred").innerHTML = lawHTML(pr.ord);
+    document.getElementById("r-pred2").textContent = cand.steps.length === 1 ? "one elementary step" : "from step " + (pr.slowIndex + 1);
+    var rk = document.getElementById("r-ok"); rk.textContent = ok ? "Yes" : "No"; rk.className = "v small verdict " + (ok ? "ok" : "no");
+    document.getElementById("r-ok2").textContent = ok ? "plausible mechanism" : sums ? "orders do not match" : "steps do not add up";
+    var n = overallOrder(ex.ord), t1 = S.trials[0], den = 1;
+    A.forEach(function (s) { den *= Math.pow(t1.c[s], ex.ord[s]); });
+    document.getElementById("r-k").innerHTML = Lab.sig(t1.rate / den, 3) + " " + kUnits(n);
+    document.getElementById("r-k2").textContent = "overall order " + n;
+    A.forEach(function (s, i) {
+      document.getElementById("s-c" + i).value = S.c[s];
+      document.getElementById("o-c" + i).textContent = S.c[s].toFixed(3) + " M";
+    });
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    document.getElementById("story").innerHTML = story(rx, cand, pr, ex, ok, sums);
+  }
+  function buildControls() {
+    var rx = RX[S.key], box = document.getElementById("ctls"); box.innerHTML = "";
+    reacts(rx).forEach(function (s, i) {
+      var d = document.createElement("div"); d.className = "ctl";
+      d.innerHTML = '<label for="s-c' + i + '"><span>[' + Lab.fmla(s) + ']<sub>0</sub></span> <output id="o-c' + i + '"></output></label><input type="range" id="s-c' + i + '" min="0.010" max="0.060" step="0.005"><span class="hint">Starting concentration</span>';
+      box.appendChild(d);
+      d.querySelector("input").addEventListener("input", function (ev) { S.c[s] = +ev.target.value; render(); });
+    });
+  }
+  function pick(k) {
+    var rx = RX[k]; S.key = k; S.cand = 0;
+    S.trials = standardTrials(rx);
+    S.c = {}; reacts(rx).forEach(function (s) { S.c[s] = rx.c0[s]; });
+    var cb = document.getElementById("cand"), key = k; cb.innerHTML = "";
+    rx.cands.forEach(function (c, i) {
+      var b = document.createElement("button"); b.type = "button"; b.textContent = c.name; b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", function () { if (S.key !== key) return; S.cand = i; render(); });
+      cb.appendChild(b);
+    });
+    buildControls(); render();
+  }
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = RX[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pick(k); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  document.getElementById("b-run").addEventListener("click", function () {
+    var rx = RX[S.key], c = {}; reacts(rx).forEach(function (s) { c[s] = S.c[s]; });
+    S.trials.push({ c: c, rate: measure(rx, c) });
+    var keep = reacts(rx).length + 1;
+    if (S.trials.length > keep + 3) S.trials.splice(keep, 1);
+    render();
+  });
+  document.getElementById("b-reset").addEventListener("click", function () { S.trials = standardTrials(RX[S.key]); render(); });
+  pick("no2co");
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "The reaction 2NO₂(g) + F₂(g) → 2NO₂F(g) is proposed to occur by Step 1: NO₂ + F₂ → NO₂F + F (slow). Step 2: F + NO₂ → NO₂F (fast). What rate law does this mechanism predict?",
+      o: ["rate = k[NO₂]²[F₂]", "rate = k[F][NO₂]", "rate = k[NO₂][F₂]", "rate = k[NO₂]²"], c: 2,
+      w: "The slow first step is rate-determining, and as an elementary step its rate law comes from its coefficients: one NO<sub>2</sub> and one F<sub>2</sub>. Choice A uses the overall coefficients, which is the most common trap. Choice B is the rate law of the fast step and contains the intermediate F." },
+    { s: "For NO₂(g) + CO(g) → NO(g) + CO₂(g), experiments show rate = k[NO₂]². Which mechanism is consistent with this rate law?",
+      o: ["Step 1: NO₂ + NO₂ → NO₃ + NO (slow). Step 2: NO₃ + CO → NO₂ + CO₂ (fast).", "A single step: NO₂ + CO → NO + CO₂.", "Step 1: NO₂ → NO + O (slow). Step 2: O + CO → CO₂ (fast).", "Step 1: NO₂ + NO₂ → NO₃ + NO (fast). Step 2: NO₃ + CO → NO₂ + CO₂ (slow)."], c: 0,
+      w: "In choice A the slow step is 2NO<sub>2</sub> → products, so rate = k[NO<sub>2</sub>]<sup>2</sup>, and the steps add up to the overall equation. Choice B predicts k[NO<sub>2</sub>][CO] and choice C predicts k[NO<sub>2</sub>]. Choice D has the slow step involving the intermediate NO<sub>3</sub> and CO, so it would make the rate depend on [CO], which the data rule out." },
+    { s: "A student writes the rate law for 2NO(g) + 2H₂(g) → N₂(g) + 2H₂O(g) as rate = k[NO]²[H₂]², using the coefficients of the balanced equation. Why is this reasoning not valid?",
+      o: ["Rate laws can only include gases that are reactants, and H₂O is a product.", "Coefficients give orders only for zero-order reactions.", "The coefficients must first be divided by two to give the simplest ratio.", "The overall reaction is not necessarily an elementary step, so its coefficients need not equal the orders."], c: 3,
+      w: "Only an elementary step's coefficients give its rate law. Overall equations are usually the sum of several steps, so the rate law must come from experiment or from the mechanism's slow step. (The accepted mechanism gives rate = k[NO]<sup>2</sup>[H<sub>2</sub>].) Choice C is a made-up rule." },
+    { s: "The reaction (CH₃)₃CBr + OH⁻ → (CH₃)₃COH + Br⁻ occurs by Step 1: (CH₃)₃CBr → (CH₃)₃C⁺ + Br⁻ (slow). Step 2: (CH₃)₃C⁺ + OH⁻ → (CH₃)₃COH (fast). If [OH⁻] is doubled while [(CH₃)₃CBr] is held constant, how does the initial rate change?",
+      o: ["It doubles.", "It does not change.", "It is cut in half.", "It quadruples."], c: 1,
+      w: "OH<sup>−</sup> reacts only in the fast step after the slow step, so the rate law is rate = k[(CH<sub>3</sub>)<sub>3</sub>CBr] and the reaction is zero order in OH<sup>−</sup>. Choice A assumes every reactant is first order because its coefficient is 1." },
+    { s: "The reaction 2NO(g) + O₂(g) → 2NO₂(g) is hypothesized to be a single elementary step. If so, what is its rate law?",
+      o: ["rate = k[NO][O₂]", "rate = k[NO₂]²", "rate = k[NO]²[O₂]", "rate = k[NO]²"], c: 2,
+      w: "For an elementary step the coefficients are the orders: two NO and one O<sub>2</sub>, so rate = k[NO]<sup>2</sup>[O<sub>2</sub>], a termolecular step. Choice B uses the product, which never appears in a forward rate law." },
+    { s: "For A + 2B → C, initial-rate data are: Trial 1: [A] = 0.10 M, [B] = 0.10 M, rate = 2.0 × 10⁻³ M/s. Trial 2: [A] = 0.20 M, [B] = 0.10 M, rate = 4.0 × 10⁻³ M/s. Trial 3: [A] = 0.10 M, [B] = 0.20 M, rate = 2.0 × 10⁻³ M/s. Which mechanism is consistent with the data?",
+      o: ["Step 1: A + B → AB (slow). Step 2: AB + B → C (fast).", "Step 1: 2B → B₂ (slow). Step 2: A + B₂ → C (fast).", "A single step: A + 2B → C.", "Step 1: A → I (slow). Step 2: I + B → J (fast). Step 3: J + B → C (fast)."], c: 3,
+      w: "Doubling [A] doubles the rate (first order); doubling [B] leaves it unchanged (zero order), so rate = k[A]. Only choice D has a slow step with A alone, and its steps add to A + 2B → C. Choice A predicts k[A][B], choice B predicts k[B]<sup>2</sup>, and choice C predicts k[A][B]<sup>2</sup>." },
+    { s: "The rate law for NO₂ + CO → NO + CO₂ is rate = k[NO₂]². If the rate is measured in M/s, what are the units of k?",
+      o: ["M⁻¹ s⁻¹", "s⁻¹", "M s⁻¹", "M⁻² s⁻¹"], c: 0,
+      w: "k = rate/[NO<sub>2</sub>]<sup>2</sup> = (M s<sup>−1</sup>)/M<sup>2</sup> = M<sup>−1</sup> s<sup>−1</sup>, the units for any second-order rate law. Choice B fits a first-order rate law and choice D a third-order one." },
+    { s: "A proposed mechanism adds up to the overall equation, and the rate law of its slow step matches the experimentally determined rate law. Which conclusion is justified?",
+      o: ["The mechanism is proven to be the actual pathway.", "The mechanism is plausible, but other mechanisms could also be consistent with the data.", "The fast steps must be the rate-determining steps.", "The overall reaction must be an elementary step."], c: 1,
+      w: "Agreement with the evidence makes a mechanism plausible, not proven; a different set of steps could give the same rate law. More evidence, such as detecting a proposed intermediate, can support one mechanism over another. Choice A overstates what the data show." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("5.8");
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    ORDER.forEach(function (k) {
+      var rx = RX[k];
+      if (!balanced(rx.overall.r, rx.overall.p)) bad.push(k + " overall unbalanced");
+      rx.cands.forEach(function (cd, ci) {
+        cd.steps.forEach(function (st, i) { if (!balanced(st.r, st.p)) bad.push(k + " cand " + ci + " step " + (i + 1) + " unbalanced"); });
+        if (!addsUp(cd.steps, rx.overall)) bad.push(k + " cand " + ci + " does not add up");
+        if (cd.steps.filter(function (s) { return s.slow; }).length !== 1) bad.push(k + " cand " + ci + " needs one slow step");
+      });
+      // the simulated data must reproduce the true mechanism's slow-step rate law, and that must match the hand-typed orders
+      var trials = standardTrials(rx), pr = predicted(rx, rx.cands[rx.trueMech]);
+      reacts(rx).forEach(function (s, i) {
+        var raw = Math.log(trials[i + 1].rate / trials[0].rate) / Math.log(2);
+        if (Math.abs(raw - rx.expect[s]) > 0.02) bad.push(k + " measured order in " + s + " = " + raw.toFixed(3));
+        if (pr.ord[s] !== rx.expect[s]) bad.push(k + " predicted order in " + s);
+      });
+      var law = rx.ks; reacts(rx).forEach(function (s) { law *= Math.pow(rx.c0[s], rx.expect[s]); });
+      if (Math.abs(trials[0].rate / law - 1) > 0.01) bad.push(k + " rate " + trials[0].rate + " vs " + law);
+      // exactly one candidate should be consistent: the true one
+      rx.cands.forEach(function (cd, ci) {
+        var p = predicted(rx, cd), match = reacts(rx).every(function (s) { return p.ord[s] === rx.expect[s]; });
+        if (match !== (ci === rx.trueMech)) bad.push(k + " cand " + ci + " consistency");
+      });
+    });
+    // quiz 6 data: doubling A doubles the rate, doubling B leaves it unchanged
+    if (Math.round(Math.log(4.0e-3 / 2.0e-3) / Math.log(2)) !== 1 || Math.round(Math.log(2.0e-3 / 2.0e-3) / Math.log(2)) !== 0) bad.push("quiz 6 data");
+    if (Q.map(function (q) { return q.c; }).join("") !== "20312301") bad.push("quiz keys changed");
+    if (bad.length) console.error("5.8 self-check failed: " + bad.join("; "));
+  })();
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [5], topic: "5.8", compact: true, storageKey: "topic-5.8" });</script>
+</body>
+</html>

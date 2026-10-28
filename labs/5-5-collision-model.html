@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Collision Model Study Lab</title>
+<meta name="description" content="Run a particle simulator where molecules must collide with enough energy and the right orientation to react, change temperature, concentration, and activation energy, and connect what you see to the shaded area of a Maxwell–Boltzmann distribution.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.ctlcard { display: grid; gap: 14px; }
+.ctlcard .controls { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v { font-size: 1.05rem; }
+.plegend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted); }
+.plegend span { display: inline-flex; align-items: center; gap: 5px; }
+.plegend i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+.plegend i.ring { background: none; border: 2px solid currentColor; }
+.big { font-family: var(--mono); font-size: 1.05rem; }
+.note { font-size: .82rem; color: var(--muted); }
+#sim { background: var(--paper); border-radius: 8px; }
+@media (max-width: 860px) { .ctlcard .controls { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .ctlcard .controls { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 5 · Topic 5.5</span>
+  <h1>Collision Model Study Lab</h1>
+  <p class="lede">For an elementary reaction to happen, reactant particles must collide, and most collisions do nothing. A collision succeeds only if the particles hit hard enough to overcome the activation energy and are lined up so the right bonds can break and form. Here you watch both requirements play out in a particle simulator and connect them to the Maxwell–Boltzmann distribution of energies.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The collision chamber</h2>
+    <p>Molecules of AB (orange, with a pink reactive B end) and atoms of C (green) fly around. The step is AB + C → A + BC: C must hit the B end, with enough energy. Rings mark collisions: pink burst = reaction, gray = not enough energy, dashed purple = enough energy but wrong orientation. Counts restart whenever you change a setting.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Particle simulator <small id="sim-sub"></small></h3>
+      <svg class="chart" id="sim" role="img" aria-label="Animated particles of AB and C colliding in a box. Successful collisions turn them into A and BC."></svg>
+      <div class="plegend">
+        <span><i style="background:var(--c1)"></i>AB (B end pink)</span><span><i style="background:var(--c2)"></i>C</span><span><i style="background:var(--c3)"></i>BC product</span><span><i style="background:var(--ghost)"></i>A product</span>
+        <span style="color:var(--c4)"><i class="ring"></i>reaction</span><span style="color:var(--ghost)"><i class="ring"></i>too little energy</span><span style="color:var(--c3)"><i class="ring" style="border-style:dashed"></i>wrong orientation</span>
+      </div>
+      <div class="btnrow"><button type="button" class="primary" id="b-play">Pause</button><button type="button" id="b-refill">Restart</button><span class="note" id="left"></span></div>
+    </div>
+    <div class="card graph-card">
+      <h3>Maxwell–Boltzmann distribution <small id="mb-sub"></small></h3>
+      <svg class="chart" id="mb" role="img" aria-label="Maxwell-Boltzmann distribution of kinetic energies with the activation energy marked and the area beyond it shaded"></svg>
+      <div class="legend" id="mb-legend"></div>
+      <div class="big" id="frac"></div>
+      <div class="group">
+        <div class="tag">Classic cases</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="controls">
+      <div class="ctl">
+        <label for="s-T">Temperature <output id="o-T"></output></label>
+        <input type="range" id="s-T" min="200" max="800" step="50">
+        <span class="hint">Sets the particles' speeds</span>
+      </div>
+      <div class="ctl">
+        <label for="s-ea"><span>Activation energy, E<sub>a</sub></span> <output id="o-ea"></output></label>
+        <input type="range" id="s-ea" min="4" max="16" step="1">
+        <span class="hint">Illustrative small values</span>
+      </div>
+      <div class="ctl">
+        <label for="s-n">Reactant particles <output id="o-n"></output></label>
+        <input type="range" id="s-n" min="4" max="20" step="2">
+        <span class="hint">Same box, so this is concentration</span>
+      </div>
+      <div class="ctl">
+        <label>Orientation requirement</label>
+        <div class="seg" id="or-seg" role="group" aria-label="Orientation requirement"><button type="button" data-v="1">C must hit B</button><button type="button" data-v="0">Any direction</button></div>
+        <span class="hint">B end within ±60° of the hit</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">AB–C collisions per second</div><div class="v" id="r-col"></div><div class="sub" id="r-col2"></div></div>
+    <div class="stat"><div class="k">Collisions with E ≥ E<sub>a</sub></div><div class="v" id="r-en"></div><div class="sub" id="r-en2"></div></div>
+    <div class="stat"><div class="k">Of those, correctly oriented</div><div class="v" id="r-or"></div><div class="sub" id="r-or2"></div></div>
+    <div class="stat"><div class="k">Reactions per second</div><div class="v" id="r-rx"></div><div class="sub" id="r-rx2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">Simplifications: the simulator is two-dimensional and uses activation energies of a few kJ/mol so you can watch single reactions; real values are usually 40–150 kJ/mol. The graph is the usual (three-dimensional) Maxwell–Boltzmann curve, which the AP course uses for a qualitative estimate of the fraction of collisions with enough energy, so its percentage will not match the simulator's tally exactly; both move the same way. Simulator time is in illustrative units ("s"), and products are quietly replaced by fresh reactants so the concentrations stay steady while you compare rates.</p>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Requirement 1</span><h3>They must collide</h3><p>Bonds can only break and form when reactant particles actually hit each other. So anything that makes collisions more frequent, such as a higher concentration, speeds up the reaction.</p></div>
+    <div class="card"><span class="tag">Requirement 2</span><h3>Enough energy</h3><p>A collision must supply at least the activation energy, E<sub>a</sub>, to start breaking bonds. Slow, gentle collisions just bounce. In most reactions only a small fraction of collisions have enough energy.</p></div>
+    <div class="card"><span class="tag">Requirement 3</span><h3>The right orientation</h3><p>The particles must meet so that the atoms that need to bond are next to each other. In AB + C → A + BC, C has to strike the B end; a hit on the A end does nothing, however hard.</p></div>
+    <div class="card"><span class="tag">Energy spread</span><h3>Maxwell–Boltzmann curve</h3><p>Particles in a sample have a wide range of kinetic energies. The area under the curve to the right of E<sub>a</sub> estimates the fraction of collisions energetic enough to react. The total area stays the same: it represents all the particles.</p></div>
+    <div class="card"><span class="tag">Temperature</span><h3>Why heating works so well</h3><p>At a higher temperature the curve flattens and shifts right, so the area past E<sub>a</sub> grows a lot. Collisions also get a little more frequent, but the larger fraction of energetic collisions is the main reason the rate rises.</p></div>
+    <div class="card"><span class="tag">What does not change</span><h3>Concentration vs. fraction</h3><p>More particles in the same volume collide more often, but the fraction of collisions with enough energy depends only on temperature and E<sub>a</sub>. A catalyst works the other way: it lowers E<sub>a</sub> (topic 5.11).</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Collision model cheat sheet</h2>
+    <p>For each change, ask two questions: does it change how often particles collide, and does it change the fraction of collisions that succeed?</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Change</th><th>Collision frequency</th><th>Fraction with E ≥ E<sub>a</sub></th><th>Rate</th><th>On the Maxwell–Boltzmann graph</th></tr></thead>
+    <tbody>
+      <tr><td>Raise temperature</td><td>Increases a little</td><td><b>Increases a lot</b></td><td>Increases</td><td>Curve flattens and shifts right; more area past E<sub>a</sub></td></tr>
+      <tr><td>Raise concentration (or compress a gas)</td><td><b>Increases</b></td><td>No change</td><td>Increases</td><td>Same shape and same shaded fraction; more particles in total</td></tr>
+      <tr><td>Grind a solid (more surface area)</td><td><b>Increases</b></td><td>No change</td><td>Increases</td><td>No change</td></tr>
+      <tr><td>Add a catalyst (topic 5.11)</td><td>No change</td><td><b>Increases</b> (lower E<sub>a</sub>)</td><td>Increases</td><td>Same curve; the E<sub>a</sub> line moves left</td></tr>
+      <tr><td>Particles must hit a specific spot</td><td>No change</td><td>No change</td><td>Lower than with no requirement</td><td>Not shown: orientation is a separate requirement</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. The collision model on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>State both conditions for a successful collision: energy at least E<sub>a</sub> and an orientation that lets the bonds rearrange.</li>
+        <li>For temperature, say "a greater fraction of collisions have energy greater than or equal to the activation energy." That phrase is the key point.</li>
+        <li>For concentration, say "more particles per unit volume, so more frequent collisions," and that the fraction of successful collisions is unchanged.</li>
+        <li>When drawing a second Maxwell–Boltzmann curve for a higher temperature, make it lower and broader with its peak shifted to higher energy, and keep the area about the same.</li>
+        <li>Point to the area to the right of E<sub>a</sub> when explaining with the graph.</li>
+        <li>Connect particle-level reasoning to the observed rate: more successful collisions per second means a faster rate.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying higher temperature lowers the activation energy. E<sub>a</sub> stays the same; more particles reach it.</li>
+        <li>Giving only "more collisions" as the reason heating speeds a reaction.</li>
+        <li>Saying every collision with enough energy reacts. Orientation matters too.</li>
+        <li>Drawing the higher-temperature curve taller, or with a larger total area.</li>
+        <li>Saying higher concentration gives particles more energy.</li>
+        <li>Confusing "collision frequency" (how often) with "fraction of effective collisions" (how many of them work).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 5.5. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-5.html">Unit 5 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  var el = function (id) { return document.getElementById(id); };
+  var RkJ = 8.314e-3;                              // kJ/(mol·K)
+  var reduce = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  // ---------- Maxwell–Boltzmann (3D) energy distribution ----------
+  function erfc(x) { // Abramowitz & Stegun 7.1.26, |error| < 1.5e-7
+    var t = 1 / (1 + 0.3275911 * x);
+    return t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429)))) * Math.exp(-x * x);
+  }
+  function mbf(E, T) { var kT = RkJ * T; return 2 * Math.sqrt(E / Math.PI) * Math.pow(kT, -1.5) * Math.exp(-E / kT); }
+  function fracAbove(Ea, T) { var x = Ea / (RkJ * T); return erfc(Math.sqrt(x)) + 2 * Math.sqrt(x / Math.PI) * Math.exp(-x); }
+
+  // ---------- State ----------
+  var S = { T: 300, Ea: 7, n: 14, orient: true };
+  var BASE = null;                                  // the comparison state for the ghost curve / story
+  var key = "base";
+
+  // ---------- Simulator ----------
+  var W = 440, H = 300, RAB = 12, RC = 9, RA = 8;
+  var C2E = 7.4e-5;                                 // kJ/mol per (px/s)^2 per unit mass: sets the speed scale
+  var P = [], flashes = [], simT = 0, running = !reduce, stats;
+  function gauss() { var u = 1 - Math.random(), v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  function sigmaV(T) { return Math.sqrt(RkJ * T / C2E); }   // each velocity component, mass = 1
+  function resetStats() { stats = { t0: simT, col: 0, en: 0, enOr: 0, rx: 0 }; }
+  function spawn() {
+    P = []; flashes = [];
+    var sv = sigmaV(S.T);
+    function place(type, r) {
+      for (var tries = 0; tries < 400; tries++) {
+        var x = r + Math.random() * (W - 2 * r), y = r + Math.random() * (H - 2 * r), ok = true;
+        for (var i = 0; i < P.length; i++) { var q = P[i]; if (Math.hypot(q.x - x, q.y - y) < q.r + r + 3) { ok = false; break; } }
+        if (ok) break;
+      }
+      P.push({ type: type, r: r, x: x, y: y, vx: gauss() * sv, vy: gauss() * sv, th: Math.random() * 2 * Math.PI, w: (Math.random() - 0.5) * 4 });
+    }
+    for (var i = 0; i < S.n; i++) { place("AB", RAB); place("C", RC); }
+    // with so few particles the sampled temperature wanders, so scale the speeds to make the mean kinetic energy exactly RT
+    var ke = 0; P.forEach(function (p) { ke += 0.5 * (p.vx * p.vx + p.vy * p.vy) * C2E; });
+    var f = Math.sqrt(RkJ * S.T / (ke / P.length)); P.forEach(function (p) { p.vx *= f; p.vy *= f; });
+    resetStats();
+  }
+  function rescale(T0, T1) { var f = Math.sqrt(T1 / T0); P.forEach(function (p) { p.vx *= f; p.vy *= f; }); }
+
+  function step(dt) {
+    simT += dt;
+    P.forEach(function (p) {
+      if (p.back && simT > p.back) { p.back = 0; if (p.type === "A") { p.type = "AB"; p.r = RAB; } else { p.type = "C"; p.r = RC; } }
+      p.x += p.vx * dt; p.y += p.vy * dt; p.th += p.w * dt;
+      if (p.x < p.r) { p.x = p.r; p.vx = Math.abs(p.vx); } if (p.x > W - p.r) { p.x = W - p.r; p.vx = -Math.abs(p.vx); }
+      if (p.y < p.r) { p.y = p.r; p.vy = Math.abs(p.vy); } if (p.y > H - p.r) { p.y = H - p.r; p.vy = -Math.abs(p.vy); }
+    });
+    for (var i = 0; i < P.length; i++) for (var j = i + 1; j < P.length; j++) {
+      var a = P[i], b = P[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), md = a.r + b.r;
+      if (d >= md || d === 0) continue;
+      var nx = dx / d, ny = dy / d, rvx = b.vx - a.vx, rvy = b.vy - a.vy, vn = rvx * nx + rvy * ny;
+      var ov = (md - d) / 2; a.x -= nx * ov; a.y -= ny * ov; b.x += nx * ov; b.y += ny * ov;
+      if (vn >= 0) continue;                                  // already separating
+      // reactive pair?
+      var ab = a.type === "AB" && b.type === "C" ? a : b.type === "AB" && a.type === "C" ? b : null;
+      if (ab) {
+        var c = ab === a ? b : a;
+        var E = 0.5 * 0.5 * (rvx * rvx + rvy * rvy) * C2E;    // kinetic energy of relative motion, reduced mass 1/2
+        var ux = Math.cos(ab.th), uy = Math.sin(ab.th), cx = (c.x - ab.x), cy = (c.y - ab.y), cl = Math.hypot(cx, cy) || 1;
+        var good = !S.orient || (ux * cx + uy * cy) / cl >= 0.5;   // B end within ±60° of the line to C
+        var hot = E >= S.Ea, mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+        stats.col++; if (hot) { stats.en++; if (good) stats.enOr++; }
+        if (hot && good) {
+          stats.rx++;
+          ab.type = "A"; ab.r = RA; c.type = "BC"; c.r = RAB; ab.back = c.back = simT + 0.4;
+          flashes.push({ x: mx, y: my, t: simT, k: "rx" });
+        } else flashes.push({ x: mx, y: my, t: simT, k: hot ? "or" : "en" });
+      }
+      // elastic collision, equal masses: exchange the normal components
+      a.vx += vn * nx; a.vy += vn * ny; b.vx -= vn * nx; b.vy -= vn * ny;
+    }
+  }
+
+  var svg = el("sim"), layer;
+  function drawSim() {
+    if (!layer) {
+      svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+      Lab.el("rect", { x: 1, y: 1, width: W - 2, height: H - 2, rx: 8, fill: "none", stroke: "var(--rule)", "stroke-width": 2 }, svg);
+      layer = Lab.el("g", {}, svg);
+    }
+    var h = "";
+    flashes = flashes.filter(function (f) { return simT - f.t < (f.k === "rx" ? 0.9 : 0.5); });
+    flashes.forEach(function (f) {
+      var age = (simT - f.t) / (f.k === "rx" ? 0.9 : 0.5);
+      var col = f.k === "rx" ? "var(--c4)" : f.k === "or" ? "var(--c3)" : "var(--ghost)";
+      h += '<circle cx="' + f.x.toFixed(1) + '" cy="' + f.y.toFixed(1) + '" r="' + (f.k === "rx" ? 14 + 26 * age : 10 + 10 * age).toFixed(1) + '" fill="none" stroke="' + col + '" stroke-width="' + (f.k === "rx" ? 3 : 2) + '"' + (f.k === "or" ? ' stroke-dasharray="3 3"' : "") + ' opacity="' + (1 - age).toFixed(2) + '"/>';
+    });
+    P.forEach(function (p) {
+      if (p.type === "AB") {
+        var ux = Math.cos(p.th), uy = Math.sin(p.th);
+        h += '<circle cx="' + (p.x - 4 * ux).toFixed(1) + '" cy="' + (p.y - 4 * uy).toFixed(1) + '" r="8.5" fill="var(--c1)" stroke="var(--surface)" stroke-width="1"/>';
+        h += '<circle cx="' + (p.x + 6 * ux).toFixed(1) + '" cy="' + (p.y + 6 * uy).toFixed(1) + '" r="6" fill="var(--c4)" stroke="var(--surface)" stroke-width="1"/>';
+      } else if (p.type === "C") h += '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + RC + '" fill="var(--c2)" stroke="var(--surface)" stroke-width="1"/>';
+      else if (p.type === "A") h += '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + RA + '" fill="var(--ghost)" opacity=".7"/>';
+      else {
+        var vx = p.vx, vy = p.vy, L = Math.hypot(vx, vy) || 1;
+        h += '<circle cx="' + (p.x - 4 * vx / L).toFixed(1) + '" cy="' + (p.y - 4 * vy / L).toFixed(1) + '" r="6.5" fill="var(--c4)" opacity=".75"/>';
+        h += '<circle cx="' + (p.x + 4 * vx / L).toFixed(1) + '" cy="' + (p.y + 4 * vy / L).toFixed(1) + '" r="8" fill="var(--c3)" opacity=".8"/>';
+      }
+    });
+    layer.innerHTML = h;
+    el("left").textContent = "products are swapped back for fresh reactants after a moment";
+    el("sim-sub").textContent = S.T + " K · " + (running ? "running" : "paused");
+  }
+
+  // ---------- Graph ----------
+  function drawMB() {
+    var Emax = 24, base = BASE && BASE.T !== S.T ? BASE.T : null;
+    var peak = Math.max(mbf(RkJ * S.T / 2, S.T), base ? mbf(RkJ * base / 2, base) : 0);
+    var ymax = Math.ceil(peak * 1.15 * 20) / 20;
+    var F = Lab.frame(el("mb"), { x: [0, Emax], y: [0, ymax], xLabel: "Kinetic energy (kJ/mol)", yLabel: "Fraction of particles", xTicks: [0, 4, 8, 12, 16, 20, 24], yTicks: [], fmtX: function (v) { return v; }, width: 440, height: 280 });
+    // shaded area beyond Ea under the current curve
+    var pts = [[S.Ea, 0]], E;
+    for (E = S.Ea; E <= Emax; E += 0.2) pts.push([E, mbf(E, S.T)]);
+    pts.push([Emax, 0]);
+    var d = pts.map(function (p, i) { return (i ? "L" : "M") + F.sx(p[0]).toFixed(1) + " " + F.sy(p[1]).toFixed(1); }).join(" ") + " Z";
+    Lab.el("path", { d: d, fill: "var(--c4)", opacity: 0.28 }, F.g);
+    if (base) Lab.fn(F, function (e) { return mbf(Math.max(e, 1e-9), base); }, "var(--ghost)", 2.4, "6 5", 200);
+    Lab.fn(F, function (e) { return mbf(Math.max(e, 1e-9), S.T); }, "var(--c1)", 3, null, 200);
+    if (BASE && BASE.Ea !== S.Ea) { Lab.vline(F, BASE.Ea, "var(--ghost)", 2, "4 4"); Lab.tag(F, BASE.Ea + 0.3, ymax * 0.62, "old Eₐ", "var(--muted)"); }
+    Lab.vline(F, S.Ea, "var(--c4)", 2.4);
+    Lab.tag(F, S.Ea + 0.3, ymax * 0.9, "Eₐ = " + S.Ea + " kJ/mol", "var(--c4)");
+    var lg = '<span class="l-c1">' + S.T + " K</span>";
+    if (base) lg += '<span class="l-ghost">' + base + " K (before)</span>";
+    lg += '<span class="l-c4">E<sub>a</sub> and area beyond it</span>';
+    el("mb-legend").innerHTML = lg;
+    var f = fracAbove(S.Ea, S.T);
+    el("frac").innerHTML = "Shaded fraction (E ≥ E<sub>a</sub>): " + (100 * f).toFixed(1) + "%" + (base ? "  vs. " + (100 * fracAbove(S.Ea, base)).toFixed(1) + "% at " + base + " K" : BASE && BASE.Ea !== S.Ea ? "  vs. " + (100 * fracAbove(BASE.Ea, S.T)).toFixed(1) + "% with the old E<sub>a</sub>" : "");
+    el("mb-sub").textContent = "total area = all particles";
+  }
+
+  // ---------- Readouts and story ----------
+  function pct(a, b) { return b ? (100 * a / b).toFixed(0) + "%" : "—"; }
+  function readouts() {
+    var dt = simT - stats.t0;
+    el("r-col").textContent = dt > 0.5 ? (stats.col / dt).toFixed(1) : "…";
+    el("r-col2").textContent = stats.col + " in " + dt.toFixed(0) + " s";
+    el("r-en").textContent = pct(stats.en, stats.col);
+    el("r-en2").textContent = stats.en + " of " + stats.col + " collisions";
+    el("r-or").textContent = S.orient ? pct(stats.enOr, stats.en) : "100% (no requirement)";
+    el("r-or2").textContent = S.orient ? stats.enOr + " of " + stats.en + " (random would be about 1 in 3)" : "any direction works";
+    el("r-rx").textContent = dt > 0.5 ? (stats.rx / dt).toFixed(2) : "…";
+    el("r-rx2").textContent = stats.rx + " reactions so far";
+  }
+  function story() {
+    var f = fracAbove(S.Ea, S.T), h = "", li = [], dt = simT - stats.t0;
+    h += "<p><b>AB + C → A + BC at " + S.T + " K</b>, E<sub>a</sub> = " + S.Ea + " kJ/mol, " + S.n + " AB and " + S.n + " C in the box. On the curve, " + (100 * f).toFixed(1) + "% of particles have at least E<sub>a</sub>.</p>";
+    if (dt > 2 && stats.col > 0) li.push("<b>So far:</b> " + stats.col + " AB–C collisions, " + stats.en + " with enough energy, " + stats.rx + " reactions. " + (stats.rx < stats.col ? "Only " + pct(stats.rx, stats.col) + " of collisions worked." : ""));
+    var focus = key || "free";
+    if (BASE && focus === "conc" && S.n < BASE.n) focus = "dilute";
+    if (BASE && focus === "ea" && S.Ea > BASE.Ea) focus = "eaUp";
+    if (BASE) {
+      if (BASE.T !== S.T) {
+        var fq = Math.sqrt(S.T / BASE.T), fr = fracAbove(S.Ea, S.T) / fracAbove(S.Ea, BASE.T);
+        li.push("<b>Temperature " + BASE.T + " → " + S.T + " K:</b> particle speeds change by √(" + S.T + "/" + BASE.T + ") = × " + fq.toFixed(2) + ", so collisions become somewhat " + (S.T > BASE.T ? "more" : "less") + " frequent (× " + fq.toFixed(2) + " at most). But the fraction past E<sub>a</sub> goes from " + (100 * fracAbove(S.Ea, BASE.T)).toFixed(1) + "% to " + (100 * fracAbove(S.Ea, S.T)).toFixed(1) + "%, × " + Lab.sig(fr, 2) + ". That " + (S.T > BASE.T ? "bigger" : "smaller") + " fraction of energetic collisions is the main effect.");
+      }
+      if (BASE.n !== S.n) li.push("<b>Particles " + BASE.n + " → " + S.n + " of each:</b> each AB has " + (S.n > BASE.n ? "more" : "fewer") + " C's to hit, and there are " + (S.n > BASE.n ? "more" : "fewer") + " AB's, so AB–C collisions per second scale roughly as " + S.n + "² / " + BASE.n + "² = × " + (S.n * S.n / (BASE.n * BASE.n)).toFixed(2) + ". The fraction past E<sub>a</sub> does not change (" + (100 * f).toFixed(1) + "%), because temperature and E<sub>a</sub> did not change.");
+      if (BASE.Ea !== S.Ea) li.push("<b>E<sub>a</sub> " + BASE.Ea + " → " + S.Ea + " kJ/mol:</b> the curve is the same, but the line moved, so the fraction with enough energy goes from " + (100 * fracAbove(BASE.Ea, S.T)).toFixed(1) + "% to " + (100 * f).toFixed(1) + "%." + (S.Ea < BASE.Ea ? " Lowering E<sub>a</sub> is what a catalyst does, by providing a different pathway (topic 5.11)." : " A higher E<sub>a</sub> means fewer collisions have enough energy, so the reaction is slower."));
+      if (BASE.orient !== S.orient) li.push("<b>Orientation:</b> " + (S.orient ? "now C must hit within ±60° of the B end, about one third of random directions, so roughly two thirds of energetic collisions fail." : "with no orientation requirement every energetic collision reacts, so the rate goes up by about × 3 compared with the B-end requirement. Real reactions between molecules almost always have some orientation requirement."));
+    }
+    if (!BASE || (BASE.T === S.T && BASE.n === S.n && BASE.Ea === S.Ea && BASE.orient === S.orient)) li.push("Most collisions are gray rings: the particles bounce off without enough energy. Of the energetic ones, " + (S.orient ? "many are dashed purple rings: C hit the A end or the side instead of the B end." : "all react, because there is no orientation requirement.") + " Pick a classic case to compare against this run.");
+    h += "<ul>" + li.map(function (s) { return "<li>" + s + "</li>"; }).join("") + "</ul>";
+    var ap = {
+      temp: "raising the temperature increases the average kinetic energy of the particles, so a greater fraction of collisions have energy greater than or equal to the activation energy (more area past E<sub>a</sub> on the Maxwell–Boltzmann curve). Collisions are also slightly more frequent, but the larger fraction of effective collisions is the main reason the rate increases.",
+      cold: "at a lower temperature fewer particles have energy at or above E<sub>a</sub>, so a smaller fraction of collisions are successful and the rate decreases.",
+      conc: "a higher concentration means more particles per unit volume, so collisions are more frequent and there are more successful collisions per second. The fraction of collisions with enough energy is unchanged because temperature is unchanged.",
+      dilute: "a lower concentration means fewer particles per unit volume, so collisions are less frequent and there are fewer successful collisions per second. The fraction of collisions with enough energy is unchanged because temperature is unchanged.",
+      eaUp: "raising the activation energy means a smaller fraction of collisions have at least E<sub>a</sub> at the same temperature, so the rate decreases.",
+      ea: "lowering the activation energy (as a catalyst does) means a larger fraction of collisions have at least E<sub>a</sub> at the same temperature, so the rate increases.",
+      orient: "a collision leads to reaction only if it has enough energy and an orientation that allows the bonds to rearrange; requiring a specific orientation means many energetic collisions still fail."
+    }[focus];
+    h += "<p><b>AP answer:</b> " + (ap || "for an elementary reaction to occur, particles must collide with energy at least equal to the activation energy and with an orientation that allows bonds to break and form. In most reactions only a small fraction of collisions meet both conditions.") + "</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  function sync() {
+    el("s-T").value = S.T; el("s-ea").value = S.Ea; el("s-n").value = S.n;
+    el("o-T").textContent = S.T + " K";
+    el("o-ea").textContent = S.Ea + " kJ/mol";
+    el("o-n").textContent = S.n + " AB + " + S.n + " C";
+    el("or-seg").querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", (b.dataset.v === "1") === S.orient ? "true" : "false"); });
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", key === k ? "true" : "false"); });
+    el("b-play").textContent = running ? "Pause" : "Play";
+    drawMB(); readouts(); el("story").innerHTML = story(); drawSim();
+  }
+  function changed() { if (!BASE) BASE = { T: S.T, Ea: S.Ea, n: S.n, orient: S.orient }; }
+  el("s-T").addEventListener("input", function () { changed(); var T0 = S.T; S.T = +el("s-T").value; rescale(T0, S.T); resetStats(); key = "temp"; if (S.T < BASE.T) key = "cold"; sync(); });
+  el("s-ea").addEventListener("input", function () { changed(); S.Ea = +el("s-ea").value; resetStats(); key = "ea"; sync(); });
+  el("s-n").addEventListener("input", function () { changed(); S.n = +el("s-n").value; spawn(); key = "conc"; sync(); });
+  el("or-seg").querySelectorAll("button").forEach(function (b) { b.addEventListener("click", function () { changed(); S.orient = b.dataset.v === "1"; resetStats(); key = "orient"; sync(); }); });
+  el("b-play").addEventListener("click", function () { running = !running; last = null; sync(); });
+  el("b-refill").addEventListener("click", function () { spawn(); sync(); });
+
+  var SC = {
+    base:   { name: "Baseline: 300 K", from: { T: 300, Ea: 7, n: 14, orient: true }, to: {} },
+    temp:   { name: "Heat to 600 K", from: { T: 300, Ea: 7, n: 14, orient: true }, to: { T: 600 } },
+    cold:   { name: "Cool to 200 K", from: { T: 300, Ea: 7, n: 14, orient: true }, to: { T: 200 } },
+    conc:   { name: "Double the concentration", from: { T: 300, Ea: 8, n: 10, orient: true }, to: { n: 20 } },
+    ea:     { name: "Lower Eₐ (catalyst preview)", from: { T: 300, Ea: 7, n: 14, orient: true }, to: { Ea: 4 } },
+    orient: { name: "Remove the orientation rule", from: { T: 300, Ea: 7, n: 14, orient: true }, to: { orient: false } }
+  };
+  var scBtns = {};
+  Object.keys(SC).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name;
+    b.addEventListener("click", function () { go(k); });
+    el("sc").appendChild(b); scBtns[k] = b;
+  });
+  function go(k) {
+    var s = SC[k], p;
+    for (p in s.from) S[p] = s.from[p];
+    BASE = k === "base" ? null : { T: S.T, Ea: S.Ea, n: S.n, orient: S.orient };
+    for (p in s.to) S[p] = s.to[p];
+    key = k === "base" ? null : k;
+    spawn(); sync();
+    if (k === "base") key = "base";
+    Object.keys(scBtns).forEach(function (q) { scBtns[q].setAttribute("aria-pressed", k === q ? "true" : "false"); });
+  }
+
+  // ---------- Loop ----------
+  var last = null, lastStory = 0;
+  function frame(t) {
+    if (running) {
+      if (last != null) {
+        var dt = Math.min(0.05, (t - last) / 1000);
+        step(dt / 3); step(dt / 3); step(dt / 3);
+        drawSim();
+        if (t - lastStory > 1000) { lastStory = t; readouts(); el("story").innerHTML = story(); }
+      }
+      last = t;
+    } else last = null;
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    // the closed-form fraction must match a numerical integral of the curve, and the curve must have area 1
+    [[8, 300], [5, 300], [8, 600], [12, 450]].forEach(function (c) {
+      var area = 0, above = 0, dE = 0.002;
+      for (var E = dE / 2; E < 80; E += dE) { var v = mbf(E, c[1]) * dE; area += v; if (E >= c[0]) above += v; }
+      if (Math.abs(area - 1) > 1e-3) bad.push("MB area " + c);
+      if (Math.abs(above - fracAbove(c[0], c[1])) > 1e-3) bad.push("MB fraction " + c);
+    });
+    if (!(fracAbove(8, 600) > fracAbove(8, 300) && fracAbove(5, 300) > fracAbove(8, 300))) bad.push("fraction trends");
+    // a short headless run: energy is conserved by elastic collisions, and the mean kinetic energy matches RT (2D)
+    spawn(); var e0 = 0, keM = 0; P.forEach(function (p) { keM += 0.5 * (p.vx * p.vx + p.vy * p.vy) * C2E; });
+    if (Math.abs(keM / P.length / (RkJ * S.T) - 1) > 1e-9) bad.push("mean kinetic energy is not RT"); P.forEach(function (p) { e0 += 0.5 * (p.vx * p.vx + p.vy * p.vy); });
+    var saveStats = stats, sT = simT;
+    for (var i = 0; i < 300; i++) step(0.01);
+    var e1 = 0; P.forEach(function (p) { e1 += 0.5 * (p.vx * p.vx + p.vy * p.vy); });
+    if (Math.abs(e1 / e0 - 1) > 1e-6) bad.push("energy not conserved");
+    if (Math.abs(Math.sqrt(310 / 300) - 1.0165) > 1e-3) bad.push("quiz 8 speed ratio");
+    simT = sT; stats = saveStats;
+    if (bad.length) console.error("5.5 self-check failed: " + bad.join("; "));
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Which statement best explains why raising the temperature increases the rate of most reactions?",
+      o: ["The activation energy decreases as the temperature increases.", "A greater fraction of collisions have energy equal to or greater than the activation energy.", "The particles become larger, so they collide more often.", "The rate constant stays the same, but the reactant concentrations increase."], c: 1,
+      w: "At a higher temperature more particles are in the high-energy tail of the Maxwell–Boltzmann distribution, so a larger fraction of collisions have at least Eₐ. Eₐ itself does not change (choice A); lowering Eₐ is what a catalyst does. Concentrations (choice D) do not change with temperature in a closed solution, and k does increase." },
+    { s: "A Maxwell–Boltzmann distribution is drawn for a gas at T₁ and again at a higher temperature T₂, with Eₐ marked. Which describes the T₂ curve?",
+      o: ["Taller and narrower, with its peak at lower energy and a smaller area past Eₐ", "Identical in shape, but with a larger total area under the curve", "Shifted to lower energy, so fewer particles exceed Eₐ", "Lower and broader, with its peak at higher energy and a larger area past Eₐ"], c: 3,
+      w: "At higher temperature the energies spread out: the peak moves to higher energy and gets lower, and the tail past Eₐ holds more area. The total area represents all the particles, so it stays the same (choice B). Choice A describes a lower temperature." },
+    { s: "In most reactions, only a small fraction of collisions between reactant particles lead to products. Which statement explains this?",
+      o: ["Most collisions lack enough energy to overcome the activation energy or have an orientation that does not allow the bonds to rearrange.", "Most collisions occur between particles of the same substance.", "Only collisions with the walls of the container can transfer enough energy.", "Particles can react only when the temperature is above the activation energy."], c: 0,
+      w: "A successful collision needs both enough energy (at least Eₐ) and a suitable orientation. Many collisions fail one or both. Choice D confuses a temperature with an energy per mole of collisions." },
+    { s: "For the elementary step NO(g) + O₃(g) → NO₂(g) + O₂(g), the N atom of NO must strike one of the end O atoms of O₃. Which collision is most likely to produce products?",
+      o: ["The O atom of NO strikes an end O atom of O₃ with energy greater than Eₐ.", "The N atom of NO strikes an end O atom of O₃ with energy less than Eₐ.", "The N atom of NO strikes an end O atom of O₃ with energy greater than Eₐ.", "The O atom of NO strikes the central O atom of O₃ with energy less than Eₐ."], c: 2,
+      w: "Only choice C meets both requirements: enough energy and an orientation that lets the new N–O bond form. Choice A has enough energy but the wrong orientation, and choice B has the right orientation but too little energy." },
+    { s: "The concentration of a reactant gas is doubled at constant temperature. How does this affect the collisions in the sample?",
+      o: ["The fraction of collisions with energy at least Eₐ doubles, and the collision frequency is unchanged.", "The collision frequency increases, and the fraction of collisions with energy at least Eₐ is unchanged.", "Both the collision frequency and the fraction of collisions with enough energy increase.", "The activation energy is lowered because particles are closer together."], c: 1,
+      w: "More particles per volume collide more often, so more collisions per second succeed. The distribution of energies depends on temperature, which did not change, so the fraction of energetic collisions stays the same. Choices A and C attribute an energy change to concentration." },
+    { s: "Which change increases the fraction of collisions that have energy greater than or equal to the activation energy, without changing the activation energy?",
+      o: ["Raising the temperature", "Increasing the concentration of a reactant", "Grinding a solid reactant into a powder", "Compressing the gas mixture into a smaller volume"], c: 0,
+      w: "Only temperature changes the distribution of particle energies. Choices B, C, and D increase how often collisions happen, not the fraction with enough energy." },
+    { s: "On a Maxwell–Boltzmann distribution with the activation energy marked, what does the area under the curve to the right of Eₐ represent?",
+      o: ["The activation energy of the reaction", "The average kinetic energy of the particles", "The rate constant of the reaction", "The fraction of particles with enough energy to react if they collide with a suitable orientation"], c: 3,
+      w: "The area to the right of Eₐ is a qualitative estimate of the fraction of particles (and so of collisions) with at least the activation energy. They still need a suitable orientation to react. Eₐ is a position on the x-axis, not an area (choice A)." },
+    { s: "The temperature of a gas-phase reaction is raised from 300 K to 310 K and the rate doubles. A student claims the rate doubled because the particles now collide twice as often. Which response is correct?",
+      o: ["The claim is correct, because collision frequency is proportional to temperature.", "The claim is correct, because the activation energy was halved.", "The claim is incorrect: collision frequency increases only slightly (particle speeds rise by less than 2%); the rate doubles mainly because a larger fraction of collisions have at least Eₐ.", "The claim is incorrect: higher temperature decreases collision frequency, so the rate must increase for another reason."], c: 2,
+      w: "Average speed is proportional to √T, and √(310/300) = 1.017, so collisions become less than 2% more frequent. The large increase in rate comes from the larger fraction of collisions with energy at least Eₐ. Eₐ does not change with temperature (choice B)." }
+  ];
+
+  go("base");
+  key = "base";
+  sync();
+  requestAnimationFrame(frame);
+  Lab.quiz(Q, el("quiz"), el("score"), el("quiz-reset"));
+  Lab.nav("5.5");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [5], topic: "5.5", compact: true, storageKey: "topic-5.5" });</script>
+</body>
+</html>

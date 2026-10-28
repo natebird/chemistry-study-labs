@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Introduction to Reaction Mechanisms Study Lab</title>
+<meta name="description" content="Add up the elementary steps of real mechanisms, watch species cancel, label each one as reactant, product, intermediate or catalyst, and see an intermediate rise and vanish in a simulated reaction.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+#lab-sec > *, .lab > *, .side > *, .group > * { min-width: 0; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v.small { font-size: 1rem; }
+.note { font-size: .82rem; color: var(--muted); }
+.steps-list { display: grid; gap: 6px; }
+.step { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.step .n { font-family: var(--mono); font-size: .76rem; color: var(--muted); min-width: 4.2em; }
+.step .eqn { flex: 1 1 220px; min-width: 0; }
+.step .mol { font-size: .74rem; color: var(--muted); }
+.eqn s { color: var(--bad); text-decoration-thickness: 2px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border-radius: 8px; padding: 6px 10px; display: grid; gap: 1px; text-align: left; min-width: 7.5em; }
+.chip .sp { font-weight: 600; }
+.chip .role { font-size: .74rem; color: var(--muted); }
+.chip.ok { border-color: var(--good); background: var(--good-soft); }
+.chip.ok .role { color: var(--good); font-weight: 600; }
+.chip.no { border-color: var(--bad); background: var(--bad-soft); }
+.chip.no .role { color: var(--bad); font-weight: 600; }
+.fb { font-size: .9rem; }
+.fb.ok { color: var(--good); } .fb.no { color: var(--bad); }
+.slegend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted); }
+.slegend span { display: inline-flex; align-items: center; gap: 6px; }
+.slegend i { display: inline-block; width: 18px; height: 0; border-top: 3px solid currentColor; }
+.slegend i.dash { border-top-style: dashed; }
+.match { font-weight: 600; }
+.match.ok { color: var(--good); } .match.no { color: var(--bad); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 5 · Topic 5.7</span>
+  <h1>Introduction to Reaction Mechanisms Study Lab</h1>
+  <p class="lede">Most reactions do not happen in one collision. They run through a sequence of elementary steps called a mechanism, and the steps must add up to the overall balanced equation. Add the steps of real mechanisms, cancel what appears on both sides, decide which species are intermediates and which are catalysts, and watch an intermediate appear and disappear as the reaction runs.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The mechanism workbench</h2>
+    <p>Pick a mechanism. The steps are added for you, with canceled species struck out. Click each species chip to label its role, then press <b>Check my labels</b>. The graph simulates the mechanism so you can see each kind of species behave differently over time; rate constants and concentrations are illustrative.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Concentration vs. time <small>simulated from the steps</small></h3>
+      <svg class="chart" id="conc" role="img" aria-label="Simulated concentrations of every species in the mechanism over time"></svg>
+      <div class="slegend" id="slegend"></div>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Mechanism</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Elementary steps</div>
+        <div class="steps-list" id="steps"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Add the steps</div>
+        <div class="eqn" id="sum"></div>
+        <div class="eqn" id="net"></div>
+        <div class="note" id="vs"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card side">
+    <div class="group">
+      <div class="tag">Label each species (click to change)</div>
+      <div class="chips" id="chips"></div>
+      <div class="btnrow">
+        <button type="button" class="primary" id="b-check">Check my labels</button>
+        <button type="button" id="b-reveal">Show answers</button>
+        <button type="button" id="b-clear">Clear labels</button>
+      </div>
+      <div class="fb" id="fb" aria-live="polite"></div>
+    </div>
+    <div class="controls">
+      <div class="ctl" style="grid-column: span 2;">
+        <label for="s-k">Speed of step 2 vs. step 1 <output id="o-k"></output></label>
+        <input type="range" id="s-k" min="-1" max="1" step="0.05">
+        <span class="hint">Multiplies the rate constant of step 2</span>
+      </div>
+      <div class="ctl" style="grid-column: span 2;">
+        <label for="s-t">Time cursor <output id="o-t"></output></label>
+        <input type="range" id="s-t" min="0" max="1" step="0.005">
+        <span class="hint">Readouts below are at this moment</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Steps (molecularity)</div><div class="v small" id="r-st"></div><div class="sub" id="r-st2"></div></div>
+    <div class="stat"><div class="k">Intermediates</div><div class="v small" id="r-in"></div><div class="sub" id="r-in2"></div></div>
+    <div class="stat"><div class="k">Catalysts</div><div class="v small" id="r-ca"></div><div class="sub" id="r-ca2"></div></div>
+    <div class="stat"><div class="k">Steps add to overall?</div><div class="v small" id="r-ok"></div><div class="sub" id="r-ok2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">Simplifications: rate constants and starting concentrations are made up so the curves are easy to see; water is the solvent in the H<sub>2</sub>O<sub>2</sub> case and is not plotted. The NO<sub>2</sub> + CO mechanism shown is the one accepted for temperatures below about 225 °C.</p>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Definition</span><h3>A mechanism is a sequence of steps</h3><p>Each step is an elementary reaction: it happens in one collision (or one molecule falling apart) exactly as written. A mechanism can include reactants, intermediates, products and catalysts.</p></div>
+    <div class="card"><span class="tag">The first test</span><h3>Steps must add up</h3><p>Write the steps one under another, add everything on the left and everything on the right, and cancel any species that appears on both sides. What is left must be the overall balanced equation. If it is not, the mechanism is wrong.</p></div>
+    <div class="card"><span class="tag">Made, then used</span><h3>Intermediate</h3><p>An intermediate is produced in an earlier step and consumed in a later one. It cancels out of the sum, so it never appears in the overall equation, and it exists only while the reaction is going on.</p></div>
+    <div class="card"><span class="tag">Used, then given back</span><h3>Catalyst</h3><p>A catalyst is consumed in an earlier step and regenerated in a later one. It also cancels out of the sum, but it is present at the start and is still there at the end. Catalysts are covered in depth in topic 5.11.</p></div>
+    <div class="card"><span class="tag">Counting particles</span><h3>Molecularity</h3><p>The number of reactant particles that collide in an elementary step: one (unimolecular), two (bimolecular) or three (termolecular, rare because three particles seldom collide at once). Only elementary steps have a molecularity.</p></div>
+    <div class="card"><span class="tag">Evidence</span><h3>Detecting an intermediate</h3><p>Finding a proposed intermediate in the reaction mixture is evidence for a mechanism that includes it over one that does not. It supports the mechanism; it does not prove it. The CED states that collecting the data used to detect an intermediate is not assessed.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Who is who in a mechanism</h2>
+    <p>Track each species through the steps in order. Where it first shows up, and whether it is left over at the end, decides its role.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Role</th><th>Pattern in the steps</th><th>In the overall equation?</th><th>Concentration over time</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><b>Reactant</b></td><td>Net consumed</td><td>Yes, left side</td><td>Starts high, falls</td><td>H<sub>2</sub>O<sub>2</sub> in the I<sup>−</sup> mechanism</td></tr>
+      <tr><td><b>Product</b></td><td>Net produced</td><td>Yes, right side</td><td>Starts at zero, rises</td><td>O<sub>2</sub> in the I<sup>−</sup> mechanism</td></tr>
+      <tr><td><b>Intermediate</b></td><td>Produced first, consumed later</td><td>No (cancels)</td><td>Starts at zero, rises, falls back to zero</td><td>IO<sup>−</sup>, NO<sub>3</sub>, N<sub>2</sub>O<sub>2</sub>, ClO</td></tr>
+      <tr><td><b>Catalyst</b></td><td>Consumed first, regenerated later</td><td>No (cancels)</td><td>Dips while the reaction runs, ends where it started</td><td>I<sup>−</sup>, Cl</td></tr>
+      <tr><td>Partly canceled species</td><td>Appears on both sides, but more on one side</td><td>Yes, with the leftover coefficient</td><td>Behaves as a net reactant or product</td><td>NO<sub>2</sub> in the NO<sub>2</sub> + CO mechanism</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Mechanisms on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>When asked for the overall equation, add the steps and show which species cancel. Multiply a step first if the mechanism says it happens twice.</li>
+        <li>Identify an intermediate with a reason: "NO<sub>3</sub> is produced in step 1 and consumed in step 2, so it does not appear in the overall equation."</li>
+        <li>Identify a catalyst with a reason: "I<sup>−</sup> is consumed in step 1 and regenerated in step 2."</li>
+        <li>When judging a mechanism, check first that the steps add up to the balanced equation (atoms and charge).</li>
+        <li>For evidence questions, say that detecting the intermediate supports the mechanism that contains it, and explain why the other mechanism cannot account for it.</li>
+        <li>Name the molecularity of a step from its reactant side: 2NO + H<sub>2</sub> is termolecular.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Calling any species that appears in two steps an intermediate. NO<sub>2</sub> appears in both steps of the NO<sub>2</sub> + CO mechanism, but more is used than made, so it is a reactant.</li>
+        <li>Mixing up intermediates and catalysts. Order matters: made then used is an intermediate; used then remade is a catalyst.</li>
+        <li>Leaving an intermediate in the overall equation, or writing the overall equation without canceling.</li>
+        <li>Writing the overall rate law from the overall coefficients. That only works for an elementary reaction (topic 5.8 shows how to get it from a mechanism).</li>
+        <li>Saying that detecting an intermediate proves a mechanism. It is evidence, not proof.</li>
+        <li>Thinking an intermediate is the same as a transition state. An intermediate is a real, if short-lived, species in a valley; a transition state is the peak of a single step.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 5.7. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-5.html">Unit 5 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Mechanisms ----------
+  // Each step: r (reactants), p (products) as { species: coefficient }, k forward, kr reverse (0 = one-way), label.
+  // init: starting concentrations (M, illustrative). hide: species not plotted. roles: hand-typed expected roles for the self-check.
+  var SC = {
+    no2co: { name: "NO₂ + CO", overall: { r: { NO2: 1, CO: 1 }, p: { NO: 1, CO2: 1 } },
+      steps: [ { r: { NO2: 2 }, p: { NO3: 1, NO: 1 }, k: 1, kr: 0, label: "slow" }, { r: { NO3: 1, CO: 1 }, p: { NO2: 1, CO2: 1 }, k: 6, kr: 0, label: "fast" } ],
+      init: { NO2: 1.0, CO: 1.0 }, tmax: 12, roles: { NO2: "reactant", NO3: "intermediate", NO: "product", CO: "reactant", CO2: "product" } },
+    no2: { name: "2NO + O₂", overall: { r: { NO: 2, O2: 1 }, p: { NO2: 2 } },
+      steps: [ { r: { NO: 2 }, p: { N2O2: 1 }, k: 6, kr: 6, label: "fast, reversible" }, { r: { N2O2: 1, O2: 1 }, p: { NO2: 2 }, k: 2, kr: 0, label: "slow" } ],
+      init: { NO: 1.0, O2: 0.6 }, tmax: 14, roles: { NO: "reactant", N2O2: "intermediate", O2: "reactant", NO2: "product" } },
+    h2o2: { name: "H₂O₂ with I⁻", overall: { r: { H2O2: 2 }, p: { H2O: 2, O2: 1 } },
+      steps: [ { r: { H2O2: 1, "I^-": 1 }, p: { H2O: 1, "IO^-": 1 }, k: 6, kr: 0, label: "slow" }, { r: { H2O2: 1, "IO^-": 1 }, p: { H2O: 1, O2: 1, "I^-": 1 }, k: 600, kr: 0, label: "fast" } ],
+      init: { H2O2: 1.0, "I^-": 0.2 }, tmax: 4, hide: { H2O: 1 }, roles: { H2O2: "reactant", "I^-": "catalyst", H2O: "product", "IO^-": "intermediate", O2: "product" } },
+    o3: { name: "O₃ + O with Cl atoms", overall: { r: { O3: 1, O: 1 }, p: { O2: 2 } },
+      steps: [ { r: { Cl: 1, O3: 1 }, p: { ClO: 1, O2: 1 }, k: 12, kr: 0, label: "" }, { r: { ClO: 1, O: 1 }, p: { Cl: 1, O2: 1 }, k: 12, kr: 0, label: "" } ],
+      init: { O3: 1.0, O: 1.3, Cl: 0.2 }, tmax: 4, roles: { Cl: "catalyst", O3: "reactant", ClO: "intermediate", O2: "product", O: "reactant" } },
+    noh2: { name: "2NO + 2H₂ (termolecular step)", overall: { r: { NO: 2, H2: 2 }, p: { N2: 1, H2O: 2 } },
+      steps: [ { r: { NO: 2, H2: 1 }, p: { N2O: 1, H2O: 1 }, k: 3, kr: 0, label: "slow" }, { r: { N2O: 1, H2: 1 }, p: { N2: 1, H2O: 1 }, k: 8, kr: 0, label: "fast" } ],
+      init: { NO: 1.0, H2: 1.0 }, tmax: 10, roles: { NO: "reactant", H2: "reactant", N2O: "intermediate", H2O: "product", N2: "product" } },
+    bad: { name: "A proposal that fails", overall: { r: { NO: 2, O2: 1 }, p: { NO2: 2 } },
+      steps: [ { r: { NO: 1, O2: 1 }, p: { NO3: 1 }, k: 2, kr: 0, label: "" }, { r: { NO3: 1 }, p: { NO2: 1, O: 1 }, k: 2, kr: 0, label: "" } ],
+      init: { NO: 1.0, O2: 0.6 }, tmax: 10, invalid: true, roles: { NO: "reactant", O2: "reactant", NO3: "intermediate", NO2: "product", O: "product" } }
+  };
+  var ORDER = ["no2co", "no2", "h2o2", "o3", "noh2", "bad"];
+  var ROLES = ["?", "reactant", "product", "intermediate", "catalyst"];
+  var S = { key: "no2co", kf: 0, t: 0.35, guess: {}, checked: false, reveal: false };
+
+  // ---------- Mechanism arithmetic ----------
+  function speciesOf(m) {
+    var out = [];
+    m.steps.forEach(function (st) { [st.r, st.p].forEach(function (side) { Object.keys(side).forEach(function (s) { if (out.indexOf(s) < 0) out.push(s); }); }); });
+    return out;
+  }
+  function netOf(m) {
+    var n = {};
+    m.steps.forEach(function (st) {
+      Object.keys(st.r).forEach(function (s) { n[s] = (n[s] || 0) - st.r[s]; });
+      Object.keys(st.p).forEach(function (s) { n[s] = (n[s] || 0) + st.p[s]; });
+    });
+    return n;
+  }
+  function roleOf(m, s) {
+    var n = netOf(m)[s];
+    if (n < 0) return "reactant";
+    if (n > 0) return "product";
+    for (var i = 0; i < m.steps.length; i++) {
+      if (m.steps[i].p[s]) return "intermediate";
+      if (m.steps[i].r[s]) return "catalyst";
+    }
+    return "?";
+  }
+  function matchesOverall(m) {
+    var n = netOf(m), o = {}, k;
+    Object.keys(m.overall.r).forEach(function (s) { o[s] = -m.overall.r[s]; });
+    Object.keys(m.overall.p).forEach(function (s) { o[s] = m.overall.p[s]; });
+    for (k in n) if ((n[k] || 0) !== (o[k] || 0)) return false;
+    for (k in o) if ((n[k] || 0) !== (o[k] || 0)) return false;
+    return true;
+  }
+  function chargeOf(s) { var c = String(s).match(/\^(\d*)([+\-])$/); return c ? (c[2] === "-" ? -1 : 1) * (c[1] ? +c[1] : 1) : 0; }
+  function balanced(r, p) {
+    var a = {}, q = 0;
+    Object.keys(r).forEach(function (s) { var f = Lab.parseFormula(s); for (var e in f) a[e] = (a[e] || 0) + f[e] * r[s]; q += chargeOf(s) * r[s]; });
+    Object.keys(p).forEach(function (s) { var f = Lab.parseFormula(s); for (var e in f) a[e] = (a[e] || 0) - f[e] * p[s]; q -= chargeOf(s) * p[s]; });
+    for (var e in a) if (a[e] !== 0) return false;
+    return q === 0;
+  }
+  function term(s, n) { return (n > 1 ? n : "") + Lab.fmla(s); }
+  function side(obj) { return Object.keys(obj).map(function (s) { return term(s, obj[s]); }).join(" + "); }
+  function molecularity(st) {
+    var n = 0; Object.keys(st.r).forEach(function (s) { n += st.r[s]; });
+    return n === 1 ? "unimolecular" : n === 2 ? "bimolecular" : n === 3 ? "termolecular" : n + " particles";
+  }
+  // The added-up equation with canceled amounts struck out.
+  function sumHTML(m) {
+    var L = {}, R = {};
+    m.steps.forEach(function (st) {
+      Object.keys(st.r).forEach(function (s) { L[s] = (L[s] || 0) + st.r[s]; });
+      Object.keys(st.p).forEach(function (s) { R[s] = (R[s] || 0) + st.p[s]; });
+    });
+    var cl = {}, cr = {};
+    Object.keys(L).forEach(function (s) { if (R[s]) { cl[s] = cr[s] = Math.min(L[s], R[s]); } });
+    function render(sideKey, left) {
+      var parts = [];
+      m.steps.forEach(function (st) {
+        var obj = st[sideKey];
+        Object.keys(obj).forEach(function (s) {
+          var n = obj[s], c = left ? (cl[s] || 0) : (cr[s] || 0), struck = Math.min(n, c);
+          if (left) cl[s] = c - struck; else cr[s] = c - struck;
+          if (struck) parts.push("<s>" + term(s, struck) + "</s>");
+          if (n - struck) parts.push(term(s, n - struck));
+        });
+      });
+      return parts.join(" + ");
+    }
+    return render("r", true) + " → " + render("p", false);
+  }
+  function netHTML(m) {
+    var n = netOf(m), r = {}, p = {};
+    speciesOf(m).forEach(function (s) { if (n[s] < 0) r[s] = -n[s]; else if (n[s] > 0) p[s] = n[s]; });
+    return { html: side(r) + " → " + side(p), r: r, p: p };
+  }
+
+  // ---------- Simulation (RK4 on the elementary-step rate laws) ----------
+  function simulate(m, kmult) {
+    var cmax = 0, kmax = 0;
+    Object.keys(m.init).forEach(function (s) { cmax = Math.max(cmax, m.init[s]); });
+    m.steps.forEach(function (st, j) { kmax = Math.max(kmax, st.k * (j === 1 ? kmult : 1), st.kr || 0); });
+    // RK4 stays stable when k·c·dt is well under 2.8; take enough steps to keep it below about 0.7
+    var sp = speciesOf(m), N = Math.max(1500, Math.ceil(m.tmax * kmax * cmax * 1.5)), dt = m.tmax / N, c = sp.map(function (s) { return m.init[s] || 0; });
+    var idx = {}; sp.forEach(function (s, i) { idx[s] = i; });
+    function deriv(x) {
+      var d = sp.map(function () { return 0; });
+      m.steps.forEach(function (st, j) {
+        var k = st.k * (j === 1 ? kmult : 1), rf = k, rr = st.kr || 0;
+        Object.keys(st.r).forEach(function (s) { rf *= Math.pow(Math.max(0, x[idx[s]]), st.r[s]); });
+        Object.keys(st.p).forEach(function (s) { rr *= Math.pow(Math.max(0, x[idx[s]]), st.p[s]); });
+        var net = rf - rr;
+        Object.keys(st.r).forEach(function (s) { d[idx[s]] -= st.r[s] * net; });
+        Object.keys(st.p).forEach(function (s) { d[idx[s]] += st.p[s] * net; });
+      });
+      return d;
+    }
+    function add(a, b, h) { return a.map(function (v, i) { return v + b[i] * h; }); }
+    var out = [c.slice()];
+    for (var i = 0; i < N; i++) {
+      var k1 = deriv(c), k2 = deriv(add(c, k1, dt / 2)), k3 = deriv(add(c, k2, dt / 2)), k4 = deriv(add(c, k3, dt));
+      c = c.map(function (v, q) { return Math.max(0, v + dt / 6 * (k1[q] + 2 * k2[q] + 2 * k3[q] + k4[q])); });
+      out.push(c.slice());
+    }
+    return { sp: sp, idx: idx, data: out, dt: dt, N: N };
+  }
+
+  // ---------- Drawing ----------
+  var COLORS = { reactant: ["var(--c1)", "var(--c4)"], product: ["var(--c2)", "var(--good)"], intermediate: ["var(--c3)", "var(--c3)"], catalyst: ["var(--accent)", "var(--accent)"] };
+  var svg = document.getElementById("conc");
+  function styleFor(m) {
+    var used = { reactant: 0, product: 0, intermediate: 0, catalyst: 0 }, st = {};
+    speciesOf(m).forEach(function (s) {
+      var r = roleOf(m, s), i = used[r]++ || 0;
+      st[s] = { color: COLORS[r][i % 2], dash: i >= 2 || (i === 1 && COLORS[r][0] === COLORS[r][1]) ? "6 4" : null, w: r === "intermediate" || r === "catalyst" ? 3.5 : 2.5, role: r };
+    });
+    return st;
+  }
+  function draw(sim, m) {
+    var ymax = 0, hide = m.hide || {};
+    sim.sp.forEach(function (s, i) { if (hide[s]) return; sim.data.forEach(function (row) { if (row[i] > ymax) ymax = row[i]; }); });
+    ymax = Math.ceil(ymax * 1.1 * 5) / 5;
+    var yT = []; for (var v = 0; v <= ymax + 1e-9; v += ymax > 1.5 ? 0.5 : 0.2) yT.push(+v.toFixed(2));
+    var F = Lab.frame(svg, { x: [0, m.tmax], y: [0, ymax], width: 440, height: 320, xLabel: "Time (arbitrary units) →", yLabel: "Concentration (M)",
+      xTicks: [], yTicks: yT, fmtY: function (v) { return v.toFixed(1); } });
+    var st = styleFor(m), leg = [];
+    sim.sp.forEach(function (s, i) {
+      if (hide[s]) return;
+      var pts = [], stride = Math.max(1, Math.floor(sim.N / 400));
+      for (var j = 0; j <= sim.N; j += stride) pts.push([j * sim.dt, sim.data[j][i]]);
+      Lab.line(F, pts, st[s].color, st[s].w, st[s].dash);
+      leg.push('<span style="color:' + st[s].color + '"><i' + (st[s].dash ? ' class="dash"' : "") + '></i>' + '<bdi>' + Lab.fmla(s) + '</bdi> <small>(' + (S.reveal || S.checked ? st[s].role : "?") + ')</small></span>');
+    });
+    var tc = S.t * m.tmax;
+    Lab.vline(F, tc, "var(--muted)", 1.5, "4 4");
+    Lab.tag(F, tc + m.tmax * 0.01, ymax * 0.95, "t", "var(--muted)", "start");
+    document.getElementById("slegend").innerHTML = leg.join("");
+  }
+
+  // ---------- Story ----------
+  function story(m, sim) {
+    var sp = speciesOf(m), ok = matchesOverall(m), net = netHTML(m), j = Math.round(S.t * sim.N), row = sim.data[j];
+    var inter = sp.filter(function (s) { return roleOf(m, s) === "intermediate"; }), cat = sp.filter(function (s) { return roleOf(m, s) === "catalyst"; });
+    var li = [];
+    li.push("<b>Adding the steps:</b> " + (ok ? "after canceling, the sum is " + net.html + ", which matches the overall equation. The mechanism passes the first test." :
+      "after canceling, the sum is " + net.html + ". The overall reaction is " + side(m.overall.r) + " → " + side(m.overall.p) + ". They do not match, so this mechanism must be rejected, even though each step is balanced."));
+    inter.forEach(function (s) {
+      var made = -1, used = -1; m.steps.forEach(function (st, i) { if (st.p[s] && made < 0) made = i + 1; if (st.r[s] && used < 0) used = i + 1; });
+      var peak = 0, tp = 0, i = sim.idx[s]; sim.data.forEach(function (r, q) { if (r[i] > peak) { peak = r[i]; tp = q; } });
+      li.push("<b>" + Lab.fmla(s) + " is an intermediate:</b> made in step " + made + ", used up in step " + used + ". Its concentration starts at zero, peaks near " + Lab.sig(peak, 2) + " M, and falls back to " + Lab.sig(sim.data[sim.N][i], 2) + " M by the end of the run. Right now (" + Lab.fmt(S.t * m.tmax, 1) + " time units) it is " + Lab.sig(row[i], 2) + " M.");
+    });
+    cat.forEach(function (s) {
+      var i = sim.idx[s], c0 = sim.data[0][i], cN = sim.data[sim.N][i];
+      li.push("<b>" + Lab.fmla(s) + " is a catalyst:</b> used in step 1 and regenerated in step 2. It starts at " + Lab.sig(c0, 2) + " M, is " + Lab.sig(row[i], 2) + " M at the cursor (lower while some is tied up as the intermediate), and ends at " + Lab.sig(cN, 2) + " M.");
+    });
+    sp.forEach(function (s) {
+      var n = netOf(m)[s];
+      var both = m.steps.some(function (st) { return st.r[s]; }) && m.steps.some(function (st) { return st.p[s]; });
+      if (both && n !== 0) li.push("<b>" + Lab.fmla(s) + " appears on both sides</b> of the sum but does not fully cancel: net " + (n < 0 ? (-n) + " consumed, so it is a reactant." : n + " produced, so it is a product.") + " Showing up in more than one step does not make a species an intermediate.");
+    });
+    if (m.steps.some(function (st) { return molecularity(st) === "termolecular"; })) li.push("<b>Termolecular step:</b> step 1 needs three particles to collide at once. That is possible but rare, which is one reason such a step is often slow.");
+    if (Math.abs(S.kf) > 0.01 && inter.length) li.push("<b>Step 2 is now " + Lab.sig(Math.pow(10, S.kf), 2) + " × its base speed.</b> " + (S.kf < 0 ? "A slower second step lets the intermediate build up to a higher concentration before it is used." : "A faster second step uses the intermediate almost as soon as it forms, so its concentration stays low."));
+    var ap = ok ? (inter.length ? inter.map(Lab.fmla).join(" and ") + (inter.length > 1 ? " are intermediates" : " is an intermediate") + " (produced in one step, consumed in a later one)" : "") +
+      (cat.length ? (inter.length ? "; " : "") + cat.map(Lab.fmla).join(" and ") + " is a catalyst (consumed in one step, regenerated in a later one)" : "") +
+      ". Neither kind appears in the overall equation, " + net.html + ", which the steps add up to."
+      : "The steps add up to " + net.html + ", not the overall equation " + side(m.overall.r) + " → " + side(m.overall.p) + ", so the mechanism is not consistent with the reaction.";
+    return "<ul><li>" + li.join("</li><li>") + "</li></ul><p><b>AP answer:</b> " + ap + "</p>";
+  }
+
+  // ---------- Render ----------
+  var elK = document.getElementById("s-k"), elT = document.getElementById("s-t"), scBtns = {}, sim = null;
+  function m() { return SC[S.key]; }
+  function chips() {
+    var box = document.getElementById("chips"); box.innerHTML = "";
+    speciesOf(m()).forEach(function (s) {
+      var b = document.createElement("button"); b.type = "button"; b.className = "chip";
+      var truth = roleOf(m(), s), g = S.reveal ? truth : (S.guess[s] || "?");
+      b.innerHTML = '<span class="sp">' + Lab.fmla(s) + '</span><span class="role">' + g + '</span>';
+      b.setAttribute("aria-label", s.replace("^", " charge ") + ": " + g + ". Click to change.");
+      if (S.checked || S.reveal) b.classList.add(g === truth ? "ok" : "no");
+      b.addEventListener("click", function () {
+        if (S.reveal) return;
+        var i = ROLES.indexOf(S.guess[s] || "?"); S.guess[s] = ROLES[(i + 1) % ROLES.length];
+        S.checked = false; document.getElementById("fb").textContent = ""; chips();
+      });
+      box.appendChild(b);
+    });
+  }
+  function render(resim) {
+    var x = m();
+    if (resim || !sim) sim = simulate(x, Math.pow(10, S.kf));
+    elK.value = S.kf; elT.value = S.t;
+    document.getElementById("o-k").textContent = "× " + Lab.sig(Math.pow(10, S.kf), 2);
+    document.getElementById("o-t").textContent = Lab.fmt(S.t * x.tmax, 1);
+    document.getElementById("steps").innerHTML = x.steps.map(function (st, i) {
+      return '<div class="step"><span class="n">Step ' + (i + 1) + '</span><span class="eqn">' + side(st.r) + (st.kr ? " ⇌ " : " → ") + side(st.p) + '</span><span class="mol">' + molecularity(st) + (st.label ? ", " + st.label : "") + '</span></div>';
+    }).join("");
+    var ok = matchesOverall(x);
+    document.getElementById("sum").innerHTML = sumHTML(x);
+    document.getElementById("net").innerHTML = "Net: " + netHTML(x).html;
+    document.getElementById("vs").innerHTML = 'Overall reaction: ' + side(x.overall.r) + " → " + side(x.overall.p) + ' <span class="match ' + (ok ? "ok" : "no") + '">' + (ok ? "matches" : "does not match") + '</span>';
+    draw(sim, x);
+    var sp = speciesOf(x);
+    var inter = sp.filter(function (s) { return roleOf(x, s) === "intermediate"; }), cat = sp.filter(function (s) { return roleOf(x, s) === "catalyst"; });
+    document.getElementById("r-st").textContent = x.steps.length + " steps";
+    document.getElementById("r-st2").textContent = x.steps.map(molecularity).join(", ");
+    document.getElementById("r-in").innerHTML = inter.length ? inter.map(Lab.fmla).join(", ") : "none";
+    document.getElementById("r-in2").innerHTML = inter.length ? "now " + inter.map(function (s) { return Lab.sig(sim.data[Math.round(S.t * sim.N)][sim.idx[s]], 2) + " M"; }).join(", ") : "";
+    document.getElementById("r-ca").innerHTML = cat.length ? cat.map(Lab.fmla).join(", ") : "none";
+    document.getElementById("r-ca2").innerHTML = cat.length ? "now " + cat.map(function (s) { return Lab.sig(sim.data[Math.round(S.t * sim.N)][sim.idx[s]], 2) + " M"; }).join(", ") : "";
+    var rk = document.getElementById("r-ok"); rk.textContent = ok ? "Yes" : "No"; rk.style.color = ok ? "var(--good)" : "var(--bad)";
+    document.getElementById("r-ok2").textContent = ok ? "atoms and charge balance" : "reject this mechanism";
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    chips();
+    document.getElementById("story").innerHTML = story(x, sim);
+  }
+  function pick(k) { S.key = k; S.guess = {}; S.checked = false; S.reveal = false; S.kf = 0; document.getElementById("fb").textContent = ""; render(true); }
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pick(k); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  elK.addEventListener("input", function () { S.kf = +elK.value; render(true); });
+  elT.addEventListener("input", function () { S.t = +elT.value; render(false); });
+  document.getElementById("b-check").addEventListener("click", function () {
+    var x = m(), sp = speciesOf(x), right = 0, blank = 0;
+    sp.forEach(function (s) { var g = S.guess[s] || "?"; if (g === "?") blank++; else if (g === roleOf(x, s)) right++; });
+    S.checked = true; S.reveal = false;
+    var fb = document.getElementById("fb");
+    if (right === sp.length) { fb.className = "fb ok"; fb.textContent = "All " + sp.length + " correct. The graph legend now shows each role."; }
+    else { fb.className = "fb no"; fb.textContent = right + " of " + sp.length + " correct" + (blank ? " (" + blank + " still unlabeled)" : "") + ". Red chips need another look: track where each species is made and where it is used."; }
+    render(false);
+  });
+  document.getElementById("b-reveal").addEventListener("click", function () { S.reveal = true; S.checked = false; document.getElementById("fb").textContent = ""; render(false); });
+  document.getElementById("b-clear").addEventListener("click", function () { S.guess = {}; S.reveal = false; S.checked = false; document.getElementById("fb").textContent = ""; render(false); });
+  pick("no2co");
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "A proposed mechanism for NO₂(g) + CO(g) → NO(g) + CO₂(g) is: Step 1: NO₂ + NO₂ → NO₃ + NO. Step 2: NO₃ + CO → NO₂ + CO₂. Which species is an intermediate?",
+      o: ["NO₂", "NO₃", "CO", "NO"], c: 1,
+      w: "NO<sub>3</sub> is produced in step 1 and consumed in step 2, so it cancels and does not appear in the overall equation. NO<sub>2</sub> (choice A) is the trap: it appears in both steps, but two are used and only one is remade, so the net is one NO<sub>2</sub> consumed and it is a reactant." },
+    { s: "A mechanism for the decomposition of hydrogen peroxide is: Step 1: H₂O₂ + I⁻ → H₂O + IO⁻. Step 2: H₂O₂ + IO⁻ → H₂O + O₂ + I⁻. What is the overall equation?",
+      o: ["H₂O₂ + I⁻ → H₂O + IO⁻", "2H₂O₂ + I⁻ + IO⁻ → 2H₂O + O₂ + I⁻ + IO⁻", "H₂O₂ → H₂O + O₂", "2H₂O₂ → 2H₂O + O₂"], c: 3,
+      w: "Adding the steps gives 2H<sub>2</sub>O<sub>2</sub> + I<sup>−</sup> + IO<sup>−</sup> → 2H<sub>2</sub>O + O<sub>2</sub> + I<sup>−</sup> + IO<sup>−</sup>. I<sup>−</sup> and IO<sup>−</sup> appear on both sides and cancel, leaving 2H<sub>2</sub>O<sub>2</sub> → 2H<sub>2</sub>O + O<sub>2</sub>. Choice B forgets to cancel; choice C is not balanced in oxygen." },
+    { s: "In the mechanism in the previous question, what is the role of I⁻?",
+      o: ["It is a catalyst, because it is consumed in step 1 and regenerated in step 2.", "It is an intermediate, because it does not appear in the overall equation.", "It is a reactant, because it appears on the left side of step 1.", "It is a product, because it appears on the right side of step 2."], c: 0,
+      w: "I<sup>−</sup> is used first and given back later, which is the pattern of a catalyst. Choice B is the common mix-up: intermediates also cancel, but an intermediate is made first and used later (that is IO<sup>−</sup> here). I<sup>−</sup> is present before the reaction starts; IO<sup>−</sup> is not." },
+    { s: "Which statement correctly distinguishes a reaction intermediate from a catalyst in a mechanism?",
+      o: ["An intermediate appears in the overall equation; a catalyst does not.", "A catalyst is produced in one step and consumed in a later step; an intermediate is consumed and then regenerated.", "An intermediate is produced in one step and consumed in a later step; a catalyst is consumed in one step and regenerated in a later step.", "Both are present in the reaction mixture before the reaction begins."], c: 2,
+      w: "Order is the key. An intermediate is formed, then used up; a catalyst is used, then re-formed. Neither appears in the overall equation (so choice A is wrong), and choice B states the two definitions backward. Only the catalyst is there at the start (choice D)." },
+    { s: "One step in a proposed mechanism is 2NO(g) + H₂(g) → N₂O(g) + H₂O(g). Which statement about this step is correct?",
+      o: ["It is bimolecular, because two different substances react.", "It is termolecular, because three reactant molecules must collide at once.", "Its molecularity cannot be known without experimental data.", "It is unimolecular, because only one H₂ molecule reacts."], c: 1,
+      w: "Molecularity counts reactant particles in an elementary step: two NO plus one H<sub>2</sub> is three, so the step is termolecular. Choice A counts kinds of substances instead of particles. Choice C would be true for an overall reaction, but an elementary step's molecularity comes straight from how it is written." },
+    { s: "The overall reaction 2A + B → C has been studied. Which proposed mechanism is consistent with the overall equation?",
+      o: ["Step 1: A + B → AB. Step 2: AB + A → C.", "Step 1: A + B → AB. Step 2: AB → C.", "Step 1: A + A → A₂. Step 2: A₂ → C.", "Step 1: 2A → A₂. Step 2: A₂ + 2B → C."], c: 0,
+      w: "Adding A + B → AB and AB + A → C and canceling AB gives 2A + B → C. Choice B sums to A + B → C, and choice C leaves out B entirely. Choice D sums to 2A + 2B → C, which uses too much B." },
+    { s: "Two mechanisms are proposed for NO₂ + CO → NO + CO₂. Mechanism 1 is a single step: NO₂ + CO → NO + CO₂. Mechanism 2 has NO₃ as an intermediate. Which observation would best support mechanism 2?",
+      o: ["CO₂ is detected as a product.", "The reaction is found to be exothermic.", "NO₃ is detected in the reaction mixture while the reaction is occurring.", "NO₃ is detected in the flask before the reactants are mixed."], c: 2,
+      w: "Only mechanism 2 makes NO<sub>3</sub>, so finding it during the reaction is evidence for mechanism 2 over mechanism 1. Choice A is predicted by both mechanisms, so it cannot tell them apart. Choice D does not fit an intermediate, which is present only while the reaction is running." },
+    { s: "A reaction A → C occurs by the mechanism A → B, then B → C. A graph of concentration vs. time is made for A, B and C. Which description fits the curve for B?",
+      o: ["It starts at its maximum value and decreases steadily to zero.", "It starts at zero and increases steadily until it levels off at its maximum.", "It stays constant throughout the reaction.", "It starts at zero, rises to a maximum, and then decreases back toward zero."], c: 3,
+      w: "B is an intermediate: none is present at the start, it forms in step 1, and it is used up in step 2, so it rises and then falls. Choice A describes the reactant A, and choice B describes the product C. A catalyst, not an intermediate, would end at its starting value." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("5.7");
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    ORDER.forEach(function (k) {
+      var x = SC[k];
+      x.steps.forEach(function (st, i) { if (!balanced(st.r, st.p)) bad.push(k + " step " + (i + 1) + " unbalanced"); });
+      if (!balanced(x.overall.r, x.overall.p)) bad.push(k + " overall unbalanced");
+      if (matchesOverall(x) === !!x.invalid) bad.push(k + " sum " + (x.invalid ? "unexpectedly matches" : "does not match"));
+      speciesOf(x).forEach(function (s) { if (roleOf(x, s) !== x.roles[s]) bad.push(k + " role of " + s + ": " + roleOf(x, s)); });
+      // conservation in the simulation: atoms in the system at the end equal atoms at the start
+      var sim = simulate(x, 1), a0 = {}, a1 = {};
+      sim.sp.forEach(function (s, i) { var f = Lab.parseFormula(s); for (var e in f) { a0[e] = (a0[e] || 0) + f[e] * sim.data[0][i]; a1[e] = (a1[e] || 0) + f[e] * sim.data[sim.N][i]; } });
+      for (var e in a0) if (Math.abs(a0[e] - a1[e]) > 1e-6) bad.push(k + " sim loses " + e);
+      // intermediates end near zero, catalysts end near their start
+      sim.sp.forEach(function (s, i) {
+        var r = roleOf(x, s), last = sim.data[sim.N][i];
+        if (r === "intermediate" && !x.invalid && last > 0.05) bad.push(k + " " + s + " not used up (" + last.toFixed(3) + ")");
+        if (r === "catalyst" && Math.abs(last - sim.data[0][i]) > 0.02) bad.push(k + " catalyst " + s + " not regenerated");
+      });
+    });
+    if (Q.map(function (q) { return q.c; }).join("") !== "13021023") bad.push("quiz keys changed");
+    if (bad.length) console.error("5.7 self-check failed: " + bad.join("; "));
+  })();
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [5], topic: "5.7", compact: true, storageKey: "topic-5.7" });</script>
+</body>
+</html>

@@ -5,7 +5,7 @@
   "use strict";
 
   /* Every topic in the course. A unit's labs go live when its number is in READY. */
-  var READY = [1, 2, 3, 4, 6];
+  var READY = [1, 2, 3, 4, 5, 6];
   var UNIT_TITLES = { 1: "Atomic Structure and Properties", 2: "Compound Structure and Properties", 3: "Properties of Substances and Mixtures", 4: "Chemical Reactions", 5: "Kinetics", 6: "Thermochemistry", 7: "Equilibrium", 8: "Acids and Bases", 9: "Thermodynamics and Electrochemistry" };
   var UNIT_WEIGHTS = { 1: "7\u20139%", 2: "7\u20139%", 3: "18\u201322%", 4: "7\u20139%", 5: "7\u20139%", 6: "7\u20139%", 7: "7\u20139%", 8: "11\u201315%", 9: "7\u20139%" };
   var TOPICS = [
