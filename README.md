@@ -4,7 +4,7 @@ Interactive study pages for **AP Chemistry**, following the College Board course
 
 Live site: https://chem.natebird.co
 
-Labs are live for Units 1–4. Terminology guides cover all nine units.
+Every one of the 91 topics has a lab, and the terminology guides cover all nine units. Each lab was checked by an independent review against the CED and the AP equations sheet (see `docs/AP_SCOPE.md`).
 
 ## Terminology guides
 
@@ -33,14 +33,15 @@ labs/               One page per course topic (N-k-slug.html)
 terms/              Master glossary and one page per unit (generated)
 scripts/topics.py   The 91 topics, unit titles, and exam weights
 scripts/build_index.py  Regenerates index.html and terms/ from topics.py and READY in lab.js
-docs/LAB_GUIDE.md   How a lab page is built (use it for Units 5–9)
+docs/LAB_GUIDE.md   How a lab page is built
+docs/AP_SCOPE.md    CED exclusion statements and the equations sheet, for checking scope claims
 ```
 
-## Adding a unit
+## Changing the site
 
-1. Write its labs in `labs/` following `docs/LAB_GUIDE.md`.
-2. Add the unit number to `READY` in `assets/lab.js`.
-3. Run `python3 scripts/build_index.py`.
+- Lab pages follow `docs/LAB_GUIDE.md`; scope claims follow `docs/AP_SCOPE.md`.
+- Units listed in `READY` in `assets/lab.js` show on the home page and in the pager.
+- After changing topics or labs, run `python3 scripts/build_index.py` to regenerate `index.html` and `terms/`.
 
 ## A note on the numbers
 

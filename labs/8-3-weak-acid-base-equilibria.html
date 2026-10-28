@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weak Acid and Base Equilibria Study Lab</title>
+<meta name="description" content="Set up the ICE table for a weak acid or weak base, see how few molecules actually ionize, compare the small-x shortcut with the exact answer, and work backward from a measured pH to Ka.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.graph-card, .side { align-content: start; }
+.side { display: grid; gap: 14px; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.side .controls { grid-template-columns: 1fr 1fr; }
+.ctl[hidden] { display: none; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.plegend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: .8rem; color: var(--muted); }
+.plegend span { display: inline-flex; align-items: center; gap: 5px; }
+.plegend i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+.note { font-size: .82rem; color: var(--muted); }
+table.ice { min-width: 0; font-variant-numeric: tabular-nums; }
+table.ice th, table.ice td { padding: 7px 8px; font-size: .86rem; text-align: center; }
+table.ice th:first-child, table.ice td:first-child { text-align: left; }
+table.ice td.x { color: var(--c1); font-weight: 600; }
+.kexpr { font-family: var(--mono); font-size: .86rem; background: var(--accent-soft); border-radius: 8px; padding: 8px 12px; overflow-x: auto; }
+.badge { font-size: .78rem; font-weight: 600; padding: 2px 10px; border-radius: 999px; display: inline-block; }
+.badge.ok { background: var(--good-soft); color: var(--good); }
+.badge.no { background: var(--bad-soft); color: var(--bad); }
+.legend .l-ex { color: var(--c1); } .legend .l-ap { color: var(--c3); }
+.legend .l-ap::before { background: none; border-top: 2px dashed currentColor; height: 0; }
+.lab-bar > * { min-width: 0; max-width: 100%; }
+#part text { font-size: 9px; font-weight: 600; fill: var(--surface); pointer-events: none; }
+#part text.cap { font-size: 12px; fill: var(--muted); font-weight: 500; }
+@media (max-width: 520px) {
+  .side .controls { grid-template-columns: 1fr; }
+  .lab-bar .eqn { white-space: normal; }
+  #pct text { font-size: 13px; }
+  #pct .lbl { font-size: 13.5px; }
+  table.ice th, table.ice td { padding: 6px 4px; font-size: .8rem; }
+  #rxn { white-space: normal; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 8 · Topic 8.3</span>
+  <h1>Weak Acid and Base Equilibria Study Lab</h1>
+  <p class="lede">A weak acid gives its proton to water only a little: in 0.10 M acetic acid, about 99 of every 100 molecules stay intact. The extent is set by an equilibrium constant, K<sub>a</sub> (or K<sub>b</sub> for a weak base). Build the ICE table, see the particles, test the small-x shortcut against the exact answer, and work backward from a measured pH to K<sub>a</sub>.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The weak acid and base equilibrium lab</h2>
+    <p>Choose a weak acid or weak base, set its starting concentration, and read the ICE table and the worked pH. Switch to <b>Find K from pH</b> to do the reverse problem. K values are typical textbook values at 25 °C; on the exam, K is always given. The calculation ignores the small amount of H₃O⁺ and OH⁻ that comes from water itself, which is fine whenever [H₃O⁺] or [OH⁻] from the weak acid or base is well above 10<sup>−7</sup> M.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Particle view <small id="part-sub"></small></h3>
+      <svg class="chart" id="part" role="img" aria-label="Particle diagram of a weak acid or base: most particles un-ionized, a few ions"></svg>
+      <div class="plegend" id="plegend"></div>
+    </div>
+    <div class="card graph-card">
+      <h3>ICE table <small id="ice-sub">mol/L</small></h3>
+      <div class="eqn" id="rxn"></div>
+      <div class="tbl-wrap"><table class="ice" id="ice"></table></div>
+      <div class="kexpr" id="kexpr"></div>
+      <div id="check"></div>
+      <p class="note">"≈ 0" for the ion from water: pure water supplies only about 10<sup>−7</sup> M, negligible next to x.</p>
+    </div>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Percent ionization against concentration <small id="pct-sub"></small></h3>
+      <svg class="chart" id="pct" role="img" aria-label="Graph of percent ionization against concentration, exact and approximate"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Classic exam cases</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Weak acid or base</div>
+        <div class="seg" role="group" aria-label="Weak acids" id="pick-a"></div>
+        <div class="seg" role="group" aria-label="Weak bases" id="pick-b"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Problem type</div>
+        <div class="seg" role="group" aria-label="Problem type" id="modes"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-c">Starting concentration <output id="o-c"></output></label>
+          <input type="range" id="s-c" min="-3" max="0" step="0.01">
+          <span class="hint">Logarithmic, 2 significant figures</span>
+        </div>
+        <div class="ctl" id="ctl-k">
+          <label for="s-k"><span id="l-k">K<sub>a</sub></span> <output id="o-k"></output></label>
+          <input type="range" id="s-k" min="-10" max="-2" step="0.01">
+          <span class="hint">Logarithmic; moving it makes a custom weak acid or base</span>
+        </div>
+        <div class="ctl" id="ctl-ph" hidden>
+          <label for="s-ph">Measured pH <output id="o-ph"></output></label>
+          <input type="range" id="s-ph" step="0.01">
+          <span class="hint" id="h-ph"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-ex">Exact (quadratic)</span><span class="l-ap">Small-x approximation √(K/C)</span><span class="l-ghost">5% line</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">pH</div><div class="v" id="r-ph"></div><div class="sub" id="r-ph2"></div></div>
+    <div class="stat"><div class="k" id="r-xk">[H₃O⁺] = x</div><div class="v" id="r-x"></div><div class="sub" id="r-x2"></div></div>
+    <div class="stat"><div class="k">Percent ionization</div><div class="v" id="r-pct"></div><div class="sub" id="r-pct2"></div></div>
+    <div class="stat"><div class="k" id="r-kk">K<sub>a</sub> and conjugate</div><div class="v" id="r-k"></div><div class="sub" id="r-k2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Partial ionization</span><h3>Most weak acid stays as HA</h3><p>HA(aq) + H₂O(l) ⇌ H₃O⁺(aq) + A⁻(aq) reaches equilibrium with only a small fraction ionized. So [H₃O⁺] is much less than the starting acid concentration, and a weak acid has a higher pH than a strong acid at the same concentration.</p></div>
+    <div class="card"><span class="tag">The constant</span><h3>K<sub>a</sub> and pK<sub>a</sub></h3><p>K<sub>a</sub> = [H₃O⁺][A⁻]/[HA], with water left out because it is the solvent. A larger K<sub>a</sub> (smaller pK<sub>a</sub>) means a stronger weak acid. K<sub>a</sub> depends on temperature but not on concentration.</p></div>
+    <div class="card"><span class="tag">ICE table</span><h3>Solve for x</h3><p>Start with C of HA and essentially no ions. Let x ionize: x = [H₃O⁺] = [A⁻] and [HA] = C − x. Then K<sub>a</sub> = x²/(C − x). When x is small next to C, C − x ≈ C and x ≈ √(K<sub>a</sub>C). Check that x/C is under 5%; if not, solve the quadratic.</p></div>
+    <div class="card"><span class="tag">Dilution</span><h3>Percent ionization rises as C falls</h3><p>Percent ionization = x/C × 100% ≈ √(K<sub>a</sub>/C) × 100%. Diluting a weak acid 100-fold raises its percent ionization about 10-fold, even though [H₃O⁺] goes down. Le Châtelier explains it: dilution favors the side with more dissolved particles.</p></div>
+    <div class="card"><span class="tag">Weak bases</span><h3>Same math with K<sub>b</sub></h3><p>B(aq) + H₂O(l) ⇌ BH⁺(aq) + OH⁻(aq), K<sub>b</sub> = [BH⁺][OH⁻]/[B]. The ICE table gives x = [OH⁻], so find pOH first, then pH = 14.00 − pOH. Ammonia and amines are the usual examples.</p></div>
+    <div class="card"><span class="tag">Conjugate pairs</span><h3>K<sub>a</sub> × K<sub>b</sub> = K<sub>w</sub></h3><p>For an acid and its conjugate base, K<sub>a</sub> × K<sub>b</sub> = 1.0 × 10<sup>−14</sup> and pK<sub>a</sub> + pK<sub>b</sub> = 14.00 at 25 °C. The weaker the acid, the stronger its conjugate base: CN⁻ (from very weak HCN) is a noticeably basic ion, while Cl⁻ (from HCl) is not basic at all.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Weak acid and base reference</h2>
+    <p>Typical values at 25 °C (textbooks differ slightly in the last digit; use whatever the problem gives). The last two columns are computed for a 0.10 M solution with the exact quadratic, so a pH can differ by 0.01 from the √(KC) shortcut (acetic acid: 2.88 exact, 2.87 shortcut); both are accepted.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Weak acid or base</th><th>K</th><th>pK</th><th>Conjugate and its K</th><th>pH at 0.10 M</th><th>% ionized at 0.10 M</th></tr></thead>
+    <tbody id="tbl"></tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Weak acids and bases on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write the equilibrium with a double arrow and the K<sub>a</sub> (or K<sub>b</sub>) expression before substituting numbers.</li>
+        <li>Substitute equilibrium concentrations: K<sub>a</sub> = x²/(C − x). State the assumption if you drop the x: "x is small compared with 0.10."</li>
+        <li>For a base, label x as [OH⁻], then convert: pOH = −log x and pH = 14.00 − pOH.</li>
+        <li>To find K<sub>a</sub> from a pH: [H₃O⁺] = 10<sup>−pH</sup> = x, then K<sub>a</sub> = x²/(C − x). This is a favorite reverse question.</li>
+        <li>Percent ionization = [H₃O⁺]<sub>eq</sub>/[HA]<sub>0</sub> × 100%. Use it to justify "weak": a few percent or less.</li>
+        <li>For a conjugate base, find K<sub>b</sub> = K<sub>w</sub>/K<sub>a</sub> first, and say which pair you mean.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Treating a weak acid as strong: pH ≠ −log C. For 0.10 M acetic acid that gives 1.00 instead of 2.87.</li>
+        <li>Forgetting the square root: x = √(K<sub>a</sub>C), not K<sub>a</sub>C.</li>
+        <li>Reporting −log x as the pH of a weak base. That number is the pOH.</li>
+        <li>Thinking dilution lowers percent ionization. It raises it; it is [H₃O⁺] that drops.</li>
+        <li>Using C − x ≈ C when x is more than about 5% of C (for example, 0.010 M HF), which overestimates [H₃O⁺].</li>
+        <li>Saying a larger K<sub>a</sub> means a larger pH. A larger K<sub>a</sub> means more H₃O⁺ and a lower pH at the same concentration.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation. All solutions are at 25 °C.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 8.3. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-8.html">Unit 8 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  var KW = 1.0e-14;
+  // ---------- Species ----------
+  // kind "a": HA + H2O <-> H3O+ + A-.  kind "b": B + H2O <-> BH+ + OH-.  conj: formula of the conjugate.
+  var SP = {
+    hac: { kind: "a", f: "CH3COOH", conj: "CH3COO^-", name: "acetic acid", K: 1.8e-5 },
+    hf: { kind: "a", f: "HF", conj: "F^-", name: "hydrofluoric acid", K: 7.2e-4 },
+    hno2: { kind: "a", f: "HNO2", conj: "NO2^-", name: "nitrous acid", K: 4.5e-4 },
+    hocl: { kind: "a", f: "HOCl", conj: "OCl^-", name: "hypochlorous acid", K: 3.0e-8 },
+    hcn: { kind: "a", f: "HCN", conj: "CN^-", name: "hydrocyanic acid", K: 6.2e-10 },
+    nh4: { kind: "a", f: "NH4^+", conj: "NH3", name: "ammonium ion", K: 5.6e-10 },
+    nh3: { kind: "b", f: "NH3", conj: "NH4^+", name: "ammonia", K: 1.8e-5 },
+    mea: { kind: "b", f: "CH3NH2", conj: "CH3NH3^+", name: "methylamine", K: 4.4e-4 },
+    py: { kind: "b", f: "C5H5N", conj: "C5H5NH^+", name: "pyridine", K: 1.7e-9 },
+    cA: { kind: "a", f: "HA", conj: "A^-", name: "a custom weak acid", K: 1.0e-5, custom: true },
+    cB: { kind: "b", f: "B", conj: "BH^+", name: "a custom weak base", K: 1.0e-5, custom: true }
+  };
+  var ACIDS = ["hac", "hf", "hno2", "hocl", "hcn", "nh4"], BASES = ["nh3", "mea", "py"];
+
+  // ---------- Number helpers ----------
+  var SUP = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "-": "⁻" };
+  function supTxt(n) { return String(n).split("").map(function (c) { return SUP[c] || c; }).join(""); }
+  function roundTo(v, d) { var k = Math.pow(10, d); return Math.round(v * k) / k; }
+  function roundSig(v, n) { if (v === 0) return 0; var e = Math.floor(Math.log10(Math.abs(v))); return roundTo(v / Math.pow(10, e), n - 1) * Math.pow(10, e); }
+  function fx(v, d) { return roundTo(v, d).toFixed(d).replace("-", "−"); }
+  function sc(v, n) { return Lab.sci(v, n || 2, true); }
+  function pctTxt(p) { return p >= 10 ? p.toFixed(0) + "%" : p >= 1 ? p.toFixed(1) + "%" : p >= 0.1 ? p.toFixed(2) + "%" : Lab.sig(p, 2) + "%"; }
+  function F(s) { return Lab.fmla(s); }
+
+  // ---------- Model ----------
+  // x from the exact quadratic x^2 + Kx - KC = 0 (water's own ions ignored), and from the small-x shortcut.
+  function xExact(K, C) { return (-K + Math.sqrt(K * K + 4 * K * C)) / 2; }
+  function xApprox(K, C) { return Math.sqrt(K * C); }
+  var S = { sp: "hac", mode: "k", C: 0.10, K: 1.8e-5, pH: 3.00, key: null };
+  function solve(st) {
+    var s = SP[st.sp], r = { s: s, C: st.C, kind: s.kind };
+    if (st.mode === "k") {
+      r.K = st.K;
+      r.xa = xApprox(r.K, r.C); r.xe = xExact(r.K, r.C);
+      r.pctA = 100 * r.xa / r.C; r.ok = r.pctA < 5;
+      r.x = r.ok ? r.xa : r.xe;     // AP route: use the shortcut when it passes the 5% check
+    } else {
+      // measured pH -> x -> K
+      r.pHin = st.pH;
+      r.x = s.kind === "a" ? Math.pow(10, -st.pH) : Math.pow(10, -(14 - st.pH));
+      r.K = r.x * r.x / (r.C - r.x);
+      r.xe = r.x; r.xa = xApprox(r.K, r.C); r.pctA = 100 * r.xa / r.C; r.ok = r.pctA < 5;
+    }
+    r.pct = 100 * r.x / r.C;
+    r.pctE = 100 * r.xe / r.C;
+    r.pKa = s.kind === "a" ? -Math.log10(r.K) : 14 - (-Math.log10(r.K));
+    r.Kconj = KW / roundSig(r.K, 2);   // from the K shown on screen
+    if (s.kind === "a") { r.H = r.x; r.pH = -Math.log10(r.x); r.OH = KW / r.x; }
+    else { r.OH = r.x; r.pOH = -Math.log10(r.x); r.pH = 14 - r.pOH; r.H = KW / r.x; }
+    r.pHr = st.mode === "ph" ? st.pH : roundTo(r.pH, 2);
+    return r;
+  }
+  // independent check: full charge balance including water, solved by bisection on log[H3O+]
+  function exactPH(s, K, C) {
+    var lo = -14, hi = 0;
+    for (var i = 0; i < 200; i++) {
+      var m = (lo + hi) / 2, h = Math.pow(10, m), oh = KW / h, f;
+      if (s.kind === "a") f = h - oh - C * K / (K + h);                 // [H3O+] = [OH-] + [A-]
+      else { var Ka = KW / K; f = h + C * h / (Ka + h) - oh; }         // [H3O+] + [BH+] = [OH-]
+      if (f > 0) hi = m; else lo = m;
+    }
+    return -(lo + hi) / 2;
+  }
+
+  // ---------- Particle view ----------
+  var part = document.getElementById("part"), PW = 440, PH = 290, NP = 40;
+  function drawPart(r) {
+    part.setAttribute("viewBox", "0 0 " + PW + " " + PH);
+    while (part.firstChild) part.removeChild(part.firstChild);
+    var s = r.s, a = s.kind === "a";
+    var nIon = Math.round(NP * r.pct / 100);
+    Lab.el("rect", { x: 16, y: 32, width: PW - 32, height: PH - 44, rx: 12, fill: "var(--accent)", opacity: 0.06 }, part);
+    var cols = 10, rows = 4, cw = (PW - 60) / cols, ch = (PH - 80) / rows;
+    var idx = 0, picks = {};
+    // spread the ionized ones through the grid (deterministic)
+    for (var k = 0; k < nIon; k++) picks[Math.floor((k + 0.5) * NP / Math.max(1, nIon)) % NP] = true;
+    for (var rr = 0; rr < rows; rr++) for (var cc = 0; cc < cols; cc++, idx++) {
+      var cx = 30 + cw * (cc + 0.5) + ((rr % 2) ? cw * 0.18 : -cw * 0.18), cy = 58 + ch * (rr + 0.5);
+      if (picks[idx]) {
+        Lab.el("circle", { cx: cx - 9, cy: cy - 7, r: 11, fill: a ? "var(--c2)" : "var(--c2)" }, part);
+        Lab.el("text", { x: cx - 9, y: cy - 4, "text-anchor": "middle" }, part, a ? "A⁻" : "BH⁺");
+        Lab.el("circle", { cx: cx + 10, cy: cy + 9, r: 11, fill: a ? "var(--c1)" : "var(--c4)" }, part);
+        Lab.el("text", { x: cx + 10, y: cy + 12, "text-anchor": "middle" }, part, a ? "H₃O⁺" : "OH⁻");
+      } else {
+        Lab.el("circle", { cx: cx, cy: cy, r: 13, fill: "var(--c3)", opacity: 0.9 }, part);
+        Lab.el("text", { x: cx, y: cy + 3, "text-anchor": "middle" }, part, a ? "HA" : "B");
+      }
+    }
+    var cap = nIon === 0 ? "Fewer than 1 in " + NP + " ionized (actual " + pctTxt(r.pct) + "); every particle shown is " + (a ? "HA" : "B") :
+      nIon + " of " + NP + " " + (a ? "HA" : "B") + (a ? " ionized" : " protonated") + " (actual " + pctTxt(r.pct) + ")";
+    Lab.el("text", { x: PW / 2, y: 22, "text-anchor": "middle", "class": "cap" }, part, cap);
+    document.getElementById("part-sub").textContent = "40 particles, water not shown";
+    var leg = a ? [["var(--c3)", "HA = " + plain(s.f) + " (un-ionized)"], ["var(--c1)", "H₃O⁺"], ["var(--c2)", "A⁻ = " + plain(s.conj)]] :
+      [["var(--c3)", "B = " + plain(s.f) + " (un-ionized)"], ["var(--c2)", "BH⁺ = " + plain(s.conj)], ["var(--c4)", "OH⁻"]];
+    document.getElementById("plegend").innerHTML = leg.map(function (l) { return '<span><i style="background:' + l[0] + '"></i>' + l[1] + "</span>"; }).join("");
+  }
+  function plain(f) { return F(f).replace(/<sub>(\d+)<\/sub>/g, function (m, d) { return d.split("").map(function (c) { return "₀₁₂₃₄₅₆₇₈₉"[+c]; }).join(""); }).replace(/<sup>(.*?)<\/sup>/g, function (m, d) { return d.replace("+", "⁺").replace("−", "⁻").replace("2", "²"); }); }
+
+  // ---------- ICE table ----------
+  function rxn(s) {
+    return s.kind === "a" ? F(s.f) + "(aq) + H<sub>2</sub>O(l) ⇌ H<sub>3</sub>O<sup>+</sup>(aq) + " + F(s.conj) + "(aq)"
+      : F(s.f) + "(aq) + H<sub>2</sub>O(l) ⇌ " + F(s.conj) + "(aq) + OH<sup>−</sup>(aq)";
+  }
+  function drawICE(r) {
+    var s = r.s, a = s.kind === "a", C = r.C, x = r.x;
+    document.getElementById("rxn").innerHTML = rxn(s);
+    var cols = a ? [F(s.f), "H<sub>3</sub>O<sup>+</sup>", F(s.conj)] : [F(s.f), F(s.conj), "OH<sup>−</sup>"];
+    var c = Lab.sig(C, 2);
+    var rows = [
+      a ? ["I", c, "≈ 0", "0"] : ["I", c, "0", "≈ 0"],
+      ["C", "−x", "+x", "+x"],
+      ["E", S.mode === "k" ? (r.ok ? c + " − x ≈ " + c : c + " − x") : c + " − x", "x", "x"]
+    ];
+    var xs = sc(x, 2);
+    var h = "<thead><tr><th></th><th>" + cols.join("</th><th>") + "</th></tr></thead><tbody>";
+    rows.forEach(function (rw) { h += "<tr><td><b>" + rw[0] + "</b></td><td>" + rw[1] + "</td><td>" + rw[2] + "</td><td>" + rw[3] + "</td></tr>"; });
+    h += "<tr><td><b>E (numbers)</b></td><td>" + (C - x > 0 ? Lab.sig(C - x, 2) : "0") + "</td><td class=\"x\">" + xs + "</td><td class=\"x\">" + xs + "</td></tr></tbody>";
+    document.getElementById("ice").innerHTML = h;
+    document.getElementById("ice-sub").textContent = "mol/L";
+    var Kn = a ? "K<sub>a</sub>" : "K<sub>b</sub>";
+    var ex = a ? Kn + " = [H<sub>3</sub>O<sup>+</sup>][" + F(s.conj) + "] / [" + F(s.f) + "]" : Kn + " = [" + F(s.conj) + "][OH<sup>−</sup>] / [" + F(s.f) + "]";
+    if (S.mode === "k") ex += " = x² / (" + c + " − x)" + (r.ok ? " ≈ x² / " + c : "") + " = " + sc(r.K, 2);
+    else ex += " = (" + xs + ")² / (" + c + " − " + xs + ") = " + sc(r.K, 2);
+    document.getElementById("kexpr").innerHTML = ex;
+    document.getElementById("check").innerHTML = S.mode === "k" ? (r.ok ?
+      '<span class="badge ok">5% check passes</span> <span class="note">x/C = ' + pctTxt(r.pctA) + " with the shortcut, so dropping x was fine.</span>" :
+      '<span class="badge no">5% check fails</span> <span class="note">The shortcut gives x/C = ' + pctTxt(r.pctA) + "; use the quadratic (x = " + sc(r.xe, 2) + ").</span>") :
+      '<span class="note">Working backward: x comes from the measured pH, so no approximation is needed.</span>';
+  }
+
+  // ---------- Percent ionization graph ----------
+  var pct = document.getElementById("pct");
+  function drawPct(r) {
+    var G = Lab.frame(pct, {
+      x: [-3.1, 0.1], y: [0, 100], xLabel: "starting concentration (M, log scale)", yLabel: "percent ionization",
+      xTicks: [-3, -2, -1, 0], yTicks: [0, 5, 20, 40, 60, 80, 100],
+      fmtX: function (v) { return v === 0 ? "1" : "10" + supTxt(v); }, fmtY: function (v) { return v + "%"; }
+    });
+    Lab.hline(G, 5, "var(--ghost)", 1.5, "5 4");
+    var K = r.K;
+    Lab.fn(G, function (lc) { var C = Math.pow(10, lc); return Math.min(130, 100 * xApprox(K, C) / C); }, "var(--c3)", 2, "6 5", 120);
+    Lab.fn(G, function (lc) { var C = Math.pow(10, lc); return 100 * xExact(K, C) / C; }, "var(--c1)", 3, null, 120);
+    var lc = Math.log10(r.C);
+    Lab.dot(G, lc, r.pctE, "var(--c1)", true);
+    var right = lc < -1;
+    Lab.el("text", { x: G.sx(lc) + (right ? 10 : -10), y: G.sy(r.pctE) - 10, "text-anchor": right ? "start" : "end", "class": "lbl", style: "fill:var(--c1)" }, G.svg, pctTxt(r.pctE));
+    Lab.tag(G, 0.05, 7, "5%", "var(--muted)", "end");
+    document.getElementById("pct-sub").innerHTML = (r.kind === "a" ? "K<sub>a</sub> = " : "K<sub>b</sub> = ") + sc(K, 2);
+  }
+
+  // ---------- Story ----------
+  function story(r) {
+    var s = r.s, a = s.kind === "a", Kn = a ? "K<sub>a</sub>" : "K<sub>b</sub>", c = Lab.sig(r.C, 2) + " M", st = [], h = "";
+    h += "<p><b>" + (s.custom ? (a ? "HA" : "B") : F(s.f)) + " (" + s.name + ") is a weak " + (a ? "acid" : "base") + "</b>, so it reacts with water only partly and reaches equilibrium: " + rxn(s) + ".</p>";
+    if (S.mode === "k") {
+      st.push("ICE table: x " + (a ? "mol/L of " + F(s.f) + " ionize, so [H<sub>3</sub>O<sup>+</sup>] = [" + F(s.conj) + "] = x" : "mol/L of " + F(s.f) + " accept a proton, so [" + F(s.conj) + "] = [OH<sup>−</sup>] = x") + " and [" + F(s.f) + "] = " + Lab.sig(r.C, 2) + " − x.");
+      st.push(Kn + " = x²/(" + Lab.sig(r.C, 2) + " − x) = " + sc(r.K, 2) + ". Assume x ≪ " + Lab.sig(r.C, 2) + ": x ≈ √(" + Kn + " × C) = √(" + sc(r.K, 2) + " × " + Lab.sig(r.C, 2) + ") = " + sc(r.xa, 3) + " M.");
+      if (r.ok) st.push("Check: " + sc(r.xa, 3) + " ÷ " + Lab.sig(r.C, 2) + " × 100% = " + pctTxt(r.pctA) + ", under 5%, so the approximation holds.");
+      else st.push("Check: " + sc(r.xa, 3) + " ÷ " + Lab.sig(r.C, 2) + " × 100% = " + pctTxt(r.pctA) + ", more than 5%. Solve x² + " + Kn + "x − " + Kn + "C = 0 instead: x = <b>" + sc(r.xe, 3) + " M</b>.");
+      if (a) st.push("pH = −log[H<sub>3</sub>O<sup>+</sup>] = −log(" + sc(r.x, 3) + ") = <b>" + fx(r.pH, 2) + "</b>");
+      else { st.push("pOH = −log[OH<sup>−</sup>] = −log(" + sc(r.x, 3) + ") = " + fx(r.pOH, 2)); st.push("pH = 14.00 − pOH = <b>" + fx(14 - roundTo(r.pOH, 2), 2) + "</b>"); }
+      st.push("Percent ionization = x ÷ C × 100% = <b>" + pctTxt(r.pct) + "</b>");
+    } else {
+      if (a) st.push("[H<sub>3</sub>O<sup>+</sup>] = 10<sup>−pH</sup> = 10<sup>−" + fx(r.pHin, 2) + "</sup> = " + sc(r.x, 2) + " M = x, and [" + F(s.conj) + "] = x too.");
+      else { st.push("pOH = 14.00 − " + fx(r.pHin, 2) + " = " + fx(14 - r.pHin, 2)); st.push("[OH<sup>−</sup>] = 10<sup>−pOH</sup> = " + sc(r.x, 2) + " M = x, and [" + F(s.conj) + "] = x too."); }
+      st.push("[" + (a ? F(s.f) : F(s.f)) + "] at equilibrium = " + Lab.sig(r.C, 2) + " − " + sc(r.x, 2) + " = " + Lab.sig(r.C - r.x, 3) + " M");
+      st.push(Kn + " = x²/(C − x) = (" + sc(r.x, 2) + ")² ÷ " + Lab.sig(r.C - r.x, 3) + " = <b>" + sc(r.K, 2) + "</b>, so p" + (a ? "K<sub>a</sub>" : "K<sub>b</sub>") + " = " + fx(-Math.log10(r.K), 2));
+      st.push("Percent ionization = x ÷ C × 100% = <b>" + pctTxt(r.pct) + "</b>");
+    }
+    h += "<ol class=\"steps\">" + st.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ol>";
+    var strongPH = a ? -Math.log10(r.C) : 14 + Math.log10(r.C);
+    h += "<p>A strong " + (a ? "acid" : "base") + " at the same concentration would have pH " + fx(strongPH, 2) + ". The weak " + (a ? "acid" : "base") + "'s pH is " + fx(Math.abs(r.pH - strongPH), 2) + " units " + (a ? "higher" : "lower") + " because only " + pctTxt(r.pct) + " of it reacts with water.</p>";
+    var conjK = a ? "K<sub>b</sub>" : "K<sub>a</sub>";
+    h += "<p>Conjugate: " + F(s.conj) + " has " + conjK + " = K<sub>w</sub> ÷ " + Kn + " = 1.0 × 10<sup>−14</sup> ÷ " + sc(r.K, 2) + " = " + sc(r.Kconj, 2) + (r.K < 1e-7 ? ". Because " + F(s.f) + " is so weak, its conjugate is a noticeably stronger " + (a ? "base" : "acid") + " than water." : ".") + "</p>";
+    var ap = S.mode === "k" ? (a ? "for a weak acid, K<sub>a</sub> = x²/(C − x) with x = [H<sub>3</sub>O<sup>+</sup>]; when x/C is under 5%, x ≈ √(K<sub>a</sub>C), and pH = −log x." :
+      "for a weak base, K<sub>b</sub> = x²/(C − x) with x = [OH<sup>−</sup>]; −log x is the pOH, so pH = 14.00 − pOH.") :
+      "from a measured pH, get x = [" + (a ? "H<sub>3</sub>O<sup>+</sup>" : "OH<sup>−</sup>") + "], then " + Kn + " = x²/(C − x) and percent ionization = x/C × 100%.";
+    h += "<p><b>AP answer:</b> " + ap + "</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  var elC = document.getElementById("s-c"), elK = document.getElementById("s-k"), elPH = document.getElementById("s-ph");
+  var pickBtns = {}, modeBtns = {}, scBtns = {};
+  function phRange() {
+    // pH range that keeps x between 0.01% and 99% of C
+    var s = SP[S.sp], lo = Math.log10(S.C * 0.99), hi = Math.log10(S.C * 1e-4);
+    if (s.kind === "a") return [roundTo(-lo, 2) + 0.01, roundTo(-hi, 2)];
+    return [roundTo(14 + hi, 2), roundTo(14 + lo, 2) - 0.01];
+  }
+  function render() {
+    var s = SP[S.sp];
+    if (S.mode === "ph") { var R = phRange(); S.pH = Math.max(R[0], Math.min(R[1], S.pH)); }
+    var r = solve(S);
+    elC.value = Math.log10(S.C); document.getElementById("o-c").textContent = Lab.sig(S.C, 2) + " M";
+    elK.value = Math.log10(S.K); document.getElementById("o-k").innerHTML = sc(S.K, 2);
+    document.getElementById("l-k").innerHTML = s.kind === "a" ? "K<sub>a</sub>" : "K<sub>b</sub>";
+    document.getElementById("ctl-k").hidden = S.mode !== "k";
+    document.getElementById("ctl-ph").hidden = S.mode !== "ph";
+    if (S.mode === "ph") { var R2 = phRange(); elPH.min = R2[0]; elPH.max = R2[1]; elPH.value = S.pH; }
+    document.getElementById("o-ph").textContent = fx(S.pH, 2);
+    document.getElementById("h-ph").textContent = s.kind === "a" ? "A weak acid's pH must be above −log C" : "A weak base's pH must be below 14 + log C";
+    Object.keys(pickBtns).forEach(function (k) { pickBtns[k].setAttribute("aria-pressed", S.sp === k || (SP[S.sp].custom && ((k === "cA" && S.sp === "cA") || (k === "cB" && S.sp === "cB"))) ? "true" : "false"); });
+    Object.keys(modeBtns).forEach(function (k) { modeBtns[k].setAttribute("aria-pressed", S.mode === k ? "true" : "false"); });
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    drawPart(r); drawICE(r); drawPct(r);
+    var a = s.kind === "a";
+    document.getElementById("r-ph").textContent = fx(r.pH, 2);
+    document.getElementById("r-ph2").textContent = a ? "from [H₃O⁺] = x" : "14.00 − pOH (pOH = " + fx(r.pOH, 2) + ")";
+    document.getElementById("r-xk").innerHTML = a ? "[H₃O⁺] = x" : "[OH⁻] = x";
+    document.getElementById("r-x").innerHTML = sc(r.x, 2);
+    document.getElementById("r-x2").innerHTML = "vs. C = " + Lab.sig(r.C, 2) + " M";
+    document.getElementById("r-pct").textContent = pctTxt(r.pct);
+    document.getElementById("r-pct2").textContent = r.pct < 5 ? "most stays un-ionized" : "over 5%: shortcut unsafe";
+    document.getElementById("r-kk").innerHTML = (a ? "K<sub>a</sub>" : "K<sub>b</sub>") + " and conjugate";
+    document.getElementById("r-k").innerHTML = sc(r.K, 2);
+    document.getElementById("r-k2").innerHTML = "p" + (a ? "K<sub>a</sub>" : "K<sub>b</sub>") + " " + fx(-Math.log10(r.K), 2) + "; conj. " + (a ? "K<sub>b</sub>" : "K<sub>a</sub>") + " " + sc(r.Kconj, 2);
+    document.getElementById("story").innerHTML = story(r);
+  }
+  function pick(k) {
+    var r = solve(S);
+    S.sp = k; S.key = null;
+    if (!SP[k].custom) S.K = SP[k].K; else S.K = roundSig(S.K, 2);
+    if (S.mode === "ph") { var r2 = solve({ sp: k, mode: "k", C: S.C, K: S.K }); S.pH = roundTo(r2.pH, 2); }
+    render();
+  }
+  function addPick(boxId, list) {
+    list.forEach(function (k) {
+      var b = document.createElement("button"); b.type = "button"; b.innerHTML = SP[k].custom ? (SP[k].kind === "a" ? "Custom acid" : "Custom base") : F(SP[k].f);
+      b.setAttribute("aria-pressed", "false"); b.addEventListener("click", function () { pick(k); });
+      document.getElementById(boxId).appendChild(b); pickBtns[k] = b;
+    });
+  }
+  addPick("pick-a", ACIDS.concat(["cA"])); addPick("pick-b", BASES.concat(["cB"]));
+  [["k", "Find pH from K"], ["ph", "Find K from pH"]].forEach(function (m) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = m[1]; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () {
+      var r = solve(S); S.mode = m[0]; S.key = null;
+      if (m[0] === "ph") S.pH = roundTo(r.pH, 2);
+      else { S.K = roundSig(r.K, 2); if (!SP[S.sp].custom && Math.abs(S.K - SP[S.sp].K) / SP[S.sp].K > 0.02) S.sp = SP[S.sp].kind === "a" ? "cA" : "cB"; }
+      render();
+    });
+    document.getElementById("modes").appendChild(b); modeBtns[m[0]] = b;
+  });
+  elC.addEventListener("input", function () { S.C = roundSig(Math.pow(10, parseFloat(elC.value)), 2); S.key = null; render(); });
+  elK.addEventListener("input", function () {
+    S.K = roundSig(Math.pow(10, parseFloat(elK.value)), 2); S.key = null;
+    if (!SP[S.sp].custom) S.sp = SP[S.sp].kind === "a" ? "cA" : "cB";
+    SP[S.sp].K = S.K; render();
+  });
+  elPH.addEventListener("input", function () { S.pH = roundTo(parseFloat(elPH.value), 2); S.key = null; render(); });
+
+  // ---------- Scenarios ----------
+  var SC = [
+    { k: "hac", name: "0.10 M acetic acid", set: { sp: "hac", mode: "k", C: 0.10 }, expect: { pH: "2.87", pct: 1.3 } },
+    { k: "hacd", name: "Dilute it: 0.0010 M", set: { sp: "hac", mode: "k", C: 0.0010 }, expect: { pH: "3.90", pct: 12.5, ok: false } },
+    { k: "nh3", name: "0.20 M NH₃ (weak base)", set: { sp: "nh3", mode: "k", C: 0.20 }, expect: { pH: "11.28", pct: 0.95 } },
+    { k: "hf", name: "0.010 M HF: 5% check fails", set: { sp: "hf", mode: "k", C: 0.010 }, expect: { pH: "2.63", ok: false } },
+    { k: "rev", name: "pH 3.00 for 0.050 M HA: find Ka", set: { sp: "cA", mode: "ph", C: 0.050, pH: 3.00 }, expect: { K: 2.0e-5, pct: 2.0 } },
+    { k: "nh4", name: "0.10 M NH₄⁺ (Ka from Kb)", set: { sp: "nh4", mode: "k", C: 0.10 }, expect: { pH: "5.13" } },
+    { k: "hcn", name: "0.10 M HCN (very weak)", set: { sp: "hcn", mode: "k", C: 0.10 }, expect: { pH: "5.10" } }
+  ];
+  SC.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () {
+      for (var k in x.set) S[k] = x.set[k];
+      if (!SP[S.sp].custom) S.K = SP[S.sp].K;
+      S.key = x.k; render();
+    });
+    document.getElementById("sc").appendChild(b); scBtns[x.k] = b;
+  });
+
+  // ---------- Reference table (generated) ----------
+  document.getElementById("tbl").innerHTML = ACIDS.concat(BASES).map(function (k) {
+    var s = SP[k], r = solve({ sp: k, mode: "k", C: 0.10, K: s.K }), a = s.kind === "a";
+    var pH = a ? -Math.log10(r.xe) : 14 + Math.log10(r.xe);
+    return "<tr><td>" + F(s.f) + " (" + s.name + ")</td><td>" + (a ? "K<sub>a</sub> = " : "K<sub>b</sub> = ") + sc(s.K, 2) + "</td><td>" + fx(-Math.log10(s.K), 2) + "</td><td>" + F(s.conj) + ": " + (a ? "K<sub>b</sub> = " : "K<sub>a</sub> = ") + sc(KW / s.K, 2) + "</td><td><b>" + fx(pH, 2) + "</b></td><td>" + pctTxt(r.pctE) + "</td></tr>";
+  }).join("");
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "What is the pH of 0.20 M CH₃COOH(aq)? (Ka = 1.8 × 10⁻⁵)",
+      o: ["0.70", "2.72", "5.44", "4.74"], c: 1,
+      w: "x = √(KaC) = √(1.8 × 10⁻⁵ × 0.20) = √(3.6 × 10⁻⁶) = 1.9 × 10⁻³ M, which is under 1% of 0.20 M, so the shortcut is fine (the quadratic also gives pH 2.72). pH = −log(1.9 × 10⁻³) = 2.72. Choice A treats acetic acid as a strong acid; choice C forgets the square root; choice D is the pKa." },
+    { s: "A 0.10 M solution of a weak monoprotic acid HA has a pH of 3.00. What is the value of Ka for HA?",
+      o: ["1.0 × 10⁻³", "1.0 × 10⁻⁶", "1.0 × 10⁻²", "1.0 × 10⁻⁵"], c: 3,
+      w: "[H₃O⁺] = [A⁻] = 10⁻³·⁰⁰ = 1.0 × 10⁻³ M and [HA] = 0.10 − 0.0010 ≈ 0.099 M. Ka = (1.0 × 10⁻³)² ÷ 0.099 = 1.0 × 10⁻⁵. Choice A is [H₃O⁺], not Ka; choice B is the numerator x² without dividing by [HA]." },
+    { s: "A 0.10 M solution of CH₃COOH is diluted with water to 0.010 M. Which statement correctly describes the change?",
+      o: ["The percent ionization increases, and [H₃O⁺] decreases.", "The percent ionization decreases, and the pH decreases.", "Ka increases, because the acid is more dilute.", "Both the percent ionization and [H₃O⁺] increase."], c: 0,
+      w: "Percent ionization ≈ √(Ka/C), so a 10-fold dilution raises it by √10 (from 1.3% to 4.2%). [H₃O⁺] ≈ √(KaC) falls by √10, from 1.3 × 10⁻³ to 4.2 × 10⁻⁴ M, so the pH rises. Ka does not depend on concentration (choice C)." },
+    { s: "Hypochlorous acid, HOCl, has Ka = 3.0 × 10⁻⁸. What is Kb for the hypochlorite ion, OCl⁻?",
+      o: ["3.0 × 10⁻⁸", "3.0 × 10⁶", "3.3 × 10⁻⁷", "7.5 × 10⁻⁷"], c: 2,
+      w: "For a conjugate pair, Ka × Kb = Kw, so Kb = 1.0 × 10⁻¹⁴ ÷ 3.0 × 10⁻⁸ = 3.3 × 10⁻⁷. Choice A assumes the conjugate has the same constant, and choice B divides the wrong way (Ka ÷ Kw)." },
+    { s: "Which description best represents the major particles in 0.10 M HF(aq) (Ka = 7.2 × 10⁻⁴)? Water molecules are not counted.",
+      o: ["Equal numbers of H₃O⁺ and F⁻ ions, with no HF molecules", "Many HF molecules and many F⁻ ions, but very few H₃O⁺ ions", "Equal numbers of HF molecules, H₃O⁺ ions, and F⁻ ions", "Mostly HF molecules, with a much smaller and equal number of H₃O⁺ and F⁻ ions"], c: 3,
+      w: "HF is weak: x = √(7.2 × 10⁻⁴ × 0.10) ≈ 8.5 × 10⁻³ M (8.1% with the exact quadratic), so most HF stays intact, and each ionization makes one H₃O⁺ and one F⁻. Choice A describes a strong acid. Choice B breaks the 1 : 1 ratio between H₃O⁺ and F⁻." },
+    { s: "What is the pH of 0.080 M NH₃(aq)? (Kb = 1.8 × 10⁻⁵)",
+      o: ["2.92", "11.08", "12.90", "9.26"], c: 1,
+      w: "x = [OH⁻] = √(1.8 × 10⁻⁵ × 0.080) = √(1.44 × 10⁻⁶) = 1.2 × 10⁻³ M (1.5% of 0.080 M, so the shortcut is fine). pOH = −log(1.2 × 10⁻³) = 2.92, so pH = 14.00 − 2.92 = 11.08. Choice A is the pOH; choice C treats NH₃ as a strong base; choice D is the pKa of NH₄⁺." },
+    { s: "Four 0.10 M solutions are prepared. Which one has the lowest pH?",
+      o: ["HF (Ka = 7.2 × 10⁻⁴)", "HNO₂ (Ka = 4.5 × 10⁻⁴)", "CH₃COOH (Ka = 1.8 × 10⁻⁵)", "HCN (Ka = 6.2 × 10⁻¹⁰)"], c: 0,
+      w: "At equal concentration, the acid with the largest Ka ionizes most and produces the most H₃O⁺, so it has the lowest pH: HF. HCN, with the smallest Ka, has the highest pH (about 5.1)." },
+    { s: "The pH of 0.10 M HCl is 1.00, but the pH of 0.10 M HNO₂ is about 2.2. Which statement best explains the difference?",
+      o: ["HNO₂ produces more H₃O⁺ per molecule than HCl does.", "HNO₂ has a smaller Kw than HCl.", "HNO₂ ionizes only partly, so [H₃O⁺] is much less than 0.10 M and most HNO₂ remains as molecules.", "HNO₂ ionizes completely, but its conjugate base removes most of the H₃O⁺."], c: 2,
+      w: "HCl ionizes completely, so [H₃O⁺] = 0.10 M. HNO₂ is a weak acid at equilibrium: [H₃O⁺] ≈ √(4.5 × 10⁻⁴ × 0.10) ≈ 6.7 × 10⁻³ M (about 6.5 × 10⁻³ M with the quadratic), pH ≈ 2.2. Choice B is wrong because Kw is a property of water, the same in both solutions." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("8.3");
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    function near(a, b, rel, what) { if (!(Math.abs(a - b) <= rel * Math.abs(b))) bad.push(what + ": got " + a + ", expected " + b); }
+    // the exact x satisfies the K expression; the shortcut agrees when x/C < 5%
+    ACIDS.concat(BASES).forEach(function (k) {
+      [0.001, 0.01, 0.1, 1].forEach(function (C) {
+        var s = SP[k], r = solve({ sp: k, mode: "k", C: C, K: s.K });
+        near(r.xe * r.xe / (C - r.xe), s.K, 1e-9, k + " K from exact x at " + C);
+        if (r.ok && Math.abs(r.xa - r.xe) / r.xe > 0.03) bad.push(k + " shortcut off by >3% at " + C);
+        // charge-balance pH (with water) agrees with the AP calculation
+        if (Math.abs(exactPH(s, s.K, C) - r.pH) > 0.06) bad.push(k + " pH disagrees with charge balance at " + C);
+        // round trip: pH -> K
+        var b = solve({ sp: k, mode: "ph", C: C, pH: -Math.log10(s.kind === "a" ? r.xe : KW / r.xe) });
+        near(b.K, s.K, 1e-6, k + " pH -> K round trip at " + C);
+      });
+    });
+    // conjugate pairs differ by exactly one H+ and one unit of charge
+    function chg(f) { var m = String(f).match(/\^(\d*)([+\-])$/); return m ? (m[2] === "+" ? 1 : -1) * (m[1] ? +m[1] : 1) : 0; }
+    Object.keys(SP).forEach(function (k) {
+      if (SP[k].custom) return;
+      var s = SP[k], acid = s.kind === "a" ? s.f : s.conj, base = s.kind === "a" ? s.conj : s.f;
+      var A = Lab.parseFormula(acid.replace(/\^.*$/, "")), B = Lab.parseFormula(base.replace(/\^.*$/, ""));
+      var keys = {}; for (var e in A) keys[e] = 1; for (var e2 in B) keys[e2] = 1;
+      for (var e3 in keys) if ((A[e3] || 0) - (B[e3] || 0) !== (e3 === "H" ? 1 : 0)) bad.push(k + " conjugate pair differs in " + e3);
+      if (chg(acid) - chg(base) !== 1) bad.push(k + " conjugate pair charge");
+    });
+    // NH4+ Ka is consistent with NH3 Kb
+    near(SP.nh4.K * SP.nh3.K, KW, 0.01, "Ka(NH4+) x Kb(NH3)");
+    // scenarios
+    SC.forEach(function (x) {
+      var st = {}; for (var k in x.set) st[k] = x.set[k]; if (!st.K) st.K = SP[st.sp].K;
+      var r = solve(st), e = x.expect;
+      if (e.pH && fx(r.pH, 2) !== e.pH) bad.push(x.k + " pH " + fx(r.pH, 2) + " vs " + e.pH);
+      if (e.pct && Math.abs(r.pct - e.pct) / e.pct > 0.05) bad.push(x.k + " % " + r.pct);
+      if (e.K && Lab.sig(r.K, 2) !== Lab.sig(e.K, 2)) bad.push(x.k + " K " + r.K);
+      if (e.ok === false && r.ok) bad.push(x.k + " should fail the 5% check");
+    });
+    // quiz arithmetic
+    if (fx(-Math.log10(xApprox(1.8e-5, 0.20)), 2) !== "2.72" || fx(-Math.log10(xExact(1.8e-5, 0.20)), 2) !== "2.72") bad.push("quiz 1");
+    if (Lab.sig(1e-6 / 0.099, 2) !== "0.000010") bad.push("quiz 2");
+    if (Lab.sig(KW / 3.0e-8 * 1e7, 2) !== "3.3") bad.push("quiz 4");
+    if (Math.abs(100 * xExact(7.2e-4, 0.10) / 0.10 - 8.1) > 0.05) bad.push("quiz 5 percent");
+    if (fx(14 + Math.log10(xApprox(1.8e-5, 0.080)), 2) !== "11.08" || fx(14 + Math.log10(xExact(1.8e-5, 0.080)), 2) !== "11.08") bad.push("quiz 6");
+    if (Math.abs(-Math.log10(xExact(4.5e-4, 0.10)) - 2.2) > 0.05) bad.push("quiz 8");
+    var used = {}; Q.forEach(function (q) { used[q.c] = 1; if (q.o.length !== 4) bad.push("quiz options"); });
+    if (Object.keys(used).length < 4) bad.push("answer letters do not vary");
+    if (bad.length) console.error("8.3 self-check failed: " + bad.slice(0, 8).join("; "));
+  })();
+
+  document.querySelector("#sc button").click();
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [8], topic: "8.3", compact: true, storageKey: "topic-8.3" });</script>
+</body>
+</html>

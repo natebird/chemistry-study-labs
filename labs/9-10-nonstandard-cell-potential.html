@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cell Potential Under Nonstandard Conditions Study Lab</title>
+<meta name="description" content="Change the ion concentrations in a galvanic or concentration cell, watch Q move the cell potential above or below E° on a live graph, and run the cell down until it reaches equilibrium at E = 0.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 18px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 14px; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.btnrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.side .controls { grid-template-columns: 1fr; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.eqn { overflow-wrap: anywhere; white-space: normal; }
+.note { font-size: .82rem; color: var(--muted); }
+.legend .l-line { color: var(--accent); } .legend .l-dot { color: var(--c1); } .legend .l-trail { color: var(--c3); }
+.legend .l-dot::before { width: 10px; height: 10px; border-radius: 50%; }
+.legend .l-trail::before { background: none; border-top: 2px dashed currentColor; height: 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 9 · Topic 9.10</span>
+  <h1>Cell Potential Under Nonstandard Conditions Study Lab</h1>
+  <p class="lede">E° describes a cell at standard conditions, where Q = 1. Real cells rarely sit there. The cell potential is a measure of how far the reaction is from equilibrium: push Q away from K and |E| grows, let Q approach K and |E| shrinks to zero. Change the concentrations, read Q, and predict the voltage before you look.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The Q-to-voltage graph</h2>
+    <p>Pick a cell and set the ion concentration in each half-cell. The blue line is E = E° − (RT/nF) ln Q at 25 °C; the orange dot is your cell. <b>Run the cell</b> lets the reaction proceed on its own, so you can watch Q climb toward K and the voltage fall. Each half-cell is treated as 1.00 L.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Cell potential vs. Q <small id="g-sub"></small></h3>
+      <svg class="chart" id="chart" role="img" aria-label="Line graph of cell potential against the logarithm of the reaction quotient, with the current cell marked"></svg>
+      <div class="lab-bar"><div class="legend"><span class="l-line">E vs. Q for this cell</span><span class="l-dot">your cell</span><span class="l-trail">path while running</span><span class="l-ghost">E° (Q = 1)</span></div></div>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Classic exam cases</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Cell</div>
+        <div class="seg" role="group" aria-label="Cell"><button type="button" data-cell="zncu">Zn | Cu</button><button type="button" data-cell="cuag">Cu | Ag</button><button type="button" data-cell="conc">Cu | Cu (concentration)</button></div>
+      </div>
+      <div class="eqn" id="eqn"></div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-a"><span id="l-a"></span> <output id="o-a"></output></label>
+          <input type="range" id="s-a" min="-3" max="0.3" step="0.1">
+          <span class="hint" id="h-a"></span>
+        </div>
+        <div class="ctl">
+          <label for="s-c"><span id="l-c"></span> <output id="o-c"></output></label>
+          <input type="range" id="s-c" min="-3" max="0.3" step="0.1">
+          <span class="hint" id="h-c"></span>
+        </div>
+      </div>
+      <div class="btnrow">
+        <button type="button" id="b-run" class="primary">Run the cell</button>
+        <button type="button" id="b-std">Reset to 1 M</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Q</div><div class="v" id="r-q"></div><div class="sub" id="r-q2"></div></div>
+    <div class="stat"><div class="k">E° (Q = 1)</div><div class="v" id="r-e0"></div><div class="sub" id="r-e02"></div></div>
+    <div class="stat"><div class="k">E (this cell)</div><div class="v" id="r-e"></div><div class="sub" id="r-e2"></div></div>
+    <div class="stat"><div class="k">Distance from equilibrium</div><div class="v" id="r-k"></div><div class="sub" id="r-k2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">The CED states that plugging numbers into the Nernst equation is not enough to show understanding; what is expected is qualitative reasoning from Q (compared with 1 and with K). The voltages here are computed so you can see the trend, using ideal behavior at 25 °C.</p>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">The anchor</span><h3>E° means Q = 1</h3><p>Standard conditions (1 M solutions, 1 atm gases) make Q = 1, and the cell potential is E°. Any other concentrations give a different Q and a different E.</p></div>
+    <div class="card"><span class="tag">The rule</span><h3>Q &lt; 1 raises E; Q &gt; 1 lowers E</h3><p>From E = E° − (RT/nF) ln Q: if Q &lt; 1, ln Q &lt; 0 and E &gt; E°. If Q &gt; 1, E &lt; E°. More reactant ions or fewer product ions push Q down and the voltage up.</p></div>
+    <div class="card"><span class="tag">Driving force</span><h3>E measures distance from equilibrium</h3><p>The farther Q is from K, the larger |E|. As a galvanic cell runs, products build up, Q rises toward K, and the voltage falls. At Q = K the cell is at equilibrium and E = 0: the battery is dead.</p></div>
+    <div class="card"><span class="tag">Not Le Châtelier</span><h3>Reason with Q, not "shifts"</h3><p>A working cell is not at equilibrium, so the CED says equilibrium arguments such as Le Châtelier's principle do not apply. Explain voltage changes by how a change moves Q relative to 1 (for E vs. E°) or relative to K.</p></div>
+    <div class="card"><span class="tag">Concentration cells</span><h3>Same half-cell, different concentrations</h3><p>With the same metal on both sides, E° = 0. Electrons flow in whatever direction moves the concentrations toward each other: the dilute side is oxidized (its ion concentration rises) and the concentrated side is reduced. E = 0 when the concentrations are equal.</p></div>
+    <div class="card"><span class="tag">What matters in Q</span><h3>Only aqueous ions and gases</h3><p>Solid electrodes are left out of Q. Coefficients become exponents, so for Cu + 2Ag<sup>+</sup> → Cu<sup>2+</sup> + 2Ag, Q = [Cu<sup>2+</sup>]/[Ag<sup>+</sup>]<sup>2</sup>, and diluting Ag<sup>+</sup> tenfold raises Q a hundredfold.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Predict the voltage</h2>
+    <p>Values for Zn(s) + Cu<sup>2+</sup>(aq) → Zn<sup>2+</sup>(aq) + Cu(s), E° = +1.10 V, Q = [Zn<sup>2+</sup>]/[Cu<sup>2+</sup>], generated from the same model as the graph.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table id="pred">
+    <thead><tr><th>Change from standard</th><th>Effect on Q</th><th>E compared with E°</th><th>E at 25 °C</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Nonstandard cells on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write Q for the overall reaction first (aqueous species only, coefficients as exponents).</li>
+        <li>Say how the change moves Q relative to 1: "Lowering [Cu<sup>2+</sup>] increases Q above 1."</li>
+        <li>Connect Q to E with the Nernst equation qualitatively: "Since Q &gt; 1, ln Q &gt; 0, so E &lt; E°."</li>
+        <li>Or argue with equilibrium distance: "Q is now closer to K, so the driving force, and |E|, is smaller."</li>
+        <li>For concentration cells, identify the anode as the dilute side and give electron flow toward the concentrated side.</li>
+        <li>For a dead battery, state that Q = K and E = 0.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Using Le Châtelier's principle ("the reaction shifts right") as the justification. Reason with Q instead.</li>
+        <li>Including solid metals in Q, or forgetting the exponent from a coefficient.</li>
+        <li>Thinking E° changes with concentration. E° is fixed; E is what changes.</li>
+        <li>Saying a concentration cell produces no voltage because E° = 0. It does whenever the concentrations differ.</li>
+        <li>Thinking a bigger electrode raises the voltage. Solids do not appear in Q.</li>
+        <li>Getting the sign backward: Q &gt; 1 lowers E, Q &lt; 1 raises it.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 9.10. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-9.html">Unit 9 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var F = Lab.CONST.F, RJ = Lab.CONST.R_J, T = 298.15, RTF = RJ * T / F;   // 0.02569 V
+  var CMIN = 1e-3;
+
+  // ---------- Cells: reaction as written, anode ion (a) and cathode ion (c) ----------
+  // Q = [a]^pa / [c]^pc; da, dc = change in [a], [c] per unit of reaction extent.
+  var CELLS = {
+    zncu: { E0: 1.10, n: 2, a: "Zn²⁺", c: "Cu²⁺", pa: 1, pc: 1, da: 1, dc: -1,
+      eq: "Zn(s) + Cu<sup>2+</sup>(aq) → Zn<sup>2+</sup>(aq) + Cu(s)", Q: "[Zn<sup>2+</sup>] / [Cu<sup>2+</sup>]", an: "Zn", ca: "Cu",
+      la: "[Zn²⁺] in the anode (Zn) beaker", lc: "[Cu²⁺] in the cathode (Cu) beaker", ha: "Product ion: raising it raises Q", hc: "Reactant ion: raising it lowers Q" },
+    cuag: { E0: 0.46, n: 2, a: "Cu²⁺", c: "Ag⁺", pa: 1, pc: 2, da: 1, dc: -2,
+      eq: "Cu(s) + 2Ag<sup>+</sup>(aq) → Cu<sup>2+</sup>(aq) + 2Ag(s)", Q: "[Cu<sup>2+</sup>] / [Ag<sup>+</sup>]<sup>2</sup>", an: "Cu", ca: "Ag",
+      la: "[Cu²⁺] in the anode (Cu) beaker", lc: "[Ag⁺] in the cathode (Ag) beaker", ha: "Product ion, exponent 1", hc: "Reactant ion, exponent 2 in Q" },
+    conc: { E0: 0.00, n: 2, a: "Cu²⁺ (left)", c: "Cu²⁺ (right)", pa: 1, pc: 1, da: 1, dc: -1,
+      eq: "Cu(s) + Cu<sup>2+</sup>(aq, right) → Cu<sup>2+</sup>(aq, left) + Cu(s)", Q: "[Cu<sup>2+</sup>]<sub>left</sub> / [Cu<sup>2+</sup>]<sub>right</sub>", an: "left Cu", ca: "right Cu",
+      la: "[Cu²⁺] in the left beaker", lc: "[Cu²⁺] in the right beaker", ha: "Written as the anode side", hc: "Written as the cathode side" }
+  };
+  var SC = {
+    std: { name: "Standard (Q = 1)", cell: "zncu", a: 0, c: 0 },
+    dilc: { name: "Dilute Cu²⁺ (Q > 1)", cell: "zncu", a: 0, c: -2 },
+    dila: { name: "Dilute Zn²⁺ (Q < 1)", cell: "zncu", a: -2, c: 0 },
+    ag: { name: "Dilute Ag⁺ (squared in Q)", cell: "cuag", a: 0, c: -1 },
+    conc: { name: "Concentration cell", cell: "conc", a: -2, c: 0 },
+    dead: { name: "Equal concentrations", cell: "conc", a: -1, c: -1 }
+  };
+  var SCO = ["std", "dilc", "dila", "ag", "conc", "dead"];
+
+  var S = { cell: "zncu", A: 1, C: 1, sc: "std", trail: [], running: false };
+  function cl() { return CELLS[S.cell]; }
+
+  // ---------- Model ----------
+  function calc(cell, A, C) {
+    var lnQ = cell.pa * Math.log(A) - cell.pc * Math.log(C);
+    var E = cell.E0 - RTF / cell.n * lnQ;
+    var log10K = cell.n * cell.E0 / RTF / Math.LN10;
+    return { lnQ: lnQ, log10Q: lnQ / Math.LN10, E: E, log10K: log10K, G: -cell.n * F * E / 1000 };
+  }
+
+  // ---------- Formatting ----------
+  function V(v) { var r = Math.abs(v) < 0.0005 ? 0 : v; return (r > 0 ? "+" : r < 0 ? "−" : "") + Math.abs(r).toFixed(3) + " V"; }
+  function M(c) { return Lab.sig(c, 2) + " M"; }
+  function pow10(lg) {
+    if (Math.abs(lg) < 2.5) return Lab.sig(Math.pow(10, lg), 2);
+    var e = Math.floor(lg), m = Math.pow(10, lg - e);
+    if (+m.toFixed(1) >= 10) { m /= 10; e++; }
+    return m.toFixed(1) + " × 10<sup>" + String(e).replace("-", "−") + "</sup>";
+  }
+  var SUP = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷" };
+  function supTxt(n) { return "10" + String(n).split("").map(function (ch) { return SUP[ch]; }).join(""); }
+
+  // ---------- Chart ----------
+  var svg = document.getElementById("chart");
+  function drawChart(m) {
+    var x = cl(), X0 = -7, X1 = 7;
+    var y0 = Math.floor((x.E0 - 0.25) * 20) / 20, y1 = Math.ceil((x.E0 + 0.25) * 20) / 20;
+    var yt = []; for (var v = y0; v <= y1 + 1e-9; v += 0.05) yt.push(Math.round(v * 100) / 100);
+    var Fm = Lab.frame(svg, { x: [X0, X1], y: [y0, y1], xTicks: [-6, -4, -2, 0, 2, 4, 6], yTicks: yt,
+      fmtX: function (v) { return v === 0 ? "1" : supTxt(v); }, fmtY: function (v) { return v.toFixed(2); },
+      xLabel: "Q (log scale)", yLabel: "E (V)", width: 440, height: 330 });
+    Lab.vline(Fm, 0, "var(--ghost)", 1.5, "5 4");
+    Lab.hline(Fm, x.E0, "var(--ghost)", 1.5, "5 4");
+    if (y0 < 0 && y1 > 0) Lab.hline(Fm, 0, "var(--ink)", 1);
+    Lab.fn(Fm, function (lq) { return x.E0 - RTF / x.n * lq * Math.LN10; }, "var(--accent)", 3);
+    Lab.tag(Fm, -6.8, x.E0 + 0.012, "E° = " + x.E0.toFixed(2) + " V", "var(--muted)");
+    // shaded halves
+    Lab.rect(Fm, X0, y0, 0, y1, "var(--good)", 0.05);
+    Lab.rect(Fm, 0, y0, X1, y1, "var(--bad)", 0.05);
+    Lab.tag(Fm, -6.8, y0 + 0.015, "Q < 1: E > E°", "var(--good)");
+    Lab.tag(Fm, 6.8, y1 - 0.03, "Q > 1: E < E°", "var(--bad)", "end");
+    // equilibrium marker
+    if (m.log10K <= X1 && m.log10K >= X0) {
+      Lab.dot(Fm, m.log10K, 0, "var(--good)");
+      Lab.tag(Fm, m.log10K + 0.3, 0.02, "Q = K, E = 0", "var(--good)");
+    } else {
+      Lab.tag(Fm, 6.8, y0 + 0.015, "E = 0 at Q = K ≈ 10^" + Math.round(m.log10K) + " →", "var(--muted)", "end");
+    }
+    if (S.trail.length > 1) Lab.line(Fm, S.trail, "var(--c3)", 2, "4 3");
+    var lq = Math.max(X0, Math.min(X1, m.log10Q)), ey = Math.max(y0, Math.min(y1, m.E));
+    Lab.dot(Fm, lq, ey, "var(--c1)", true);
+    if (m.log10Q > X1 || m.log10Q < X0) Lab.tag(Fm, lq, ey + 0.03, "off scale", "var(--c1)", m.log10Q > X1 ? "end" : "start");
+    document.getElementById("g-sub").textContent = "n = " + x.n + ", 25 °C";
+  }
+
+  // ---------- Readouts & story ----------
+  function readouts(m) {
+    var x = cl();
+    document.getElementById("eqn").innerHTML = x.eq + "<br>Q = " + x.Q;
+    document.getElementById("r-q").innerHTML = pow10(m.log10Q);
+    document.getElementById("r-q2").textContent = Math.abs(m.log10Q) < 1e-9 ? (S.cell === "conc" ? "Q = 1 (= K for this cell)" : "Q = 1: standard ratio") : m.log10Q < 0 ? "Q < 1" : "Q > 1";
+    document.getElementById("r-e0").textContent = V(x.E0);
+    document.getElementById("r-e02").textContent = "fixed for this reaction";
+    document.getElementById("r-e").textContent = V(m.E);
+    document.getElementById("r-e2").innerHTML = Math.abs(m.E - x.E0) < 0.0005 ? "equal to E°" : m.E > x.E0 ? "<span style='color:var(--good)'>higher than E°</span>" : "<span style='color:var(--bad)'>lower than E°</span>";
+    var d = m.log10K - m.log10Q;
+    document.getElementById("r-k").innerHTML = Math.abs(d) < 0.01 ? "at equilibrium" : "Q/K = " + pow10(-d);
+    document.getElementById("r-k2").textContent = Math.abs(d) < 0.01 ? "E = 0: no net reaction" : d > 0 ? "Q < K: runs forward as written" : "Q > K: runs in reverse";
+  }
+  function story(m) {
+    var x = cl(), li = [], h = "";
+    var qWord = Math.abs(m.log10Q) < 1e-9 ? "equal to 1" : m.log10Q < 0 ? "less than 1" : "greater than 1";
+    li.push("Q = " + x.Q + " = " + (x.pc === 2 ? M(S.A) + " / (" + M(S.C) + ")<sup>2</sup>" : M(S.A) + " / " + M(S.C)) + " = " + pow10(m.log10Q) + ", which is <b>" + qWord + "</b>.");
+    if (Math.abs(m.log10Q) < 1e-9) li.push(S.cell === "conc" ? "ln Q = 0, so E = E° = 0. For a concentration cell K = 1, so Q = 1 is also equilibrium." : "This is the standard case: ln Q = 0, so E = E° = " + V(x.E0) + ".");
+    else if (m.log10Q < 0) li.push("Q &lt; 1 makes ln Q negative, so the correction −(RT/nF) ln Q is positive and E (" + V(m.E) + ") is <b>greater than E°</b>. Relative to standard conditions there is more reactant ion or less product ion, so the cell is farther from equilibrium.");
+    else if (S.cell === "conc") li.push("Q &gt; 1 makes ln Q positive, so E (" + V(m.E) + ") is <b>less than E°</b> = 0. For a concentration cell K = 1, so Q &gt; 1 is just as far from equilibrium as Q &lt; 1; the negative sign means the reaction runs in the reverse of the direction written.");
+    else li.push("Q &gt; 1 makes ln Q positive, so E (" + V(m.E) + ") is <b>less than E°</b>. There is more product ion or less reactant ion than at standard conditions, so the cell is closer to equilibrium.");
+    if (x.pc === 2 && Math.abs(Math.log10(S.C)) > 0.05) li.push("[Ag<sup>+</sup>] is squared in Q, so changing it by a factor of 10 changes Q by a factor of 100.");
+    if (S.cell === "conc") {
+      if (Math.abs(m.E) < 0.0005) li.push("Both beakers have the same [Cu<sup>2+</sup>]. Nothing drives the electrons either way: this concentration cell is at equilibrium and E = 0.");
+      else {
+        var anL = m.E > 0;
+        li.push("E° = 0 for a concentration cell, but E ≠ 0 because the concentrations differ. To reach equilibrium the concentrations must even out, so Cu is <b>oxidized in the " + (anL ? "left (more dilute)" : "right (more dilute)") + " beaker</b> (the anode) and Cu<sup>2+</sup> is <b>reduced in the " + (anL ? "right" : "left") + " (more concentrated) beaker</b> (the cathode). Electrons flow through the wire from " + (anL ? "left to right" : "right to left") + ".");
+        if (!anL) li.push("As written (left as anode) E is negative, so the spontaneous direction is the reverse. The magnitude, " + Math.abs(m.E).toFixed(3) + " V, is what a voltmeter would read.");
+      }
+    } else if (m.E > 0) {
+      li.push("E is still far from zero because K ≈ " + pow10(m.log10K) + " is enormous: the cell stays far from equilibrium until " + x.c + " is almost used up. Press <b>Run the cell</b> to watch it discharge.");
+    }
+    if (S.trail.length > 1) li.push("While running, " + x.c.replace(/ \(.*\)/, "") + " was consumed and the product ion built up, so Q rose and E fell along the purple path. " + (S.cell === "conc" ? "It stopped when the concentrations were equal: Q = K = 1 and E = 0." : "The voltage only collapses toward 0 when Q approaches K, which in practice means the reactant ion is exhausted (a dead battery)."));
+    h += "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+    var ap = (S.cell === "conc" && Math.abs(m.E) < 0.0005) ? "with equal concentrations Q = K = 1, the cell is at equilibrium, and E = 0." :
+      Math.abs(m.log10Q) < 1e-9 ? "at Q = 1 the cell potential equals E°." :
+      S.cell === "conc" ? "for a concentration cell E° = 0 and K = 1. The concentrations differ, so Q ≠ 1 = K, the cell is not at equilibrium, and |E| &gt; 0; the electrode in the more dilute solution is the anode, and electrons flow toward the more concentrated side." :
+      "Q " + (m.log10Q < 0 ? "&lt;" : "&gt;") + " 1, so by E = E° − (RT/nF) ln Q the cell potential is " + (m.log10Q < 0 ? "greater" : "less") + " than E°; the cell is " + (m.log10Q < 0 ? "farther from" : "closer to") + " equilibrium than at standard conditions.";
+    h += "<p><b>AP answer:</b> " + ap + "</p>";
+    return h;
+  }
+
+  // ---------- Prediction table (generated) ----------
+  (function table() {
+    var x = CELLS.zncu, rows = [
+      ["Standard: both 1.0 M", 1, 1, "Q = 1"],
+      ["[Cu<sup>2+</sup>] lowered to 0.010 M", 1, 0.01, "Q rises to 100"],
+      ["[Cu<sup>2+</sup>] raised to 2.0 M (more reactant)", 1, 2, "Q falls to 0.50"],
+      ["[Zn<sup>2+</sup>] lowered to 0.010 M", 0.01, 1, "Q falls to 0.010"],
+      ["[Zn<sup>2+</sup>] raised to 2.0 M (more product)", 2, 1, "Q rises to 2.0"],
+      ["Both diluted tenfold (0.10 M each)", 0.1, 0.1, "Q stays 1"],
+      ["Larger Zn electrode", 1, 1, "No change (solids not in Q)"]
+    ], tb = document.querySelector("#pred tbody");
+    rows.forEach(function (r) {
+      var m = calc(x, r[1], r[2]), tr = document.createElement("tr");
+      var cmp = Math.abs(m.E - x.E0) < 0.0005 ? "Equal to E°" : m.E > x.E0 ? "<b>Higher</b>" : "<span class=\"shift\">Lower</span>";
+      tr.innerHTML = "<td>" + r[0] + "</td><td>" + r[3] + "</td><td>" + cmp + "</td><td>" + V(m.E) + "</td>";
+      tb.appendChild(tr);
+    });
+  })();
+
+  // ---------- Controls ----------
+  var elA = document.getElementById("s-a"), elC = document.getElementById("s-c"), scBtns = {}, cellBtns = document.querySelectorAll("[data-cell]");
+  function render() {
+    var x = cl(), m = calc(x, S.A, S.C);
+    elA.value = Math.log10(S.A); elC.value = Math.log10(S.C);
+    document.getElementById("l-a").textContent = x.la; document.getElementById("l-c").textContent = x.lc;
+    document.getElementById("h-a").textContent = x.ha; document.getElementById("h-c").textContent = x.hc;
+    document.getElementById("o-a").textContent = M(S.A); document.getElementById("o-c").textContent = M(S.C);
+    Array.prototype.forEach.call(cellBtns, function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-cell") === S.cell ? "true" : "false"); });
+    SCO.forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.sc === k ? "true" : "false"); });
+    document.getElementById("b-run").textContent = S.running ? "Running…" : "Run the cell";
+    drawChart(m); readouts(m);
+    document.getElementById("story").innerHTML = story(m);
+  }
+  function match() { S.sc = null; SCO.forEach(function (k) { var x = SC[k]; if (x.cell === S.cell && Math.abs(Math.log10(S.A) - x.a) < 1e-6 && Math.abs(Math.log10(S.C) - x.c) < 1e-6) S.sc = k; }); }
+  var stopAnim = null;
+  function halt() { if (stopAnim) stopAnim(); stopAnim = null; S.running = false; }
+  SCO.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name;
+    b.addEventListener("click", function () { halt(); var x = SC[k]; S.cell = x.cell; S.A = Math.pow(10, x.a); S.C = Math.pow(10, x.c); S.sc = k; S.trail = []; render(); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  Array.prototype.forEach.call(cellBtns, function (b) {
+    b.addEventListener("click", function () { halt(); S.cell = b.getAttribute("data-cell"); S.trail = []; match(); render(); });
+  });
+  elA.addEventListener("input", function () { halt(); S.A = Math.pow(10, parseFloat(elA.value)); S.trail = []; match(); render(); });
+  elC.addEventListener("input", function () { halt(); S.C = Math.pow(10, parseFloat(elC.value)); S.trail = []; match(); render(); });
+  document.getElementById("b-std").addEventListener("click", function () { halt(); S.A = 1; S.C = 1; S.trail = []; match(); render(); });
+  document.getElementById("b-run").addEventListener("click", function () {
+    if (S.running) return;
+    var x = cl(), m0 = calc(x, S.A, S.C), A0 = S.A, C0 = S.C;
+    var dir = m0.E >= 0 ? 1 : -1;                   // spontaneous direction
+    if (Math.abs(m0.E) < 0.0005) { render(); return; }
+    // extent where E reaches 0, or where the consumed ion reaches CMIN
+    var xEnd;
+    if (S.cell === "conc") xEnd = Math.abs(C0 - A0) / 2;
+    else xEnd = dir > 0 ? (C0 - CMIN) / -x.dc : (A0 - CMIN) / x.da;
+    if (xEnd <= 0) { render(); return; }
+    S.running = true; S.trail = [[m0.log10Q, m0.E]]; S.sc = null;
+    stopAnim = Lab.animate(3200, function (t) {
+      var ext = dir * xEnd * (1 - Math.pow(1 - t, 2));
+      S.A = Math.max(CMIN, A0 + x.da * ext); S.C = Math.max(CMIN, C0 + x.dc * ext);
+      var mm = calc(x, S.A, S.C); S.trail.push([Math.max(-7, Math.min(7, mm.log10Q)), mm.E]);
+      render();
+    }, function () { S.running = false; stopAnim = null; if (S.cell === "conc") { S.A = S.C = (A0 + C0) / 2; } render(); });
+  });
+
+  // ---------- Self-check ----------
+  (function selfCheck() {
+    var errs = [];
+    function near(a, b, tol) { return Math.abs(a - b) <= tol; }
+    if (!near(RTF, 0.025693, 0.00001)) errs.push("RT/F " + RTF);
+    if (!near(calc(CELLS.zncu, 1, 1).E, 1.10, 1e-12)) errs.push("standard E ≠ E°");
+    if (!near(calc(CELLS.zncu, 1, 0.01).E, 1.041, 0.0006)) errs.push("dilute Cu2+ E");
+    if (!near(calc(CELLS.zncu, 0.01, 1).E, 1.159, 0.0006)) errs.push("dilute Zn2+ E");
+    if (!near(calc(CELLS.cuag, 1, 0.1).E, 0.401, 0.0006)) errs.push("Ag squared E");
+    if (!near(calc(CELLS.conc, 0.01, 1).E, 0.059, 0.0006)) errs.push("concentration cell E");
+    if (!near(calc(CELLS.conc, 0.1, 0.1).E, 0, 1e-12)) errs.push("equal concentrations E");
+    if (!near(calc(CELLS.zncu, 1, 1).log10K, 37.2, 0.05)) errs.push("log K Daniell " + calc(CELLS.zncu, 1, 1).log10K);
+    // direction rule: Q < 1 -> E > E°, Q > 1 -> E < E°
+    [[0.01, 1], [1, 0.01], [2, 0.3], [0.2, 1.5]].forEach(function (p) {
+      Object.keys(CELLS).forEach(function (k) { var x = CELLS[k], m = calc(x, p[0], p[1]); if ((m.log10Q < 0) !== (m.E > x.E0)) errs.push(k + " sign rule fails"); });
+    });
+    if (errs.length) console.error("9.10 self-check failed: " + errs.join("; "));
+  })();
+
+  render();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "For Zn(s) + Cu²⁺(aq) → Zn²⁺(aq) + Cu(s), E° = +1.10 V. A cell is built with [Zn²⁺] = 1.0 M and [Cu²⁺] = 0.010 M. How does its cell potential compare with E°?",
+      o: ["Greater than 1.10 V, because Q > 1", "Equal to 1.10 V, because E° does not depend on concentration", "It cannot be determined without the volume of each solution", "Less than 1.10 V, because Q = 100 > 1, so the cell is closer to equilibrium"], c: 3,
+      w: "Q = [Zn²⁺]/[Cu²⁺] = 1.0/0.010 = 100. With Q > 1, ln Q > 0, so E = E° − (RT/nF) ln Q is less than E°. Choice A has the right Q but the wrong direction. Choice B is true of E°, but the question asks about E." },
+    { s: "Which change would increase the measured potential of a Zn/Cu galvanic cell (Zn + Cu²⁺ → Zn²⁺ + Cu) that starts at standard conditions?",
+      o: ["Adding Zn(NO₃)₂(s) to the zinc half-cell", "Dissolving more Cu(NO₃)₂(s) in the copper half-cell", "Replacing the zinc electrode with a larger one", "Adding distilled water to the copper half-cell"], c: 1,
+      w: "Raising [Cu²⁺] (a reactant ion) lowers Q below 1, so E rises above E°. Choice A raises [Zn²⁺] (a product), which raises Q and lowers E. Choice C changes nothing because solids are not in Q. Choice D dilutes Cu²⁺, raising Q and lowering E." },
+    { s: "A concentration cell has a Cu electrode in 0.010 M Cu²⁺ and a Cu electrode in 1.0 M Cu²⁺, joined by a salt bridge. Which statement is correct?",
+      o: ["The Cu in 0.010 M Cu²⁺ is the anode; electrons flow through the wire toward the 1.0 M side, because the spontaneous reaction makes the concentrations more equal.",
+          "The Cu in 1.0 M Cu²⁺ is the anode, because it has more Cu²⁺ ions to give up.",
+          "No current flows, because E° = 0 for a concentration cell.",
+          "Electrons flow through the salt bridge from the dilute side to the concentrated side."], c: 0,
+      w: "The cell moves toward equilibrium by evening out the concentrations: Cu is oxidized in the dilute beaker (raising its [Cu²⁺]) and Cu²⁺ is reduced in the concentrated beaker (lowering it). Choice C confuses E° with E; here Q = 0.010 and E ≈ +0.059 V. Choice D sends electrons through the bridge, which carries only ions." },
+    { s: "As a flashlight battery is used, its voltage gradually decreases. Which explanation is best?",
+      o: ["E° decreases as the reactants are used up.", "The electrodes get smaller, and electrode size controls the voltage.", "As the reaction proceeds, Q increases toward K, so the cell gets closer to equilibrium and the cell potential decreases, reaching zero at Q = K.", "Le Châtelier's principle shifts the reaction toward the reactants as products build up."], c: 2,
+      w: "Running the cell converts reactants to products, so Q rises toward K and E falls; at Q = K, E = 0. E° is a fixed property of the reaction (choice A). Choice D uses an equilibrium argument; the CED notes that Le Châtelier's principle does not apply to these systems because they are not at equilibrium." },
+    { s: "Which describes a galvanic cell that has reached equilibrium?",
+      o: ["E = E° and Q = 1", "E = 0 and Q = K", "E = E° and Q = K", "E < 0 and Q < K"], c: 1,
+      w: "At equilibrium there is no driving force, so E = 0, and the reaction quotient equals the equilibrium constant. E = E° (choices A and C) describes standard conditions, Q = 1, which is not equilibrium unless K happens to be 1." },
+    { s: "For Cu(s) + 2Ag⁺(aq) → Cu²⁺(aq) + 2Ag(s), E° = +0.46 V. A cell has [Cu²⁺] = 1.0 M and [Ag⁺] = 0.10 M. Which statement is correct?",
+      o: ["Q = 0.10, so E > E°", "Q = 10, so E < E°", "Q = 0.010, so E > E°", "Q = 100, so E < E°"], c: 3,
+      w: "Q = [Cu²⁺]/[Ag⁺]² = 1.0/(0.10)² = 100. Since Q > 1, E < E° (about 0.40 V). Choice B forgets the exponent 2 from the coefficient; choices A and C invert the ratio." },
+    { s: "A cell has E° = +0.50 V. At 25 °C its measured potential is +0.56 V. Using E = E° − (RT/nF) ln Q, what can be concluded?",
+      o: ["Q = 1", "Q > 1", "Q < 1, so the cell is farther from equilibrium than at standard conditions", "Q = K"], c: 2,
+      w: "E > E° requires −(RT/nF) ln Q > 0, so ln Q < 0 and Q < 1. A smaller Q means the cell is farther from equilibrium (Q is farther below K), so the driving force is larger. Choice D would give E = 0." },
+    { s: "Which statement correctly explains why the cell potential depends on concentrations in a working galvanic cell?",
+      o: ["The cell is not at equilibrium; its potential reflects how far the reaction is from equilibrium, which is measured by Q relative to K.",
+          "Higher concentrations make the ions move faster, which pushes electrons harder.",
+          "Concentrations change E° for each half-reaction.",
+          "Adding ions shifts the equilibrium by Le Châtelier's principle, which changes K."], c: 0,
+      w: "Cell potential is a driving force toward equilibrium, and concentration enters through Q. E° and K are fixed at a given temperature (choices C and D are wrong), and the effect is thermodynamic, not about ion speed (choice B)." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("9.10");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [9], topic: "9.10", compact: true, storageKey: "topic-9.10" });</script>
+</body>
+</html>

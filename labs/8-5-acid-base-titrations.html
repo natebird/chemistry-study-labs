@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acid–Base Titrations Study Lab</title>
+<meta name="description" content="Drive a burette along a live titration curve for strong, weak, and diprotic acids and bases: find the equivalence and half-equivalence points, read pKa from the curve, track the major species, and test which indicator works.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.graph-card, .side { align-content: start; }
+.side { display: grid; gap: 12px; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.side .controls { grid-template-columns: 1fr 1fr; }
+.ctl[hidden] { display: none; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.note { font-size: .82rem; color: var(--muted); }
+.legend .l-curve { color: var(--accent); } .legend .l-eq { color: var(--c4); } .legend .l-half { color: var(--c2); }
+.legend .l-ind { color: var(--c1); }
+.legend .l-ind::before { height: 10px; opacity: .35; }
+.lab-bar > * { min-width: 0; max-width: 100%; }
+@media (max-width: 520px) {
+  .side .controls { grid-template-columns: 1fr; }
+  .lab-bar .eqn { white-space: normal; }
+  #curve text, #spec text { font-size: 13px; }
+  #curve .lbl, #spec .lbl { font-size: 13.5px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 8 · Topic 8.5</span>
+  <h1>Acid–Base Titrations Study Lab</h1>
+  <p class="lede">A titration curve plots pH against the volume of titrant added, and its shape tells you almost everything: whether the analyte is strong or weak, where the equivalence point is, what pK<sub>a</sub> is, and how many protons a polyprotic acid gives up. Drive the burette along the curve, watch the major species change, and see which indicator would mark the end point.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The titration curve</h2>
+    <p>Pick an analyte, then add titrant with the slider or the buttons. The curve is calculated from the full equilibrium (charge balance, including water), so it is what a pH meter would show; the story beside it works the same point by the AP method so you can compare. The flask always starts with 25.00 mL of analyte. K values are typical textbook values at 25 °C; the diprotic acid H₂A uses illustrative values, pK<sub>a1</sub> = 3.00 and pK<sub>a2</sub> = 8.00.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>pH against volume of titrant <small id="curve-sub"></small></h3>
+      <svg class="chart" id="curve" role="img" aria-label="Titration curve: pH against volume of titrant added, with the equivalence and half-equivalence points marked"></svg>
+      <div class="eqn" id="rxn"></div>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Classic exam cases</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Analyte in the flask</div>
+        <div class="seg" role="group" aria-label="Analyte" id="pick"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl" style="grid-column: 1 / -1;">
+          <label for="s-v">Titrant added <output id="o-v"></output></label>
+          <input type="range" id="s-v" min="0" max="50" step="0.05">
+          <div class="btnrow">
+            <button type="button" id="b-m1">−1.00 mL</button>
+            <button type="button" id="b-drop">+1 drop</button>
+            <button type="button" id="b-p1">+1.00 mL</button>
+            <button type="button" id="b-half">Half-equivalence</button>
+            <button type="button" id="b-eq">Equivalence</button>
+          </div>
+        </div>
+        <div class="ctl">
+          <label for="s-ca">Analyte concentration <output id="o-ca"></output></label>
+          <input type="range" id="s-ca" min="0.050" max="0.200" step="0.005">
+        </div>
+        <div class="ctl">
+          <label for="s-ct">Titrant concentration <output id="o-ct"></output></label>
+          <input type="range" id="s-ct" min="0.050" max="0.200" step="0.005">
+        </div>
+        <div class="ctl" id="ctl-pk">
+          <label for="s-pk"><span id="l-pk">pK<sub>a</sub></span> <output id="o-pk"></output></label>
+          <input type="range" id="s-pk" min="2.5" max="9.5" step="0.01">
+          <span class="hint" id="h-pk"></span>
+        </div>
+      </div>
+      <div class="group">
+        <div class="tag">Indicator</div>
+        <div class="seg" role="group" aria-label="Indicator" id="ind"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-curve">Titration curve</span><span class="l-eq">Equivalence point</span><span class="l-half">Half-equivalence (pH = pK<sub>a</sub>)</span><span class="l-ind">Indicator color-change range</span></div>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Major species in the flask <small id="spec-sub"></small></h3>
+      <svg class="chart" id="spec" role="img" aria-label="Bar chart of the amounts of the major species at the current point"></svg>
+    </div>
+    <div class="card graph-card">
+      <h3>Where are we on the curve?</h3>
+      <div class="story" id="story" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Titrant added</div><div class="v" id="r-v"></div><div class="sub" id="r-v2"></div></div>
+    <div class="stat"><div class="k">pH (curve)</div><div class="v" id="r-ph"></div><div class="sub" id="r-ph2"></div></div>
+    <div class="stat"><div class="k">Region</div><div class="v" id="r-reg"></div><div class="sub" id="r-reg2"></div></div>
+    <div class="stat"><div class="k">Indicator</div><div class="v" id="r-ind"></div><div class="sub" id="r-ind2"></div></div>
+  </div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Equivalence point</span><h3>Moles titrant = moles analyte</h3><p>For a monoprotic acid or base, the equivalence point is reached when the moles of titrant added equal the moles of analyte originally present. That is true for strong and weak analytes alike, so V<sub>eq</sub> gives the analyte concentration: C<sub>a</sub>V<sub>a</sub> = C<sub>t</sub>V<sub>eq</sub>.</p></div>
+    <div class="card"><span class="tag">Half-equivalence</span><h3>pH = pK<sub>a</sub> halfway there</h3><p>At half the equivalence volume, half of the weak acid has become A⁻, so [HA] = [A⁻] and Henderson–Hasselbalch gives pH = pK<sub>a</sub>. Reading the pH at ½V<sub>eq</sub> is how you get pK<sub>a</sub> from a curve. For a weak base, the pH there equals the pK<sub>a</sub> of its conjugate acid.</p></div>
+    <div class="card"><span class="tag">Equivalence pH</span><h3>Set by what is left</h3><p>Strong acid + strong base: only spectators, pH 7. Weak acid + strong base: A⁻ remains and makes the solution basic (pH &gt; 7). Weak base + strong acid: BH⁺ remains and makes it acidic (pH &lt; 7).</p></div>
+    <div class="card"><span class="tag">Reading the shape</span><h3>Strong vs. weak curves</h3><p>A weak acid starts at a higher pH than a strong acid of the same concentration, rises quickly at first, then flattens into a buffer region centered on pK<sub>a</sub>. Its jump at equivalence is shorter. Past equivalence, both curves follow the excess OH⁻ and look the same.</p></div>
+    <div class="card"><span class="tag">Indicators</span><h3>Match the color change to the jump</h3><p>An indicator is itself a weak acid whose two forms have different colors; it changes color over roughly pK<sub>a</sub>(indicator) ± 1. Choose one whose range sits inside the steep part of the curve, around the equivalence pH. Phenolphthalein (about 8.2–10.0) suits weak acid + strong base.</p></div>
+    <div class="card"><span class="tag">Polyprotic acids</span><h3>One jump per proton</h3><p>A diprotic acid H₂A shows two equivalence points, the second at twice the volume of the first. Before the first, H₂A and HA⁻ dominate (pH = pK<sub>a1</sub> at the first half-equivalence point); between them, HA⁻ and A²⁻ (pH = pK<sub>a2</sub> at the second). Count the jumps to count the acidic protons.</p></div>
+  </div>
+  <p class="note">Scope: calculating the concentration of each species along a polyprotic titration curve is not assessed on the AP Exam; for monoprotic titrations those calculations are in scope, and qualitative reasoning about which species are present in large or small amounts is in scope for polyprotic acids. That is why the species chart shows numbers only for monoprotic analytes.</p>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Four points on every titration curve</h2>
+    <p>25.00 mL of 0.100 M acid titrated with 0.100 M NaOH (V<sub>eq</sub> = 25.00 mL). The pH values are computed by this page with the AP method and agree with the curve.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Point</th><th>Weak acid (CH₃COOH): major species</th><th>Weak acid: how to get pH</th><th>Weak acid pH</th><th>Strong acid (HCl) pH</th></tr></thead>
+    <tbody id="tbl"></tbody>
+  </table>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Indicator</th><th>Color change (acid → base form)</th><th>Approximate pH range</th><th>Good for</th></tr></thead>
+    <tbody id="tbl-ind"></tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Titration curves on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Find V<sub>eq</sub> from the middle of the steep jump, then use moles: mol analyte = C<sub>titrant</sub> × V<sub>eq</sub> (monoprotic, 1 : 1).</li>
+        <li>Read pK<sub>a</sub> at ½V<sub>eq</sub> and say why: "at the half-equivalence point [HA] = [A⁻], so pH = pK<sub>a</sub>." Then K<sub>a</sub> = 10<sup>−pK<sub>a</sub></sup>.</li>
+        <li>Explain the equivalence pH with a species and an equation: "CH₃COO⁻ + H₂O ⇌ CH₃COOH + OH⁻ makes the solution basic."</li>
+        <li>For a point before equivalence, show the moles of HA and A⁻ after reaction, then use Henderson–Hasselbalch.</li>
+        <li>For an indicator, compare its pK<sub>a</sub> (or range) to the pH at the equivalence point.</li>
+        <li>For a polyprotic curve, identify the major species in each region and match each half-equivalence point to its pK<sub>a</sub>.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying the equivalence point is always at pH 7. Only strong + strong titrations are neutral there.</li>
+        <li>Reading pK<sub>a</sub> at the equivalence point instead of halfway to it.</li>
+        <li>Thinking a weak acid needs less base to reach equivalence. Strength changes the curve's shape, not the moles of base needed.</li>
+        <li>Thinking that adding water to the flask changes V<sub>eq</sub>. It changes the starting pH a little but not the moles of analyte.</li>
+        <li>Picking methyl red or methyl orange for a weak acid + strong base titration; they change color well before equivalence.</li>
+        <li>Treating the end point and the equivalence point as the same thing: the end point is where the indicator changes, which a good indicator places close to equivalence.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation. All solutions are at 25 °C.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 8.5. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-8.html">Unit 8 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  var KW = 1.0e-14, VA = 25.00;
+  function roundTo(v, d) { var k = Math.pow(10, d); return Math.round(v * k) / k; }
+  function fx(v, d) { return roundTo(v, d).toFixed(d).replace("-", "−"); }
+  function sc(v, n) { return Lab.sci(v, n || 2, true); }
+  function mL(v) { return v.toFixed(2) + " mL"; }
+  function mm(v) { return Math.abs(v) < 5e-7 ? "0" : Lab.sig(v, 3); }
+  var F = function (s) { return Lab.fmla(s); };
+
+  // ---------- Analytes ----------
+  // side "acid": titrated with NaOH.  side "base": titrated with HCl.
+  // weak acids carry Ka; weak bases carry Kb; the diprotic acid carries K1, K2.
+  var AN = {
+    sa: { name: "Strong acid (HCl)", side: "acid", f: "HCl", t: "NaOH", strong: true },
+    wa: { name: "Weak acid", side: "acid", f: "CH3COOH", conj: "CH3COO^-", t: "NaOH", Ka: 1.8e-5, label: "CH₃COOH" },
+    wb: { name: "Weak base", side: "base", f: "NH3", conj: "NH4^+", t: "HCl", Kb: 1.8e-5, label: "NH₃" },
+    sb: { name: "Strong base (NaOH)", side: "base", f: "NaOH", t: "HCl", strong: true },
+    di: { name: "Diprotic acid H₂A", side: "acid", f: "H2A", t: "NaOH", K1: 1.0e-3, K2: 1.0e-8, di: true }
+  };
+  var IND = {
+    none: { name: "None" },
+    mo: { name: "Methyl orange", lo: 3.1, hi: 4.4, col: "red → yellow" },
+    mr: { name: "Methyl red", lo: 4.4, hi: 6.2, col: "red → yellow" },
+    btb: { name: "Bromothymol blue", lo: 6.0, hi: 7.6, col: "yellow → blue" },
+    pp: { name: "Phenolphthalein", lo: 8.2, hi: 10.0, col: "colorless → pink" }
+  };
+  var S = { an: "wa", ca: 0.100, ct: 0.100, v: 0, K: 1.8e-5, ind: "pp", key: null };
+
+  // ---------- Exact curve: volume of titrant as an explicit function of [H3O+] ----------
+  // Acid analyte with NaOH:  V = VA (Ca*alpha - (h - oh)) / (Ct + (h - oh)), alpha = average charge per acid unit.
+  // Base analyte with HCl:   V = VA (Cb*beta + (h - oh)) / (Ct - (h - oh)), beta = average positive charge per base unit.
+  function alpha(st, h) {
+    var a = AN[st.an];
+    if (a.strong) return 1;
+    if (a.di) { var d = h * h + a.K1 * h + a.K1 * a.K2; return (a.K1 * h + 2 * a.K1 * a.K2) / d; }
+    if (a.side === "acid") return st.K / (st.K + h);
+    var Kc = KW / st.K; return h / (Kc + h);
+  }
+  function vOfH(st, h) {
+    var a = AN[st.an], oh = KW / h, d = h - oh;
+    // past the titrant's own pH the denominator reaches 0: that pH is never reached, so report an infinite volume
+    if (a.side === "acid") return st.ct + d <= 0 ? Infinity : VA * (st.ca * alpha(st, h) - d) / (st.ct + d);
+    return st.ct - d <= 0 ? Infinity : VA * (st.ca * alpha(st, h) + d) / (st.ct - d);
+  }
+  // pH at a given volume: V(h) is monotonic, so bisect on log h
+  function pHat(st, V) {
+    var a = AN[st.an], lo = -14.5, hi = 0.5;
+    for (var i = 0; i < 90; i++) {
+      var m = (lo + hi) / 2, v = vOfH(st, Math.pow(10, m));
+      var vv = isFinite(v) ? v : (a.side === "acid" ? -1e9 : 1e9);
+      if (a.side === "acid") { if (vv > V) lo = m; else hi = m; }   // larger h -> less base added
+      else { if (vv > V) hi = m; else lo = m; }                      // larger h -> more acid added
+    }
+    return -(lo + hi) / 2;
+  }
+  function veq(st) { var a = AN[st.an], n = st.ca * VA; return a.di ? [n / st.ct, 2 * n / st.ct] : [n / st.ct]; }
+  function xmax(st) { var e = veq(st), last = e[e.length - 1]; return Math.max(20, Math.ceil(last * 1.6 / 5) * 5); }
+  function pKa(st) { var a = AN[st.an]; if (a.strong) return null; if (a.di) return [-Math.log10(a.K1), -Math.log10(a.K2)]; return a.side === "acid" ? -Math.log10(st.K) : 14 - (-Math.log10(st.K)); }
+
+  // ---------- AP method at a point (monoprotic) ----------
+  function weakX(K, C) { var xa = Math.sqrt(K * C); return xa / C < 0.05 ? xa : (-K + Math.sqrt(K * K + 4 * K * C)) / 2; }
+  function apPoint(st, V) {
+    var a = AN[st.an], n0 = st.ca * VA, nt = st.ct * V, Vt = VA + V, L = Vt / 1000, e = veq(st)[0], r = { V: V, n0: n0, nt: nt, Vt: Vt };
+    var atEq = Math.abs(V - e) < 0.005, acid = a.side === "acid";
+    if (a.di) {
+      var e2 = veq(st)[1];
+      r.region = V < 0.005 ? "start" : V < e - 0.005 ? "buf1" : Math.abs(V - e) < 0.005 ? "eq1" : V < e2 - 0.005 ? "buf2" : Math.abs(V - e2) < 0.005 ? "eq2" : "after";
+      return r;
+    }
+    if (V < 0.005) {
+      r.region = "start";
+      if (a.strong) r.pH = acid ? -Math.log10(st.ca) : 14 + Math.log10(st.ca);
+      else { r.x = weakX(st.K, st.ca); r.pH = acid ? -Math.log10(r.x) : 14 + Math.log10(r.x); }
+    } else if (atEq) {
+      r.region = "eq";
+      if (a.strong) r.pH = 7;
+      else { r.C = n0 / 1000 / L; r.Kc = KW / st.K; r.x = weakX(r.Kc, r.C); r.pH = acid ? 14 + Math.log10(r.x) : -Math.log10(r.x); }
+    } else if (V < e) {
+      r.region = "before";
+      if (a.strong) { r.cx = (n0 - nt) / Vt; r.pH = acid ? -Math.log10(r.cx) : 14 + Math.log10(r.cx); }
+      else { r.nW = n0 - nt; r.nC = nt; r.pKa = pKa(st); r.ratio = acid ? r.nC / r.nW : r.nW / r.nC; r.pH = r.pKa + Math.log10(r.ratio); }
+    } else {
+      r.region = "after"; r.cx = (nt - n0) / Vt; r.pH = acid ? 14 + Math.log10(r.cx) : -Math.log10(r.cx);
+    }
+    return r;
+  }
+
+  // ---------- Drawing: curve ----------
+  var curve = document.getElementById("curve"), spec = document.getElementById("spec");
+  function curvePts(st, xm) {
+    var pts = [];
+    for (var p = 0.2; p <= 13.8; p += 0.02) {
+      var v = vOfH(st, Math.pow(10, -p));
+      if (isFinite(v) && v >= 0 && v <= xm) pts.push([v, p]);
+    }
+    var p0 = pHat(st, 0), pe = pHat(st, xm);
+    pts.unshift([0, p0]); pts.push([xm, pe]);
+    pts.sort(function (a, b) { return a[0] - b[0]; });
+    return pts;
+  }
+  function drawCurve(st) {
+    var a = AN[st.an], xm = xmax(st), step = xm > 60 ? 20 : xm > 30 ? 10 : 5, xt = [];
+    for (var t = 0; t <= xm + 1e-9; t += step) xt.push(t);
+    var G = Lab.frame(curve, { x: [0, xm], y: [0, 14], xLabel: "volume of " + a.t + " added (mL)", yLabel: "pH", xTicks: xt, yTicks: [0, 2, 4, 6, 7, 8, 10, 12, 14], fmtX: function (v) { return v; }, fmtY: function (v) { return v; } });
+    var ind = IND[st.ind];
+    if (ind.lo != null) { Lab.rect(G, 0, ind.lo, xm, ind.hi, "var(--c1)", 0.16); Lab.tag(G, xm * 0.99, ind.hi + 0.25, ind.name, "var(--c1)", "end"); }
+    Lab.hline(G, 7, "var(--ghost)", 1, "4 4");
+    var e = veq(st), pk = pKa(st);
+    e.forEach(function (ev, i) {
+      Lab.vline(G, ev, "var(--c4)", 1.5, "5 4");
+      var pe = pHat(st, ev);
+      Lab.el("circle", { cx: G.sx(ev), cy: G.sy(pe), r: 5, fill: "var(--c4)" }, G.g);
+      Lab.tag(G, ev + xm * 0.015, Math.min(13.3, pe + (a.side === "acid" ? -0.9 : 0.6)), (e.length > 1 ? "eq. pt " + (i + 1) : "eq. pt") + ", pH " + fx(pe, 2), "var(--c4)", "start");
+    });
+    if (pk != null) {
+      var halves = a.di ? [e[0] / 2, (e[0] + e[1]) / 2] : [e[0] / 2];
+      halves.forEach(function (hv, i) {
+        var ph = pHat(st, hv);
+        Lab.line(G, [[hv, 0], [hv, ph], [0, ph]], "var(--c2)", 1.2, "3 3");
+        Lab.el("circle", { cx: G.sx(hv), cy: G.sy(ph), r: 4.5, fill: "var(--c2)" }, G.g);
+        Lab.tag(G, hv + xm * 0.015, ph + (a.side === "acid" ? -0.9 : 0.5), "pH " + fx(ph, 2) + " ≈ pK" + (a.di ? "a" + (i + 1) : "a"), "var(--c2)", "start");
+      });
+    }
+    Lab.line(G, curvePts(st, xm), "var(--accent)", 3);
+    var ph = pHat(st, st.v);
+    Lab.line(G, [[st.v, 0], [st.v, 14]], "var(--muted)", 1, "2 3");
+    Lab.dot(G, st.v, ph, "var(--ink)", false);
+    document.getElementById("curve-sub").textContent = "25.00 mL of " + Lab.sig(st.ca, 3) + " M analyte, " + Lab.sig(st.ct, 3) + " M " + a.t;
+    return ph;
+  }
+
+  // ---------- Drawing: species ----------
+  function species(st) {
+    var a = AN[st.an], V = st.v, n0 = st.ca * VA, nt = st.ct * V, out = [];
+    if (a.di) {
+      // qualitative only: fractions from the exact pH, shown without numbers
+      var h = Math.pow(10, -pHat(st, V)), d = h * h + a.K1 * h + a.K1 * a.K2, ex = Math.max(0, nt - 2 * n0);
+      out = [{ f: "H2A", y: n0 * h * h / d, c: "var(--c3)" }, { f: "HA^-", y: n0 * a.K1 * h / d, c: "var(--c2)" }, { f: "A^2-", y: n0 * a.K1 * a.K2 / d, c: "var(--c1)" }, { f: "OH^-", y: ex, c: "var(--c4)" }];
+      return { list: out, numbers: false };
+    }
+    var acid = a.side === "acid", r = Math.min(n0, nt);
+    if (a.strong) {
+      out = acid ? [{ f: "H3O^+", y: n0 - r, c: "var(--c1)" }, { f: "OH^-", y: nt - r, c: "var(--c4)" }, { f: "Na^+", y: nt, c: "var(--ghost)" }, { f: "Cl^-", y: n0, c: "var(--ghost)" }]
+        : [{ f: "OH^-", y: n0 - r, c: "var(--c4)" }, { f: "H3O^+", y: nt - r, c: "var(--c1)" }, { f: "Cl^-", y: nt, c: "var(--ghost)" }, { f: "Na^+", y: n0, c: "var(--ghost)" }];
+    } else {
+      out = acid ? [{ f: a.f, y: n0 - r, c: "var(--c3)" }, { f: a.conj, y: r, c: "var(--c2)" }, { f: "OH^-", y: nt - r, c: "var(--c4)" }, { f: "Na^+", y: nt, c: "var(--ghost)" }]
+        : [{ f: a.f, y: n0 - r, c: "var(--c3)" }, { f: a.conj, y: r, c: "var(--c2)" }, { f: "H3O^+", y: nt - r, c: "var(--c1)" }, { f: "Cl^-", y: nt, c: "var(--ghost)" }];
+    }
+    return { list: out, numbers: true };
+  }
+  function svgF(f) { return F(f).replace(/<sub>(.*?)<\/sub>/g, '<tspan baseline-shift="sub" font-size="9">$1</tspan>').replace(/<sup>(.*?)<\/sup>/g, '<tspan baseline-shift="super" font-size="9">$1</tspan>'); }
+  function drawSpec(st) {
+    var sp = species(st), a = AN[st.an], top = 0;
+    var n0 = st.ca * VA;
+    top = sp.numbers ? Math.max(n0, st.ct * st.v, 1) * 1.2 : n0 * 1.25;
+    var stp = top > 30 ? 10 : top > 12 ? 4 : top > 6 ? 2 : 1, ticks = [];
+    if (sp.numbers) for (var t = 0; t <= top; t += stp) ticks.push(t);
+    var G = Lab.frame(spec, { x: [0, sp.list.length], y: [0, top], yLabel: sp.numbers ? "amount (mmol)" : "relative amount", xLabel: "", yTicks: ticks, fmtY: function (v) { return v; }, height: 300 });
+    sp.list.forEach(function (s, i) {
+      var x0 = i + 0.2, x1 = i + 0.8, y = Math.max(0, s.y);
+      if (y > top * 0.002) Lab.el("rect", { x: G.sx(x0), y: G.sy(y), width: G.sx(x1) - G.sx(x0), height: G.sy(0) - G.sy(y), fill: s.c, opacity: 0.9 }, G.g);
+      var lab = sp.numbers ? mm(y) : y > n0 * 0.5 ? "major" : y > n0 * 0.02 ? "present" : "tiny";
+      Lab.el("text", { x: G.sx(i + 0.5), y: G.sy(y) - 6, "text-anchor": "middle", "class": "lbl", style: "fill:" + s.c }, G.svg, lab);
+      var l = Lab.el("text", { x: G.sx(i + 0.5), y: G.H - G.M.b + 18, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, G.svg); l.innerHTML = svgF(s.f);
+    });
+    document.getElementById("spec-sub").textContent = sp.numbers ? "mmol after reaction; gray = spectator" : "qualitative (polyprotic)";
+  }
+
+  // ---------- Indicator ----------
+  // the end point is where the curve first enters the far side of the indicator's range (midpoint of the range)
+  function indicatorCheck(st) {
+    var ind = IND[st.ind], a = AN[st.an];
+    if (ind.lo == null) return null;
+    var mid = (ind.lo + ind.hi) / 2, h = Math.pow(10, -mid), vEnd = vOfH(st, h), e = veq(st), best = e[0], i;
+    for (i = 0; i < e.length; i++) if (Math.abs(vEnd - e[i]) < Math.abs(vEnd - best)) best = e[i];
+    return { vEnd: vEnd, veq: best, err: vEnd - best, good: Math.abs(vEnd - best) <= 0.10, mid: mid };
+  }
+
+  // ---------- Story ----------
+  function story(st, ph) {
+    var a = AN[st.an], r = apPoint(st, st.v), e = veq(st), acid = a.side === "acid", h = "", s = [];
+    var tName = F(a.t), aName = F(a.f);
+    var pk = pKa(st);
+    if (a.di) {
+      var txt = {
+        start: ["Start: only H<sub>2</sub>A", "H<sub>2</sub>A is the major species; a little HA<sup>−</sup> and H<sub>3</sub>O<sup>+</sup> come from its first ionization."],
+        buf1: ["First buffer region", "H<sub>2</sub>A + OH<sup>−</sup> → HA<sup>−</sup> + H<sub>2</sub>O. Both H<sub>2</sub>A and HA<sup>−</sup> are present in large amounts. At V = " + mL(e[0] / 2) + " they are about equal and pH ≈ pK<sub>a1</sub> = " + fx(pk[0], 2) + " (the curve reads a little higher because H<sub>2</sub>A is a fairly strong weak acid)."],
+        eq1: ["First equivalence point", "Every H<sub>2</sub>A has lost one proton: HA<sup>−</sup> is the major species. This took " + mL(e[0]) + " of NaOH, which equals the moles of H<sub>2</sub>A."],
+        buf2: ["Second buffer region", "HA<sup>−</sup> + OH<sup>−</sup> → A<sup>2−</sup> + H<sub>2</sub>O. HA<sup>−</sup> and A<sup>2−</sup> are both major. At V = " + mL((e[0] + e[1]) / 2) + " they are equal and pH ≈ pK<sub>a2</sub> = " + fx(pk[1], 2) + "."],
+        eq2: ["Second equivalence point", "Both protons are gone: A<sup>2−</sup> is the major species, a weak base, so the pH is well above 7. The volume is exactly twice the first."],
+        after: ["Past the last equivalence point", "Excess OH<sup>−</sup> and A<sup>2−</sup> are present; the excess OH<sup>−</sup> controls the pH."]
+      }[r.region];
+      h += "<p><b>" + txt[0] + "</b> at " + mL(st.v) + ": pH " + fx(ph, 2) + ".</p><p>" + txt[1] + "</p>";
+      h += "<p>Two jumps, at " + mL(e[0]) + " and " + mL(e[1]) + ", show two acidic protons. The species chart is qualitative because the AP Exam does not ask you to calculate each species' concentration along a polyprotic curve.</p>";
+      h += "<p><b>AP answer:</b> the number of equivalence points gives the number of acidic protons, and the pH at each half-equivalence point gives pK<sub>a1</sub> and pK<sub>a2</sub>.</p>";
+      return h;
+    }
+    s.push("Moles of analyte: " + Lab.sig(st.ca, 3) + " M × 25.00 mL = " + mm(r.n0) + " mmol " + aName + ". Moles of titrant: " + Lab.sig(st.ct, 3) + " M × " + mL(st.v) + " = " + mm(r.nt) + " mmol " + tName + ". Equivalence at " + mm(r.n0) + " ÷ " + Lab.sig(st.ct, 3) + " = " + mL(e[0]) + ".");
+    var regionName = { start: "Before any titrant", before: a.strong ? "Before equivalence" : "Buffer region", eq: "Equivalence point", after: "Past equivalence" }[r.region];
+    if (r.region === "start") {
+      if (a.strong) s.push(aName + " is strong, so " + (acid ? "[H₃O⁺]" : "[OH⁻]") + " = " + Lab.sig(st.ca, 3) + " M and pH = <b>" + fx(r.pH, 2) + "</b>.");
+      else s.push(aName + " is weak: x = √(" + (acid ? "K<sub>a</sub>" : "K<sub>b</sub>") + " × C) = " + sc(r.x, 3) + " M = " + (acid ? "[H₃O⁺]" : "[OH⁻]") + ", so pH = <b>" + fx(r.pH, 2) + "</b>. It starts higher than a strong acid would (pH " + fx(acid ? -Math.log10(st.ca) : 14 + Math.log10(st.ca), 2) + ").");
+    } else if (r.region === "before") {
+      if (a.strong) s.push("Some " + aName + " remains: " + mm(r.n0 - r.nt) + " mmol in " + mL(r.Vt) + ", so " + (acid ? "[H₃O⁺]" : "[OH⁻]") + " = " + Lab.sci(r.cx, 3) + " M and pH = <b>" + fx(r.pH, 2) + "</b>.");
+      else {
+        var weak = aName, conj = F(a.conj);
+        s.push("After reaction: " + mm(r.nW) + " mmol " + weak + " and " + mm(r.nC) + " mmol " + conj + ". Both present, so this is a buffer.");
+        s.push("pH = pK<sub>a</sub> + log(" + (acid ? "[" + conj + "]/[" + weak + "]" : "[" + weak + "]/[" + conj + "]") + ") = " + fx(r.pKa, 4) + " + log(" + (acid ? mm(r.nC) + "/" + mm(r.nW) : mm(r.nW) + "/" + mm(r.nC)) + ") = " + fx(r.pKa, 4) + " + (" + fx(Math.log10(r.ratio), 4) + ") = <b>" + fx(r.pH, 2) + "</b>" + (Math.abs(st.v - e[0] / 2) < 0.005 ? ". This is the half-equivalence point: the two are equal, so pH = pK<sub>a</sub>" + (acid ? "" : " of " + conj) + "." : "."));
+      }
+    } else if (r.region === "eq") {
+      if (a.strong) s.push("All " + aName + " has reacted; only Na<sup>+</sup>, Cl<sup>−</sup>, and water remain, so pH = <b>7.00</b>.");
+      else s.push("All " + aName + " has become " + F(a.conj) + " (" + Lab.sci(r.C, 3) + " M in " + mL(r.Vt) + "). " + F(a.conj) + " is a weak " + (acid ? "base" : "acid") + " with " + (acid ? "K<sub>b</sub>" : "K<sub>a</sub>") + " = K<sub>w</sub>/" + (acid ? "K<sub>a</sub>" : "K<sub>b</sub>") + " = " + sc(r.Kc, 2) + ": " + (acid ? "[OH⁻]" : "[H₃O⁺]") + " = " + sc(r.x, 3) + " M, so pH = <b>" + fx(r.pH, 2) + "</b>, " + (acid ? "above" : "below") + " 7.");
+    } else {
+      s.push("Excess " + tName + ": " + mm(r.nt - r.n0) + " mmol in " + mL(r.Vt) + ", so " + (acid ? "[OH⁻]" : "[H₃O⁺]") + " = " + Lab.sci(r.cx, 3) + " M and pH = <b>" + fx(r.pH, 2) + "</b>." + (a.strong ? "" : " The " + F(a.conj) + " present barely matters next to the excess."));
+    }
+    var diff = Math.abs(r.pH - ph);
+    if (diff > 0.05) s.push("<i>The full equilibrium (the curve) gives pH " + fx(ph, 2) + " here; the AP shortcut is rough this close to " + (r.region === "before" && st.v < e[0] / 2 ? "the start, where one buffer component is tiny" : "equivalence, where the excess is tiny") + ".</i>");
+    h += "<p><b>" + regionName + "</b> at " + mL(st.v) + " of " + tName + ".</p>";
+    h += "<ol class=\"steps\">" + s.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ol>";
+    var ic = indicatorCheck(st);
+    if (ic) {
+      var ind = IND[st.ind];
+      h += "<p><b>" + ind.name + "</b> (" + ind.col + ", pH " + ind.lo.toFixed(1) + "–" + ind.hi.toFixed(1) + ") changes color at about " + mL(Math.max(0, ic.vEnd)) + ", " + (ic.good ? "within two drops of equivalence: a good choice." : Math.abs(ic.err).toFixed(2) + " mL " + (ic.err < 0 ? "before" : "after") + " the equivalence point: a poor choice for this titration.") + "</p>";
+    }
+    var ap = a.strong ? "at the equivalence point of a strong acid–strong base titration, moles titrant = moles analyte and the pH is 7.00; use V<sub>eq</sub> and the titrant concentration to find the analyte concentration." :
+      acid ? "at ½V<sub>eq</sub>, [HA] = [A⁻] so pH = pK<sub>a</sub> (" + fx(pk, 2) + "); at V<sub>eq</sub> only A⁻ remains, so the pH is above 7." :
+      "at ½V<sub>eq</sub>, [B] = [BH⁺] so pH = pK<sub>a</sub> of BH⁺ (" + fx(pk, 2) + "); at V<sub>eq</sub> only BH⁺ remains, so the pH is below 7.";
+    h += "<p><b>AP answer:</b> " + ap + "</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  var el = function (id) { return document.getElementById(id); };
+  var pickBtns = {}, indBtns = {}, scBtns = {};
+  function rxnText(a) {
+    if (a.di) return "H<sub>2</sub>A + OH<sup>−</sup> → HA<sup>−</sup> + H<sub>2</sub>O, then HA<sup>−</sup> + OH<sup>−</sup> → A<sup>2−</sup> + H<sub>2</sub>O";
+    if (a.strong) return a.side === "acid" ? "H<sub>3</sub>O<sup>+</sup>(aq) + OH<sup>−</sup>(aq) → 2H<sub>2</sub>O(l)" : "OH<sup>−</sup>(aq) + H<sub>3</sub>O<sup>+</sup>(aq) → 2H<sub>2</sub>O(l)";
+    return a.side === "acid" ? F(a.f) + "(aq) + OH<sup>−</sup>(aq) → " + F(a.conj) + "(aq) + H<sub>2</sub>O(l)" : F(a.f) + "(aq) + H<sub>3</sub>O<sup>+</sup>(aq) → " + F(a.conj) + "(aq) + H<sub>2</sub>O(l)";
+  }
+  function render() {
+    var a = AN[S.an], xm = xmax(S);
+    S.v = Math.max(0, Math.min(xm, S.v));
+    var ev = el("s-v"); ev.max = xm; ev.value = S.v;
+    el("o-v").textContent = mL(S.v);
+    el("s-ca").value = S.ca; el("o-ca").textContent = S.ca.toFixed(3) + " M";
+    el("s-ct").value = S.ct; el("o-ct").textContent = S.ct.toFixed(3) + " M";
+    var weak = !a.strong && !a.di;
+    el("ctl-pk").hidden = !weak;
+    if (weak) {
+      var p = -Math.log10(S.K);
+      el("s-pk").value = p; el("o-pk").textContent = p.toFixed(2);
+      el("l-pk").innerHTML = a.side === "acid" ? "pK<sub>a</sub> of the weak acid" : "pK<sub>b</sub> of the weak base";
+      var named = Math.abs(S.K - a.K0) / a.K0 < 1e-6;
+      el("h-pk").innerHTML = named ? (a.side === "acid" ? "Acetic acid, K<sub>a</sub> = 1.8 × 10<sup>−5</sup>" : "Ammonia, K<sub>b</sub> = 1.8 × 10<sup>−5</sup>") : "A custom weak " + (a.side === "acid" ? "acid HA" : "base B") + ", K = " + sc(S.K, 2);
+    }
+    Object.keys(pickBtns).forEach(function (k) { pickBtns[k].setAttribute("aria-pressed", S.an === k ? "true" : "false"); });
+    Object.keys(indBtns).forEach(function (k) { indBtns[k].setAttribute("aria-pressed", S.ind === k ? "true" : "false"); });
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    el("b-half").disabled = !!a.strong;
+    el("rxn").innerHTML = rxnText(a);
+    var ph = drawCurve(S);
+    drawSpec(S);
+    var e = veq(S), r = apPoint(S, S.v);
+    el("r-v").textContent = mL(S.v);
+    el("r-v2").textContent = "V(eq) = " + e.map(function (x) { return x.toFixed(2); }).join(" and ") + " mL";
+    el("r-ph").textContent = fx(ph, 2);
+    el("r-ph2").textContent = a.di ? "from the full equilibrium" : "AP method: " + fx(r.pH, 2);
+    var regTxt = a.di ? { start: "Start", buf1: "Buffer 1", eq1: "Eq. point 1", buf2: "Buffer 2", eq2: "Eq. point 2", after: "Excess OH⁻" }[r.region] :
+      { start: "Start", before: a.strong ? "Before eq." : "Buffer", eq: "Equivalence", after: "Past eq." }[r.region];
+    el("r-reg").textContent = regTxt;
+    el("r-reg2").textContent = (S.v / e[0] * 100).toFixed(0) + "% of the way to " + (a.di ? "the first " : "") + "equivalence";
+    var ic = indicatorCheck(S), ind = IND[S.ind];
+    if (!ic) { el("r-ind").textContent = "None"; el("r-ind2").textContent = "pick one to test it"; }
+    else {
+      var colNow = ph < ind.lo ? ind.col.split(" → ")[0] : ph > ind.hi ? ind.col.split(" → ")[1] : "changing";
+      el("r-ind").textContent = colNow;
+      el("r-ind2").textContent = ind.name + (ic.good ? ": good choice" : ": poor choice here");
+    }
+    el("story").innerHTML = story(S, ph);
+  }
+  Object.keys(AN).forEach(function (k) {
+    var a = AN[k]; if (a.Ka) a.K0 = a.Ka; if (a.Kb) a.K0 = a.Kb;
+    var b = document.createElement("button"); b.type = "button"; b.textContent = a.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S.an = k; S.key = null; if (a.K0) S.K = a.K0; S.v = 0; render(); });
+    el("pick").appendChild(b); pickBtns[k] = b;
+  });
+  Object.keys(IND).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = IND[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S.ind = k; S.key = null; render(); });
+    el("ind").appendChild(b); indBtns[k] = b;
+  });
+  el("s-v").addEventListener("input", function () { S.v = parseFloat(el("s-v").value); S.key = null; render(); });
+  el("s-ca").addEventListener("input", function () { S.ca = parseFloat(el("s-ca").value); S.key = null; render(); });
+  el("s-ct").addEventListener("input", function () { S.ct = parseFloat(el("s-ct").value); S.key = null; render(); });
+  el("s-pk").addEventListener("input", function () { S.K = Math.pow(10, -parseFloat(el("s-pk").value)); S.key = null; render(); });
+  function bump(d) { S.v = roundTo(S.v + d, 2); S.key = null; render(); }
+  el("b-m1").addEventListener("click", function () { bump(-1); });
+  el("b-drop").addEventListener("click", function () { bump(0.05); });
+  el("b-p1").addEventListener("click", function () { bump(1); });
+  el("b-half").addEventListener("click", function () { var e = veq(S); S.v = roundTo(S.v > e[0] - 1e-9 && AN[S.an].di ? (e[0] + e[1]) / 2 : e[0] / 2, 4); S.key = null; render(); });
+  el("b-eq").addEventListener("click", function () { var e = veq(S); S.v = roundTo(S.v > e[0] - 1e-9 && e.length > 1 ? e[1] : e[0], 4); S.key = null; render(); });
+
+  // ---------- Scenarios ----------
+  var SC = [
+    { k: "sa", name: "HCl + NaOH: equivalence", set: { an: "sa", ca: 0.100, ct: 0.100, v: 25.00, ind: "btb" }, expect: { ap: "7.00", region: "eq" } },
+    { k: "wa0", name: "CH₃COOH: before any NaOH", set: { an: "wa", ca: 0.100, ct: 0.100, v: 0, ind: "pp" }, expect: { ap: "2.87", region: "start" } },
+    { k: "wah", name: "CH₃COOH: half-equivalence", set: { an: "wa", ca: 0.100, ct: 0.100, v: 12.50, ind: "pp" }, expect: { ap: "4.74", region: "before" } },
+    { k: "wae", name: "CH₃COOH: equivalence", set: { an: "wa", ca: 0.100, ct: 0.100, v: 25.00, ind: "pp" }, expect: { ap: "8.72", region: "eq" } },
+    { k: "wax", name: "CH₃COOH: 5.00 mL past", set: { an: "wa", ca: 0.100, ct: 0.100, v: 30.00, ind: "pp" }, expect: { ap: "11.96", region: "after" } },
+    { k: "bad", name: "Wrong indicator: methyl red", set: { an: "wa", ca: 0.100, ct: 0.100, v: 20.00, ind: "mr" }, expect: { badInd: true } },
+    { k: "wbe", name: "NH₃ + HCl: equivalence", set: { an: "wb", ca: 0.100, ct: 0.100, v: 25.00, ind: "mr" }, expect: { ap: "5.28", region: "eq" } },
+    { k: "di", name: "Diprotic acid: two jumps", set: { an: "di", ca: 0.100, ct: 0.100, v: 12.50, ind: "none" }, expect: { region: "buf1" } }
+  ];
+  SC.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { for (var k in x.set) S[k] = x.set[k]; if (AN[S.an].K0) S.K = AN[S.an].K0; S.key = x.k; render(); });
+    el("sc").appendChild(b); scBtns[x.k] = b;
+  });
+  function stOf(set) { var s = { an: "wa", ca: 0.1, ct: 0.1, v: 0, K: 1.8e-5, ind: "pp" }; for (var k in set) s[k] = set[k]; if (AN[s.an].K0 && !set.K) s.K = AN[s.an].K0; return s; }
+
+  // ---------- Tables (generated) ----------
+  (function () {
+    var pts = [
+      [0, "Start (0 mL)", "CH₃COOH", "Weak acid alone: x = √(K<sub>a</sub>C)"],
+      [12.5, "Half-equivalence (12.50 mL)", "CH₃COOH = CH₃COO⁻", "pH = pK<sub>a</sub>"],
+      [25, "Equivalence (25.00 mL)", "CH₃COO⁻ (and Na⁺)", "K<sub>b</sub> = K<sub>w</sub>/K<sub>a</sub>, x = √(K<sub>b</sub>C)"],
+      [30, "Past equivalence (30.00 mL)", "OH⁻ and CH₃COO⁻", "[OH⁻] = excess mol ÷ total V"]
+    ];
+    el("tbl").innerHTML = pts.map(function (p) {
+      var w = apPoint(stOf({ an: "wa" }), p[0]), s = apPoint(stOf({ an: "sa" }), p[0]);
+      return "<tr><td>" + p[1] + "</td><td>" + p[2] + "</td><td>" + p[3] + "</td><td><b>" + fx(w.pH, 2) + "</b></td><td>" + fx(s.pH, 2) + "</td></tr>";
+    }).join("");
+    var good = { mo: "Weak base + strong acid; strong + strong at about 0.1 M", mr: "Weak base + strong acid (equivalence below 7); strong + strong", btb: "Strong acid + strong base (equivalence at 7)", pp: "Weak acid + strong base (equivalence above 7); strong + strong" };
+    el("tbl-ind").innerHTML = ["mo", "mr", "btb", "pp"].map(function (k) { var i = IND[k]; return "<tr><td>" + i.name + "</td><td>" + i.col + "</td><td><b>" + i.lo.toFixed(1) + "–" + i.hi.toFixed(1) + "</b></td><td>" + good[k] + "</td></tr>"; }).join("");
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "A 25.00 mL sample of a weak monoprotic acid HA is titrated with 0.100 M NaOH. The equivalence point is reached at 20.00 mL. What was the concentration of HA?",
+      o: ["0.125 M", "0.100 M", "0.0800 M", "0.0400 M"], c: 2,
+      w: "At the equivalence point, mol NaOH = mol HA = 0.100 M × 0.02000 L = 2.00 × 10⁻³ mol, and [HA] = 2.00 × 10⁻³ mol ÷ 0.02500 L = 0.0800 M. The acid being weak does not change this 1 : 1 mole relationship. Choice A divides the volumes the wrong way; choice D uses the half-equivalence volume." },
+    { s: "In the titration of a weak acid HA with NaOH, the pH at the half-equivalence point is 4.20. What is Ka for HA?",
+      o: ["6.3 × 10⁻⁵", "4.20", "1.6 × 10⁻¹⁰", "6.3 × 10⁻³"], c: 0,
+      w: "At the half-equivalence point [HA] = [A⁻], so pH = pKa = 4.20, and Ka = 10⁻⁴·²⁰ = 6.3 × 10⁻⁵. Choice B is the pKa, not Ka. Choice C (10⁻⁹·⁸⁰) is Kb for A⁻." },
+    { s: "Why is the pH at the equivalence point of a CH₃COOH–NaOH titration greater than 7?",
+      o: ["Excess NaOH is present at the equivalence point.", "Some CH₃COOH remains un-ionized at the equivalence point.", "Na⁺ ions react with water to produce OH⁻.", "CH₃COO⁻ reacts with water: CH₃COO⁻ + H₂O ⇌ CH₃COOH + OH⁻."], c: 3,
+      w: "At equivalence, all the acetic acid has been converted to acetate, which is the conjugate base of a weak acid and accepts protons from water, producing OH⁻. Choice A is false by definition: no excess titrant at equivalence. Na⁺ (choice C) is a spectator." },
+    { s: "A weak acid with Ka = 1.8 × 10⁻⁵ is titrated with NaOH, and the pH at the equivalence point is 8.72. Which indicator is the best choice?",
+      o: ["Methyl orange (pH 3.1–4.4)", "Phenolphthalein (pH 8.2–10.0)", "Methyl red (pH 4.4–6.2)", "Bromocresol green (pH 3.8–5.4)"], c: 1,
+      w: "The indicator's color-change range should include the pH at the equivalence point, which sits in the steep part of the curve. Only phenolphthalein's range includes 8.72. The other three would change color in the buffer region, well before equivalence." },
+    { s: "A solution of NH₃ (Kb = 1.8 × 10⁻⁵) is titrated with HCl. Which statement describes the solution at the half-equivalence point?",
+      o: ["[NH₃] = [H₃O⁺], and the pH is 4.74.", "[NH₃] = [NH₄⁺], and the pH is about 9.26.", "Only NH₄⁺ is present, and the pH is below 7.", "[NH₄⁺] = [Cl⁻] = [OH⁻], and the pH is 7.00."], c: 1,
+      w: "Halfway to equivalence, half the NH₃ has become NH₄⁺, so the two are equal and pH = pKa of NH₄⁺ = 14.00 − 4.74 = 9.26. Choice A uses pKb as if it were the pH. Choice C describes the equivalence point." },
+    { s: "A titration curve for 25.0 mL of an acid with 0.10 M NaOH shows two distinct steep rises, at 20.0 mL and 40.0 mL. Which conclusion is best supported?",
+      o: ["The acid is a strong monoprotic acid.", "The acid is monoprotic, and 40.0 mL is the half-equivalence point.", "Between 0 and 20.0 mL the major species are HA⁻ and A²⁻.", "The acid is diprotic, and between 0 and 20.0 mL the major species are H₂A and HA⁻."], c: 3,
+      w: "Two equivalence points, the second at twice the volume of the first, mean two acidic protons removed one at a time. Before the first equivalence point, OH⁻ converts H₂A to HA⁻, so those two dominate. HA⁻ and A²⁻ (choice C) dominate between 20.0 and 40.0 mL." },
+    { s: "A student titrates a weak acid with NaOH. Which change would NOT change the volume of NaOH needed to reach the equivalence point?",
+      o: ["Adding 25 mL of distilled water to the acid in the flask", "Using an acid sample with twice the concentration", "Using NaOH with half the concentration", "Pipetting twice the volume of the acid sample"], c: 0,
+      w: "The equivalence point depends only on the moles of acid and the concentration of NaOH. Adding water changes neither, although it raises the starting pH slightly. Choices B and D double the moles of acid, and choice C halves the moles of NaOH per mL; each doubles V(eq)." },
+    { s: "Equal volumes of 0.10 M HCl and 0.10 M CH₃COOH are titrated separately with 0.10 M NaOH. Which comparison of the two titration curves is correct?",
+      o: ["The CH₃COOH titration needs less NaOH to reach equivalence.", "Both curves have an equivalence point at pH 7.", "The CH₃COOH curve starts at a higher pH and has an equivalence point above pH 7, but both need the same volume of NaOH.", "The HCl curve has a buffer region centered at pH 4.74."], c: 2,
+      w: "Equal moles of acid need equal moles of NaOH, so V(eq) is the same. The weak acid starts higher (2.87 vs 1.00), has a buffer region around pKa = 4.74, and ends at pH 8.72 at equivalence because of the acetate ion. Choice A confuses strength with amount." }
+  ];
+  Lab.quiz(Q, el("quiz"), el("score"), el("quiz-reset"));
+  Lab.nav("8.5");
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    // the curve is self-consistent: pH -> V -> pH round trips, and V rises with pH (acids) or falls (bases)
+    Object.keys(AN).forEach(function (k) {
+      var st = stOf({ an: k }), last = null;
+      for (var p = 1; p <= 13; p += 0.5) {
+        var v = vOfH(st, Math.pow(10, -p));
+        if (!isFinite(v) || v < 0 || v > 200) continue;
+        if (Math.abs(pHat(st, v) - p) > 1e-6) bad.push(k + " round trip at pH " + p);
+        if (last != null && (AN[k].side === "acid" ? v < last : v > last)) bad.push(k + " curve not monotonic at pH " + p);
+        last = v;
+      }
+    });
+    // AP method agrees with the exact curve away from the start and the equivalence point
+    ["sa", "wa", "wb", "sb"].forEach(function (k) {
+      var st = stOf({ an: k }), e = veq(st)[0];
+      [0.2, 0.35, 0.5, 0.65, 0.8, 0.9, 1.1, 1.3, 1.5].forEach(function (f) {
+        var V = e * f, r = apPoint(st, V), ex = pHat(st, V);
+        if (Math.abs(r.pH - ex) > 0.03) bad.push(k + " AP vs curve at " + V.toFixed(2) + " mL: " + r.pH.toFixed(3) + " vs " + ex.toFixed(3));
+      });
+      var r0 = apPoint(st, 0), req = apPoint(st, e);
+      if (Math.abs(r0.pH - pHat(st, 0)) > 0.02) bad.push(k + " start");
+      if (Math.abs(req.pH - pHat(st, e)) > 0.02) bad.push(k + " equivalence");
+    });
+    // equivalence volumes and the diprotic half-equivalence pH values
+    var d = stOf({ an: "di" }), de = veq(d);
+    if (Math.abs(de[0] - 25) > 1e-9 || Math.abs(de[1] - 50) > 1e-9) bad.push("diprotic V(eq)");
+    if (Math.abs(pHat(d, 37.5) - 8.00) > 0.05) bad.push("diprotic pKa2 at second half-equivalence: " + pHat(d, 37.5));
+    if (Math.abs(pHat(d, 12.5) - 3.00) > 0.25) bad.push("diprotic pKa1 region: " + pHat(d, 12.5));
+    // scenarios
+    SC.forEach(function (x) {
+      var st = stOf(x.set), r = apPoint(st, st.v), e = x.expect;
+      if (e.ap && fx(r.pH, 2) !== e.ap) bad.push(x.k + " AP pH " + fx(r.pH, 2) + " vs " + e.ap);
+      if (e.region && r.region !== e.region) bad.push(x.k + " region " + r.region);
+      if (e.badInd && indicatorCheck(st).good) bad.push(x.k + " indicator should be poor");
+    });
+    if (!indicatorCheck(stOf({ an: "wa", ind: "pp" })).good) bad.push("phenolphthalein should suit CH3COOH");
+    if (!indicatorCheck(stOf({ an: "sa", ind: "btb" })).good) bad.push("bromothymol blue should suit HCl");
+    if (!indicatorCheck(stOf({ an: "wb", ind: "mr" })).good) bad.push("methyl red should suit NH3");
+    // quiz arithmetic
+    if (Lab.sig(0.100 * 20.00 / 25.00, 3) !== "0.0800") bad.push("quiz 1");
+    if (Lab.sig(Math.pow(10, -4.20) * 1e5, 2) !== "6.3" || Lab.sig(Math.pow(10, -9.80) * 1e10, 2) !== "1.6") bad.push("quiz 2");
+    if (fx(14 + Math.log10(1.8e-5), 2) !== "9.26") bad.push("quiz 5");
+    var used = {}; Q.forEach(function (q) { used[q.c] = 1; if (q.o.length !== 4) bad.push("quiz options"); });
+    if (Object.keys(used).length < 4) bad.push("answer letters do not vary");
+    if (bad.length) console.error("8.5 self-check failed: " + bad.slice(0, 8).join("; "));
+  })();
+
+  document.querySelector("#sc button").click();
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [8], topic: "8.5", compact: true, storageKey: "topic-8.5" });</script>
+</body>
+</html>

@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pH and pKa Study Lab</title>
+<meta name="description" content="Slide the pH past a weak acid's pKa and watch HA turn into A⁻ particle by particle, see indicators change color, and pick the right indicator for three titrations.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+/* Indicator colors are physical colors, so they stay the same in light and dark mode. */
+:root { --ind-red: #d23a2e; --ind-yel: #e2b400; --ind-blue: #2f6fd6; --ind-pink: #e0559b; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.ctlcard { display: grid; gap: 16px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.ctlcard .controls { grid-template-columns: 1fr; }
+.note { font-size: .82rem; color: var(--muted); }
+.fb { font-size: .92rem; }
+.fb.ok { color: var(--good); } .fb.no { color: var(--bad); } .fb.meh { color: var(--c1); }
+.chooser { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; align-items: start; }
+.chooser .side { display: grid; gap: 12px; }
+@media (max-width: 860px) { .chooser { grid-template-columns: 1fr; } }
+svg .ptxt { font-family: var(--body); font-size: 10px; font-weight: 600; fill: var(--surface); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 8 · Topic 8.7</span>
+  <h1>pH and pKa Study Lab</h1>
+  <p class="lede">Whether a weak acid exists mostly as HA or mostly as A<sup>−</sup> depends on one comparison: the pH of the solution against the pK<sub>a</sub> of the acid. Below the pK<sub>a</sub>, the protonated form wins; above it, the deprotonated form wins. Slide the pH, watch the particles switch, see why indicators change color, and choose the right indicator for a titration.</p>
+</header>
+
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The protonation-state explorer</h2>
+    <p>Pick a weak acid or an indicator, then move the pH. The pH is held fixed by the rest of the solution (as if a strong acid or base had been added); the weak acid itself is present at a low concentration and just responds to it. The beaker shows 20 representative particles; water and H<sub>3</sub>O<sup>+</sup> are not drawn.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3><span>Percent in each form vs. pH</span> <small id="dist-sub"></small></h3>
+      <svg class="chart" id="dist" role="img" aria-label="Percent of the weak acid present as HA and as A minus, plotted against pH, with a line at the current pH"></svg>
+    </div>
+    <div class="card graph-card">
+      <h3><span>Particle view</span> <small id="part-sub">20 particles; water not shown</small></h3>
+      <svg class="chart particles" id="part" role="img" aria-label="Beaker with particles of the protonated and deprotonated forms"></svg>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <div class="tag">Exam scenarios</div>
+      <div class="scenarios" id="sc"></div>
+    </div>
+    <div class="group">
+      <div class="tag">Weak acid or indicator</div>
+      <div class="chips" id="sp"></div>
+      <div class="eqn" id="eqn"></div>
+    </div>
+    <div class="controls">
+      <div class="ctl">
+        <label for="s-ph">Solution pH <output id="o-ph"></output></label>
+        <input type="range" id="s-ph" min="0" max="14" step="0.05">
+        <span class="hint" id="h-ph"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend">
+      <span class="l-c2" id="lg-ha">HA (protonated)</span>
+      <span class="l-c4" id="lg-a">A⁻ (deprotonated)</span>
+      <span class="l-ad">Current pH</span>
+      <span class="l-ghost">pKa</span>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">pH − pK<sub>a</sub></div><div class="v" id="r-d"></div><div class="sub" id="r-d2"></div></div>
+    <div class="stat"><div class="k" id="r-ratio-k">[A<sup>−</sup>] / [HA]</div><div class="v" id="r-ratio"></div><div class="sub">= 10<sup>(pH − pKa)</sup></div></div>
+    <div class="stat"><div class="k">Percent in each form</div><div class="v" id="r-pct"></div><div class="sub" id="r-pct2"></div></div>
+    <div class="stat"><div class="k">Predominant form</div><div class="v" id="r-pre"></div><div class="sub" id="r-pre2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+
+  <div class="card">
+    <div class="chooser">
+      <div class="graph-card">
+        <h3><span>Choosing an indicator</span> <small>25.00 mL of 0.100 M analyte, 0.100 M titrant</small></h3>
+        <svg class="chart" id="tit" role="img" aria-label="Titration curve with the selected indicator's color-change range shaded and the equivalence point marked"></svg>
+      </div>
+      <div class="side">
+        <div class="group">
+          <div class="tag">Titration</div>
+          <div class="chips" id="tt"></div>
+        </div>
+        <div class="group">
+          <div class="tag">Indicator (color change over about pK<sub>a</sub> ± 1)</div>
+          <div class="chips" id="ti"></div>
+        </div>
+        <div class="fb" id="tfb" aria-live="polite"></div>
+        <p class="note">Curves are computed from K<sub>a</sub> = 1.8 × 10<sup>−5</sup> for CH<sub>3</sub>COOH and K<sub>b</sub> = 1.8 × 10<sup>−5</sup> for NH<sub>3</sub>. Indicator pK<sub>a</sub> values are typical textbook values; real transition ranges are not exactly pK<sub>a</sub> ± 1.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">The rule</span><h3>Compare pH with pK<sub>a</sub></h3><p>If pH &lt; pK<sub>a</sub>, [HA] &gt; [A<sup>−</sup>]: the protonated form predominates. If pH &gt; pK<sub>a</sub>, [A<sup>−</sup>] &gt; [HA]. If pH = pK<sub>a</sub>, the two are equal. This comparison is how the CED asks you to predict the predominant form.</p></div>
+    <div class="card"><span class="tag">Why it works</span><h3>K<sub>a</sub> fixes the ratio</h3><p>K<sub>a</sub> = [H<sub>3</sub>O<sup>+</sup>][A<sup>−</sup>]/[HA], so [A<sup>−</sup>]/[HA] = K<sub>a</sub>/[H<sub>3</sub>O<sup>+</sup>]. When [H<sub>3</sub>O<sup>+</sup>] is larger than K<sub>a</sub> (pH below pK<sub>a</sub>), the ratio is less than 1. Each pH unit changes the ratio tenfold.</p></div>
+    <div class="card"><span class="tag">Le Châtelier view</span><h3>Lots of H<sub>3</sub>O<sup>+</sup> pushes protons on</h3><p>In HA + H<sub>2</sub>O ⇌ H<sub>3</sub>O<sup>+</sup> + A<sup>−</sup>, a low pH means a high [H<sub>3</sub>O<sup>+</sup>], which drives A<sup>−</sup> back to HA. A high pH means OH<sup>−</sup> removes protons, which favors A<sup>−</sup>.</p></div>
+    <div class="card"><span class="tag">Weak bases too</span><h3>Use the conjugate acid's pK<sub>a</sub></h3><p>For NH<sub>3</sub>, compare the pH with the pK<sub>a</sub> of NH<sub>4</sub><sup>+</sup> (9.26). Below 9.26, NH<sub>4</sub><sup>+</sup> predominates; above it, NH<sub>3</sub> does. Get pK<sub>a</sub> from pK<sub>b</sub> with pK<sub>a</sub> + pK<sub>b</sub> = 14.</p></div>
+    <div class="card"><span class="tag">Indicators</span><h3>A weak acid with two colors</h3><p>An indicator HIn has one color and In<sup>−</sup> another. Its color tells you which form predominates, so the color change happens near pH = pK<sub>a</sub> of the indicator, over roughly two pH units.</p></div>
+    <div class="card"><span class="tag">Titrations</span><h3>Match pK<sub>a</sub> to the equivalence pH</h3><p>Choose an indicator whose pK<sub>a</sub> is close to the pH at the equivalence point. Then the color change (end point) happens at the equivalence point. Weak acid with strong base: equivalence pH &gt; 7. Weak base with strong acid: &lt; 7.</p></div>
+  </div>
+</section>
+
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. pH vs. pK<sub>a</sub> cheat sheet</h2>
+    <p>The ratio row follows from the Henderson–Hasselbalch equation on the equations sheet. For predominance questions you only need the sign of pH − pK<sub>a</sub>.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>pH − pK<sub>a</sub></th><th>[A<sup>−</sup>] : [HA]</th><th>Percent A<sup>−</sup></th><th>Predominant form</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Indicator</th><th>pK<sub>a</sub> (typical)</th><th>Acid form (HIn)</th><th>Base form (In<sup>−</sup>)</th><th>Good for</th></tr></thead>
+    <tbody>
+      <tr><td>Methyl red</td><td>5.0</td><td>red</td><td>yellow</td><td>Weak base titrated with strong acid (equivalence pH about 5)</td></tr>
+      <tr><td>Bromothymol blue</td><td>7.1</td><td>yellow</td><td>blue</td><td>Strong acid with strong base (equivalence pH 7)</td></tr>
+      <tr><td>Phenolphthalein</td><td>9.3</td><td>colorless</td><td>pink</td><td>Weak acid titrated with strong base (equivalence pH about 8–9)</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. pH and pK<sub>a</sub> on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>State both numbers and the comparison: "pH 7.40 is greater than the pK<sub>a</sub> of 4.74, so [CH<sub>3</sub>COO<sup>−</sup>] &gt; [CH<sub>3</sub>COOH]."</li>
+        <li>Name the species with formulas, not just "the acid form."</li>
+        <li>For a weak base, convert first: pK<sub>a</sub>(BH<sup>+</sup>) = 14.00 − pK<sub>b</sub>(B), then compare.</li>
+        <li>For indicator choice, give the equivalence-point pH and say the indicator's pK<sub>a</sub> is close to it.</li>
+        <li>To explain a color, say which form of the indicator predominates at that pH and what color that form has.</li>
+        <li>If asked to read pK<sub>a</sub> from a titration curve, it equals the pH at half the equivalence volume.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Thinking "acidic solution means HA predominates." HCOOH (pK<sub>a</sub> 3.75) at pH 4.5 is mostly HCOO<sup>−</sup>, even though the solution is acidic.</li>
+        <li>Comparing the pH with 7 instead of with the pK<sub>a</sub>.</li>
+        <li>Using pK<sub>b</sub> of NH<sub>3</sub> (4.74) as if it were the pK<sub>a</sub> of NH<sub>4</sub><sup>+</sup>.</li>
+        <li>Saying the indicator should change color "at pH 7" for every titration. Only strong–strong titrations have an equivalence pH of 7.</li>
+        <li>Saying that at pH = pK<sub>a</sub> the acid is "half strong" or "neutral." It means [HA] = [A<sup>−</sup>], nothing more.</li>
+        <li>Forgetting the direction: higher pH (fewer H<sub>3</sub>O<sup>+</sup>) means more of the deprotonated form.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 8.7. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-8.html">Unit 8 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var Kw = Lab.CONST.Kw;
+
+  // ---------- Species ----------
+  // ha / a: protonated and deprotonated formulas; Ka or pKa; ind: indicator colors [acid form, base form] (null = colorless)
+  var SP = {
+    hac:  { name: "Acetic acid", ha: "CH3COOH", a: "CH3COO^-", Ka: 1.8e-5, shortHA: "HA", shortA: "A⁻" },
+    hf:   { name: "Hydrofluoric acid", ha: "HF", a: "F^-", Ka: 6.8e-4, shortHA: "HF", shortA: "F⁻" },
+    hocl: { name: "Hypochlorous acid", ha: "HOCl", a: "OCl^-", Ka: 3.0e-8, shortHA: "HA", shortA: "A⁻" },
+    nh4:  { name: "Ammonium / ammonia", ha: "NH4^+", a: "NH3", Ka: Kw / 1.8e-5, shortHA: "BH⁺", shortA: "B", base: true },
+    mr:   { name: "Methyl red", ha: "HIn", a: "In^-", pKa: 5.0, ind: ["var(--ind-red)", "var(--ind-yel)"], cn: ["red", "yellow"], shortHA: "HIn", shortA: "In⁻" },
+    btb:  { name: "Bromothymol blue", ha: "HIn", a: "In^-", pKa: 7.1, ind: ["var(--ind-yel)", "var(--ind-blue)"], cn: ["yellow", "blue"], shortHA: "HIn", shortA: "In⁻" },
+    php:  { name: "Phenolphthalein", ha: "HIn", a: "In^-", pKa: 9.3, ind: [null, "var(--ind-pink)"], cn: ["colorless", "pink"], shortHA: "HIn", shortA: "In⁻" }
+  };
+  var SORDER = ["hac", "hf", "hocl", "nh4", "mr", "btb", "php"];
+  function pKa(s) { return s.Ka ? -Math.log10(s.Ka) : s.pKa; }
+  function pka2(s) { return (Math.round(pKa(s) * 100) / 100).toFixed(2); }
+  function fracA(s, pH) { return 1 / (1 + Math.pow(10, pKa(s) - pH)); }
+  function F(x) { return Lab.fmla(x); }
+
+  var SCN = [
+    { id: "eq",    name: "Acetic acid at pH = pKa", sp: "hac", pH: 4.74 },
+    { id: "stom",  name: "Acetic acid in stomach acid (pH 1.5)", sp: "hac", pH: 1.5 },
+    { id: "blood", name: "Acetic acid in blood (pH 7.4)", sp: "hac", pH: 7.4 },
+    { id: "acid",  name: "HF at pH 4.5: acidic, yet F⁻ wins", sp: "hf", pH: 4.5 },
+    { id: "nh",    name: "Ammonia at pH 7", sp: "nh4", pH: 7.0 },
+    { id: "btb",   name: "Bromothymol blue at pH 6.1 and 8.1", sp: "btb", pH: 6.1, flip: 8.1 },
+    { id: "php",   name: "Phenolphthalein at pH 8", sp: "php", pH: 8.0 }
+  ];
+
+  var st = { sp: "hac", pH: 4.74, scn: "eq" };
+
+  // ---------- Distribution plot ----------
+  var svgD = document.getElementById("dist");
+  function drawDist() {
+    var s = SP[st.sp], pk = pKa(s);
+    var Fr = Lab.frame(svgD, { x: [0, 14], y: [0, 100], width: 440, height: 300, xTicks: [0, 2, 4, 6, 8, 10, 12, 14], yTicks: [0, 25, 50, 75, 100],
+      fmtX: function (v) { return v; }, fmtY: function (v) { return v + "%"; }, xLabel: "pH", yLabel: "percent of total" });
+    if (s.ind) {
+      Lab.rect(Fr, pk - 1, 0, pk + 1, 100, "var(--accent)", 0.08);
+      Lab.tag(Fr, pk, 96, "color change", "var(--muted)", "middle");
+    }
+    Lab.vline(Fr, pk, "var(--ghost)", 1.5, "6 4");
+    Lab.fn(Fr, function (x) { return 100 * (1 - fracA(s, x)); }, "var(--c2)", 3, null, 140);
+    Lab.fn(Fr, function (x) { return 100 * fracA(s, x); }, "var(--c4)", 3, null, 140);
+    Lab.vline(Fr, st.pH, "var(--accent)", 2);
+    var fa = fracA(s, st.pH);
+    Lab.dot(Fr, st.pH, 100 * (1 - fa), "var(--c2)");
+    Lab.dot(Fr, st.pH, 100 * fa, "var(--c4)");
+    Lab.tag(Fr, pk + 0.15, 6, "pKa " + pka2(s), "var(--muted)");
+    var lx = pk > 7 ? 0.3 : 13.7, an = pk > 7 ? "start" : "end";
+    Lab.tag(Fr, lx, pk > 7 ? 88 : 12, s.shortHA, "var(--c2)", an);
+    Lab.tag(Fr, lx, pk > 7 ? 12 : 88, s.shortA, "var(--c4)", an);
+    document.getElementById("dist-sub").textContent = s.name + ", pKa " + pka2(s);
+  }
+
+  // ---------- Particle beaker ----------
+  var svgP = document.getElementById("part");
+  var SPOTS = (function () {
+    var out = [], seed = 11;
+    function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+    for (var r = 0; r < 4; r++) for (var c = 0; c < 5; c++) out.push([125 + c * 50 + (rnd() - 0.5) * 18, 120 + r * 42 + (rnd() - 0.5) * 12]);
+    // shuffle so converted particles are scattered
+    for (var i = out.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)); var t = out[i]; out[i] = out[j]; out[j] = t; }
+    return out;
+  })();
+  function drawPart() {
+    var s = SP[st.sp], fa = fracA(s, st.pH), nA = Math.round(20 * fa);
+    svgP.setAttribute("viewBox", "0 0 440 300");
+    while (svgP.firstChild) svgP.removeChild(svgP.firstChild);
+    var g = Lab.el("g", {}, svgP);
+    // beaker
+    var path = "M95 70 L95 270 Q95 284 109 284 L331 284 Q345 284 345 270 L345 70";
+    if (s.ind) {
+      if (s.ind[0]) Lab.el("rect", { x: 96, y: 96, width: 248, height: 186, fill: s.ind[0], opacity: (0.42 * (1 - fa)).toFixed(3) }, g);
+      if (s.ind[1]) Lab.el("rect", { x: 96, y: 96, width: 248, height: 186, fill: s.ind[1], opacity: (0.42 * fa).toFixed(3) }, g);
+    } else Lab.el("rect", { x: 96, y: 96, width: 248, height: 186, fill: "var(--accent)", opacity: 0.05 }, g);
+    Lab.el("line", { x1: 96, y1: 96, x2: 344, y2: 96, stroke: "var(--ghost)", "stroke-width": 1.5 }, g);
+    Lab.el("path", { d: path, fill: "none", stroke: "var(--ink)", "stroke-width": 2.5 }, g);
+    SPOTS.forEach(function (p, i) {
+      var isA = i < nA;
+      if (isA) {
+        Lab.el("circle", { cx: p[0], cy: p[1], r: 13, fill: "var(--c4)" }, g);
+        Lab.el("text", { x: p[0], y: p[1] + 4, "text-anchor": "middle", "class": "ptxt" }, g, "−");
+      } else {
+        Lab.el("circle", { cx: p[0], cy: p[1], r: 13, fill: "var(--c2)" }, g);
+        Lab.el("circle", { cx: p[0] + 11, cy: p[1] - 10, r: 6, fill: "var(--c1)" }, g);
+        if (s.base) Lab.el("text", { x: p[0], y: p[1] + 4, "text-anchor": "middle", "class": "ptxt" }, g, "+");
+      }
+    });
+    // key
+    Lab.el("circle", { cx: 110, cy: 32, r: 9, fill: "var(--c2)" }, g);
+    Lab.el("circle", { cx: 118, cy: 25, r: 4.5, fill: "var(--c1)" }, g);
+    Lab.el("text", { x: 130, y: 36, "class": "lbl", style: "fill:var(--ink)" }, g, uni(s.ha) + " (with H)");
+    Lab.el("circle", { cx: 260, cy: 32, r: 9, fill: "var(--c4)" }, g);
+    Lab.el("text", { x: 275, y: 36, "class": "lbl", style: "fill:var(--ink)" }, g, uni(s.a));
+    Lab.el("text", { x: 220, y: 60, "text-anchor": "middle" }, g, (20 - nA) + " " + uni(s.ha) + " and " + nA + " " + uni(s.a) + " (rounded to whole particles)");
+    if (s.ind) {
+      var col = fa > 0.9 ? s.cn[1] : fa < 0.1 ? s.cn[0] : "a mix of " + s.cn[0] + " and " + s.cn[1];
+      Lab.el("text", { x: 220, y: 298, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, g, "Solution looks " + col);
+    }
+  }
+  function uni(f) {
+    var SUB = "₀₁₂₃₄₅₆₇₈₉", m = String(f).match(/\^([0-9]*)([+\-])$/), ch = "";
+    if (m) { ch = (m[2] === "+" ? "⁺" : "⁻"); f = f.slice(0, m.index); }
+    return f.replace(/([A-Za-z\)])(\d+)/g, function (a, b, d) { return b + d.split("").map(function (x) { return SUB[+x]; }).join(""); }) + ch;
+  }
+
+  // ---------- Readouts and story ----------
+  function ratioTxt(r) {
+    if (r >= 1) return (r >= 100 ? Lab.sci(r, 2) : Lab.sig(r, 2)) + " : 1";
+    var inv = 1 / r; return "1 : " + (inv >= 100 ? Lab.sci(inv, 2) : Lab.sig(inv, 2));
+  }
+  function pctPair(fa) {
+    function p(x) { x *= 100; return x >= 99.95 ? ">99.9" : x < 0.05 ? "<0.1" : x.toFixed(1); }
+    return p(1 - fa) + "% / " + p(fa) + "%";
+  }
+  function readouts() {
+    var s = SP[st.sp], pk = pKa(s), d = st.pH - pk, fa = fracA(s, st.pH), r = Math.pow(10, d);
+    document.getElementById("r-d").textContent = (d >= 0 ? "+" : "−") + Math.abs(d).toFixed(2);
+    document.getElementById("r-d2").textContent = Math.abs(d) < 0.005 ? "pH equals pKa" : d < 0 ? "pH is below pKa" : "pH is above pKa";
+    document.getElementById("r-ratio-k").innerHTML = "[" + F(s.a) + "] : [" + F(s.ha) + "]";
+    document.getElementById("r-ratio").innerHTML = ratioTxt(r);
+    document.getElementById("r-pct").innerHTML = pctPair(fa);
+    document.getElementById("r-pct2").innerHTML = F(s.ha) + " / " + F(s.a);
+    var pre = Math.abs(d) < 0.005 ? "neither" : d < 0 ? F(s.ha) : F(s.a);
+    document.getElementById("r-pre").innerHTML = pre;
+    document.getElementById("r-pre2").textContent = Math.abs(d) < 0.005 ? "equal amounts" : d < 0 ? "protonated form" : "deprotonated form";
+    document.getElementById("o-ph").textContent = st.pH.toFixed(2);
+    document.getElementById("h-ph").textContent = "pKa of " + (s.ind ? "the indicator" : uni(s.ha)) + " = " + pka2(s) + (s.base ? " (from Kb of NH₃ = 1.8 × 10⁻⁵: pKa = 14.00 − 4.74 = 9.26)" : "");
+    document.getElementById("eqn").innerHTML = F(s.ha) + "(aq) + H<sub>2</sub>O(l) ⇌ H<sub>3</sub>O<sup>+</sup>(aq) + " + F(s.a) + "(aq)&nbsp;&nbsp; K<sub>a</sub> = " + (s.Ka ? Lab.sci(s.Ka, 2, true) : Lab.sci(Math.pow(10, -s.pKa), 2, true));
+    document.getElementById("lg-ha").textContent = uni(s.ha) + " (protonated)";
+    document.getElementById("lg-a").textContent = uni(s.a) + " (deprotonated)";
+  }
+  function story() {
+    var s = SP[st.sp], pk = pKa(s), d = st.pH - pk, fa = fracA(s, st.pH), r = Math.pow(10, d);
+    var HA = F(s.ha), A = F(s.a), h = "";
+    var cmp = Math.abs(d) < 0.005 ? "equals" : d < 0 ? "is below" : "is above";
+    h += "<p><b>Comparison:</b> pH " + st.pH.toFixed(2) + " " + cmp + " the pK<sub>a</sub> of " + pka2(s) + " for " + HA + ".</p>";
+    h += "<p><b>Why:</b> K<sub>a</sub> = [H<sub>3</sub>O<sup>+</sup>][" + A + "]/[" + HA + "], so [" + A + "]/[" + HA + "] = K<sub>a</sub>/[H<sub>3</sub>O<sup>+</sup>] = 10<sup>(pH − pKa)</sup> = 10<sup>" + d.toFixed(2).replace("-", "−") + "</sup> = " + (r >= 1 ? (r >= 100 ? Lab.sci(r, 2) : Lab.sig(r, 2)) : "1/" + (1 / r >= 100 ? Lab.sci(1 / r, 2) : Lab.sig(1 / r, 2))) + ". " +
+      (Math.abs(d) < 0.005 ? "[H<sub>3</sub>O<sup>+</sup>] equals K<sub>a</sub>, so neither form is favored." :
+       d < 0 ? "[H<sub>3</sub>O<sup>+</sup>] is larger than K<sub>a</sub>; the high concentration of H<sub>3</sub>O<sup>+</sup> keeps protons on." :
+               "[H<sub>3</sub>O<sup>+</sup>] is smaller than K<sub>a</sub>; with few H<sub>3</sub>O<sup>+</sup> around, the acid gives up its proton.") + "</p>";
+    if (s.ind) {
+      var col = fa > 0.9 ? s.cn[1] : fa < 0.1 ? s.cn[0] : "in between (a mix of " + s.cn[0] + " and " + s.cn[1] + ")";
+      h += "<p><b>Indicator:</b> HIn is " + s.cn[0] + " and In<sup>−</sup> is " + s.cn[1] + ". At this pH the solution looks " + col + ". The eye sees a clean color only when one form outnumbers the other about ten to one, which is why the change spans roughly pK<sub>a</sub> − 1 to pK<sub>a</sub> + 1.</p>";
+    }
+    if (st.sp === "hf" && d > 0 && st.pH < 7) h += "<p><b>Watch the trap:</b> the solution is acidic (pH below 7), but F<sup>−</sup> still predominates because what matters is pH compared with pK<sub>a</sub>, not with 7.</p>";
+    if (s.base) h += "<p><b>Weak base:</b> compare the pH with the pK<sub>a</sub> of the conjugate acid NH<sub>4</sub><sup>+</sup>, not with the pK<sub>b</sub> of NH<sub>3</sub>.</p>";
+    var ans = Math.abs(d) < 0.005 ? "pH = pKa, so [" + HA + "] = [" + A + "]; neither form predominates." :
+      d < 0 ? "pH (" + st.pH.toFixed(2) + ") &lt; pK<sub>a</sub> (" + pka2(s) + "), so the protonated form " + HA + " has the higher concentration." :
+              "pH (" + st.pH.toFixed(2) + ") &gt; pK<sub>a</sub> (" + pka2(s) + "), so the deprotonated form " + A + " has the higher concentration.";
+    h += "<p><b>AP answer:</b> " + ans + "</p>";
+    document.getElementById("story").innerHTML = h;
+  }
+  function render() {
+    document.getElementById("s-ph").value = st.pH;
+    Object.keys(spBtns).forEach(function (k) { spBtns[k].setAttribute("aria-pressed", k === st.sp ? "true" : "false"); });
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", k === st.scn ? "true" : "false"); });
+    drawDist(); drawPart(); readouts(); story();
+  }
+
+  // ---------- Controls ----------
+  var spBtns = {}, scBtns = {}, stop = null;
+  function goPH(target, then) {
+    if (stop) stop();
+    var from = st.pH;
+    stop = Lab.animate(600, function (e) { st.pH = Math.round((from + (target - from) * e) * 100) / 100; render(); }, then);
+  }
+  SORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SP[k].name;
+    b.addEventListener("click", function () { if (stop) stop(); st.sp = k; st.scn = null; render(); });
+    document.getElementById("sp").appendChild(b); spBtns[k] = b;
+  });
+  SCN.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.name;
+    b.addEventListener("click", function () {
+      st.sp = x.sp; st.scn = x.id;
+      if (x.flip) { st.pH = x.pH; goPH(x.pH, null); var t = x; setTimeout(function () { if (st.scn === t.id) goPH(t.flip); }, 1200); }
+      else goPH(x.pH);
+    });
+    document.getElementById("sc").appendChild(b); scBtns[x.id] = b;
+  });
+  document.getElementById("s-ph").addEventListener("input", function (e) { if (stop) stop(); st.pH = parseFloat(e.target.value); st.scn = null; render(); });
+
+  // ---------- Cheat-sheet table (generated) ----------
+  (function () {
+    var rows = [-3, -2, -1, 0, 1, 2, 3], tb = document.getElementById("tbody");
+    rows.forEach(function (d) {
+      var r = Math.pow(10, d), fa = r / (1 + r);
+      var tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + (d > 0 ? "+" : d < 0 ? "−" : "") + Math.abs(d) + "</td><td>" + (d >= 0 ? r + " : 1" : "1 : " + (1 / r)) + "</td><td>" + (fa * 100).toFixed(d === 0 ? 0 : Math.abs(d) >= 3 ? 1 : Math.abs(d) === 2 ? 1 : 0) + "%</td><td>" +
+        (d < 0 ? "<b>HA</b>" : d > 0 ? "<b>A<sup>−</sup></b>" : "neither (equal)") + "</td>";
+      tb.appendChild(tr);
+    });
+  })();
+
+  // ---------- Indicator chooser: titration curves from the charge balance ----------
+  var TT = {
+    sa: { name: "HCl with NaOH", kind: "acid", K: null, an: "HCl", ti: "NaOH" },
+    wa: { name: "CH₃COOH with NaOH", kind: "acid", K: 1.8e-5, an: "CH₃COOH", ti: "NaOH" },
+    wb: { name: "NH₃ with HCl", kind: "base", K: Kw / 1.8e-5, an: "NH₃", ti: "HCl" }
+  };
+  var IND = { mr: SP.mr, btb: SP.btb, php: SP.php };
+  var Ca = 0.100, Va = 25.00, Ct = 0.100;
+  // pH after v mL of titrant. Acid analyte: [H+] + [Na+] = [OH-] + [A-]. Base analyte: [H+] + [BH+] = [OH-] + [Cl-].
+  function titPH(t, v) {
+    var V = Va + v, C = Ca * Va / V, X = Ct * v / V;
+    function f(H) {
+      if (t.kind === "acid") { var A = t.K ? C * t.K / (t.K + H) : C; return H + X - Kw / H - A; }
+      var BH = C * H / (H + t.K); return H + BH - Kw / H - X;
+    }
+    var lo = -15, hi = 1;
+    for (var i = 0; i < 80; i++) { var m = (lo + hi) / 2; if (f(Math.pow(10, m)) > 0) hi = m; else lo = m; }
+    return -(lo + hi) / 2;
+  }
+  var Veq = Ca * Va / Ct;
+  // volume at which the curve crosses a given pH (bisection; curve is monotonic)
+  function volAt(t, pH) {
+    var lo = 0, hi = 50, up = t.kind === "acid";
+    for (var i = 0; i < 60; i++) { var m = (lo + hi) / 2, p = titPH(t, m); if ((up && p < pH) || (!up && p > pH)) lo = m; else hi = m; }
+    return (lo + hi) / 2;
+  }
+  var tst = { t: "wa", i: "php" }, ttB = {}, tiB = {};
+  var svgT = document.getElementById("tit");
+  function drawTit() {
+    var t = TT[tst.t], ind = IND[tst.i], pk = pKa(ind);
+    var Fr = Lab.frame(svgT, { x: [0, 50], y: [0, 14], width: 440, height: 300, xTicks: [0, 10, 20, 30, 40, 50], yTicks: [0, 2, 4, 6, 8, 10, 12, 14],
+      fmtX: function (v) { return v; }, fmtY: function (v) { return v; }, xLabel: "volume of " + t.ti + " added (mL)", yLabel: "pH" });
+    Lab.rect(Fr, 0, pk - 1, 50, pk + 1, ind.ind[1], 0.18);
+    Lab.tag(Fr, 1, pk + 1.25, ind.name + " changes color", "var(--muted)", "start");
+    var pts = []; for (var v = 0; v <= 50.001; v += 0.25) pts.push([v, titPH(t, v)]);
+    // add points near equivalence for a sharp jump
+    for (var dv = -0.5; dv <= 0.5; dv += 0.02) pts.push([Veq + dv, titPH(t, Veq + dv)]);
+    pts.sort(function (a, b) { return a[0] - b[0]; });
+    Lab.line(Fr, pts, "var(--accent)", 2.6);
+    var pEq = titPH(t, Veq);
+    Lab.dot(Fr, Veq, pEq, "var(--c1)", true);
+    Lab.tag(Fr, Veq + 1.2, pEq + (t.kind === "acid" ? -0.6 : 0.9), "equivalence pH " + pEq.toFixed(2), "var(--c1)");
+    var vEnd = volAt(t, pk);
+    Lab.el("circle", { cx: Fr.sx(vEnd), cy: Fr.sy(pk), r: 5, fill: "none", stroke: "var(--ink)", "stroke-width": 2 }, Fr.g);
+    return { pEq: pEq, vEnd: vEnd, pk: pk };
+  }
+  function renderTit() {
+    var r = drawTit(), t = TT[tst.t], ind = IND[tst.i], err = r.vEnd - Veq;
+    Object.keys(ttB).forEach(function (k) { ttB[k].setAttribute("aria-pressed", k === tst.t ? "true" : "false"); });
+    Object.keys(tiB).forEach(function (k) { tiB[k].setAttribute("aria-pressed", k === tst.i ? "true" : "false"); });
+    var fb = document.getElementById("tfb");
+    var best = Object.keys(IND).sort(function (a, b) { return Math.abs(pKa(IND[a]) - r.pEq) - Math.abs(pKa(IND[b]) - r.pEq); })[0];
+    var msg = "Equivalence at " + Veq.toFixed(2) + " mL, pH " + r.pEq.toFixed(2) + ". " + ind.name + " (pKa " + r.pk.toFixed(1) + ") is half changed at " + r.vEnd.toFixed(2) + " mL (open circle), ";
+    msg += Math.abs(err) < 0.05 ? "within one drop of equivalence. " : (Math.abs(err).toFixed(2) + " mL " + (err < 0 ? "before" : "after") + " equivalence. ");
+    if (tst.i === best) { fb.className = "fb ok"; msg += "Best choice: its pKa is closest to the equivalence-point pH."; }
+    else if (Math.abs(err) < 0.05) { fb.className = "fb meh"; msg += "It works here only because the jump is so steep; " + IND[best].name + " has a pKa closer to the equivalence pH and is the textbook choice."; }
+    else { fb.className = "fb no"; msg += "Poor choice: its pKa is far from the equivalence pH, so the end point misses the equivalence point. Try " + IND[best].name + "."; }
+    fb.textContent = msg;
+  }
+  Object.keys(TT).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = TT[k].name;
+    b.addEventListener("click", function () { tst.t = k; renderTit(); });
+    document.getElementById("tt").appendChild(b); ttB[k] = b;
+  });
+  Object.keys(IND).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = IND[k].name + " (" + IND[k].pKa.toFixed(1) + ")";
+    b.addEventListener("click", function () { tst.i = k; renderTit(); });
+    document.getElementById("ti").appendChild(b); tiB[k] = b;
+  });
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    function near(a, b, tol, what) { if (!(Math.abs(a - b) <= tol)) bad.push(what + ": got " + a + ", expected " + b); }
+    near(pKa(SP.hac), 4.74, 0.005, "acetic pKa");
+    near(pKa(SP.nh4), 9.26, 0.01, "NH4+ pKa");
+    near(pKa(SP.hf), 3.17, 0.005, "HF pKa");
+    near(fracA(SP.hac, pKa(SP.hac)), 0.5, 1e-12, "half at pKa");
+    near(1 / fracA(SP.hf, 5.0) - 1, 1 / 67.6, 0.0005, "HF ratio at pH 5 (quiz 1)");
+    near(fracA(SP.btb, 9.0) / (1 - fracA(SP.btb, 9.0)), 79.4, 0.1, "BTB ratio at pH 9 (quiz 4)");
+    near(6.0 + Math.log10(9 / 3), 6.48, 0.005, "quiz 2 pH");
+    near(titPH(TT.sa, Veq), 7.00, 0.01, "strong-strong equivalence pH");
+    near(titPH(TT.wa, Veq), 8.72, 0.01, "weak acid equivalence pH");
+    near(titPH(TT.wb, Veq), 5.28, 0.01, "weak base equivalence pH");
+    near(titPH(TT.wa, Veq / 2), 4.74, 0.02, "half-equivalence pH = pKa");
+    near(titPH(TT.wa, 0), 2.87, 0.01, "initial pH of 0.100 M acetic acid");
+    // every species: formulas differ by exactly one H, charge by one
+    SORDER.forEach(function (k) {
+      var s = SP[k]; if (s.ind) return;
+      var a = Lab.parseFormula(s.ha), b = Lab.parseFormula(s.a);
+      for (var e in a) if ((a[e] - (b[e] || 0)) !== (e === "H" ? 1 : 0)) bad.push(k + " pair mismatch in " + e);
+    });
+    if (bad.length) console.error("8.7 self-check failed: " + bad.join("; "));
+  })();
+
+  render();
+  renderTit();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Hydrofluoric acid has pKa = 3.17. In a solution buffered at pH 5.0, which species is present at the higher concentration?",
+      o: ["HF, because the solution is acidic", "F⁻, because the pH is greater than the pKa of HF", "HF and F⁻ are present in equal concentrations", "It cannot be determined without the concentration of HF"], c: 1,
+      w: "Compare pH with pKa: 5.0 > 3.17, so the deprotonated form predominates. In fact [F⁻]/[HF] = 10^(5.0 − 3.17) ≈ 68. Choice A is the classic trap: being below pH 7 does not decide anything; the comparison is with the pKa. Choice D is wrong because the ratio depends only on pH and pKa, not on the total amount." },
+    { s: "A weak acid HA has pKa = 6.0. A particle diagram of a solution of the acid shows 3 HA molecules and 9 A⁻ ions (water and H₃O⁺ not shown). Which pH is closest to the pH of the solution?",
+      o: ["5.5", "6.0", "6.5", "9.0"], c: 2,
+      w: "[A⁻]/[HA] = 9/3 = 3, so pH = pKa + log 3 = 6.0 + 0.48 = 6.5. Because A⁻ outnumbers HA, the pH must be above the pKa, which rules out A and B. Choice D would require a ratio of 1000 : 1." },
+    { s: "A student titrates a weak acid with NaOH. The pH at the equivalence point is 8.7. Which indicator is the best choice?",
+      o: ["Methyl orange, pKa = 3.5", "Methyl red, pKa = 5.0", "Bromothymol blue, pKa = 7.1", "Phenolphthalein, pKa = 9.3"], c: 3,
+      w: "An indicator changes color near pH = pKa, so choose the one whose pKa is closest to the equivalence-point pH of 8.7: phenolphthalein. Choice C is the trap of assuming every equivalence point is at pH 7; with a weak acid, the conjugate base makes the equivalence point basic. Methyl red would change color while much of the acid was still untitrated." },
+    { s: "Bromothymol blue is an indicator, HIn, with pKa = 7.1. HIn is yellow and In⁻ is blue. What color is a solution containing bromothymol blue at pH 9.0?",
+      o: ["Yellow", "Blue", "Green, because both forms are present in equal amounts", "Colorless, because the indicator is fully ionized"], c: 1,
+      w: "pH 9.0 is almost 2 units above the pKa, so [In⁻]/[HIn] = 10^1.9 ≈ 79 and the blue In⁻ form predominates. Green (choice C) would be seen near pH 7.1, where the two forms are about equal. Choice D confuses ionizing with losing color; In⁻ is the colored blue form." },
+    { s: "Acetic acid has pKa = 4.74. Which statement is correct about acetic acid in blood, pH 7.4?",
+      o: ["[CH₃COO⁻] > [CH₃COOH], because the pH is greater than the pKa", "[CH₃COOH] > [CH₃COO⁻], because acetic acid is a weak acid", "[CH₃COOH] = [CH₃COO⁻], because blood is buffered", "No CH₃COOH is present at all, because the pH is above 7"], c: 0,
+      w: "pH 7.4 > pKa 4.74, so acetate predominates; the ratio [CH₃COO⁻]/[CH₃COOH] = 10^2.66 ≈ 460. Choice B mixes up weak-acid behavior in pure water with behavior at a fixed pH. Choice D overstates it: a small amount of CH₃COOH is always present." },
+    { s: "For a weak acid HA in a solution where pH = pKa, which of the following must be true?",
+      o: ["[HA] > [A⁻]", "The pH is 7.00.", "The acid is completely ionized.", "[HA] = [A⁻]"], c: 3,
+      w: "From Ka = [H₃O⁺][A⁻]/[HA], when [H₃O⁺] = Ka the ratio [A⁻]/[HA] is 1. The pH equals the pKa, which is 7 only for an acid whose pKa happens to be 7, so choice B is not required. Only half of the acid is in the A⁻ form, so choice C is false." },
+    { s: "Methylamine, CH₃NH₂, is a weak base. Its conjugate acid, CH₃NH₃⁺, has pKa = 10.6. In a solution at pH 8.0, which species predominates?",
+      o: ["CH₃NH₃⁺, because the pH is less than the pKa of CH₃NH₃⁺", "CH₃NH₂, because a pH above 7 is basic", "CH₃NH₂, because methylamine is a base", "Neither; their concentrations are equal at any pH above 7"], c: 0,
+      w: "Compare the pH with the pKa of the conjugate acid: 8.0 < 10.6, so the protonated form CH₃NH₃⁺ predominates, by a ratio of about 400 to 1. Choice B compares with 7 instead of with the pKa; the solution is basic, but not basic enough to remove most of the protons." },
+    { s: "Formic acid, HCOOH, has pKa = 3.75. A solution of formic acid is adjusted to pH 4.50. Which of the following is correct?",
+      o: ["HCOOH predominates, because the solution is acidic.", "[HCOOH] = [HCOO⁻], because formic acid is a weak acid and is half ionized.", "[HCOO⁻] > [HCOOH], because the pH is greater than the pKa.", "HCOO⁻ predominates, because HCOOH is a strong acid."], c: 2,
+      w: "pH 4.50 > pKa 3.75, so [HCOO⁻]/[HCOOH] = 10^0.75 ≈ 5.6 and HCOO⁻ predominates. Choice A is the trap: an acidic solution can still have mostly the deprotonated form when the pH is above the pKa. Choice D reaches the right species for the wrong reason; HCOOH is a weak acid." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("8.7");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [8], topic: "8.7", compact: true, storageKey: "topic-8.7" });</script>
+</body>
+</html>

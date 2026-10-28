@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Introduction to Entropy Study Lab</title>
+<meta name="description" content="Watch particles before and after melting, boiling, gas expansion, heating, and reactions, predict the sign of ΔS for each, and see how matter and energy dispersal set the answer.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 18px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 14px; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.side .controls { grid-template-columns: 1fr 1fr; }
+.fb { font-size: .9rem; border-radius: 8px; padding: 8px 12px; background: var(--paper); border: 1px solid var(--rule); }
+.fb.ok { background: var(--good-soft); border-color: var(--good); color: var(--good); }
+.fb.no { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.lab-bar > * { min-width: 0; max-width: 100%; }
+#ke-wrap[hidden] { display: none; }
+#ke-wrap { display: grid; gap: 4px; }
+#ke-wrap .cap { font-size: .8rem; color: var(--muted); }
+.legend .l-gh { color: var(--muted); }
+.legend .l-gh::before { background: none; border-top: 2px dashed var(--ghost); height: 0; }
+.note { font-size: .84rem; color: var(--muted); }
+.legend.atoms span::before { width: 10px; height: 10px; border-radius: 50%; }
+.tally { font-family: var(--mono); font-size: .82rem; color: var(--muted); }
+@media (max-width: 520px) {
+  .side .controls { grid-template-columns: 1fr; }
+  .lab-bar .eqn { white-space: normal; }
+  #box text { font-size: 13px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 9 · Topic 9.1</span>
+  <h1>Introduction to Entropy Study Lab</h1>
+  <p class="lede">Entropy (S) measures how spread out a system's matter and energy are. It goes up when particles get more room or more freedom to move, and when a higher temperature spreads energy over a wider range of molecular speeds. Pick a process below, predict the sign of ΔS from the particle picture, then check your reasoning.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The entropy sorter</h2>
+    <p>Each process shows the particles before and after. Decide whether matter or energy became more dispersed, make a prediction, and the lab tells you if you were right and shows the measured ΔS. The last option is a sample of helium you control yourself: change its volume and temperature and watch the speed distribution.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Particle view <small id="box-sub"></small></h3>
+      <svg class="chart" id="box" role="img" aria-label="Two boxes of particles: the system before and after the process"></svg>
+      <div id="ke-wrap" hidden>
+        <svg class="chart" id="ke" role="img" aria-label="Distribution of molecular kinetic energies before and after"></svg>
+        <span class="cap">Distribution of kinetic energies. A higher temperature flattens and widens the curve: energy is spread over more energy levels.</span>
+      </div>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Processes</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Your prediction for ΔS</div>
+        <div class="seg" role="group" aria-label="Prediction">
+          <button type="button" id="p-pos" aria-pressed="false">ΔS &gt; 0</button>
+          <button type="button" id="p-neg" aria-pressed="false">ΔS &lt; 0</button>
+          <button type="button" id="p-zero" aria-pressed="false">Can't tell / near 0</button>
+        </div>
+        <div class="fb" id="fb" aria-live="polite">Predict first, then read the explanation below.</div>
+        <div class="tally" id="tally"></div>
+      </div>
+      <div class="group" id="gas-ctl">
+        <div class="tag">Your helium sample (1 mol)</div>
+        <div class="controls">
+          <div class="ctl">
+            <label for="s-v1">V before <output id="o-v1"></output></label>
+            <input type="range" id="s-v1" min="1" max="4" step="0.5">
+          </div>
+          <div class="ctl">
+            <label for="s-v2">V after <output id="o-v2"></output></label>
+            <input type="range" id="s-v2" min="1" max="4" step="0.5">
+          </div>
+          <div class="ctl">
+            <label for="s-t1">T before <output id="o-t1"></output></label>
+            <input type="range" id="s-t1" min="150" max="900" step="10">
+          </div>
+          <div class="ctl">
+            <label for="s-t2">T after <output id="o-t2"></output></label>
+            <input type="range" id="s-t2" min="150" max="900" step="10">
+          </div>
+        </div>
+        <span class="tally">Moving a slider switches to this sample.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend atoms" id="legend"></div>
+    <div class="eqn" id="eqn"></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Moles of gas</div><div class="v" id="r-gas"></div><div class="sub" id="r-gas2"></div></div>
+    <div class="stat"><div class="k">What changed</div><div class="v" id="r-what"></div><div class="sub" id="r-what2"></div></div>
+    <div class="stat"><div class="k">Sign of ΔS</div><div class="v" id="r-sign"></div><div class="sub" id="r-sign2"></div></div>
+    <div class="stat"><div class="k">ΔS, J/(mol·K)</div><div class="v" id="r-ds"></div><div class="sub" id="r-ds2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">Measured values come from standard molar entropies at 25 °C (the melting value is at 0 °C). Particle counts are scaled down, and each sphere cluster stands for a molecule or formula unit.</p>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Definition</span><h3>Entropy is dispersal</h3><p>Entropy measures how many ways a system's particles and their energy can be arranged. When matter spreads into more space, or energy spreads over more possible states, there are more arrangements and S goes up. "Disorder" is a loose shortcut; on the exam, argue in terms of dispersal of matter and energy.</p></div>
+    <div class="card"><span class="tag">Phase</span><h3>Solid &lt; liquid &lt; gas</h3><p>Particles in a solid only vibrate in place. In a liquid they slide past one another. In a gas they move freely through the whole container. So melting, vaporizing, and subliming all have ΔS &gt; 0; freezing, condensing, and deposition have ΔS &lt; 0. The jump from liquid to gas is much larger than from solid to liquid.</p></div>
+    <div class="card"><span class="tag">Gas moles</span><h3>Count moles of gas</h3><p>Gases dominate entropy. If a reaction makes more moles of gas than it uses, ΔS &gt; 0; fewer moles of gas, ΔS &lt; 0. When the gas moles are equal, the sign can't be predicted from the equation alone and ΔS is usually small.</p></div>
+    <div class="card"><span class="tag">Volume</span><h3>More room, more entropy</h3><p>A gas that expands at constant temperature has more positions available to each molecule, so its matter is more dispersed and S increases. Compressing a gas lowers S.</p></div>
+    <div class="card"><span class="tag">Temperature</span><h3>Hotter means more spread-out energy</h3><p>By kinetic molecular theory, raising the temperature widens the distribution of molecular kinetic energies. Energy is spread across more energy states, so entropy increases with temperature even if nothing else changes.</p></div>
+    <div class="card"><span class="tag">Units</span><h3>Joules, not kilojoules</h3><p>Entropy changes are reported in J/(mol·K), or J/K for a reaction as written. Enthalpy is in kJ. Keep that difference in mind for topic 9.3, where ΔS must be converted to kJ before it is combined with ΔH.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Predicting the sign of ΔS</h2>
+    <p>Look for the change that disperses the most matter. Gas-phase changes usually win over everything else.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Change</th><th>Sign of ΔS</th><th>Particle-level reason</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td>Solid → liquid → gas</td><td><b>Positive</b></td><td>Particles gain freedom to move and occupy more volume.</td><td>H₂O(l) → H₂O(g), +118.9 J/(mol·K)</td></tr>
+      <tr><td>Gas → liquid → solid</td><td><b>Negative</b></td><td>Particles are held closer together with less freedom of motion.</td><td>Freezing water, −22.0 J/(mol·K)</td></tr>
+      <tr><td>More moles of gas formed</td><td><b>Positive</b></td><td>More independent gas particles, each free to move through the container.</td><td>CaCO₃(s) → CaO(s) + CO₂(g)</td></tr>
+      <tr><td>Fewer moles of gas formed</td><td><b>Negative</b></td><td>Gas particles combine into fewer particles.</td><td>N₂(g) + 3H₂(g) → 2NH₃(g)</td></tr>
+      <tr><td>Gas expands at constant T</td><td><b>Positive</b></td><td>Each molecule has more positions available.</td><td>He fills a container twice as large</td></tr>
+      <tr><td>Temperature increases</td><td><b>Positive</b></td><td>The kinetic-energy distribution broadens; energy is more dispersed.</td><td>Heating a gas from 300 K to 600 K</td></tr>
+      <tr><td>Ions combine into a solid</td><td><b>Negative</b></td><td>Ions that moved through the solution are locked in a lattice.</td><td>Ag⁺(aq) + Cl⁻(aq) → AgCl(s)</td></tr>
+      <tr><td>Equal moles of gas</td><td><b>Small; can't tell</b></td><td>No clear change in dispersal; the sign depends on details.</td><td>H₂(g) + Cl₂(g) → 2HCl(g), +20.0 J/K</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Entropy on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points</h3>
+      <ul>
+        <li>State the sign of ΔS and give a particle-level reason in the same sentence: "ΔS &gt; 0 because 1 mol of gas is produced from solids, so matter becomes more dispersed."</li>
+        <li>For reactions, count the moles of gas on each side and say which side has more.</li>
+        <li>For phase changes, name the phases and describe the change in particle freedom or volume.</li>
+        <li>For a temperature change, refer to the distribution of kinetic energies broadening (energy dispersal).</li>
+        <li>For a gas expanding at constant temperature, say the molecules can occupy a larger volume.</li>
+        <li>Use the words "dispersed" or "more possible arrangements"; "more random" alone may not earn the point.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Counting all molecules instead of only gas molecules. Two moles of a solid do not outweigh one mole of a gas.</li>
+        <li>Deciding the sign of ΔS from ΔH. An exothermic reaction can have ΔS of either sign.</li>
+        <li>Claiming a sign when the moles of gas are equal. Say the change is small and cannot be predicted from the equation alone.</li>
+        <li>Saying a gas that expands at constant temperature has faster molecules. Its speed distribution is unchanged; only the volume grew.</li>
+        <li>Treating "thermodynamically favored" as the same as "ΔS &gt; 0". Favorability depends on ΔG°, which includes ΔH° (topic 9.3).</li>
+        <li>Writing entropy units as kJ/(mol·K). Tabulated entropies are in J/(mol·K).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 9.1. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-9.html">Unit 9 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var R = 8.314;
+
+  // ---------- Data: standard molar entropies at 298 K, J/(mol·K) ----------
+  var S0 = {
+    "H2(g)": 130.7, "O2(g)": 205.2, "N2(g)": 191.6, "Cl2(g)": 223.1, "HCl(g)": 186.9,
+    "H2O(l)": 69.9, "H2O(g)": 188.8, "NH3(g)": 192.5, "CaCO3(s)": 92.9, "CaO(s)": 39.8,
+    "CO2(g)": 213.8, "NO2(g)": 240.1, "N2O4(g)": 304.3, "Ag^+(aq)": 72.7, "Cl^-(aq)": 56.5, "AgCl(s)": 96.2
+  };
+  function split(k) {
+    var m = k.match(/^(.*?)(\^([0-9]*)([+\-]))?\((s|l|g|aq)\)$/);
+    return { f: m[1], st: m[5], q: m[2] ? (m[4] === "+" ? 1 : -1) * (m[3] ? +m[3] : 1) : 0 };
+  }
+  function show(k) { var s = split(k); return Lab.fmla(s.f + (s.q ? "^" + (Math.abs(s.q) > 1 ? Math.abs(s.q) : "") + (s.q > 0 ? "+" : "-") : "")) + "(" + s.st + ")"; }
+  function side(list) { return list.map(function (t) { return (t[0] === 1 ? "" : t[0]) + show(t[1]); }).join(" + "); }
+  function gasMol(list) { return list.reduce(function (a, t) { return a + (split(t[1]).st === "g" ? t[0] : 0); }, 0); }
+  function dSfromTable(sc) {
+    var p = 0, r = 0;
+    sc.p.forEach(function (t) { p += t[0] * S0[t[1]]; });
+    sc.r.forEach(function (t) { r += t[0] * S0[t[1]]; });
+    return p - r;
+  }
+
+  // ---------- Molecule drawings: [dx, dy, r, color] ----------
+  var H = "var(--ghost)", O = "var(--c1)", N = "var(--accent)", C = "var(--ink)", CL = "var(--c2)", CA = "var(--c4)", AG = "var(--c3)", HE = "var(--c3)";
+  var SHAPE = {
+    "H2O": [[0, 0, 5.5, O], [-5, 4, 3.4, H], [5, 4, 3.4, H]],
+    "H2": [[-3, 0, 4, H], [3, 0, 4, H]],
+    "O2": [[-4, 0, 5, O], [4, 0, 5, O]],
+    "N2": [[-4, 0, 5, N], [4, 0, 5, N]],
+    "Cl2": [[-4.5, 0, 5.5, CL], [4.5, 0, 5.5, CL]],
+    "HCl": [[-2, 0, 5.5, CL], [5, 0, 3.4, H]],
+    "NH3": [[0, 0, 5.5, N], [-6, 3, 3.4, H], [6, 3, 3.4, H], [0, -6, 3.4, H]],
+    "CO2": [[-7, 0, 4.4, O], [0, 0, 4.8, C], [7, 0, 4.4, O]],
+    "NO2": [[0, -1, 5, N], [-6, 4, 4.3, O], [6, 4, 4.3, O]],
+    "N2O4": [[-4, 0, 4.6, N], [4, 0, 4.6, N], [-9, 5, 3.8, O], [-9, -5, 3.8, O], [9, 5, 3.8, O], [9, -5, 3.8, O]],
+    "CaCO3": [[-4, 0, 5.5, CA], [4, 0, 3.6, C], [4, -5, 3, O], [8, 3, 3, O], [1, 4, 3, O]],
+    "CaO": [[-3, 0, 5.5, CA], [4, 0, 4.4, O]],
+    "Ag^+": [[0, 0, 5.5, AG]],
+    "Cl^-": [[0, 0, 6, CL]],
+    "He": [[0, 0, 5, HE]]
+  };
+  var ATOMS = { "H2O": { H: 2, O: 1 }, "H2": { H: 2 }, "O2": { O: 2 }, "N2": { N: 2 }, "Cl2": { Cl: 2 }, "HCl": { H: 1, Cl: 1 }, "NH3": { N: 1, H: 3 }, "CO2": { C: 1, O: 2 },
+    "NO2": { N: 1, O: 2 }, "N2O4": { N: 2, O: 4 }, "CaCO3": { Ca: 1, C: 1, O: 3 }, "CaO": { Ca: 1, O: 1 }, "Ag^+": { Ag: 1 }, "Cl^-": { Cl: 1 }, "He": { He: 1 } };
+  var LEG = { H: ["H", H], O: ["O", O], N: ["N", N], C: ["C", C], Cl: ["Cl", CL], Ca: ["Ca", CA], Ag: ["Ag", AG], He: ["He", HE] };
+
+  // Box contents: groups { sp, n, mode: solid | liquid | gas | aq }, vol (fraction of the box), T (K), water (tint)
+  var SC = [
+    { key: "melt", label: "Ice melts", r: [[1, "H2O(s)"]], p: [[1, "H2O(l)"]], dS: 22.0, sign: 1,
+      what: "Solid → liquid", src: "at 0 °C: 6010 J/mol ÷ 273.15 K",
+      before: { g: [{ sp: "H2O", n: 16, mode: "solid" }], T: 273 }, after: { g: [{ sp: "H2O", n: 16, mode: "liquid" }], T: 273 },
+      why: ["In ice each water molecule vibrates around a fixed spot in the hydrogen-bonded lattice.", "In liquid water the molecules slide past one another and can be found in many more positions.", "The molecules are still touching, so the increase is modest compared with boiling."],
+      ap: "ΔS > 0. Melting gives the molecules freedom to move past one another, so the matter is more dispersed." },
+    { key: "boil", label: "Water evaporates", r: [[1, "H2O(l)"]], p: [[1, "H2O(g)"]], sign: 1,
+      what: "Liquid → gas", src: "S°(H₂O(g)) − S°(H₂O(l))",
+      before: { g: [{ sp: "H2O", n: 16, mode: "liquid" }], T: 298 }, after: { g: [{ sp: "H2O", n: 16, mode: "gas" }], T: 298 },
+      why: ["In the liquid, molecules are held together by hydrogen bonds and stay near the bottom.", "As a gas, each molecule moves independently through the whole container: a far larger volume.", "That is why ΔS for vaporization (about +119) is several times larger than for melting (about +22)."],
+      ap: "ΔS > 0. Gas particles move freely and occupy a much larger volume than the liquid, so matter is far more dispersed." },
+    { key: "expand", label: "Gas expands (V doubles)", r: [[1, "He(g)"]], p: [[1, "He(g)"]], gasOnly: true, sign: 1,
+      what: "V × 2, same T", src: "R ln 2 for 1 mol",
+      before: { g: [{ sp: "He", n: 10, mode: "gas" }], T: 300, vol: 0.5 }, after: { g: [{ sp: "He", n: 10, mode: "gas" }], T: 300, vol: 1 },
+      why: ["The partition is removed and the helium spreads into the empty half of the box.", "Temperature is constant, so the molecules move at the same speeds as before. Only the space available changed.", "With twice the volume, each molecule has twice as many places to be: matter is more dispersed."],
+      ap: "ΔS > 0. At constant temperature the gas occupies a larger volume, so its molecules are more dispersed." },
+    { key: "heat", label: "Heat a gas (300 → 600 K)", r: [[1, "He(g)"]], p: [[1, "He(g)"]], gasOnly: true, sign: 1,
+      what: "T × 2, same V", src: "(3/2)R ln 2 for 1 mol of He",
+      before: { g: [{ sp: "He", n: 10, mode: "gas" }], T: 300, vol: 1 }, after: { g: [{ sp: "He", n: 10, mode: "gas" }], T: 600, vol: 1 },
+      why: ["Same molecules in the same volume, so the dispersal of matter has not changed.", "At the higher temperature the distribution of kinetic energies is wider and flatter (graph below the box).", "Energy is spread over a wider range of energy states, so energy is more dispersed."],
+      ap: "ΔS > 0. A higher temperature broadens the distribution of molecular kinetic energies, so energy is more dispersed." },
+    { key: "caco3", label: "CaCO₃ decomposes", r: [[1, "CaCO3(s)"]], p: [[1, "CaO(s)"], [1, "CO2(g)"]], sign: 1,
+      what: "Gas formed from a solid",
+      before: { g: [{ sp: "CaCO3", n: 9, mode: "solid" }], T: 298 }, after: { g: [{ sp: "CaO", n: 9, mode: "solid" }, { sp: "CO2", n: 9, mode: "gas" }], T: 298 },
+      why: ["The reactant is a single solid. The products are a solid plus 1 mol of CO₂ gas.", "The CO₂ molecules escape the lattice and move freely through the container.", "Producing gas from a solid is a large increase in the dispersal of matter."],
+      ap: "ΔS > 0. One mole of gas is produced from a solid reactant (0 → 1 mol gas), so matter becomes much more dispersed." },
+    { key: "haber", label: "N₂ + 3H₂ → 2NH₃", r: [[1, "N2(g)"], [3, "H2(g)"]], p: [[2, "NH3(g)"]], sign: -1,
+      what: "Fewer gas particles",
+      before: { g: [{ sp: "N2", n: 2, mode: "gas" }, { sp: "H2", n: 6, mode: "gas" }], T: 298 }, after: { g: [{ sp: "NH3", n: 4, mode: "gas" }], T: 298 },
+      why: ["Every species is a gas, so compare the moles of gas: 4 mol of reactants become 2 mol of products.", "The same atoms end up in half as many independent particles.", "Fewer particles means fewer possible arrangements, so entropy decreases."],
+      ap: "ΔS < 0. Four moles of gas react to form two moles of gas, so matter becomes less dispersed." },
+    { key: "n2o4", label: "N₂O₄ → 2NO₂", r: [[1, "N2O4(g)"]], p: [[2, "NO2(g)"]], sign: 1,
+      what: "More gas particles",
+      before: { g: [{ sp: "N2O4", n: 4, mode: "gas" }], T: 298 }, after: { g: [{ sp: "NO2", n: 8, mode: "gas" }], T: 298 },
+      why: ["One mole of gas becomes two moles of gas.", "Each N₂O₄ molecule splits into two NO₂ molecules that move independently.", "More gas particles give more possible arrangements."],
+      ap: "ΔS > 0. The number of moles of gas doubles (1 → 2), so matter becomes more dispersed." },
+    { key: "agcl", label: "AgCl precipitates", r: [[1, "Ag^+(aq)"], [1, "Cl^-(aq)"]], p: [[1, "AgCl(s)"]], sign: -1,
+      what: "Ions → solid",
+      before: { g: [{ sp: "Ag^+", n: 8, mode: "aq" }, { sp: "Cl^-", n: 8, mode: "aq" }], T: 298, water: true },
+      after: { g: [{ sp: "Ag^+", n: 8, mode: "solid" }, { sp: "Cl^-", n: 8, mode: "solid" }], T: 298, water: true },
+      why: ["Before, Ag⁺ and Cl⁻ ions move independently throughout the solution.", "After, they are locked in place in a solid lattice at the bottom.", "No gases are involved, so the change is smaller than for gas reactions, but it is clearly negative."],
+      ap: "ΔS < 0. Dissolved ions that could move throughout the solution are fixed in a solid, so matter becomes less dispersed." },
+    { key: "h2o", label: "2H₂ + O₂ → 2H₂O(l)", r: [[2, "H2(g)"], [1, "O2(g)"]], p: [[2, "H2O(l)"]], sign: -1,
+      what: "Gases → liquid",
+      before: { g: [{ sp: "H2", n: 6, mode: "gas" }, { sp: "O2", n: 3, mode: "gas" }], T: 298 }, after: { g: [{ sp: "H2O", n: 6, mode: "liquid" }], T: 298 },
+      why: ["Three moles of gas become zero moles of gas.", "The product is a liquid: fewer particles, and they are packed together at the bottom.", "Both effects lower the dispersal of matter, so ΔS is large and negative."],
+      ap: "ΔS < 0. Three moles of gas form a liquid (3 → 0 mol gas), so matter becomes much less dispersed." },
+    { key: "hcl", label: "H₂ + Cl₂ → 2HCl", r: [[1, "H2(g)"], [1, "Cl2(g)"]], p: [[2, "HCl(g)"]], sign: 0,
+      what: "Gas moles equal",
+      before: { g: [{ sp: "H2", n: 4, mode: "gas" }, { sp: "Cl2", n: 4, mode: "gas" }], T: 298 }, after: { g: [{ sp: "HCl", n: 8, mode: "gas" }], T: 298 },
+      why: ["Two moles of gas become two moles of gas, so counting gas moles gives no answer.", "The measured value is +20.0 J/K: positive, but small compared with reactions that change the moles of gas.", "On the exam, the defensible claim is that ΔS is close to zero and its sign can't be predicted from the equation."],
+      ap: "ΔS ≈ 0 (small). The moles of gas are the same on both sides, so there is no clear change in dispersal; the sign can't be justified from the equation alone." },
+    { key: "custom", label: "Your helium sample", custom: true }
+  ];
+  SC.forEach(function (s) { if (s.r && !s.gasOnly && s.dS == null) s.dS = dSfromTable(s); });
+  SC[2].dS = R * Math.log(2);
+  SC[3].dS = 1.5 * R * Math.log(2);
+
+  // ---------- State ----------
+  var S = { key: "melt", pred: null, v1: 2, v2: 2, t1: 300, t2: 600, tried: {}, right: 0 };
+  function cur() { return SC.filter(function (s) { return s.key === S.key; })[0]; }
+  function customSc() {
+    var dS = R * Math.log(S.v2 / S.v1) + 1.5 * R * Math.log(S.t2 / S.t1);
+    var tol = 0.05;
+    return { key: "custom", custom: true, r: [[1, "He(g)"]], p: [[1, "He(g)"]], gasOnly: true, dS: dS, sign: Math.abs(dS) < tol ? 0 : dS > 0 ? 1 : -1,
+      what: (S.v2 === S.v1 ? "Same V" : S.v2 > S.v1 ? "V up" : "V down") + ", " + (S.t2 === S.t1 ? "same T" : S.t2 > S.t1 ? "T up" : "T down"),
+      src: "R ln(V₂/V₁) + (3/2)R ln(T₂/T₁)",
+      before: { g: [{ sp: "He", n: 10, mode: "gas" }], T: S.t1, vol: S.v1 / 4 }, after: { g: [{ sp: "He", n: 10, mode: "gas" }], T: S.t2, vol: S.v2 / 4 } };
+  }
+  function scen() { var s = cur(); return s.custom ? customSc() : s; }
+
+  // ---------- Particle boxes ----------
+  var svg = document.getElementById("box");
+  var W = 440, HT = 270, BX = [{ x0: 14, x1: 204 }, { x0: 236, x1: 426 }], Y0 = 34, Y1 = 254;
+  var parts = [], seed = 1;
+  function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+  function build() {
+    var sc = scen();
+    svg.setAttribute("viewBox", "0 0 " + W + " " + HT);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    parts = []; seed = 7;
+    [sc.before, sc.after].forEach(function (st, bi) {
+      var b = BX[bi], vol = st.vol == null ? 1 : st.vol, xr = b.x0 + (b.x1 - b.x0) * vol;
+      Lab.el("text", { x: (b.x0 + b.x1) / 2, y: 18, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, svg, bi ? "After" : "Before");
+      if (st.water) Lab.el("rect", { x: b.x0, y: Y0, width: b.x1 - b.x0, height: Y1 - Y0, fill: "var(--accent)", opacity: 0.08 }, svg);
+      if (vol < 1) {
+        Lab.el("rect", { x: xr, y: Y0, width: b.x1 - xr, height: Y1 - Y0, fill: "var(--ghost)", opacity: 0.15 }, svg);
+        Lab.el("line", { x1: xr, x2: xr, y1: Y0, y2: Y1, stroke: "var(--ink)", "stroke-width": 2, "stroke-dasharray": "5 3" }, svg);
+        if (b.x1 - xr > 40) Lab.el("text", { x: (xr + b.x1) / 2, y: (Y0 + Y1) / 2, "text-anchor": "middle" }, svg, "empty");
+      }
+      Lab.el("rect", { x: b.x0, y: Y0, width: b.x1 - b.x0, height: Y1 - Y0, fill: "none", stroke: "var(--ink)", "stroke-width": 1.5, rx: 4 }, svg);
+      Lab.el("text", { x: (b.x0 + b.x1) / 2, y: HT - 2, "text-anchor": "middle" }, svg, st.T + " K" + (st.vol != null ? " · " + Lab.fmt(st.vol * 4, 1) + " L" : ""));
+      var box = { x0: b.x0 + 15, x1: xr - 15, y0: Y0 + 14, y1: Y1 - 13 };
+      // solids first: a lattice at the bottom
+      var solids = [], others = [];
+      st.g.forEach(function (gr) { for (var i = 0; i < gr.n; i++) (gr.mode === "solid" ? solids : others).push(gr); });
+      var mixed = solids.length && solids.every(function (g) { return g.sp === "Ag^+" || g.sp === "Cl^-"; });
+      if (mixed) { // interleave Ag+ / Cl- in a checkerboard
+        var ag = solids.filter(function (g) { return g.sp === "Ag^+"; }), cl = solids.filter(function (g) { return g.sp === "Cl^-"; });
+        solids = []; for (var k = 0; k < ag.length; k++) { solids.push(ag[k]); solids.push(cl[k]); }
+      }
+      var cols = mixed ? 4 : Math.min(Math.ceil(Math.sqrt(solids.length * 1.4)), 5), sp = mixed ? 18 : (solids.length ? Math.max(20, halfW(solids[0].sp) * 2.6 + 4) : 20);
+      var gw = (cols - 1) * sp, cx0 = (box.x0 + box.x1) / 2 - gw / 2;
+      var solidTop = box.y1;
+      solids.forEach(function (gr, i) {
+        var row = Math.floor(i / cols), col = i % cols;
+        if (mixed) col = (row % 2 ? (cols - 1 - col) : col);
+        var x = cx0 + col * sp, y = box.y1 - 4 - row * sp;
+        solidTop = Math.min(solidTop, y - 14);
+        parts.push(mk(gr.sp, x, y, "solid", st.T, box, bi));
+      });
+      var liquids = others.filter(function (g) { return g.mode === "liquid"; });
+      var lcols = 6, lsp = 25;
+      liquids.forEach(function (gr, i) {
+        var row = Math.floor(i / lcols), col = i % lcols;
+        var x = box.x0 + 10 + col * ((box.x1 - box.x0 - 20) / (lcols - 1)) + (rnd() - 0.5) * 6;
+        var y = box.y1 - 4 - row * lsp + (rnd() - 0.5) * 6;
+        var p = mk(gr.sp, x, y, "liquid", st.T, box, bi);
+        p.ytop = box.y1 - 4 - (Math.ceil(liquids.length / lcols) - 1) * lsp - 8;
+        parts.push(p);
+      });
+      others.filter(function (g) { return g.mode === "gas" || g.mode === "aq"; }).forEach(function (gr) {
+        var p = mk(gr.sp, box.x0 + rnd() * (box.x1 - box.x0), box.y0 + rnd() * ((gr.mode === "gas" && solids.length ? solidTop - 6 : box.y1) - box.y0), gr.mode, st.T, box, bi);
+        if (solids.length) p.box = { x0: box.x0, x1: box.x1, y0: box.y0, y1: solidTop - 4 };
+        parts.push(p);
+      });
+    });
+    // arrow between boxes
+    Lab.el("path", { d: "M207 144 L231 144", stroke: "var(--muted)", "stroke-width": 2 }, svg);
+    Lab.el("path", { d: "M233 144 L225 139 L225 149 Z", fill: "var(--muted)" }, svg);
+    draw();
+  }
+  function halfW(sp) { return (SHAPE[sp] || [[0, 0, 5]]).reduce(function (m, a) { return Math.max(m, Math.abs(a[0]) + a[2]); }, 0); }
+  function mk(sp, x, y, mode, T, box, bi) {
+    var g = Lab.el("g", {}, svg);
+    (SHAPE[sp] || [[0, 0, 5, "var(--ink)"]]).forEach(function (a) {
+      Lab.el("circle", { cx: a[0], cy: a[1], r: a[2], fill: a[3], stroke: "var(--surface)", "stroke-width": 0.8 }, g);
+    });
+    var ang = rnd() * Math.PI * 2, spd = mode === "gas" ? 1.1 * Math.sqrt(T / 300) : mode === "aq" ? 0.35 : mode === "liquid" ? 0.25 : 0;
+    return { g: g, x: x, y: y, x0: x, y0: y, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd, mode: mode, T: T, box: box, ph: rnd() * 6.28 };
+  }
+  function draw() {
+    parts.forEach(function (p) {
+      var dx = 0, dy = 0;
+      if (p.mode === "solid") { var a = 0.9 * Math.sqrt(p.T / 300); dx = Math.sin(p.ph) * a; dy = Math.cos(p.ph * 1.3) * a; }
+      p.g.setAttribute("transform", "translate(" + (p.x + dx).toFixed(1) + " " + (p.y + dy).toFixed(1) + ") scale(1.3)");
+    });
+  }
+  function step() {
+    parts.forEach(function (p) {
+      if (p.mode === "solid") { p.ph += 0.35; return; }
+      if (p.mode === "liquid") {
+        p.vx += (Math.random() - 0.5) * 0.12; p.vy += (Math.random() - 0.5) * 0.12;
+        p.vx *= 0.96; p.vy *= 0.96;
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < p.box.x0) { p.x = p.box.x0; p.vx = Math.abs(p.vx); } if (p.x > p.box.x1) { p.x = p.box.x1; p.vx = -Math.abs(p.vx); }
+        if (p.y > p.box.y1 - 2) { p.y = p.box.y1 - 2; p.vy = -Math.abs(p.vy); } if (p.y < p.ytop) { p.y = p.ytop; p.vy = Math.abs(p.vy); }
+        return;
+      }
+      p.x += p.vx; p.y += p.vy;
+      var b = p.box;
+      if (p.x < b.x0) { p.x = b.x0; p.vx = Math.abs(p.vx); } if (p.x > b.x1) { p.x = b.x1; p.vx = -Math.abs(p.vx); }
+      if (p.y < b.y0) { p.y = b.y0; p.vy = Math.abs(p.vy); } if (p.y > b.y1) { p.y = b.y1; p.vy = -Math.abs(p.vy); }
+    });
+    draw();
+  }
+  if (!Lab.reduceMotion) {
+    (function loop() { step(); requestAnimationFrame(loop); })();
+  }
+
+  // ---------- Kinetic-energy distribution ----------
+  function mb(E, T) { var rt = R * T / 1000; return 2 / Math.sqrt(Math.PI) * Math.pow(1 / rt, 1.5) * Math.sqrt(E) * Math.exp(-E / rt); }
+  function drawKE(sc) {
+    var wrap = document.getElementById("ke-wrap");
+    var show = sc.gasOnly;
+    wrap.hidden = !show;
+    if (!show) return;
+    var F = Lab.frame(document.getElementById("ke"), { x: [0, 20], y: [0, 0.42], width: 440, height: 220, xLabel: "Kinetic energy (kJ/mol)", yLabel: "Fraction of molecules",
+      xTicks: [0, 5, 10, 15, 20], fmtX: function (v) { return v; } });
+    Lab.fn(F, function (E) { return mb(E, sc.before.T); }, "var(--ghost)", 2.5, "6 4", 120);
+    Lab.fn(F, function (E) { return mb(E, sc.after.T); }, "var(--c1)", 3, null, 120);
+    var peakB = R * sc.before.T / 2000, peakA = R * sc.after.T / 2000;
+    Lab.tag(F, peakB + 1.2, mb(peakB, sc.before.T) + 0.012, sc.before.T + " K (before)", "var(--muted)");
+    if (sc.after.T !== sc.before.T) Lab.tag(F, peakA + 1.2, mb(peakA, sc.after.T) + 0.012, sc.after.T + " K (after)", "var(--c1)");
+  }
+
+  // ---------- Render ----------
+  function signTxt(s) { return s > 0 ? "ΔS > 0" : s < 0 ? "ΔS < 0" : "≈ 0"; }
+  function render(rebuild) {
+    var sc = scen();
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", k === S.key ? "true" : "false"); });
+    ["pos", "neg", "zero"].forEach(function (k) { document.getElementById("p-" + k).setAttribute("aria-pressed", S.pred === k ? "true" : "false"); });
+    ["v1", "v2", "t1", "t2"].forEach(function (k) {
+      document.getElementById("s-" + k).value = S[k];
+      document.getElementById("o-" + k).textContent = k[0] === "v" ? Lab.fmt(S[k], 1) + " L" : S[k] + " K";
+    });
+    if (rebuild) build();
+    drawKE(sc);
+    document.getElementById("box-sub").textContent = sc.custom ? "1 mol of helium" : sc.label;
+    document.getElementById("eqn").innerHTML = sc.gasOnly ? "He(g, " + Lab.fmt(sc.before.vol * 4, 1) + " L, " + sc.before.T + " K) → He(g, " + Lab.fmt(sc.after.vol * 4, 1) + " L, " + sc.after.T + " K)" : side(sc.r) + " → " + side(sc.p);
+    // legend from atoms present
+    var els = {};
+    [sc.before, sc.after].forEach(function (st) { st.g.forEach(function (g) { Object.keys(ATOMS[g.sp]).forEach(function (a) { els[a] = 1; }); }); });
+    document.getElementById("legend").innerHTML = Object.keys(els).map(function (a) { return '<span style="color:' + LEG[a][1] + '">' + LEG[a][0] + '</span>'; }).join("") +
+      (sc.before.water ? '<span style="color:var(--accent)">Water (tint)</span>' : "");
+    var gb = sc.gasOnly ? 1 : gasMol(sc.r), ga = sc.gasOnly ? 1 : gasMol(sc.p);
+    document.getElementById("r-gas").textContent = gb + " → " + ga;
+    document.getElementById("r-gas2").textContent = ga > gb ? "more gas" : ga < gb ? "less gas" : "no change";
+    document.getElementById("r-what").textContent = sc.what;
+    document.getElementById("r-what2").textContent = sc.gasOnly ? "1 mol He" : "per mole of reaction as written";
+    var shown = S.pred != null || sc.custom;
+    document.getElementById("r-sign").textContent = shown ? signTxt(sc.sign) : "?";
+    document.getElementById("r-sign2").textContent = shown ? (sc.key === "hcl" ? "measured: small, positive" : "") : "predict first";
+    document.getElementById("r-ds").textContent = shown ? (sc.dS > 0 ? "+" : sc.dS < 0 ? "−" : "") + Math.abs(sc.dS).toFixed(sc.gasOnly ? 2 : 1) : "?";
+    document.getElementById("r-ds2").textContent = shown ? (sc.src || "ΣS°(products) − ΣS°(reactants)") : "";
+    // feedback
+    var fb = document.getElementById("fb");
+    if (S.pred == null) { fb.className = "fb"; fb.textContent = sc.custom ? "Set the sliders, predict, then compare. The value updates live." : "Predict first, then read the explanation below."; }
+    else {
+      var p = S.pred === "pos" ? 1 : S.pred === "neg" ? -1 : 0, ok = p === sc.sign;
+      fb.className = "fb " + (ok ? "ok" : "no");
+      fb.textContent = ok ? "Right: " + signTxt(sc.sign) + "." :
+        (sc.key === "hcl" && p === 1 ? "The measured sign is positive, but nothing in the equation lets you justify that. The moles of gas are equal, so the defensible answer is ΔS ≈ 0 / can't tell." :
+         "Not this time: " + (sc.sign === 0 ? "the change is too small to call." : signTxt(sc.sign) + ".") + " Read why below.");
+    }
+    var n = Object.keys(S.tried).length;
+    document.getElementById("tally").textContent = n ? S.right + " of " + n + " processes predicted correctly on the first try" : "";
+    document.getElementById("story").innerHTML = story(sc, shown);
+  }
+  function story(sc, shown) {
+    var h = "";
+    if (sc.custom) {
+      var dV = R * Math.log(S.v2 / S.v1), dT = 1.5 * R * Math.log(S.t2 / S.t1), li = [];
+      li.push(S.v2 === S.v1 ? "The volume is unchanged, so the dispersal of matter is the same before and after." :
+        "The volume goes from " + Lab.fmt(S.v1, 1) + " L to " + Lab.fmt(S.v2, 1) + " L, so each atom has " + (S.v2 > S.v1 ? "more" : "less") + " room: the volume term is " + (dV > 0 ? "+" : "−") + Math.abs(dV).toFixed(2) + " J/K.");
+      li.push(S.t2 === S.t1 ? "The temperature is unchanged, so the kinetic-energy distribution is the same." :
+        "The temperature goes from " + S.t1 + " K to " + S.t2 + " K, so the kinetic-energy distribution becomes " + (S.t2 > S.t1 ? "wider and flatter (energy more dispersed)" : "narrower and taller (energy less dispersed)") + ": the temperature term is " + (dT > 0 ? "+" : "−") + Math.abs(dT).toFixed(2) + " J/K.");
+      if (S.v2 !== S.v1 && S.t2 !== S.t1 && (dV > 0) !== (dT > 0)) li.push("The two effects work against each other here, so you need numbers to know which wins. AP questions usually focus on one change at a time.");
+      li.push("The equation used for the numbers, ΔS = R ln(V₂/V₁) + (3/2)R ln(T₂/T₁), is beyond the AP course. It is shown so you can see how the two effects compare in size.");
+      h += "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+      h += "<p><b>AP answer:</b> " + (sc.sign === 0 ? (S.v2 === S.v1 && S.t2 === S.t1 ? "ΔS = 0: neither the volume nor the temperature changes, so the dispersal of matter and energy is unchanged." : "ΔS ≈ 0: the volume and temperature effects nearly cancel; name both and say they are about equal in size.") :
+        "ΔS " + (sc.sign > 0 ? "> 0" : "< 0") + ". " + (S.v2 !== S.v1 && S.t2 === S.t1 ? "At constant temperature the gas occupies a " + (S.v2 > S.v1 ? "larger" : "smaller") + " volume, so its matter is " + (S.v2 > S.v1 ? "more" : "less") + " dispersed." :
+        S.t2 !== S.t1 && S.v2 === S.v1 ? "At constant volume a " + (S.t2 > S.t1 ? "higher" : "lower") + " temperature " + (S.t2 > S.t1 ? "broadens" : "narrows") + " the distribution of kinetic energies, so energy is " + (S.t2 > S.t1 ? "more" : "less") + " dispersed." :
+        (dV > 0) === (dT > 0) ? "Both effects point the same way: the " + (dV > 0 ? "larger" : "smaller") + " volume makes matter " + (dV > 0 ? "more" : "less") + " dispersed, and the " + (dT > 0 ? "higher" : "lower") + " temperature makes energy " + (dT > 0 ? "more" : "less") + " dispersed." :
+        "The effects oppose each other; name both (volume: matter dispersal; temperature: energy dispersal) and say which is larger.")) + "</p>";
+      return h;
+    }
+    if (!shown) {
+      h += "<p><b>Before you predict:</b> compare the two boxes.</p><ul><li>Did any particles change phase? Which phase gives particles the most freedom?</li><li>Count the moles of gas on each side of the equation.</li><li>Did the volume or the temperature change?</li></ul>";
+      h += "<p><b>AP answer:</b> name the change in dispersal of matter (phase, moles of gas, volume) or of energy (temperature), then state the sign of ΔS.</p>";
+      return h;
+    }
+    h += "<ul>" + sc.why.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+    h += "<p>Measured: ΔS = " + (sc.dS > 0 ? "+" : "−") + Math.abs(sc.dS).toFixed(sc.gasOnly ? 2 : 1) + " J/(mol·K)" + (sc.src ? " (" + sc.src + ")" : " from standard molar entropies") + ".</p>";
+    h += "<p><b>AP answer:</b> " + sc.ap + "</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  var scBtns = {}, scBox = document.getElementById("sc");
+  SC.forEach(function (s) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = s.label;
+    b.addEventListener("click", function () { S.key = s.key; S.pred = null; render(true); });
+    scBox.appendChild(b); scBtns[s.key] = b;
+  });
+  ["pos", "neg", "zero"].forEach(function (k) {
+    document.getElementById("p-" + k).addEventListener("click", function () {
+      var sc = scen();
+      if (S.pred == null && !sc.custom && !S.tried[sc.key]) {
+        S.tried[sc.key] = 1;
+        if ((k === "pos" ? 1 : k === "neg" ? -1 : 0) === sc.sign) S.right++;
+      }
+      S.pred = k; render(false);
+    });
+  });
+  ["v1", "v2", "t1", "t2"].forEach(function (k) {
+    document.getElementById("s-" + k).addEventListener("input", function (e) {
+      S[k] = parseFloat(e.target.value);
+      var was = S.key; S.key = "custom"; if (was !== "custom") S.pred = null;
+      render(true);
+    });
+  });
+  render(true);
+
+  // ---------- Self-check ----------
+  (function () {
+    function bad(m) { console.error("9.1 self-check: " + m); }
+    var expect = { boil: 118.9, caco3: 160.7, haber: -198.7, n2o4: 175.9, agcl: -33.0, h2o: -326.8, hcl: 20.0 };
+    Object.keys(expect).forEach(function (k) {
+      var s = SC.filter(function (x) { return x.key === k; })[0];
+      if (Math.abs(s.dS - expect[k]) > 0.051) bad(k + " ΔS " + s.dS + " ≠ " + expect[k]);
+      if ((s.dS > 0 ? 1 : -1) !== (s.sign || 1)) bad(k + " sign disagrees with ΔS");
+    });
+    if (Math.abs(6010 / 273.15 - SC[0].dS) > 0.05) bad("melting ΔS");
+    if (Math.abs(SC[2].dS - 5.76) > 0.01 || Math.abs(SC[3].dS - 8.64) > 0.01) bad("gas ΔS");
+    // equations balance in atoms and charge; drawings conserve atoms
+    SC.forEach(function (s) {
+      if (!s.r || s.gasOnly) return;
+      function tally(list) { var t = {}, q = 0; list.forEach(function (x) { var p = split(x[1]), c = Lab.parseFormula(p.f); for (var e in c) t[e] = (t[e] || 0) + x[0] * c[e]; q += x[0] * p.q; }); t.q = q; return t; }
+      var a = tally(s.r), b = tally(s.p);
+      Object.keys(a).concat(Object.keys(b)).forEach(function (e) { if ((a[e] || 0) !== (b[e] || 0)) bad(s.key + " unbalanced in " + e); });
+      function dr(st) { var t = {}; st.g.forEach(function (g) { var m = ATOMS[g.sp]; for (var e in m) t[e] = (t[e] || 0) + g.n * m[e]; }); return t; }
+      var c = dr(s.before), d = dr(s.after);
+      Object.keys(c).concat(Object.keys(d)).forEach(function (e) { if ((c[e] || 0) !== (d[e] || 0)) bad(s.key + " drawing loses " + e); });
+    });
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "For which of the following processes is ΔS° negative?",
+      o: ["CaCO₃(s) → CaO(s) + CO₂(g)", "H₂O(l) → H₂O(g)", "2SO₂(g) + O₂(g) → 2SO₃(g)", "N₂O₄(g) → 2NO₂(g)"], c: 2,
+      w: "Three moles of gas react to form two moles of gas, so matter becomes less dispersed and ΔS° &lt; 0 (the measured value is about −188 J/K). Choices A and D increase the moles of gas, and choice B turns a liquid into a gas; all three have ΔS° &gt; 0." },
+    { s: "Which of the following changes for 1 mol of water has the largest positive ΔS?",
+      o: ["H₂O(s) → H₂O(l) at 0 °C", "H₂O(l) → H₂O(g) at 25 °C", "H₂O(g) at 300 K → H₂O(g) at 310 K", "H₂O(l) at 25 °C → H₂O(l) at 30 °C"], c: 1,
+      w: "Vaporization turns a liquid into a gas that fills a much larger volume, about +119 J/(mol·K). Melting (choice A) is only about +22 J/(mol·K) because the molecules in the liquid are still in contact. Small temperature increases (C and D) raise S by only a few J/(mol·K)." },
+    { s: "A sample of an ideal gas expands from 1.0 L to 3.0 L at constant temperature. Which statement best explains why the entropy of the gas increases?",
+      o: ["The gas molecules move faster in the larger container.", "The gas molecules collide with the walls more often.", "The distribution of molecular kinetic energies becomes broader.", "The gas molecules have a larger volume in which to be dispersed."], c: 3,
+      w: "At constant temperature the speed distribution does not change, so energy dispersal is unchanged; what changes is the volume available, so the matter is more dispersed. Choices A and C describe a temperature increase. Choice B is backward: in a larger container, collisions with the walls become less frequent." },
+    { s: "A rigid container of argon gas is heated from 300 K to 400 K. Which statement best explains why the entropy of the argon increases?",
+      o: ["The distribution of kinetic energies among the atoms broadens, so energy is more dispersed.", "The atoms occupy a larger volume.", "The number of moles of gas increases.", "The argon atoms become larger and take up more space."], c: 0,
+      w: "Raising the temperature widens the distribution of kinetic energies (kinetic molecular theory), so energy is spread over more energy states. The container is rigid, so choice B is wrong, and heating does not change the number of atoms (C) or their size (D)." },
+    { s: "Consider the reaction 4NH₃(g) + 5O₂(g) → 4NO(g) + 6H₂O(g). Which of the following correctly predicts the sign of ΔS° and gives a valid justification?",
+      o: ["ΔS° < 0, because there are more product molecules than reactant molecules", "ΔS° ≈ 0, because all the species are gases", "ΔS° > 0, because 10 mol of gas is produced from 9 mol of gas", "ΔS° < 0, because O₂ is consumed"], c: 2,
+      w: "Products: 4 + 6 = 10 mol of gas; reactants: 4 + 5 = 9 mol of gas. More moles of gas means more dispersal, so ΔS° &gt; 0 (measured about +180 J/K). Choice A has the right observation but the wrong sign. Choice B is a trap: being all gases does not make ΔS° zero; the moles of gas still change." },
+    { s: "A particle diagram shows 8 separate atoms of gaseous X in a container. After a reaction at the same temperature and volume, the container holds 4 molecules of gaseous X₂. What is the sign of ΔS for this change, and why?",
+      o: ["Positive, because bonds form, which releases energy to the surroundings", "Negative, because there are fewer independent gas particles after the reaction", "Zero, because the total number of atoms is unchanged", "Positive, because X₂ molecules are larger than X atoms"], c: 1,
+      w: "Eight independent gas particles become four, so there are fewer possible arrangements and the matter is less dispersed: ΔS &lt; 0. Choice A confuses enthalpy (bond formation is exothermic) with entropy. Choice C counts atoms, but entropy depends on the number of independent particles." },
+    { s: "When solutions of AgNO₃ and NaCl are mixed, AgCl(s) precipitates: Ag⁺(aq) + Cl⁻(aq) → AgCl(s). Which statement about the entropy change of this net reaction is correct?",
+      o: ["ΔS° > 0, because a new substance forms", "ΔS° ≈ 0, because no gas is involved", "ΔS° > 0, because the spectator ions remain dissolved", "ΔS° < 0, because ions that moved freely through the solution become fixed in a solid lattice"], c: 3,
+      w: "Dissolved ions move throughout the solution; in the solid they only vibrate in place, so matter becomes less dispersed (measured about −33 J/K). Choice B is a trap: the change is smaller than for gas reactions, but a liquid-to-solid-type change still has a definite negative sign. Spectator ions (C) are not part of the net reaction." },
+    { s: "For the reaction H₂(g) + Cl₂(g) → 2HCl(g), which statement about ΔS° is best supported by the balanced equation alone?",
+      o: ["ΔS° is close to zero, because the number of moles of gas does not change", "ΔS° is large and positive, because HCl is a polar molecule", "ΔS° is large and negative, because two different reactants combine", "ΔS° is large and positive, because the reaction is exothermic"], c: 0,
+      w: "Two moles of gas form two moles of gas, so there is no clear change in the dispersal of matter; the measured ΔS° is small (+20.0 J/K). Choice D confuses enthalpy with entropy, and the sign of ΔH says nothing about the sign of ΔS. Choice C is wrong because the number of gas particles is unchanged." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("9.1");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [9], topic: "9.1", compact: true, storageKey: "topic-9.1" });</script>
+</body>
+</html>

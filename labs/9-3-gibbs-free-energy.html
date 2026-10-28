@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gibbs Free Energy and Thermodynamic Favorability Study Lab</title>
+<meta name="description" content="Set ΔH°, ΔS°, and temperature, watch ΔG° = ΔH° − TΔS° move on a live graph and a four-quadrant sign map, find the crossover temperature, and check the result against free energies of formation.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.side .controls { grid-template-columns: 1fr; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.lab-bar > * { min-width: 0; max-width: 100%; }
+.calc .row span:last-child { font-family: var(--mono); font-size: .88rem; text-align: right; }
+.calc .row span:first-child { min-width: 0; }
+.quad-wrap { display: grid; grid-template-columns: 170px 1fr; gap: 12px; align-items: center; }
+.quad-wrap p { font-size: .86rem; color: var(--muted); }
+.note { font-size: .84rem; color: var(--muted); }
+.legend .l-good { color: var(--good); }
+.legend .l-good::before { height: 10px; opacity: .35; }
+.v.fav { color: var(--good); } .v.unf { color: var(--bad); }
+@media (max-width: 520px) {
+  .lab-bar .eqn { white-space: normal; }
+  .calc .row { flex-direction: column; gap: 2px; }
+  .calc .row span:last-child { text-align: left; }
+  .quad-wrap { grid-template-columns: 140px 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 9 · Topic 9.3</span>
+  <h1>Gibbs Free Energy and Thermodynamic Favorability Study Lab</h1>
+  <p class="lede">Whether a process is thermodynamically favored depends on enthalpy and entropy together, combined in ΔG° = ΔH° − TΔS°. When ΔG° &lt; 0 the process is favored. Change ΔH°, ΔS°, and the temperature below, see which term wins, and find the temperature where the answer flips.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The ΔG° explorer</h2>
+    <p>The graph plots ΔG° = ΔH° − TΔS° against temperature: a straight line that starts at ΔH° (at 0 K) with slope −ΔS°. Where the line is below zero (shaded) the process is thermodynamically favored. The presets are real processes with values from standard tables; as in the AP course, ΔH° and ΔS° are treated as constant with temperature.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>ΔG° vs. temperature <small id="g-sub"></small></h3>
+      <svg class="chart" id="gt" role="img" aria-label="Line graph of standard free energy change against temperature"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Processes</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-h">ΔH° <output id="o-h"></output></label>
+          <input type="range" id="s-h" min="-300" max="300" step="1">
+        </div>
+        <div class="ctl">
+          <label for="s-s">ΔS° <output id="o-s"></output></label>
+          <input type="range" id="s-s" min="-300" max="300" step="1">
+        </div>
+        <div class="ctl">
+          <label for="s-t">Temperature <output id="o-t"></output></label>
+          <input type="range" id="s-t" min="100" max="1500" step="5">
+          <span class="hint" id="h-t"></span>
+        </div>
+      </div>
+      <div class="quad-wrap">
+        <svg id="quad" role="img" aria-label="Sign map of ΔH° against ΔS° with the current process marked"></svg>
+        <p id="quad-txt"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-ad">ΔG° = ΔH° − TΔS°</span><span class="l-good">Favored region (ΔG° &lt; 0)</span><span class="l-c1">Current temperature</span></div>
+    <div class="eqn" id="eqn"></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">ΔG° at this T</div><div class="v" id="r-g"></div><div class="sub">kJ/mol</div></div>
+    <div class="stat"><div class="k">TΔS°</div><div class="v" id="r-ts"></div><div class="sub" id="r-ts2"></div></div>
+    <div class="stat"><div class="k">Crossover temperature</div><div class="v" id="r-x"></div><div class="sub" id="r-x2"></div></div>
+    <div class="stat"><div class="k">Thermodynamically favored?</div><div class="v" id="r-f"></div><div class="sub" id="r-f2"></div></div>
+  </div>
+
+  <div class="card calc" id="calc" aria-live="polite"></div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Definition</span><h3>ΔG° decides favorability</h3><p>ΔG° is the standard free energy change, for all reactants and products in standard states (pure solids and liquids, 1 M solutions, 1 atm gases). ΔG° &lt; 0: thermodynamically favored. ΔG° &gt; 0: not favored; the reverse process is favored.</p></div>
+    <div class="card"><span class="tag">Vocabulary</span><h3>"Favored," not "spontaneous"</h3><p>The course uses "thermodynamically favored" instead of "spontaneous," because spontaneous sounds like "fast" or "sudden." ΔG° says nothing about speed. A favored reaction can take millions of years (topic 9.4).</p></div>
+    <div class="card"><span class="tag">Two routes</span><h3>Two ways to calculate ΔG°</h3><p>From formation values: ΔG° = ΣΔG°f(products) − ΣΔG°f(reactants), using ΔG°f = 0 for elements in standard states. Or from ΔH° and ΔS°: ΔG° = ΔH° − TΔS°. Both are on the equations sheet, and at 298 K they agree within rounding.</p></div>
+    <div class="card"><span class="tag">Units</span><h3>Convert ΔS° to kJ</h3><p>ΔH° is in kJ/mol but ΔS° is in J/(mol·K). Divide ΔS° by 1000 before multiplying by T. Forgetting this makes TΔS° a thousand times too big, the most common lost point in this topic. T must be in kelvins.</p></div>
+    <div class="card"><span class="tag">Sign table</span><h3>Two cases need no math</h3><p>ΔH° &lt; 0 and ΔS° &gt; 0: both terms make ΔG° negative, favored at all T. ΔH° &gt; 0 and ΔS° &lt; 0: both make ΔG° positive, favored at no T. When the signs agree, temperature decides: high T favors the ΔS° &gt; 0 case, low T favors the ΔH° &lt; 0 case.</p></div>
+    <div class="card"><span class="tag">Crossover</span><h3>Where ΔG° = 0</h3><p>When ΔH° and ΔS° have the same sign, set ΔG° = 0 to find T = ΔH°/ΔS°. Above that temperature the entropy term dominates; below it the enthalpy term dominates. Freezing water (ΔH° &lt; 0, ΔS° &lt; 0) crosses at 273 K, which is why ice forms below 0 °C.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Signs of ΔH° and ΔS°</h2>
+    <p>The four combinations, with the presets from the lab as examples. The first two rows need no calculation.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>ΔH°</th><th>ΔS°</th><th>ΔG° &lt; 0 (favored) at</th><th>Why</th><th>Example</th></tr></thead>
+    <tbody id="sign-table"></tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Free energy on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points</h3>
+      <ul>
+        <li>Write ΔG° = ΔH° − TΔS°, convert ΔS° to kJ/(mol·K), substitute with units, and give ΔG° in kJ/mol with its sign.</li>
+        <li>State the conclusion explicitly: "ΔG° &lt; 0, so the reaction is thermodynamically favored at 298 K."</li>
+        <li>For "favored at all/no/high/low temperatures," cite both signs: "ΔH° &lt; 0 and ΔS° &gt; 0, so ΔG° &lt; 0 at all T."</li>
+        <li>For a crossover, set ΔG° = 0 and solve T = ΔH°/ΔS°, with consistent units; say which side of it is favored.</li>
+        <li>When asked which factor drives a process, compare the sizes of ΔH° and TΔS°.</li>
+        <li>For ΣΔG°f, multiply by coefficients and use zero for elements in their standard states.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Mixing J and kJ: ΔH° = −92.2 kJ/mol with ΔS° = −198.7 J/(mol·K) means TΔS° = 298 × (−0.1987) = −59.2 kJ/mol.</li>
+        <li>Using °C for T. At 25 °C, T = 298 K.</li>
+        <li>Saying "spontaneous means fast," or that ΔG° &lt; 0 tells you the rate.</li>
+        <li>Claiming an endothermic process can never be favored. Dissolving NaNO₃ or NH₄NO₃ is endothermic and favored because of TΔS°.</li>
+        <li>Getting the subtraction backward: ΔG° = ΔH° − TΔS°, so a positive ΔS° lowers ΔG°.</li>
+        <li>Setting S° = 0 for elements when computing ΔS° (only ΔH°f and ΔG°f are zero for elements).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 9.3. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-9.html">Unit 9 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Data at 298 K: [ΔH°f kJ/mol, ΔG°f kJ/mol, S° J/(mol·K)] ----------
+  var D = {
+    "H2O2(l)": [-187.8, -120.4, 109.6], "H2O(l)": [-285.8, -237.1, 69.9], "O2(g)": [0, 0, 205.2], "O3(g)": [142.7, 163.2, 238.9],
+    "CaCO3(s)": [-1206.9, -1128.8, 92.9], "CaO(s)": [-635.1, -604.0, 39.8], "CO2(g)": [-393.5, -394.4, 213.8],
+    "N2(g)": [0, 0, 191.6], "H2(g)": [0, 0, 130.7], "NH3(g)": [-46.1, -16.5, 192.5],
+    "NO2(g)": [33.2, 51.3, 240.1], "N2O4(g)": [9.2, 97.9, 304.3],
+    "NaNO3(s)": [-467.9, -367.0, 116.5], "Na^+(aq)": [-240.1, -261.9, 59.0], "NO3^-(aq)": [-205.0, -108.7, 146.4]
+  };
+  function split(k) { var m = k.match(/^(.*?)(\^([0-9]*)([+\-]))?\((s|l|g|aq)\)$/); return { f: m[1], st: m[5], q: m[2] ? (m[4] === "+" ? 1 : -1) * (m[3] ? +m[3] : 1) : 0 }; }
+  function show(k) { var s = split(k); return Lab.fmla(s.f + (s.q ? "^" + (Math.abs(s.q) > 1 ? Math.abs(s.q) : "") + (s.q > 0 ? "+" : "-") : "")) + "(" + s.st + ")"; }
+  function side(list) { return list.map(function (t) { return (t[0] === 1 ? "" : t[0]) + show(t[1]); }).join(" + "); }
+  function tot(list, i) { return list.reduce(function (a, t) { return a + t[0] * D[t[1]][i]; }, 0); }
+
+  var PR = [
+    { key: "h2o2", label: "H₂O₂ decomposes", r: [[2, "H2O2(l)"]], p: [[2, "H2O(l)"], [1, "O2(g)"]], T: 298 },
+    { key: "o3", label: "O₂ → O₃", r: [[3, "O2(g)"]], p: [[2, "O3(g)"]], T: 298 },
+    { key: "caco3", label: "CaCO₃ decomposes", r: [[1, "CaCO3(s)"]], p: [[1, "CaO(s)"], [1, "CO2(g)"]], T: 298 },
+    { key: "haber", label: "Haber process", r: [[1, "N2(g)"], [3, "H2(g)"]], p: [[2, "NH3(g)"]], T: 298 },
+    { key: "no2", label: "2NO₂ → N₂O₄", r: [[2, "NO2(g)"]], p: [[1, "N2O4(g)"]], T: 298 },
+    { key: "nano3", label: "NaNO₃ dissolves", r: [[1, "NaNO3(s)"]], p: [[1, "Na^+(aq)"], [1, "NO3^-(aq)"]], T: 298 },
+    { key: "freeze", label: "Water freezes", eq: "H<sub>2</sub>O(l) → H<sub>2</sub>O(s)", dh: -6.01, ds: -22.0, T: 263, src: "at 0 °C: ΔH°fus = 6.01 kJ/mol" },
+    { key: "custom", label: "Your own values", custom: true }
+  ];
+  PR.forEach(function (p) {
+    if (p.r) { p.dh = tot(p.p, 0) - tot(p.r, 0); p.dg = tot(p.p, 1) - tot(p.r, 1); p.ds = tot(p.p, 2) - tot(p.r, 2); p.eq = side(p.r) + " → " + side(p.p); }
+  });
+  var WHY = {
+    h2o2: "Exothermic, and 1 mol of gas forms from liquids.",
+    o3: "Endothermic, and 3 mol of gas become 2 mol.",
+    caco3: "Endothermic (bonds broken), and a gas forms from a solid.",
+    haber: "Exothermic, but 4 mol of gas become 2 mol.",
+    no2: "Exothermic (a bond forms), but 2 mol of gas become 1 mol.",
+    nano3: "Endothermic, but ions disperse into solution.",
+    freeze: "Exothermic, but the liquid becomes a more ordered solid."
+  };
+
+  var S = { key: "haber", dh: 0, ds: 0, T: 298 };
+  function pr() { return PR.filter(function (p) { return p.key === S.key; })[0]; }
+  function pick(k) { var p = PR.filter(function (x) { return x.key === k; })[0]; S.key = k; if (!p.custom) { S.dh = p.dh; S.ds = p.ds; S.T = p.T; } render(); }
+  function G(T) { return S.dh - T * S.ds / 1000; }
+  function f1(v) { return (v < 0 ? "−" : v > 0 ? "+" : "") + Math.abs(v).toFixed(1); }
+  function m1(v) { return (v < 0 ? "−" : "") + Math.abs(v).toFixed(1); }
+  function f2(v) { return (v < 0 ? "−" : v > 0 ? "+" : "") + Math.abs(v).toFixed(Math.abs(v) < 10 ? 2 : 1); }
+  function cross() { return S.ds !== 0 && S.dh / S.ds * 1000 > 0 && (S.dh > 0) === (S.ds > 0) ? S.dh / (S.ds / 1000) : null; }
+  function kind() { return S.dh === 0 && S.ds === 0 ? "zero" : S.dh <= 0 && S.ds >= 0 ? "all" : S.dh >= 0 && S.ds <= 0 ? "none" : S.dh > 0 ? "high" : "low"; }
+  function niceStep(span) { var raw = span / 5, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p; }
+
+  // ---------- Graph ----------
+  function drawG() {
+    var g0 = G(0), g1 = G(1500), lo = Math.min(g0, g1, 0, G(S.T)), hi = Math.max(g0, g1, 0, G(S.T));
+    if (hi - lo < 4) { hi += 2; lo -= 2; }
+    var pad = (hi - lo) * 0.1; lo -= pad; hi += pad;
+    var st = niceStep(hi - lo), yt = [];
+    for (var v = Math.ceil(lo / st) * st; v <= hi + 1e-9; v += st) yt.push(+v.toFixed(6));
+    var F = Lab.frame(document.getElementById("gt"), { x: [0, 1500], y: [lo, hi], xTicks: [0, 300, 600, 900, 1200, 1500], yTicks: yt,
+      fmtX: function (v) { return v; }, fmtY: function (v) { return (v < 0 ? "−" : "") + Math.abs(+v.toFixed(2)); },
+      xLabel: "Temperature (K)", yLabel: "ΔG° (kJ/mol)", width: 440, height: 330 });
+    Lab.rect(F, 0, lo, 1500, 0, "var(--good)", 0.12);
+    Lab.hline(F, 0, "var(--ink)", 1.2);
+    Lab.tag(F, 1480, lo + (hi - lo) * 0.04, "favored (ΔG° < 0)", "var(--good)", "end");
+    Lab.tag(F, 1480, hi - (hi - lo) * 0.07, "not favored (ΔG° > 0)", "var(--bad)", "end");
+    Lab.line(F, [[0, g0], [1500, g1]], "var(--accent)", 3);
+    Lab.vline(F, 298, "var(--ghost)", 1.2, "3 3");
+    Lab.el("text", { x: F.sx(298) + 4, y: F.H - F.M.b - 6, style: "fill:var(--muted)" }, F.svg, "298 K");
+    var x = cross();
+    if (x != null && x <= 1500) {
+      Lab.el("circle", { cx: F.sx(x), cy: F.sy(0), r: 5, fill: "var(--surface)", stroke: "var(--accent)", "stroke-width": 2 }, F.g);
+      var right = x < 1250, up = right ? S.ds > 0 : S.ds < 0;
+      Lab.el("text", { x: F.sx(x) + (right ? 9 : -9), y: F.sy(0) + (up ? -9 : 17), "text-anchor": right ? "start" : "end", "class": "lbl", style: "fill:var(--accent)" }, F.svg, "T = " + Math.round(x) + " K");
+    }
+    Lab.vline(F, S.T, "var(--c1)", 1.5, "5 3");
+    Lab.dot(F, S.T, G(S.T), "var(--c1)");
+  }
+  function drawQuad() {
+    var q = document.getElementById("quad"), W = 170, Hh = 150;
+    q.setAttribute("viewBox", "0 0 " + W + " " + Hh);
+    while (q.firstChild) q.removeChild(q.firstChild);
+    var cx = W / 2, cy = Hh / 2, k = kind();
+    var cells = [["none", 0, 0, "No T"], ["high", cx, 0, "High T"], ["low", 0, cy, "Low T"], ["all", cx, cy, "All T"]];
+    cells.forEach(function (c) {
+      var col = c[0] === "all" ? "var(--good)" : c[0] === "none" ? "var(--bad)" : "var(--c1)";
+      Lab.el("rect", { x: c[1] + 1, y: c[2] + 1, width: cx - 2, height: cy - 2, rx: 6, fill: col, opacity: c[0] === k ? 0.28 : 0.08 }, q);
+      Lab.el("text", { x: c[1] + cx / 2, y: c[2] + cy / 2 + 4, "text-anchor": "middle", "class": "lbl", style: "fill:" + col + (c[0] === k ? "" : "; opacity:.7") }, q, c[3]);
+    });
+    Lab.el("line", { x1: cx, x2: cx, y1: 0, y2: Hh, stroke: "var(--ink)" }, q);
+    Lab.el("line", { x1: 0, x2: W, y1: cy, y2: cy, stroke: "var(--ink)" }, q);
+    Lab.el("text", { x: W - 3, y: cy - 4, "text-anchor": "end", style: "font-size:10px" }, q, "ΔS° +");
+    Lab.el("text", { x: 3, y: cy - 4, style: "font-size:10px" }, q, "ΔS° −");
+    Lab.el("text", { x: cx + 4, y: 11, style: "font-size:10px" }, q, "ΔH° +");
+    Lab.el("text", { x: cx + 4, y: Hh - 4, style: "font-size:10px" }, q, "ΔH° −");
+    var px = cx + Math.max(-1, Math.min(1, S.ds / 300)) * (cx - 8), py = cy - Math.max(-1, Math.min(1, S.dh / 300)) * (cy - 8);
+    Lab.el("circle", { cx: px, cy: py, r: 5.5, fill: "var(--c1)", stroke: "var(--surface)", "stroke-width": 2 }, q);
+    var txt = { all: "ΔH° < 0 and ΔS° > 0: both terms make ΔG° negative. Favored at every temperature; no calculation needed.",
+      none: "ΔH° > 0 and ΔS° < 0: both terms make ΔG° positive. Not favored at any temperature; no calculation needed.",
+      high: "ΔH° > 0 and ΔS° > 0: the entropy term wins only when T is large enough. Favored at high T.",
+      low: "ΔH° < 0 and ΔS° < 0: the enthalpy term wins only when T is small enough. Favored at low T.",
+      zero: "ΔH° = 0 and ΔS° = 0: ΔG° = 0 at every temperature, so neither direction is favored." };
+    document.getElementById("quad-txt").textContent = txt[k];
+  }
+
+  // ---------- Render ----------
+  var elH = document.getElementById("s-h"), elS = document.getElementById("s-s"), elT = document.getElementById("s-t");
+  function render() {
+    var p = pr(), g = G(S.T), ts = S.T * S.ds / 1000, x = cross(), k = kind();
+    if (Math.abs(g) < 0.005) g = 0; // treat a rounding-level ΔG° (e.g. freezing at 273 K) as zero
+    Object.keys(btns).forEach(function (kk) { btns[kk].setAttribute("aria-pressed", kk === S.key ? "true" : "false"); });
+    elH.value = Math.round(S.dh); elS.value = Math.round(S.ds); elT.value = S.T;
+    document.getElementById("o-h").textContent = f2(S.dh) + " kJ/mol";
+    document.getElementById("o-s").textContent = f1(S.ds) + " J/(mol·K)";
+    document.getElementById("o-t").textContent = S.T + " K";
+    document.getElementById("h-t").textContent = (S.T - 273) + " °C" + (S.T === 298 ? " (standard 25 °C)" : "");
+    document.getElementById("g-sub").textContent = p.custom ? "your values" : p.label;
+    document.getElementById("eqn").innerHTML = p.custom ? "ΔG° = ΔH° − TΔS°" : p.eq;
+    drawG(); drawQuad();
+    var rg = document.getElementById("r-g"); rg.textContent = f2(g); rg.className = "v " + (g < 0 ? "fav" : g > 0 ? "unf" : "");
+    document.getElementById("r-ts").textContent = f2(ts);
+    document.getElementById("r-ts2").textContent = "kJ/mol at " + S.T + " K";
+    document.getElementById("r-x").textContent = x != null ? Math.round(x) + " K" : "none";
+    document.getElementById("r-x2").textContent = x != null ? (k === "high" ? "favored above" : "favored below") + " (" + Math.round(x - 273) + " °C)" : k === "all" ? "favored at all T" : k === "zero" ? "ΔG° = 0 at all T" : "favored at no T";
+    var rf = document.getElementById("r-f"); rf.textContent = g < 0 ? "Yes" : g > 0 ? "No" : "ΔG° = 0"; rf.className = "v " + (g < 0 ? "fav" : g > 0 ? "unf" : "");
+    document.getElementById("r-f2").textContent = g < 0 ? "ΔG° < 0" : g > 0 ? "ΔG° > 0; reverse is favored" : "neither direction favored";
+    document.getElementById("calc").innerHTML = calc(p, g, ts);
+    document.getElementById("story").innerHTML = story(p, g, ts, x, k);
+  }
+  function calc(p, g, ts) {
+    var h = "<h3>Worked calculation at " + S.T + " K</h3>";
+    h += '<div class="row"><span>Convert ΔS° to kJ</span><span>' + f1(S.ds) + " J/(mol·K) ÷ 1000 = " + (S.ds / 1000 < 0 ? "−" : "") + Math.abs(S.ds / 1000).toFixed(4) + ' kJ/(mol·K)</span></div>';
+    h += '<div class="row"><span>TΔS°</span><span>(' + S.T + " K)(" + (S.ds / 1000 < 0 ? "−" : "") + Math.abs(S.ds / 1000).toFixed(4) + ") = " + f2(ts) + ' kJ/mol</span></div>';
+    if (p.r) {
+      h += '<div class="row"><span>Check, ΔG°f route (valid at 298 K only)</span><span>ΣΔG°f(products) − ΣΔG°f(reactants) = ' + m1(tot(p.p, 1)) + " − (" + m1(tot(p.r, 1)) + ") = " + f1(p.dg) + ' kJ/mol</span></div>';
+    }
+    h += '<div class="row"><span>ΔG° = ΔH° − TΔS°</span><span>' + f2(S.dh) + " − (" + f2(ts) + ") = " + f2(g) + ' kJ/mol</span></div>';
+    return h;
+  }
+  function story(p, g, ts, x, k) {
+    var li = [];
+    if (!p.custom) li.push("<b>" + p.label + ".</b> " + WHY[p.key] + " ΔH° = " + f2(S.dh) + " kJ/mol and ΔS° = " + f1(S.ds) + " J/(mol·K)" + (p.src ? " (" + p.src + ")" : "") + ".");
+    li.push("At " + S.T + " K, the enthalpy term is " + f2(S.dh) + " kJ/mol and the entropy term, −TΔS°, is " + f2(-ts) + " kJ/mol. " +
+      (Math.abs(S.dh) > Math.abs(ts) ? "The enthalpy term is larger, so it sets the sign of ΔG°." : Math.abs(S.dh) < Math.abs(ts) ? "The entropy term is larger, so it sets the sign of ΔG°." : "They cancel exactly."));
+    if (k === "zero") li.push("ΔH° and ΔS° are both zero, so ΔG° = 0 at every temperature: neither direction is favored.");
+    else if (k === "all") li.push("Neither ΔH° nor −TΔS° is positive" + (S.dh === 0 || S.ds === 0 ? " (one of them is zero)" : "") + ", so ΔG° is negative at every temperature. Move the temperature slider: the dot never leaves the shaded region.");
+    else if (k === "none") li.push("Neither ΔH° nor −TΔS° is negative" + (S.dh === 0 || S.ds === 0 ? " (one of them is zero)" : "") + ", so ΔG° is positive at every temperature. The reverse process is favored instead.");
+    else if (x != null) li.push("ΔH° and ΔS° have the same sign, so the answer depends on temperature. Setting ΔG° = 0 gives T = ΔH°/ΔS° = " + f2(S.dh) + " ÷ " + (S.ds / 1000 < 0 ? "−" : "") + Math.abs(S.ds / 1000).toFixed(4) + " = " + Math.round(x) + " K. The process is favored " + (k === "high" ? "above" : "below") + " that temperature" + (x > 1500 ? " (off the right edge of the graph)" : "") + ".");
+    if (p.key === "freeze") li.push(S.T < 273 ? "Below 273 K the enthalpy released by forming hydrogen bonds in the solid outweighs the entropy lost, so water freezes." : S.T > 273 ? "Above 273 K the entropy term wins and ice melts instead; freezing is not favored." : "At the melting point, ice and water are in balance.");
+    if (p.key === "nano3") li.push("Dissolving NaNO₃ is endothermic (the solution gets cold), yet it is favored at 298 K because the large positive ΔS° makes −TΔS° outweigh ΔH°.");
+    if (p.key === "caco3") li.push("That is why lime kilns heat limestone to well above 1100 K. The ΔH° and ΔS° values are for 298 K, so the crossover found this way is an estimate.");
+    if (p.r && S.T !== 298) li.push("The ΔG°f check in the calculation is for 298 K only; at " + S.T + " K use ΔH° − TΔS°.");
+    var h = "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+    h += "<p><b>AP answer:</b> ΔG° = ΔH° − TΔS° = " + f2(S.dh) + " kJ/mol − (" + S.T + " K)(" + (S.ds / 1000 < 0 ? "−" : "") + Math.abs(S.ds / 1000).toFixed(4) + " kJ/(mol·K)) = " + f2(g) + " kJ/mol. " +
+      (g < 0 ? "Because ΔG° &lt; 0, the process is thermodynamically favored at " + S.T + " K." : g > 0 ? "Because ΔG° &gt; 0, the process is not thermodynamically favored at " + S.T + " K." : "ΔG° = 0, so neither direction is favored.") + "</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  var btns = {}, box = document.getElementById("sc");
+  PR.forEach(function (p) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = p.label;
+    b.addEventListener("click", function () { pick(p.key); });
+    box.appendChild(b); btns[p.key] = b;
+  });
+  elH.addEventListener("input", function () { S.dh = +elH.value; S.key = "custom"; render(); });
+  elS.addEventListener("input", function () { S.ds = +elS.value; S.key = "custom"; render(); });
+  elT.addEventListener("input", function () { S.T = +elT.value; render(); });
+
+  // ---------- Sign table (generated from the presets) ----------
+  (function () {
+    var rows = [["all", "&lt; 0", "&gt; 0", "<b>All temperatures</b>", "Both ΔH° and −TΔS° are negative."],
+      ["none", "&gt; 0", "&lt; 0", "<b>No temperature</b>", "Both ΔH° and −TΔS° are positive; the reverse is favored."],
+      ["high", "&gt; 0", "&gt; 0", "<b>High T</b> (above ΔH°/ΔS°)", "TΔS° must grow larger than ΔH°."],
+      ["low", "&lt; 0", "&lt; 0", "<b>Low T</b> (below ΔH°/ΔS°)", "TΔS° must stay smaller in size than ΔH°."]];
+    document.getElementById("sign-table").innerHTML = rows.map(function (r) {
+      var ex = PR.filter(function (p) { if (p.custom) return false; var s = { dh: p.dh, ds: p.ds }; var kk = s.dh <= 0 && s.ds >= 0 ? "all" : s.dh >= 0 && s.ds <= 0 ? "none" : s.dh > 0 ? "high" : "low"; return kk === r[0]; });
+      return "<tr><td>" + r[1] + "</td><td>" + r[2] + "</td><td>" + r[3] + "</td><td>" + r[4] + "</td><td>" + ex.map(function (p) {
+        var x = (p.dh > 0) === (p.ds > 0) ? " (crossover " + Math.round(p.dh / p.ds * 1000) + " K)" : "";
+        return p.label + ": ΔH° = " + f2(p.dh) + " kJ/mol, ΔS° = " + f1(p.ds) + " J/(mol·K)" + x;
+      }).join("<br>") + "</td></tr>";
+    }).join("");
+  })();
+
+  pick("haber");
+
+  // ---------- Self-check ----------
+  (function () {
+    function bad(m) { console.error("9.3 self-check: " + m); }
+    var Sel = { H: 130.7 / 2, O: 205.2 / 2, N: 191.6 / 2, C: 5.7, Ca: 41.4, Na: 51.3 };
+    Object.keys(D).forEach(function (k) {
+      var s = split(k); if (s.q) return;
+      var c = Lab.parseFormula(s.f), se = 0; for (var e in c) se += c[e] * Sel[e];
+      var pred = D[k][0] - 298.15 * (D[k][2] - se) / 1000;
+      if (Math.abs(pred - D[k][1]) > 1.5) bad(k + " ΔG°f inconsistent with ΔH°f and S° (" + pred.toFixed(1) + ")");
+    });
+    var expect = { h2o2: [-196.0, 125.8, -233.4], o3: [285.4, -137.8, 326.4], caco3: [178.3, 160.7, 130.4], haber: [-92.2, -198.7, -33.0], no2: [-57.2, -175.9, -4.7], nano3: [22.8, 88.9, -3.6] };
+    PR.forEach(function (p) {
+      if (!p.r) return;
+      var e = expect[p.key];
+      if (Math.abs(p.dh - e[0]) > 0.051 || Math.abs(p.ds - e[1]) > 0.051 || Math.abs(p.dg - e[2]) > 0.051) bad(p.key + " totals " + [p.dh, p.ds, p.dg].join(", "));
+      if (Math.abs(p.dh - 298.15 * p.ds / 1000 - p.dg) > 1.5) bad(p.key + " ΔH° − TΔS° disagrees with ΣΔG°f");
+      var a = {}, b = {};
+      function t(list, o) { list.forEach(function (y) { var s = split(y[1]), c = Lab.parseFormula(s.f); for (var e2 in c) o[e2] = (o[e2] || 0) + y[0] * c[e2]; o.q = (o.q || 0) + y[0] * s.q; }); }
+      t(p.r, a); t(p.p, b);
+      Object.keys(a).concat(Object.keys(b)).forEach(function (e2) { if ((a[e2] || 0) !== (b[e2] || 0)) bad(p.key + " unbalanced " + e2); });
+    });
+    var fz = PR.filter(function (p) { return p.key === "freeze"; })[0];
+    if (Math.abs(fz.dh / fz.ds * 1000 - 273.2) > 0.2) bad("freezing crossover");
+    // quiz numbers
+    if (Math.abs(178.3 - 298 * 0.1607 - 130.4) > 0.05 || Math.abs(178.3 + 298 * 0.1607 - 226.2) > 0.05 || Math.abs(178.3 / 0.1607 - 1109.5) > 0.5) bad("quiz 1/2");
+    if (Math.abs(D["N2O4(g)"][1] - 2 * D["NO2(g)"][1] + 4.7) > 0.05 || Math.abs(D["N2O4(g)"][1] - D["NO2(g)"][1] - 46.6) > 0.05) bad("quiz 5");
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "For CaCO₃(s) → CaO(s) + CO₂(g), ΔH° = +178.3 kJ/mol and ΔS° = +160.7 J/(mol·K). What is ΔG° at 298 K?",
+      o: ["−4.77 × 10⁴ kJ/mol", "+130.4 kJ/mol", "+226.2 kJ/mol", "−130.4 kJ/mol"], c: 1,
+      w: "Convert ΔS° to kJ: 0.1607 kJ/(mol·K). ΔG° = 178.3 − (298)(0.1607) = 178.3 − 47.9 = +130.4 kJ/mol, so the reaction is not favored at 298 K. Choice A forgets to convert J to kJ. Choice C adds TΔS° instead of subtracting it." },
+    { s: "For the same reaction (ΔH° = +178.3 kJ/mol, ΔS° = +160.7 J/(mol·K)), above approximately what temperature does the decomposition become thermodynamically favored? Assume ΔH° and ΔS° do not change with temperature.",
+      o: ["1.11 K", "298 K", "901 K", "1110 K"], c: 3,
+      w: "Set ΔG° = 0: T = ΔH°/ΔS° = 178.3 kJ/mol ÷ 0.1607 kJ/(mol·K) = 1110 K. Both ΔH° and ΔS° are positive, so the reaction is favored above this temperature. Choice A divides kJ by J without converting; choice C inverts the ratio (ΔS°/ΔH° × 1000)." },
+    { s: "A reaction has ΔH° < 0 and ΔS° < 0. Which statement about its thermodynamic favorability is correct?",
+      o: ["It is favored only at low temperatures, where the size of ΔH° exceeds the size of TΔS°.", "It is favored only at high temperatures, where TΔS° is large.", "It is favored at all temperatures because it is exothermic.", "It is not favored at any temperature because ΔS° < 0."], c: 0,
+      w: "ΔG° = ΔH° − TΔS°: the enthalpy term is negative (favorable) and −TΔS° is positive (unfavorable). At low T the −TΔS° term is small, so ΔG° &lt; 0. Choice B describes the ΔH° &gt; 0, ΔS° &gt; 0 case. Choices C and D each consider only one of the two terms." },
+    { s: "At −10 °C, liquid water freezes even though ΔS° for freezing is negative. Which statement best explains why freezing is thermodynamically favored at this temperature?",
+      o: ["The entropy of the water increases when it freezes at low temperature.", "Freezing is endothermic, and endothermic processes are favored at low temperature.", "Freezing is exothermic, and at this low temperature the size of ΔH° is greater than the size of TΔS°, so ΔG° < 0.", "Freezing is favored at all temperatures; it only appears not to happen above 0 °C because it is slow."], c: 2,
+      w: "For freezing, ΔH° ≈ −6.01 kJ/mol and ΔS° ≈ −22.0 J/(mol·K). At 263 K, TΔS° = −5.79 kJ/mol, so ΔG° = −6.01 + 5.79 = −0.22 kJ/mol &lt; 0. Choice B gets the sign of ΔH° wrong: freezing releases heat. Choice D is false: above 273 K, ΔG° for freezing is positive." },
+    { s: "Given ΔG°f values of NO₂(g) = 51.3 kJ/mol and N₂O₄(g) = 97.9 kJ/mol, what is ΔG° for 2NO₂(g) → N₂O₄(g) at 298 K?",
+      o: ["+46.6 kJ/mol", "−4.7 kJ/mol", "+4.7 kJ/mol", "+149.2 kJ/mol"], c: 1,
+      w: "ΔG° = ΔG°f(N₂O₄) − 2ΔG°f(NO₂) = 97.9 − 2(51.3) = 97.9 − 102.6 = −4.7 kJ/mol, so the dimerization is (slightly) favored at 298 K. Choice A forgets the coefficient 2. Choice C subtracts in the wrong order." },
+    { s: "Solid NH₄NO₃ dissolves readily in water at 25 °C, and the solution becomes cold. Which of the following correctly describes the dissolution at 25 °C?",
+      o: ["ΔH° > 0, ΔS° > 0, and TΔS° > ΔH°", "ΔH° < 0, ΔS° > 0, and the process is favored at all temperatures", "ΔH° > 0, ΔS° < 0, and ΔG° > 0", "ΔH° < 0, ΔS° < 0, and the size of ΔH° exceeds TΔS°"], c: 0,
+      w: "The solution gets cold, so dissolving absorbs heat: ΔH° &gt; 0. The process is favored, so ΔG° &lt; 0, which requires ΔS° &gt; 0 and TΔS° larger than ΔH°. Choice B has the wrong sign of ΔH° (the solution would warm up). Choice C would make the process unfavored at every temperature." },
+    { s: "A reaction has ΔG° = −50 kJ/mol at 298 K. Which statement is correct?",
+      o: ["The reaction will occur rapidly at 298 K.", "The reaction has no activation energy.", "ΔS° for the reaction must be positive.", "The reaction is thermodynamically favored, but ΔG° gives no information about how fast it occurs."], c: 3,
+      w: "A negative ΔG° means the reaction is thermodynamically favored. Rate depends on activation energy and kinetics, which ΔG° does not describe (topic 9.4). Choice A is the classic \"spontaneous means fast\" error. Choice C is not required: a large negative ΔH° can make ΔG° negative even when ΔS° &lt; 0." },
+    { s: "A graph of ΔG° versus T (in K) for a reaction is a straight line with a positive slope that crosses ΔG° = 0 at 400 K. Assuming ΔH° and ΔS° are constant, which statement is correct?",
+      o: ["ΔH° > 0 and ΔS° > 0; the reaction is favored above 400 K.", "ΔH° > 0 and ΔS° < 0; the reaction is never favored.", "ΔH° < 0 and ΔS° < 0; the reaction is favored below 400 K.", "ΔH° < 0 and ΔS° > 0; the reaction is favored at all temperatures."], c: 2,
+      w: "ΔG° = ΔH° − TΔS° is a line with slope −ΔS°. A positive slope means ΔS° &lt; 0. The line rises through zero at 400 K, so it is negative below 400 K, and its intercept at T = 0 (equal to ΔH°) is negative. So ΔH° &lt; 0, ΔS° &lt; 0, favored below 400 K. Choice A reads the slope as +ΔS° instead of −ΔS°." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("9.3");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [9], topic: "9.3", compact: true, storageKey: "topic-9.3" });</script>
+</body>
+</html>

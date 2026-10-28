@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pH and Solubility Study Lab</title>
+<meta name="description" content="Lower the pH over a saturated solution of CaF₂, Mg(OH)₂, CaCO₃ or AgCl and watch H₃O⁺ pull the basic anion out of the equilibrium, so more solid dissolves, or nothing happens.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.ctlcard { display: grid; gap: 16px; }
+.ctlcard .controls { grid-template-columns: 1fr; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.plegend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted); }
+.plegend span { display: inline-flex; align-items: center; gap: 5px; }
+.plegend em { font-style: normal; }
+.plegend i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+.note { font-size: .82rem; color: var(--muted); }
+.eqn { white-space: normal; line-height: 1.7; }
+svg .ptxt { font-family: var(--body); font-size: 9px; font-weight: 700; fill: var(--surface); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 8 · Topic 8.11</span>
+  <h1>pH and Solubility Study Lab</h1>
+  <p class="lede">A slightly soluble salt dissolves more in acid when one of its ions is a base: H<sub>3</sub>O<sup>+</sup> reacts with that ion, lowering its concentration, and by Le Châtelier's principle more solid dissolves to replace it. If the anion is the conjugate base of a strong acid, the pH has no effect. Move the pH over four classic salts and see which ones respond.</p>
+</header>
+
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The dissolving bench</h2>
+    <p>Each beaker holds a saturated solution in contact with excess solid. The pH is held at the slider value by the rest of the solution (a buffer, a strong acid or a strong base), as if you had added it. The particle view shows the trend on a compressed scale; the graph shows the computed molar solubility on a log scale.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3><span>Particle view</span> <small id="part-sub"></small></h3>
+      <svg class="chart particles" id="part" role="img" aria-label="Beaker with undissolved solid at the bottom and dissolved ions, with the basic anion partly converted to its conjugate acid at low pH"></svg>
+      <div class="plegend" id="plegend"></div>
+    </div>
+    <div class="card graph-card">
+      <h3><span>Molar solubility vs. pH</span> <small>log scale</small></h3>
+      <svg class="chart" id="graph" role="img" aria-label="Logarithm of molar solubility of the selected salt plotted against pH, with the current pH marked"></svg>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <div class="tag">Exam scenarios</div>
+      <div class="scenarios" id="sc"></div>
+    </div>
+    <div class="group">
+      <div class="tag">Salt</div>
+      <div class="chips" id="salts"></div>
+      <div class="eqn" id="eqn"></div>
+    </div>
+    <div class="controls">
+      <div class="ctl">
+        <label for="s-ph">pH of the solution <output id="o-ph"></output></label>
+        <input type="range" id="s-ph" min="0" max="14" step="0.1">
+        <span class="hint" id="h-ph"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">K<sub>sp</sub></div><div class="v" id="r-ksp"></div><div class="sub">fixed at 25 °C; pH does not change it</div></div>
+    <div class="stat"><div class="k">Molar solubility at this pH</div><div class="v" id="r-s"></div><div class="sub" id="r-s2"></div></div>
+    <div class="stat"><div class="k" id="r-an-k">Basic anion left unprotonated</div><div class="v" id="r-an"></div><div class="sub" id="r-an2"></div></div>
+    <div class="stat"><div class="k">pH-sensitive?</div><div class="v" id="r-sens"></div><div class="sub" id="r-sens2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">Solubilities are computed for a solution held at the given pH, from K<sub>sp</sub> and K<sub>a</sub> values at 25 °C (CaF<sub>2</sub> 3.9 × 10<sup>−11</sup>, Mg(OH)<sub>2</sub> 5.6 × 10<sup>−12</sup>, CaCO<sub>3</sub> 4.8 × 10<sup>−9</sup>, AgCl 1.8 × 10<sup>−10</sup>; HF K<sub>a</sub> 6.8 × 10<sup>−4</sup>; H<sub>2</sub>CO<sub>3</sub> K<sub>a1</sub> 4.3 × 10<sup>−7</sup>, K<sub>a2</sub> 4.8 × 10<sup>−11</sup>). They ignore activity effects, ion pairing, and CO<sub>2</sub> escaping, and values above about 1 M only mean "dissolves completely." They are illustrations: the AP exam asks for the qualitative effect of pH on solubility, and computing solubility as a function of pH is not assessed.</p>
+</section>
+
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">When pH matters</span><h3>One ion is a base (or OH<sup>−</sup>)</h3><p>Solubility depends on pH when an ion of the salt is a weak base (F<sup>−</sup>, CO<sub>3</sub><sup>2−</sup>, CH<sub>3</sub>COO<sup>−</sup>, PO<sub>4</sub><sup>3−</sup>), the hydroxide ion itself, or a weak acid. The usual examples are basic anions.</p></div>
+    <div class="card"><span class="tag">Le Châtelier</span><h3>Removing a product pulls more solid in</h3><p>In CaF<sub>2</sub>(s) ⇌ Ca<sup>2+</sup> + 2F<sup>−</sup>, added H<sub>3</sub>O<sup>+</sup> converts F<sup>−</sup> into HF. Lower [F<sup>−</sup>] makes Q &lt; K<sub>sp</sub>, so more CaF<sub>2</sub> dissolves until Q = K<sub>sp</sub> again.</p></div>
+    <div class="card"><span class="tag">Hydroxides</span><h3>Acid dissolves them; base suppresses them</h3><p>H<sub>3</sub>O<sup>+</sup> + OH<sup>−</sup> → 2H<sub>2</sub>O removes hydroxide, so Mg(OH)<sub>2</sub> dissolves in stomach acid. Added OH<sup>−</sup> is a common ion and pushes the equilibrium left, lowering solubility.</p></div>
+    <div class="card"><span class="tag">Carbonates</span><h3>Fizz in acid</h3><p>CO<sub>3</sub><sup>2−</sup> picks up protons to become HCO<sub>3</sub><sup>−</sup> and then H<sub>2</sub>CO<sub>3</sub>, which breaks down into CO<sub>2</sub> and water. Limestone and marble dissolve in acid rain for this reason.</p></div>
+    <div class="card"><span class="tag">No effect</span><h3>Anions of strong acids</h3><p>Cl<sup>−</sup>, Br<sup>−</sup>, I<sup>−</sup>, NO<sub>3</sub><sup>−</sup> and ClO<sub>4</sub><sup>−</sup> do not react with H<sub>3</sub>O<sup>+</sup>, so the solubility of AgCl or AgBr is the same in acid as in water.</p></div>
+    <div class="card"><span class="tag">K<sub>sp</sub> vs. solubility</span><h3>K<sub>sp</sub> stays put</h3><p>At constant temperature, K<sub>sp</sub> does not change with pH. What changes is the molar solubility: how much solid must dissolve to make Q equal K<sub>sp</sub> again.</p></div>
+  </div>
+</section>
+
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. pH and solubility cheat sheet</h2>
+    <p>Ask one question about the anion: is it the conjugate base of a weak acid (or OH<sup>−</sup>)? If yes, acid raises solubility.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Salt</th><th>Anion</th><th>Reaction with added H<sub>3</sub>O<sup>+</sup></th><th>Solubility in acid</th><th>Solubility in base</th></tr></thead>
+    <tbody>
+      <tr><td>CaF<sub>2</sub>, BaF<sub>2</sub></td><td>F<sup>−</sup> (weak base)</td><td>F<sup>−</sup> + H<sub>3</sub>O<sup>+</sup> → HF + H<sub>2</sub>O</td><td><b>Increases</b></td><td>Same as in water</td></tr>
+      <tr><td>Mg(OH)<sub>2</sub>, Ca(OH)<sub>2</sub>, Fe(OH)<sub>3</sub></td><td>OH<sup>−</sup></td><td>OH<sup>−</sup> + H<sub>3</sub>O<sup>+</sup> → 2H<sub>2</sub>O</td><td><b>Increases</b></td><td><span class="shift">Decreases</span> (common ion)</td></tr>
+      <tr><td>CaCO<sub>3</sub>, Ag<sub>2</sub>CO<sub>3</sub></td><td>CO<sub>3</sub><sup>2−</sup> (weak base)</td><td>CO<sub>3</sub><sup>2−</sup> + H<sub>3</sub>O<sup>+</sup> → HCO<sub>3</sub><sup>−</sup> + H<sub>2</sub>O, then to H<sub>2</sub>CO<sub>3</sub> → CO<sub>2</sub> + H<sub>2</sub>O</td><td><b>Increases</b></td><td>Little change</td></tr>
+      <tr><td>Ca<sub>3</sub>(PO<sub>4</sub>)<sub>2</sub>, AgCH<sub>3</sub>COO</td><td>PO<sub>4</sub><sup>3−</sup>, CH<sub>3</sub>COO<sup>−</sup> (weak bases)</td><td>Protonated to HPO<sub>4</sub><sup>2−</sup>, CH<sub>3</sub>COOH</td><td><b>Increases</b></td><td>Little change</td></tr>
+      <tr><td>AgCl, AgBr, AgI, PbCl<sub>2</sub></td><td>Cl<sup>−</sup>, Br<sup>−</sup>, I<sup>−</sup> (negligible bases)</td><td>None</td><td>No change</td><td>No change (for AP purposes)</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. pH and solubility on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write the dissolution equilibrium first: CaF<sub>2</sub>(s) ⇌ Ca<sup>2+</sup>(aq) + 2F<sup>−</sup>(aq).</li>
+        <li>Write the reaction of the added species with the ion: F<sup>−</sup> + H<sub>3</sub>O<sup>+</sup> → HF + H<sub>2</sub>O.</li>
+        <li>State the chain: [F<sup>−</sup>] decreases, so Q &lt; K<sub>sp</sub> (or the equilibrium shifts right by Le Châtelier's principle), so more solid dissolves.</li>
+        <li>Explain why the anion reacts: it is the conjugate base of a weak acid (HF).</li>
+        <li>For a "no effect" salt, say why: Cl<sup>−</sup> is the conjugate base of a strong acid and does not react with H<sub>3</sub>O<sup>+</sup>.</li>
+        <li>Keep it qualitative: the course asks for the direction of the effect, not a calculated solubility.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying K<sub>sp</sub> increases in acid. K<sub>sp</sub> depends only on temperature; the solubility increases.</li>
+        <li>Saying every salt dissolves better in acid. AgCl does not.</li>
+        <li>Forgetting the common-ion effect for hydroxides: adding NaOH lowers the solubility of Mg(OH)<sub>2</sub>.</li>
+        <li>Having H<sub>3</sub>O<sup>+</sup> react with the metal cation. It reacts with the basic anion.</li>
+        <li>Writing a double arrow for H<sub>3</sub>O<sup>+</sup> + OH<sup>−</sup> → 2H<sub>2</sub>O as if it barely happens. It goes essentially to completion.</li>
+        <li>Saying the solid dissolves "because acid is corrosive." Use the equilibrium argument.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 8.11. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-8.html">Unit 8 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var Kw = Lab.CONST.Kw;
+
+  // ---------- Salts ----------
+  // cat / an: ions (formula strings with charges); nA: anions per formula unit.
+  // kind: "weak" (anion is conjugate base of a weak acid), "oh" (hydroxide), "carb" (carbonate), "none" (strong-acid anion).
+  var SALT = {
+    caf2:  { f: "CaF2", cat: "Ca^2+", an: "F^-", nA: 2, Ksp: 3.9e-11, kind: "weak", Ka: 6.8e-4, conj: "HF" },
+    mgoh2: { f: "Mg(OH)2", cat: "Mg^2+", an: "OH^-", nA: 2, Ksp: 5.6e-12, kind: "oh", conj: "H2O" },
+    caco3: { f: "CaCO3", cat: "Ca^2+", an: "CO3^2-", nA: 1, Ksp: 4.8e-9, kind: "carb", K1: 4.3e-7, K2: 4.8e-11, conj: "HCO3^-", conj2: "H2CO3" },
+    agcl:  { f: "AgCl", cat: "Ag^+", an: "Cl^-", nA: 1, Ksp: 1.8e-10, kind: "none", conj: "HCl" }
+  };
+  var SORDER = ["caf2", "mgoh2", "caco3", "agcl"];
+
+  // fraction of the dissolved anion present as the free (unprotonated) anion at this [H+]
+  function alpha(s, H) {
+    if (s.kind === "weak") return s.Ka / (s.Ka + H);
+    if (s.kind === "carb") return s.K1 * s.K2 / (H * H + s.K1 * H + s.K1 * s.K2);
+    return 1;
+  }
+  // molar solubility at a fixed pH (solution held at that pH)
+  function solub(s, pH) {
+    var H = Math.pow(10, -pH);
+    if (s.kind === "oh") { var OH = Kw / H; return s.Ksp / (OH * OH); }
+    var a = alpha(s, H);
+    if (s.nA === 2) return Math.pow(s.Ksp / (4 * a * a), 1 / 3);
+    return Math.sqrt(s.Ksp / a);
+  }
+  // solubility in pure water with no reaction of the anion (the usual Ksp-only calculation)
+  function s0(s) { return s.nA === 2 ? Math.pow(s.Ksp / 4, 1 / 3) : Math.sqrt(s.Ksp); }
+  // pH of a saturated Mg(OH)2 solution in pure water: [OH-] = 2 s0
+  function pHsat(s) { return 14 + Math.log10(2 * s0(s)); }
+
+  var SCN = [
+    { id: "f2",   name: "CaF₂ in strong acid (pH 1)", salt: "caf2", pH: 1 },
+    { id: "f7",   name: "CaF₂ at pH 7", salt: "caf2", pH: 7 },
+    { id: "mgst", name: "Mg(OH)₂ in stomach acid", salt: "mgoh2", pH: 1.5, cap: true },
+    { id: "mgb",  name: "Mg(OH)₂ in NaOH (pH 13)", salt: "mgoh2", pH: 13 },
+    { id: "co",   name: "Limestone in acid rain (pH 4.5)", salt: "caco3", pH: 4.5 },
+    { id: "ag",   name: "AgCl in acid (pH 1)", salt: "agcl", pH: 1 }
+  ];
+  var st = { salt: "caf2", pH: 7, scn: "f7" };
+  function F(x) { return Lab.fmla(x); }
+  function uni(f) {
+    var SUB = "₀₁₂₃₄₅₆₇₈₉", m = String(f).match(/\^([0-9]*)([+\-])$/), ch = "";
+    if (m) { ch = (m[1] === "2" ? "²" : "") + (m[2] === "+" ? "⁺" : "⁻"); f = f.slice(0, m.index); }
+    return f.replace(/([A-Za-z\)])(\d+)/g, function (a, b, d) { return b + d.split("").map(function (x) { return SUB[+x]; }).join(""); }) + ch;
+  }
+
+  // ---------- Particle view ----------
+  var svgP = document.getElementById("part");
+  var SPOTS = (function () {
+    var out = [], seed = 5;
+    function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+    for (var r = 0; r < 4; r++) for (var c = 0; c < 8; c++) out.push([118 + c * 29 + (rnd() - 0.5) * 9, 112 + r * 30 + (rnd() - 0.5) * 9]);
+    for (var i = out.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)); var t = out[i]; out[i] = out[j]; out[j] = t; }
+    return out;
+  })();
+  var UNITS = 12; // formula units of solid + dissolved shown
+  function counts(s, pH) {
+    var sol = solub(s, pH), ls = Math.log10(sol);
+    var n = Math.max(1, Math.min(UNITS, Math.round(1 + 1.6 * (ls + 6))));
+    if (sol >= 1) n = UNITS;
+    var H = Math.pow(10, -pH), free, mid = 0;
+    var tot = n * s.nA;
+    if (s.kind === "oh") free = Math.round(tot * Math.min(1, (Kw / H) / (2 * sol)));
+    else if (s.kind === "carb") {
+      var D = H * H + s.K1 * H + s.K1 * s.K2;
+      free = Math.round(tot * s.K1 * s.K2 / D); mid = Math.round(tot * s.K1 * H / D);
+      if (free + mid > tot) mid = tot - free;
+    } else free = Math.round(tot * alpha(s, H));
+    return { n: n, solid: UNITS - n, tot: tot, free: free, mid: mid, prot: tot - free - mid };
+  }
+  function drawPart() {
+    var s = SALT[st.salt], c = counts(s, st.pH);
+    svgP.setAttribute("viewBox", "0 0 440 300");
+    while (svgP.firstChild) svgP.removeChild(svgP.firstChild);
+    var g = Lab.el("g", {}, svgP);
+    Lab.el("rect", { x: 96, y: 96, width: 248, height: 186, fill: "var(--accent)", opacity: 0.05 }, g);
+    Lab.el("line", { x1: 96, y1: 96, x2: 344, y2: 96, stroke: "var(--ghost)", "stroke-width": 1.5 }, g);
+    Lab.el("path", { d: "M95 70 L95 270 Q95 284 109 284 L331 284 Q345 284 345 270 L345 70", fill: "none", stroke: "var(--ink)", "stroke-width": 2.5 }, g);
+    // solid at the bottom: a row of blocks
+    for (var i = 0; i < c.solid; i++) {
+      var row = i < 7 ? 0 : 1, col = row ? i - 7 : i;
+      var x = 120 + col * 30 + row * 15, y = 262 - row * 18;
+      Lab.el("rect", { x: x, y: y, width: 26, height: 16, rx: 3, fill: "var(--ghost)", stroke: "var(--ink)", "stroke-width": 0.8 }, g);
+    }
+    if (c.solid === 0) Lab.el("text", { x: 220, y: 272, "text-anchor": "middle", "class": "lbl", style: "fill:var(--bad)" }, g, "all the solid has dissolved");
+    // dissolved particles
+    var list = [];
+    for (var k = 0; k < c.n; k++) list.push("cat");
+    for (var a = 0; a < c.free; a++) list.push("free");
+    for (var b = 0; b < c.mid; b++) list.push("mid");
+    for (var p = 0; p < c.prot; p++) list.push("prot");
+    list.forEach(function (t, idx) {
+      if (idx >= SPOTS.length) return;
+      var X = SPOTS[idx][0], Y = SPOTS[idx][1];
+      if (t === "cat") { Lab.el("circle", { cx: X, cy: Y, r: 11, fill: "var(--accent)" }, g); Lab.el("text", { x: X, y: Y + 3.5, "text-anchor": "middle", "class": "ptxt" }, g, "+"); }
+      else if (t === "free") { Lab.el("circle", { cx: X, cy: Y, r: 9, fill: "var(--c4)" }, g); Lab.el("text", { x: X, y: Y + 3.5, "text-anchor": "middle", "class": "ptxt" }, g, "−"); }
+      else if (t === "mid") { Lab.el("circle", { cx: X, cy: Y, r: 9, fill: "var(--c3)" }, g); Lab.el("circle", { cx: X + 8, cy: Y - 7, r: 4, fill: "var(--c1)" }, g); }
+      else if (s.kind === "oh") { Lab.el("circle", { cx: X, cy: Y, r: 8, fill: "none", stroke: "var(--ghost)", "stroke-width": 1.5, "stroke-dasharray": "3 2" }, g); }
+      else if (s.kind === "carb") { Lab.el("circle", { cx: X, cy: Y - 4, r: 8, fill: "var(--surface)", stroke: "var(--c2)", "stroke-width": 2.6 }, g); Lab.el("circle", { cx: X + 7, cy: Y + 7, r: 4.5, fill: "var(--surface)", stroke: "var(--c2)", "stroke-width": 2 }, g); }
+      else { Lab.el("circle", { cx: X, cy: Y, r: 9, fill: "var(--c2)" }, g); Lab.el("circle", { cx: X + 8, cy: Y - 7, r: 4, fill: "var(--c1)" }, g); }
+    });
+    Lab.el("text", { x: 220, y: 40, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, g, "pH " + st.pH.toFixed(1) + ": " + c.n + " of " + UNITS + " formula units dissolved");
+    Lab.el("text", { x: 220, y: 60, "text-anchor": "middle" }, g, "counts on a compressed (log) scale; water not shown");
+    document.getElementById("part-sub").textContent = uni(s.f) + " with excess solid";
+    var L = '<span><i style="background:var(--accent)"></i><em>' + F(s.cat) + '</em></span><span><i style="background:var(--c4)"></i><em>' + F(s.an) + '</em></span>';
+    if (s.kind === "weak") L += '<span><i style="background:var(--c2)"></i><em>' + F(s.conj) + ' (F<sup>−</sup> that picked up H<sup>+</sup>)</em></span>';
+    if (s.kind === "carb") L += '<span><i style="background:var(--c3)"></i><em>HCO<sub>3</sub><sup>−</sup></em></span><span><i style="border:2px solid var(--c2)"></i><em>H<sub>2</sub>CO<sub>3</sub> / CO<sub>2</sub></em></span>';
+    if (s.kind === "oh") L += '<span><i style="border:1.5px dashed var(--ghost)"></i><em>OH<sup>−</sup> neutralized to H<sub>2</sub>O</em></span>';
+    L += '<span><i style="background:var(--ghost); border-radius:3px"></i><em>undissolved ' + F(s.f) + '</em></span>';
+    document.getElementById("plegend").innerHTML = L;
+  }
+
+  // ---------- Graph ----------
+  var svgG = document.getElementById("graph");
+  function drawGraph() {
+    var s = SALT[st.salt];
+    var Fr = Lab.frame(svgG, { x: [0, 14], y: [-8, 1], width: 440, height: 300, xTicks: [0, 2, 4, 6, 8, 10, 12, 14], yTicks: [-8, -6, -4, -2, 0],
+      fmtX: function (v) { return v; }, fmtY: function (v) { return "10" + String(v).replace("-", "⁻").replace("8", "⁸").replace("6", "⁶").replace("4", "⁴").replace("2", "²").replace(/^0$/, "⁰"); },
+      xLabel: "pH", yLabel: "molar solubility (M)" });
+    Lab.rect(Fr, 0, 0, 14, 1, "var(--bad)", 0.08);
+    Lab.tag(Fr, 13.8, 0.35, "dissolves completely", "var(--bad)", "end");
+    Lab.hline(Fr, Math.log10(s0(s)), "var(--ghost)", 1.5, "6 4");
+    Lab.tag(Fr, 13.8, Math.log10(s0(s)) - 0.5, "Ksp-only value", "var(--muted)", "end");
+    Lab.fn(Fr, function (x) { return Math.min(1.2, Math.log10(solub(s, x))); }, "var(--accent)", 3, null, 140);
+    var ls = Math.log10(solub(s, st.pH));
+    Lab.vline(Fr, st.pH, "var(--c1)", 1.5, "4 3");
+    Lab.dot(Fr, st.pH, Math.max(-8, Math.min(1, ls)), "var(--c1)");
+    if (s.kind === "weak") { Lab.vline(Fr, -Math.log10(s.Ka), "var(--c2)", 1, "2 3"); Lab.tag(Fr, -Math.log10(s.Ka) + 0.15, -7.6, "pKa of HF", "var(--c2)"); }
+  }
+
+  // ---------- Readouts + story ----------
+  function sciTxt(v) { return v >= 1 ? "> 1 M" : Lab.sci(v, 2, true) + " M"; }
+  function readouts() {
+    var s = SALT[st.salt], sol = solub(s, st.pH), H = Math.pow(10, -st.pH);
+    document.getElementById("o-ph").textContent = st.pH.toFixed(1);
+    document.getElementById("r-ksp").innerHTML = Lab.sci(s.Ksp, 2, true);
+    document.getElementById("r-s").innerHTML = sciTxt(sol);
+    var ratio = sol / s0(s);
+    document.getElementById("r-s2").textContent = s.kind === "none" ? "same at every pH" : sol >= 1 ? "effectively all dissolves" : ratio > 1.05 ? Lab.sig(ratio, 2) + "× the Ksp-only value" : ratio < 0.95 ? "only " + (ratio < 0.01 ? "a tiny fraction of" : Lab.sig(ratio, 2) + "×") + " the Ksp-only value" : "about the Ksp-only value";
+    document.getElementById("r-an-k").innerHTML = "Dissolved anion present as " + F(s.an);
+    var fr;
+    if (s.kind === "oh") fr = Math.min(1, (Kw / H) / (2 * sol)); else fr = alpha(s, H);
+    document.getElementById("r-an").textContent = s.kind === "none" ? "100%" : (fr * 100 >= 99.95 ? ">99.9" : fr * 100 < 0.01 ? "<0.01" : Lab.sig(fr * 100, 2)) + "%";
+    document.getElementById("r-an2").textContent = s.kind === "none" ? "Cl⁻ does not react with H₃O⁺" : s.kind === "oh" ? "the rest was neutralized to H₂O" : s.kind === "carb" ? "the rest is HCO₃⁻ or H₂CO₃" : "the rest became HF";
+    document.getElementById("r-sens").textContent = s.kind === "none" ? "no" : "yes";
+    document.getElementById("r-sens2").textContent = s.kind === "none" ? "anion of a strong acid" : s.kind === "oh" ? "hydroxide ion" : "anion is a weak base";
+    var hint = s.kind === "weak" ? "pKa of HF = 3.17: below this, most F⁻ is protonated" : s.kind === "oh" ? "Saturated Mg(OH)₂ in pure water has pH " + pHsat(s).toFixed(1) : s.kind === "carb" ? "pKa1 = 6.37 and pKa2 = 10.32 for H₂CO₃" : "HCl is a strong acid, so Cl⁻ never picks up H⁺";
+    document.getElementById("h-ph").textContent = hint;
+    var eq = F(s.f) + "(s) ⇌ " + F(s.cat) + "(aq) + " + (s.nA > 1 ? s.nA : "") + F(s.an) + "(aq)&nbsp;&nbsp; K<sub>sp</sub> = [" + F(s.cat) + "][" + F(s.an) + "]" + (s.nA > 1 ? "<sup>" + s.nA + "</sup>" : "");
+    var side = s.kind === "weak" ? "F<sup>−</sup>(aq) + H<sub>3</sub>O<sup>+</sup>(aq) → HF(aq) + H<sub>2</sub>O(l)" :
+      s.kind === "oh" ? "OH<sup>−</sup>(aq) + H<sub>3</sub>O<sup>+</sup>(aq) → 2H<sub>2</sub>O(l)" :
+      s.kind === "carb" ? "CO<sub>3</sub><sup>2−</sup>(aq) + H<sub>3</sub>O<sup>+</sup>(aq) → HCO<sub>3</sub><sup>−</sup>(aq) + H<sub>2</sub>O(l); HCO<sub>3</sub><sup>−</sup> + H<sub>3</sub>O<sup>+</sup> → H<sub>2</sub>CO<sub>3</sub> + H<sub>2</sub>O; H<sub>2</sub>CO<sub>3</sub> → CO<sub>2</sub>(g) + H<sub>2</sub>O(l)" :
+      "Cl<sup>−</sup>(aq) + H<sub>3</sub>O<sup>+</sup>(aq) → no reaction";
+    document.getElementById("eqn").innerHTML = eq + "<br>In acid: " + side;
+  }
+  function story() {
+    var s = SALT[st.salt], sol = solub(s, st.pH), h = "", Fx = F(s.f), An = F(s.an);
+    var acidic = st.pH < 7, eq = Fx + "(s) ⇌ " + F(s.cat) + " + " + (s.nA > 1 ? s.nA : "") + An;
+    if (s.kind === "none") {
+      h += "<p><b>" + Fx + ":</b> Cl<sup>−</sup> is the conjugate base of HCl, a strong acid, so it has no tendency to accept a proton. Changing [H<sub>3</sub>O<sup>+</sup>] does not change [Cl<sup>−</sup>], so Q and K<sub>sp</sub> are unaffected. Solubility stays " + sciTxt(sol) + " at every pH.</p>";
+      h += "<p><b>AP answer:</b> The solubility of AgCl is not pH-sensitive because Cl<sup>−</sup> is the conjugate base of a strong acid and does not react with H<sub>3</sub>O<sup>+</sup>; the equilibrium " + eq + " is not shifted.</p>";
+    } else if (s.kind === "oh") {
+      var ps = pHsat(s);
+      if (st.pH < ps - 0.05) {
+        h += "<p><b>Below pH " + ps.toFixed(1) + "</b> (the pH of saturated Mg(OH)<sub>2</sub> in pure water), [OH<sup>−</sup>] is held lower than the solid alone would make it. H<sub>3</sub>O<sup>+</sup> neutralizes OH<sup>−</sup> as it forms: OH<sup>−</sup> + H<sub>3</sub>O<sup>+</sup> → 2H<sub>2</sub>O. With [OH<sup>−</sup>] kept low, Q &lt; K<sub>sp</sub> and more solid dissolves. Solubility here: " + sciTxt(sol) + ".</p>";
+        h += "<p><b>AP answer:</b> Lowering the pH increases the solubility of Mg(OH)<sub>2</sub>: added H<sub>3</sub>O<sup>+</sup> reacts with OH<sup>−</sup>, decreasing [OH<sup>−</sup>], so by Le Châtelier's principle the equilibrium " + eq + " shifts right and more Mg(OH)<sub>2</sub> dissolves." + (sol >= 1 ? " At this pH it dissolves completely, which is how an antacid neutralizes stomach acid." : "") + "</p>";
+      } else if (st.pH > ps + 0.05) {
+        h += "<p><b>Above pH " + ps.toFixed(1) + "</b>, extra OH<sup>−</sup> (from NaOH, for example) is a common ion. It raises [OH<sup>−</sup>], so Q &gt; K<sub>sp</sub> until some Mg<sup>2+</sup> precipitates. Solubility here: " + sciTxt(sol) + ", less than in pure water.</p>";
+        h += "<p><b>AP answer:</b> Raising the pH decreases the solubility of Mg(OH)<sub>2</sub>: the added OH<sup>−</sup> is a common ion that shifts " + eq + " to the left (common-ion effect).</p>";
+      } else {
+        h += "<p><b>Pure-water conditions:</b> saturated Mg(OH)<sub>2</sub> makes its own pH of about " + ps.toFixed(1) + ", and the solubility is the K<sub>sp</sub>-only value, " + sciTxt(sol) + ".</p>";
+        h += "<p><b>AP answer:</b> Adding acid would increase the solubility (H<sub>3</sub>O<sup>+</sup> removes OH<sup>−</sup>); adding base would decrease it (common-ion effect).</p>";
+      }
+    } else {
+      var H = Math.pow(10, -st.pH), a = alpha(s, H), ratio = sol / s0(s);
+      var which = s.kind === "weak" ? "HF" : "HCO<sub>3</sub><sup>−</sup> and H<sub>2</sub>CO<sub>3</sub>";
+      var pct = (1 - a) * 100;
+      h += "<p><b>" + Fx + " at pH " + st.pH.toFixed(1) + ":</b> " + An + " is the conjugate base of a weak acid, so H<sub>3</sub>O<sup>+</sup> converts some of it to " + which + ". Here " + (pct < 0.05 ? "almost none" : pct >= 99.5 ? "almost all" : Lab.sig(pct, 2) + "%") + " of the dissolved " + An + " has been protonated.</p>";
+      if (ratio > 1.05) h += "<p><b>Le Châtelier:</b> removing " + An + " lowers Q below K<sub>sp</sub>, so more " + Fx + " dissolves until Q = K<sub>sp</sub>. The molar solubility is " + sciTxt(sol) + ", " + (sol >= 1 ? "far beyond what the solution can hold as a saturated solution: the solid dissolves completely." : Lab.sig(ratio, 2) + " times the K<sub>sp</sub>-only value.") + (s.kind === "carb" && st.pH < 6.4 ? " The H<sub>2</sub>CO<sub>3</sub> breaks down to CO<sub>2</sub> gas, which bubbles out." : "") + "</p>";
+      else h += "<p><b>Little effect at this pH:</b> so little " + An + " is protonated that the solubility is about the K<sub>sp</sub>-only value, " + sciTxt(sol) + ". " + (s.kind === "weak" ? "F<sup>−</sup> is only protonated to a large extent when the pH approaches or drops below 3.17, the pK<sub>a</sub> of HF." : "Carbonate is protonated below about pH 10.3, the pK<sub>a</sub> of HCO<sub>3</sub><sup>−</sup>.") + "</p>";
+      h += "<p><b>AP answer:</b> Lowering the pH increases the solubility of " + Fx + ": H<sub>3</sub>O<sup>+</sup> reacts with " + An + " (" + (s.kind === "weak" ? "F<sup>−</sup> + H<sub>3</sub>O<sup>+</sup> → HF + H<sub>2</sub>O" : "CO<sub>3</sub><sup>2−</sup> + H<sub>3</sub>O<sup>+</sup> → HCO<sub>3</sub><sup>−</sup> + H<sub>2</sub>O") + "), decreasing [" + An + "], so the equilibrium " + eq + " shifts right and more solid dissolves.</p>";
+    }
+    document.getElementById("story").innerHTML = h;
+  }
+  var saB = {}, scB = {};
+  function render() {
+    document.getElementById("s-ph").value = st.pH;
+    Object.keys(saB).forEach(function (k) { saB[k].setAttribute("aria-pressed", k === st.salt ? "true" : "false"); });
+    Object.keys(scB).forEach(function (k) { scB[k].setAttribute("aria-pressed", k === st.scn ? "true" : "false"); });
+    drawPart(); drawGraph(); readouts(); story();
+  }
+
+  // ---------- Controls ----------
+  var stop = null;
+  SORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.innerHTML = F(SALT[k].f);
+    b.addEventListener("click", function () { if (stop) stop(); st.salt = k; st.scn = null; render(); });
+    document.getElementById("salts").appendChild(b); saB[k] = b;
+  });
+  SCN.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.name;
+    b.addEventListener("click", function () {
+      if (stop) stop();
+      var from = st.salt === x.salt ? st.pH : (x.pH < 7 ? 7 : 7);
+      st.salt = x.salt; st.scn = x.id;
+      stop = Lab.animate(700, function (e) { st.pH = Math.round((from + (x.pH - from) * e) * 10) / 10; render(); });
+    });
+    document.getElementById("sc").appendChild(b); scB[x.id] = b;
+  });
+  document.getElementById("s-ph").addEventListener("input", function (e) { if (stop) stop(); st.pH = parseFloat(e.target.value); st.scn = null; render(); });
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    function near(a, b, tol, what) { if (!(Math.abs(a - b) <= tol * Math.abs(b))) bad.push(what + ": got " + a + ", expected " + b); }
+    // dissolution equations balance in atoms and charge
+    function chg(x) { var m = x.match(/\^([0-9]*)([+\-])$/); return m ? (m[1] ? +m[1] : 1) * (m[2] === "+" ? 1 : -1) : 0; }
+    SORDER.forEach(function (k) {
+      var s = SALT[k], L = Lab.parseFormula(s.f), c = Lab.parseFormula(s.cat), a = Lab.parseFormula(s.an), R = {};
+      for (var e in c) R[e] = (R[e] || 0) + c[e];
+      for (var e2 in a) R[e2] = (R[e2] || 0) + s.nA * a[e2];
+      for (var e3 in L) if (L[e3] !== R[e3]) bad.push(k + " unbalanced in " + e3);
+      for (var e4 in R) if (!(e4 in L)) bad.push(k + " extra " + e4);
+      if (chg(s.cat) + s.nA * chg(s.an) !== 0) bad.push(k + " charge");
+      if (s.kind !== "none" && s.kind !== "oh") { var cj = Lab.parseFormula(s.conj); if ((cj.H || 0) - (a.H || 0) !== 1) bad.push(k + " conjugate acid"); }
+    });
+    // hand values
+    near(s0(SALT.caf2), 2.13e-4, 0.01, "CaF2 Ksp-only solubility");
+    near(solub(SALT.caf2, 12), 2.13e-4, 0.01, "CaF2 at high pH equals Ksp-only value");
+    near(solub(SALT.agcl, 1), 1.34e-5, 0.01, "AgCl pH-independent");
+    near(solub(SALT.agcl, 13), solub(SALT.agcl, 1), 1e-12, "AgCl same at all pH");
+    near(pHsat(SALT.mgoh2), 10.35, 0.002, "saturated Mg(OH)2 pH");
+    near(solub(SALT.mgoh2, pHsat(SALT.mgoh2)), s0(SALT.mgoh2), 1e-6, "Mg(OH)2 consistent at its own pH");
+    near(solub(SALT.mgoh2, 13), 5.6e-10, 0.001, "Mg(OH)2 at pH 13");
+    // direction: lower pH never lowers solubility for basic anions
+    SORDER.forEach(function (k) {
+      for (var p = 0.5; p <= 14; p += 0.5) if (solub(SALT[k], p) > solub(SALT[k], p - 0.5) * (1 + 1e-9)) bad.push(k + " solubility rises with pH at " + p);
+    });
+    if (bad.length) console.error("8.11 self-check failed: " + bad.slice(0, 6).join("; "));
+  })();
+
+  render();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Which of the following salts becomes more soluble when HNO₃(aq) is added to a saturated solution of it?",
+      o: ["AgCl", "AgBr", "AgI", "CaF₂"], c: 3,
+      w: "F⁻ is the conjugate base of the weak acid HF, so H₃O⁺ converts it to HF. That lowers [F⁻], shifts CaF₂(s) ⇌ Ca²⁺ + 2F⁻ to the right, and more CaF₂ dissolves. Cl⁻, Br⁻ and I⁻ are conjugate bases of strong acids; they do not react with H₃O⁺, so the solubilities of choices A, B and C do not change." },
+    { s: "Solid NaOH is added to a saturated solution of Mg(OH)₂ in contact with excess solid, at constant temperature. Which of the following occurs?",
+      o: ["More Mg(OH)₂ precipitates, because the added OH⁻ shifts Mg(OH)₂(s) ⇌ Mg²⁺ + 2OH⁻ to the left.", "More Mg(OH)₂ dissolves, because NaOH is a strong base.", "Nothing changes, because Na⁺ is a spectator ion.", "Ksp of Mg(OH)₂ decreases, so less of it can dissolve."], c: 0,
+      w: "OH⁻ is a common ion. Raising [OH⁻] makes Q > Ksp, so Mg²⁺ and OH⁻ combine and precipitate until Q = Ksp again; the solubility decreases. Na⁺ is a spectator, but the OH⁻ is not (choice C). Ksp is constant at constant temperature (choice D)." },
+    { s: "Marble, CaCO₃, slowly dissolves in acid rain. Which explanation is best?",
+      o: ["H₃O⁺ oxidizes Ca²⁺ ions, removing them from solution.", "Acid rain is warmer than pure rain, which increases Ksp of CaCO₃.", "H₃O⁺ reacts with CO₃²⁻ to form HCO₃⁻ (and eventually CO₂ and water), lowering [CO₃²⁻] so that Q < Ksp and more CaCO₃ dissolves.", "Acid rain contains Ca²⁺ ions that react with the marble."], c: 2,
+      w: "CO₃²⁻ is a base. Protonating it lowers [CO₃²⁻] in CaCO₃(s) ⇌ Ca²⁺ + CO₃²⁻, so the equilibrium shifts right (Le Châtelier) and more solid dissolves. Choice A is wrong because Ca²⁺ is not oxidized; H₃O⁺ reacts with the anion, not the cation. Choice D would, if anything, add a common ion and lower the solubility." },
+    { s: "The solubility of which of the following salts is essentially unaffected by the pH of the solution?",
+      o: ["CaCO₃", "AgBr", "Mg(OH)₂", "BaF₂"], c: 1,
+      w: "Br⁻ is the conjugate base of HBr, a strong acid, so it does not react with H₃O⁺ and the solubility of AgBr does not depend on pH. CO₃²⁻ and F⁻ are basic anions (choices A and D), and OH⁻ (choice C) is neutralized by acid, so those salts dissolve more at low pH." },
+    { s: "A small amount of HCl(aq) is added to a saturated solution of CaF₂ in contact with excess CaF₂(s). After equilibrium is reestablished, how do the concentrations compare with those before the addition?",
+      o: ["[Ca²⁺] decreases and [F⁻] increases.", "[Ca²⁺] and [F⁻] are both unchanged, because Ksp is constant.", "[HF] increases and [Ca²⁺] increases, because more CaF₂ dissolves.", "Nothing changes, because CaF₂ is an ionic solid."], c: 2,
+      w: "H₃O⁺ converts F⁻ into HF, so [HF] rises. The drop in [F⁻] lets more CaF₂ dissolve, which raises [Ca²⁺]. [F⁻] settles lower than before while [Ca²⁺] is higher, keeping [Ca²⁺][F⁻]² = Ksp. Choice B confuses a constant Ksp with constant concentrations." },
+    { s: "HCl is added to a saturated solution of CaF₂ at constant temperature. Which statement about Ksp and the molar solubility of CaF₂ is correct?",
+      o: ["Ksp is unchanged; the molar solubility increases.", "Ksp increases; the molar solubility increases.", "Ksp and the molar solubility are both unchanged.", "Ksp decreases; the molar solubility increases."], c: 0,
+      w: "Ksp is an equilibrium constant and changes only with temperature. What changes is how much solid has to dissolve to bring Q back up to Ksp after F⁻ is removed, so the molar solubility increases. Choice B is the common error of treating Ksp as if it were the solubility." },
+    { s: "A student claims that adding HNO₃ increases the solubility of every slightly soluble salt. Which salt provides the best counterexample to this claim?",
+      o: ["Ag₂CO₃", "AgCl", "Mg(OH)₂", "Ca₃(PO₄)₂"], c: 1,
+      w: "AgCl's anion, Cl⁻, comes from the strong acid HCl and does not react with H₃O⁺, so adding HNO₃ does not change its solubility. The other three contain basic anions (CO₃²⁻, OH⁻, PO₄³⁻) that are protonated in acid, so their solubilities do increase and they support the claim instead." },
+    { s: "Ca(OH)₂ is slightly soluble. In which solution is its molar solubility greatest?",
+      o: ["A solution buffered at pH 12, because it contains more OH⁻ to attract Ca²⁺", "Both are equal, because Ksp is constant.", "A solution buffered at pH 12, because a higher pH speeds up dissolving", "A solution buffered at pH 10, because the lower [OH⁻] lets more Ca(OH)₂ dissolve before Q reaches Ksp"], c: 3,
+      w: "Ksp = [Ca²⁺][OH⁻]². At pH 10, [OH⁻] = 1 × 10⁻⁴ M, a hundred times smaller than at pH 12, so [Ca²⁺] can be far larger before the product reaches Ksp. Higher pH means more common ion and lower solubility, so choices A and C have it backward. Choice B confuses Ksp with solubility." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("8.11");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [8], topic: "8.11", compact: true, storageKey: "topic-8.11" });</script>
+</body>
+</html>

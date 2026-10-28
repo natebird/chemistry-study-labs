@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Buffer Capacity Study Lab</title>
+<meta name="description" content="Race two acetate buffers against added acid and base, watch their components drain, and see why concentration sets capacity while the ratio sets pH.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.ctlcard { display: grid; gap: 16px; }
+.ctlcard .controls { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 860px) { .ctlcard .controls { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .ctlcard .controls { grid-template-columns: 1fr; } }
+.ctl.wide { grid-column: 1 / -1; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.note { font-size: .82rem; color: var(--muted); }
+.bA { color: var(--accent); font-weight: 600; } .bB { color: var(--c1); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 8 · Topic 8.10</span>
+  <h1>Buffer Capacity Study Lab</h1>
+  <p class="lede">Two buffers can have exactly the same pH and very different staying power. The ratio of conjugate base to acid sets the pH; the amounts of each set how much added acid or base the buffer can absorb before the pH swings. Race two acetate buffers against strong acid and strong base and watch which one runs out first.</p>
+</header>
+
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The buffer race</h2>
+    <p>Buffers <span class="bA">A</span> and <span class="bB">B</span> are each 100 mL of CH<sub>3</sub>COOH and NaCH<sub>3</sub>COO. Drag the addition slider left to add 1.0 M HCl, right to add 1.0 M NaOH; both buffers get the same amount. Capacity here means the millimoles that change the pH by one full unit from where it started.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3><span>pH as acid or base is added</span> <small>dots = now</small></h3>
+      <svg class="chart" id="graph" role="img" aria-label="pH of buffer A and buffer B versus millimoles of strong acid or base added"></svg>
+    </div>
+    <div class="card graph-card">
+      <h3><span>What is left in each buffer</span> <small>millimoles</small></h3>
+      <svg class="chart" id="tanks" role="img" aria-label="Bars showing the millimoles of acetic acid, acetate and any excess H3O+ or OH- left in each buffer"></svg>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <div class="tag">Exam scenarios</div>
+      <div class="scenarios" id="sc"></div>
+    </div>
+    <div class="controls">
+      <div class="ctl"><label for="s-ah"><span><span class="bA">A</span>: [CH₃COOH]</span> <output id="o-ah"></output></label><input type="range" id="s-ah" min="0" max="0.50" step="0.01"></div>
+      <div class="ctl"><label for="s-aa"><span><span class="bA">A</span>: [CH₃COO⁻]</span> <output id="o-aa"></output></label><input type="range" id="s-aa" min="0" max="0.50" step="0.01"></div>
+      <div class="ctl"><label for="s-bh"><span><span class="bB">B</span>: [CH₃COOH]</span> <output id="o-bh"></output></label><input type="range" id="s-bh" min="0" max="0.50" step="0.01"></div>
+      <div class="ctl"><label for="s-ba"><span><span class="bB">B</span>: [CH₃COO⁻]</span> <output id="o-ba"></output></label><input type="range" id="s-ba" min="0" max="0.50" step="0.01"></div>
+      <div class="ctl wide">
+        <label for="s-n">Added to each buffer <output id="o-n"></output></label>
+        <input type="range" id="s-n" min="-60" max="60" step="1">
+        <span class="hint">Left: mmol HCl. Right: mmol NaOH. 1 mmol = 1.0 mL of 1.0 M solution; the added volume is included.</span>
+      </div>
+    </div>
+    <div class="btnrow">
+      <button type="button" id="b-acid">− 5 mmol (more HCl)</button>
+      <button type="button" id="b-base">+ 5 mmol (more NaOH)</button>
+      <button type="button" id="b-zero">Back to 0</button>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-ad">Buffer A</span><span class="l-c1">Buffer B</span><span class="l-ghost">pH ± 1 from start (capacity limit)</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">pH of A / B now</div><div class="v" id="r-ph"></div><div class="sub" id="r-ph2"></div></div>
+    <div class="stat"><div class="k">A: capacity for acid / base</div><div class="v" id="r-ca"></div><div class="sub">mmol to move pH by 1 unit</div></div>
+    <div class="stat"><div class="k">B: capacity for acid / base</div><div class="v" id="r-cb"></div><div class="sub">mmol to move pH by 1 unit</div></div>
+    <div class="stat"><div class="k">Bigger capacity</div><div class="v" id="r-win"></div><div class="sub" id="r-win2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">pH values solve the full equilibrium with K<sub>a</sub>(CH<sub>3</sub>COOH) = 1.8 × 10<sup>−5</sup> at 25 °C. The one-unit definition of capacity is just a convenient yardstick for this lab. The CED asks you to explain capacity from the amounts of the two components, so compare these numbers rather than memorizing them.</p>
+</section>
+
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Definition</span><h3>Buffer capacity</h3><p>The amount of strong acid or strong base a buffer can neutralize before its pH changes significantly. It depends on the moles of each component present, not just on the pH.</p></div>
+    <div class="card"><span class="tag">Same ratio, more stuff</span><h3>Concentration sets capacity</h3><p>A 1.0 M / 1.0 M acetate buffer and a 0.10 M / 0.10 M acetate buffer have the same pH (4.74), because the ratio is 1 in both. The concentrated one has ten times as much of each component, so it can absorb about ten times as much acid or base.</p></div>
+    <div class="card"><span class="tag">Unequal amounts</span><h3>Capacity is lopsided</h3><p>Added base is consumed by the acid member; added acid by the base member. A buffer with more CH<sub>3</sub>COOH than CH<sub>3</sub>COO<sup>−</sup> has more capacity for added base than for added acid, and the reverse.</p></div>
+    <div class="card"><span class="tag">Best balance</span><h3>Equal amounts</h3><p>For a fixed total amount of the pair, capacity is most balanced when [HA] = [A<sup>−</sup>], which is when pH = pK<sub>a</sub>. The buffer then resists acid and base equally well.</p></div>
+    <div class="card"><span class="tag">Running out</span><h3>Exceeding capacity</h3><p>Once the reacting component is nearly used up, added H<sub>3</sub>O<sup>+</sup> or OH<sup>−</sup> has little left to react with and builds up, and the pH changes sharply, just like near an equivalence point on a titration curve.</p></div>
+    <div class="card"><span class="tag">Dilution</span><h3>Same pH, less capacity</h3><p>Adding water keeps the ratio and the pH but lowers the concentration of both components, so each liter of the buffer can absorb less before it is overwhelmed.</p></div>
+  </div>
+</section>
+
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Capacity cheat sheet</h2>
+    <p>Each row is a 100 mL acetate buffer. The pH and capacities are computed by this page's equilibrium model, so compare them with each other rather than memorizing them.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>[CH<sub>3</sub>COOH] / [CH<sub>3</sub>COO<sup>−</sup>]</th><th>pH</th><th>Capacity for added HCl</th><th>Capacity for added NaOH</th><th>What to notice</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  </div>
+</section>
+
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Buffer capacity on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Separate the two ideas: "the ratio [A<sup>−</sup>]/[HA] determines the pH; the amounts of A<sup>−</sup> and HA determine the capacity."</li>
+        <li>Name which component reacts: added acid is consumed by the conjugate base, so capacity for acid depends on moles of A<sup>−</sup>.</li>
+        <li>Compare moles, not concentrations, when the buffers have different volumes.</li>
+        <li>When a buffer's capacity is exceeded, say the reacting component has been used up and the excess strong acid or base now determines the pH.</li>
+        <li>To design a high-capacity buffer at a given pH, keep the ratio and raise both concentrations.</li>
+        <li>In a lab-error question, explain how a mistake in amounts changes capacity even if the pH is unchanged.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying a more concentrated buffer has a lower (or higher) pH. If the ratio is the same, the pH is the same.</li>
+        <li>Getting the lopsided case backward: more HA means more capacity for added <i>base</i>.</li>
+        <li>Thinking capacity depends on K<sub>a</sub> alone. Two acetate buffers share a K<sub>a</sub> and can still differ tenfold in capacity.</li>
+        <li>Saying a buffer "stops working" the moment any acid is added. It works until the reacting component is nearly gone.</li>
+        <li>Saying dilution changes the pH of a buffer. It changes the capacity.</li>
+        <li>Picking the buffer with the largest total concentration when the question asks about one direction. Look at the component that reacts.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 8.10. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-8.html">Unit 8 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var Kw = Lab.CONST.Kw, Ka = 1.8e-5, V0 = 100, NMAX = 60;
+
+  // ---------- Model ----------
+  // A buffer is { h: [CH3COOH] M, a: [CH3COO-] M } in 100 mL. net: mmol strong base added (negative = HCl).
+  function mm(b) { return { ha: b.h * V0, a: b.a * V0 }; } // mmol
+  function pHof(b, net) {
+    var n = mm(b), V = V0 + Math.abs(net);
+    var T = (n.ha + n.a) / V, Na = (n.a + Math.max(net, 0)) / V, Cl = Math.max(-net, 0) / V;
+    function f(H) { var al = Ka / (Ka + H); return H + Na - Kw / H - Cl - T * al; }
+    var lo = -15, hi = 1;
+    for (var i = 0; i < 80; i++) { var m = (lo + hi) / 2; if (f(Math.pow(10, m)) > 0) hi = m; else lo = m; }
+    return -(lo + hi) / 2;
+  }
+  // mmol after strong acid/base reacts completely
+  function stoich(b, net) {
+    var n = mm(b), T = n.ha + n.a, nb = n.a + net, o = { ha: 0, a: 0, h: 0, oh: 0 };
+    if (nb < 0) { o.ha = T; o.h = -nb; } else if (nb > T) { o.a = T; o.oh = nb - T; } else { o.a = nb; o.ha = T - nb; }
+    return o;
+  }
+  // mmol of acid (dir = -1) or base (dir = +1) that changes the pH by 1.00 unit
+  function capacity(b, dir) {
+    var p0 = pHof(b, 0), target = p0 + dir;
+    if (dir > 0 ? pHof(b, 200 * dir) < target : pHof(b, 200 * dir) > target) return Infinity;
+    var lo = 0, hi = 200;
+    for (var i = 0; i < 50; i++) { var m = (lo + hi) / 2, p = pHof(b, dir * m); if (dir > 0 ? p < target : p > target) lo = m; else hi = m; }
+    return (lo + hi) / 2;
+  }
+
+  var SCN = [
+    { id: "conc", name: "Same ratio, 10× concentration", A: { h: 0.50, a: 0.50 }, B: { h: 0.05, a: 0.05 }, net: -20 },
+    { id: "lop",  name: "More acid than base", A: { h: 0.30, a: 0.10 }, B: { h: 0.20, a: 0.20 }, net: 15 },
+    { id: "lopb", name: "More base than acid", A: { h: 0.10, a: 0.30 }, B: { h: 0.20, a: 0.20 }, net: -15 },
+    { id: "dil",  name: "Diluted tenfold", A: { h: 0.20, a: 0.20 }, B: { h: 0.02, a: 0.02 }, net: 5 },
+    { id: "over", name: "Exceed the capacity", A: { h: 0.10, a: 0.10 }, B: { h: 0.10, a: 0.10 }, net: -14 },
+    { id: "eq",   name: "Equal total, equal vs. unequal", A: { h: 0.20, a: 0.20 }, B: { h: 0.35, a: 0.05 }, net: 0 }
+  ];
+  var st = { A: { h: 0.50, a: 0.50 }, B: { h: 0.05, a: 0.05 }, net: -20, scn: "conc" };
+
+  function f2(x) { return x.toFixed(2); }
+  function capTxt(c) { return !isFinite(c) ? "> 200" : c < 10 ? c.toFixed(1) : Math.round(c).toString(); }
+  function isBuf(b) { return b.h > 0 && b.a > 0; }
+
+  // ---------- Graph ----------
+  var svgG = document.getElementById("graph");
+  function drawGraph() {
+    var Fr = Lab.frame(svgG, { x: [-NMAX, NMAX], y: [0, 14], width: 440, height: 300, xTicks: [-60, -40, -20, 0, 20, 40, 60], yTicks: [0, 2, 4, 6, 8, 10, 12, 14],
+      fmtX: function (v) { return v < 0 ? "−" + (-v) : v > 0 ? "+" + v : "0"; }, fmtY: function (v) { return v; },
+      xLabel: "mmol added  (← HCl | NaOH →)", yLabel: "pH" });
+    [["A", "var(--accent)"], ["B", "var(--c1)"]].forEach(function (x) {
+      var b = st[x[0]], pts = [];
+      for (var n = -NMAX; n <= NMAX + 1e-9; n += 0.5) pts.push([n, pHof(b, n)]);
+      var p0 = pHof(b, 0);
+      Lab.line(Fr, [[-NMAX, p0 + 1], [NMAX, p0 + 1]], x[1], 1, "2 4");
+      Lab.line(Fr, [[-NMAX, p0 - 1], [NMAX, p0 - 1]], x[1], 1, "2 4");
+      Lab.line(Fr, pts, x[1], 3);
+    });
+    Lab.vline(Fr, st.net, "var(--ghost)", 1.5, "6 4");
+    Lab.dot(Fr, st.net, pHof(st.B, st.net), "var(--c1)");
+    Lab.dot(Fr, st.net, pHof(st.A, st.net), "var(--accent)");
+  }
+
+  // ---------- Tanks ----------
+  var svgT = document.getElementById("tanks");
+  function drawTanks() {
+    var oA = stoich(st.A, st.net), oB = stoich(st.B, st.net);
+    var top = Math.max(10, mm(st.A).ha + mm(st.A).a, mm(st.B).ha + mm(st.B).a, oA.h, oA.oh, oB.h, oB.oh) * 1.12;
+    var step = [5, 10, 20, 25, 50].filter(function (s) { return top / s <= 6; })[0] || 50, ticks = [];
+    for (var t = 0; t <= top; t += step) ticks.push(t);
+    var bars = [];
+    function grp(o, x0, col) {
+      bars.push({ x: x0, y: o.ha, color: "var(--c2)", label: o.ha.toFixed(0), width: 0.8 });
+      bars.push({ x: x0 + 1, y: o.a, color: "var(--c4)", label: o.a.toFixed(0), width: 0.8 });
+      var ex = o.h || o.oh;
+      bars.push({ x: x0 + 2, y: ex, color: o.h ? "var(--bad)" : "var(--c3)", label: ex ? ex.toFixed(0) : "", width: 0.8 });
+    }
+    grp(oA, 1, "var(--accent)"); grp(oB, 5.5, "var(--c1)");
+    var Fr = Lab.bars(svgT, { x: [0, 8.5], y: [0, top], width: 440, height: 300, yTicks: ticks, fmtY: function (v) { return v; }, yLabel: "mmol", bars: bars });
+    var labs = [[1, "HA"], [2, "A⁻"], [3, "excess"], [5.5, "HA"], [6.5, "A⁻"], [7.5, "excess"]];
+    labs.forEach(function (l) { Lab.el("text", { x: Fr.sx(l[0]), y: Fr.H - Fr.M.b + 16, "text-anchor": "middle" }, svgT, l[1]); });
+    Lab.el("text", { x: Fr.sx(2), y: Fr.H - 10, "text-anchor": "middle", "class": "lbl", style: "fill:var(--accent)" }, svgT, "Buffer A");
+    Lab.el("text", { x: Fr.sx(6.5), y: Fr.H - 10, "text-anchor": "middle", "class": "lbl", style: "fill:var(--c1)" }, svgT, "Buffer B");
+    Lab.el("line", { x1: Fr.sx(4.25), x2: Fr.sx(4.25), y1: Fr.M.t, y2: Fr.H - Fr.M.b, stroke: "var(--rule)", "stroke-width": 1.5 }, svgT);
+  }
+
+  // ---------- Readouts and story ----------
+  function who(k) { return '<span class="' + (k === "A" ? "bA" : "bB") + '">' + k + "</span>"; }
+  function readouts() {
+    var pa = pHof(st.A, st.net), pb = pHof(st.B, st.net), a0 = pHof(st.A, 0), b0 = pHof(st.B, 0);
+    document.getElementById("r-ph").textContent = f2(pa) + " / " + f2(pb);
+    document.getElementById("r-ph2").textContent = "started at " + f2(a0) + " / " + f2(b0);
+    var cA = [capacity(st.A, -1), capacity(st.A, 1)], cB = [capacity(st.B, -1), capacity(st.B, 1)];
+    document.getElementById("r-ca").textContent = capTxt(cA[0]) + " / " + capTxt(cA[1]);
+    document.getElementById("r-cb").textContent = capTxt(cB[0]) + " / " + capTxt(cB[1]);
+    var dir = st.net < 0 ? 0 : 1, word = st.net < 0 ? "acid" : "base";
+    if (st.net === 0) { dir = null; }
+    var w = document.getElementById("r-win"), w2 = document.getElementById("r-win2");
+    if (dir === null) {
+      var tA = Math.min(cA[0], cA[1]), tB = Math.min(cB[0], cB[1]);
+      w.innerHTML = Math.abs(tA - tB) < 0.05 ? "tie" : tA > tB ? who("A") : who("B");
+      w2.textContent = "comparing the weaker direction of each";
+    } else {
+      w.innerHTML = Math.abs(cA[dir] - cB[dir]) < 0.05 ? "tie" : cA[dir] > cB[dir] ? who("A") : who("B");
+      w2.textContent = "for added " + word;
+    }
+    document.getElementById("o-n").textContent = st.net === 0 ? "nothing" : st.net < 0 ? (-st.net) + " mmol HCl" : st.net + " mmol NaOH";
+    ["ah", "aa", "bh", "ba"].forEach(function (k) {
+      var v = st[k[0].toUpperCase()][k[1] === "h" ? "h" : "a"];
+      document.getElementById("o-" + k).textContent = v.toFixed(2) + " M";
+      document.getElementById("s-" + k).value = v;
+    });
+    document.getElementById("s-n").value = st.net;
+    return { cA: cA, cB: cB };
+  }
+  function story(c) {
+    var A = st.A, B = st.B, nA = mm(A), nB = mm(B), h = "";
+    var pA0 = pHof(A, 0), pB0 = pHof(B, 0);
+    var rA = A.h > 0 ? A.a / A.h : Infinity, rB = B.h > 0 ? B.a / B.h : Infinity;
+    h += "<p><b>Starting pH:</b> " + who("A") + " has " + nA.ha.toFixed(0) + " mmol CH<sub>3</sub>COOH and " + nA.a.toFixed(0) + " mmol CH<sub>3</sub>COO<sup>−</sup> (pH " + f2(pA0) + "); " + who("B") + " has " + nB.ha.toFixed(0) + " and " + nB.a.toFixed(0) + " mmol (pH " + f2(pB0) + "). " +
+      (isBuf(A) && isBuf(B) && Math.abs(rA - rB) < 1e-9 ? "The ratios are the same, so the starting pH values match (to within the small effect of the buffers' own ionization)." : "The ratios differ, so the starting pH values differ.") + "</p>";
+    if (!isBuf(A) || !isBuf(B)) h += "<p><b>Note:</b> a solution with only one member of the pair is not a buffer; its capacity in one direction is essentially zero.</p>";
+    h += "<p><b>Which member reacts:</b> added HCl is consumed by CH<sub>3</sub>COO<sup>−</sup>, so capacity for acid tracks the moles of CH<sub>3</sub>COO<sup>−</sup> (" + nA.a.toFixed(0) + " in A, " + nB.a.toFixed(0) + " in B). Added NaOH is consumed by CH<sub>3</sub>COOH, so capacity for base tracks the moles of CH<sub>3</sub>COOH (" + nA.ha.toFixed(0) + " in A, " + nB.ha.toFixed(0) + " in B).</p>";
+    if (st.net !== 0) {
+      var oA = stoich(A, st.net), oB = stoich(B, st.net), word = st.net < 0 ? "HCl" : "NaOH";
+      function state(o, k) {
+        var ex = o.h || o.oh;
+        if (ex > 0) return who(k) + " has run out of " + (o.h ? "CH<sub>3</sub>COO<sup>−</sup>" : "CH<sub>3</sub>COOH") + "; " + ex.toFixed(0) + " mmol excess " + (o.h ? "H<sub>3</sub>O<sup>+</sup>" : "OH<sup>−</sup>") + " now controls the pH";
+        var p0 = pHof(st[k], 0), p = pHof(st[k], st.net);
+        return who(k) + " still holds " + o.ha.toFixed(0) + " : " + o.a.toFixed(0) + " mmol HA : A⁻, pH changed by " + Math.abs(p - p0).toFixed(2) + (Math.abs(p - p0) >= 1 ? " (capacity exceeded)" : "");
+      }
+      h += "<p><b>After " + Math.abs(st.net) + " mmol " + word + ":</b> " + state(oA, "A") + ". " + state(oB, "B") + ".</p>";
+    }
+    var ans;
+    var sameRatio = isBuf(A) && isBuf(B) && Math.abs(rA - rB) < 1e-9;
+    if (sameRatio && Math.abs(nA.ha - nB.ha) > 1e-9) {
+      var big = nA.ha > nB.ha ? "A" : "B";
+      ans = "Both buffers have the same [CH<sub>3</sub>COO<sup>−</sup>]/[CH<sub>3</sub>COOH] ratio, so they have the same pH. Buffer " + who(big) + " has higher concentrations of both components, so it can neutralize more added acid or base before its pH changes significantly: it has the greater buffer capacity.";
+    } else if (isBuf(A) && isBuf(B) && (Math.abs(A.h - A.a) > 1e-9 || Math.abs(B.h - B.a) > 1e-9)) {
+      var lop = Math.abs(A.h - A.a) > Math.abs(B.h - B.a) ? "A" : "B", L = st[lop];
+      var same = Math.abs(A.h - B.h) < 1e-9 && Math.abs(A.a - B.a) < 1e-9;
+      ans = (same ? "Both buffers have" : "Buffer " + who(lop) + " has") + " more " + (L.h > L.a ? "CH<sub>3</sub>COOH than CH<sub>3</sub>COO<sup>−</sup>, so " + (same ? "each has" : "it has") + " a greater capacity for added base (OH<sup>−</sup> reacts with CH<sub>3</sub>COOH) than for added acid." : "CH<sub>3</sub>COO<sup>−</sup> than CH<sub>3</sub>COOH, so " + (same ? "each has" : "it has") + " a greater capacity for added acid (H<sub>3</sub>O<sup>+</sup> reacts with CH<sub>3</sub>COO<sup>−</sup>) than for added base.") +
+        " The capacity in each direction depends on the amount of the component that reacts.";
+    } else if (isBuf(A) && isBuf(B)) {
+      ans = "The two buffers are identical, so they have the same pH and the same capacity. Adding enough strong acid or base to use up one component exceeds the capacity, and the pH then changes sharply.";
+    } else {
+      ans = "A buffer needs significant amounts of both components. Capacity for added acid depends on the amount of conjugate base, and capacity for added base depends on the amount of weak acid.";
+    }
+    h += "<p><b>AP answer:</b> " + ans + "</p>";
+    document.getElementById("story").innerHTML = h;
+  }
+  var scB = {};
+  function render() {
+    Object.keys(scB).forEach(function (k) { scB[k].setAttribute("aria-pressed", k === st.scn ? "true" : "false"); });
+    drawGraph(); drawTanks(); var c = readouts(); story(c);
+  }
+
+  // ---------- Controls ----------
+  SCN.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.name;
+    b.addEventListener("click", function () {
+      st.A = { h: x.A.h, a: x.A.a }; st.B = { h: x.B.h, a: x.B.a }; st.scn = x.id;
+      var target = x.net; st.net = 0; render();
+      Lab.animate(700, function (e) { st.net = Math.round(target * e); render(); });
+    });
+    document.getElementById("sc").appendChild(b); scB[x.id] = b;
+  });
+  ["ah", "aa", "bh", "ba"].forEach(function (k) {
+    document.getElementById("s-" + k).addEventListener("input", function (e) {
+      st[k[0].toUpperCase()][k[1] === "h" ? "h" : "a"] = parseFloat(e.target.value); st.scn = null; render();
+    });
+  });
+  document.getElementById("s-n").addEventListener("input", function (e) { st.net = parseInt(e.target.value, 10); render(); });
+  document.getElementById("b-acid").addEventListener("click", function () { st.net = Math.max(-NMAX, st.net - 5); render(); });
+  document.getElementById("b-base").addEventListener("click", function () { st.net = Math.min(NMAX, st.net + 5); render(); });
+  document.getElementById("b-zero").addEventListener("click", function () { st.net = 0; render(); });
+
+  // ---------- Generated table ----------
+  (function () {
+    var rows = [[0.10, 0.10, "Reference"], [1.00, 1.00, "Same pH as the reference, about 10× the capacity both ways"], [0.010, 0.010, "Same pH, about one tenth the capacity"],
+      [0.15, 0.05, "Below pK<sub>a</sub>; resists base much better than acid"], [0.05, 0.15, "Above pK<sub>a</sub>; resists acid much better than base"]];
+    var tb = document.getElementById("tbody");
+    rows.forEach(function (r) {
+      var b = { h: r[0], a: r[1] }, tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + r[0].toFixed(r[0] < 0.1 ? 3 : 2) + " M / " + r[1].toFixed(r[1] < 0.1 ? 3 : 2) + " M</td><td>" + f2(pHof(b, 0)) + "</td><td>" + capTxt(capacity(b, -1)) + " mmol</td><td>" + capTxt(capacity(b, 1)) + " mmol</td><td>" + r[2] + "</td>";
+      tb.appendChild(tr);
+    });
+  })();
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    function near(a, b, tol, what) { if (!(Math.abs(a - b) <= tol)) bad.push(what + ": got " + a + ", expected " + b); }
+    var ref = { h: 0.10, a: 0.10 }, big = { h: 0.50, a: 0.50 }, small = { h: 0.05, a: 0.05 };
+    near(pHof(ref, 0), 4.74, 0.01, "reference pH");
+    near(pHof(big, 0), pHof(small, 0), 0.01, "same ratio same pH");
+    // hand-worked with Henderson-Hasselbalch: (10 - n)/(10 + n) = 0.1 -> n = 8.18 mmol
+    near(capacity(ref, -1), 90 / 11, 0.15, "reference acid capacity");
+    near(capacity(ref, 1), 90 / 11, 0.15, "reference base capacity");
+    near(capacity(big, -1) / capacity(small, -1), 10, 0.3, "10x concentration gives about 10x capacity");
+    var lop = { h: 0.30, a: 0.10 };
+    if (!(capacity(lop, 1) > capacity(lop, -1))) bad.push("more HA should resist base better");
+    // stoichiometry: quiz 6 (5.0 mmol HA + 5.0 mmol A- per 100 mL, + 6 mmol OH-) -> 0 HA, 10 A-, 1 OH-
+    var o = stoich({ h: 0.05, a: 0.05 }, 6); if (o.ha !== 0 || Math.abs(o.a - 10) > 1e-9 || Math.abs(o.oh - 1) > 1e-9) bad.push("quiz 6 stoichiometry");
+    for (var n = -NMAX + 1; n <= NMAX; n++) if (!(pHof(ref, n) > pHof(ref, n - 1))) bad.push("pH not rising at " + n);
+    if (bad.length) console.error("8.10 self-check failed: " + bad.slice(0, 6).join("; "));
+  })();
+
+  render();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Buffer X is 0.10 M CH₃COOH and 0.10 M NaCH₃COO. Buffer Y is 1.0 M CH₃COOH and 1.0 M NaCH₃COO. Which statement is correct?",
+      o: ["X has a higher pH because it is less concentrated.", "X and Y have the same pH and the same buffer capacity.", "X and Y have the same pH, but Y has the greater buffer capacity.", "Y has a lower pH and a greater buffer capacity."], c: 2,
+      w: "The pH depends on the ratio [CH₃COO⁻]/[CH₃COOH], which is 1 in both, so both are at pH = pKa = 4.74. Y contains ten times as much of each component per liter, so it can neutralize about ten times as much added acid or base. Choice B misses that capacity depends on the amounts, not the ratio." },
+    { s: "A buffer contains 0.30 M HA and 0.10 M NaA. Which statement about its buffer capacity is correct?",
+      o: ["It has greater capacity for added base than for added acid, because there is more HA to react with OH⁻.", "It has greater capacity for added acid than for added base, because HA is an acid.", "Its capacity is the same for added acid and added base, because it is a buffer.", "It has no capacity for added acid, because [HA] > [A⁻]."], c: 0,
+      w: "Added OH⁻ reacts with HA; added H₃O⁺ reacts with A⁻. This buffer has three times as much HA as A⁻, so it can absorb more base than acid. Choice B gets the matching backward: an acid component neutralizes base, not acid. Choice D overstates it: 0.10 M A⁻ still absorbs some acid." },
+    { s: "Each of the following is 1.0 L of a buffer. Which can neutralize the most HCl before its pH changes significantly?",
+      o: ["0.10 mol HA and 0.10 mol A⁻", "0.50 mol HA and 0.05 mol A⁻", "0.05 mol HA and 0.05 mol A⁻", "0.20 mol HA and 0.40 mol A⁻"], c: 3,
+      w: "Added H₃O⁺ is consumed by the conjugate base, so capacity for acid depends on the moles of A⁻. Choice D has the most A⁻ (0.40 mol). Choice B is a trap: it has the most total material, but almost all of it is HA, which does not react with added acid." },
+    { s: "A particle diagram of a buffer shows 2 HA and 8 A⁻ (water and spectator ions not shown). About how many OH⁻ ions can be added before the buffer's capacity for base is exceeded?",
+      o: ["0", "2", "8", "10"], c: 1,
+      w: "Each OH⁻ is consumed by one HA: HA + OH⁻ → A⁻ + H₂O. With only 2 HA present, a third OH⁻ has nothing to react with and accumulates, so the pH rises sharply. Choice C counts the A⁻, which is what absorbs added acid, not base." },
+    { s: "A buffer is diluted with distilled water to ten times its original volume. How do the pH and buffer capacity of 100 mL of the diluted buffer compare with those of 100 mL of the original buffer?",
+      o: ["The pH stays about the same; the capacity decreases.", "The pH stays about the same; the capacity stays the same.", "The pH increases; the capacity decreases.", "The pH decreases; the capacity increases."], c: 0,
+      w: "Dilution lowers [HA] and [A⁻] by the same factor, so the ratio and the pH are essentially unchanged. Each liter of the diluted buffer holds a tenth as much HA and A⁻, so 100 mL of it can neutralize only about a tenth as much acid or base: its capacity is lower. Choice B ignores the drop in concentration; choices C and D wrongly assume the ratio changes." },
+    { s: "A buffer contains 0.050 mol CH₃COOH and 0.050 mol NaCH₃COO. A student adds 0.060 mol NaOH. Which best describes the result?",
+      o: ["0.050 mol CH₃COOH and 0.050 mol CH₃COO⁻ remain; the pH is unchanged.", "All of the CH₃COOH reacts, leaving 0.110 mol CH₃COO⁻; the pH rises slightly.", "All of the CH₃COOH reacts, leaving 0.100 mol CH₃COO⁻ and 0.010 mol excess OH⁻; the pH rises sharply.", "0.010 mol CH₃COOH and 0.110 mol CH₃COO⁻ remain; the pH rises slightly."], c: 2,
+      w: "Only 0.050 mol CH₃COOH is available to react, so 0.050 mol OH⁻ reacts, forming 0.050 mol more CH₃COO⁻ (0.100 mol total), and 0.010 mol OH⁻ is left over. The excess strong base, not the buffer, now sets the pH, which rises sharply: the capacity has been exceeded. Choice B lets more OH⁻ react than there was acid to react with." },
+    { s: "A student needs an acetate buffer at pH 4.74 that resists both added acid and added base as strongly as possible. Which preparation is best?",
+      o: ["0.10 M CH₃COOH and 0.10 M NaCH₃COO", "0.50 M CH₃COOH and 0.10 M NaCH₃COO", "0.010 M CH₃COOH and 0.010 M NaCH₃COO", "0.50 M CH₃COOH and 0.50 M NaCH₃COO"], c: 3,
+      w: "pH 4.74 = pKa requires equal concentrations of the two components, and the highest equal concentrations give the greatest capacity in both directions. Choice B would have a pH below 4.74 (4.74 + log 0.2 = 4.04) and little capacity for acid. Choices A and C have the right pH but less capacity." },
+    { s: "Which change increases the buffer capacity of an acetate buffer without significantly changing its pH?",
+      o: ["Adding distilled water", "Adding more CH₃COOH and NaCH₃COO in the same mole ratio as already present", "Adding solid NaCH₃COO only", "Adding a small amount of NaOH"], c: 1,
+      w: "Adding both components in the existing ratio raises the amounts of both while keeping [CH₃COO⁻]/[CH₃COOH] the same, so capacity rises and the pH stays put. Choice A lowers the capacity. Choices C and D change the ratio, so they change the pH; D also uses up some of the acid component." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("8.10");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [8], topic: "8.10", compact: true, storageKey: "topic-8.10" });</script>
+</body>
+</html>

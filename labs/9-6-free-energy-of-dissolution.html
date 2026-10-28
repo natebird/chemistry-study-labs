@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free Energy of Dissolution Study Lab</title>
+<meta name="description" content="Step a salt through dissolving at the particle level, see the sign of the enthalpy and entropy change for each stage, and compare ΔH°, TΔS°, and ΔG° for six real salts as the temperature changes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.ctl[hidden], .group[hidden] { display: none; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 18px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.side .controls { grid-template-columns: 1fr; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.lab-bar > * { min-width: 0; max-width: 100%; }
+.note { font-size: .84rem; color: var(--muted); }
+.legend.dots span::before { width: 10px; height: 10px; border-radius: 50%; }
+.stage-cap { font-size: .9rem; min-height: 3em; }
+.factors { width: 100%; min-width: 0; border-collapse: collapse; font-size: .88rem; }
+.factors th, .factors td { padding: 7px 8px; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+.factors th { font-size: .72rem; }
+.factors tr.on td { background: var(--accent-soft); }
+.factors .up { color: var(--bad); font-weight: 600; white-space: nowrap; }
+.factors .dn { color: var(--good); font-weight: 600; white-space: nowrap; }
+.factors .sm { color: var(--muted); }
+.v.fav { color: var(--good); } .v.unf { color: var(--bad); }
+@media (max-width: 520px) {
+  .lab-bar .eqn { white-space: normal; }
+  .factors { font-size: .82rem; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 9 · Topic 9.6</span>
+  <h1>Free Energy of Dissolution Study Lab</h1>
+  <p class="lede">Whether a salt dissolves depends on ΔG° for dissolving, which combines three factors: breaking the attractions that hold the solid together, reorganizing the water around the ions, and forming new ion–water attractions. Each factor has its own enthalpy and entropy change, and they largely cancel, so the overall result is hard to predict. Step through the process, then compare real salts.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Dissolving, one step at a time</h2>
+    <p>The three steps are a thought experiment: in a real beaker they happen together. The particle view shows each step; the table beside it gives the sign of ΔH and ΔS for that step. The overall values for each salt are measured, standard values at 25 °C; changing the temperature uses ΔG° = ΔH° − TΔS° with ΔH° and ΔS° held constant.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Particle view <small id="v-sub"></small></h3>
+      <svg class="chart" id="pv" role="img" aria-label="Particle diagram of a salt dissolving in water, shown in stages"></svg>
+      <div class="seg" role="group" aria-label="Stage">
+        <button type="button" id="st-0" aria-pressed="true">Start</button>
+        <button type="button" id="st-1" aria-pressed="false">1. Separate ions</button>
+        <button type="button" id="st-2" aria-pressed="false">2. Reorganize water</button>
+        <button type="button" id="st-3" aria-pressed="false">3. Hydrate ions</button>
+      </div>
+      <p class="stage-cap" id="cap"></p>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Salts</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-t">Temperature <output id="o-t"></output></label>
+          <input type="range" id="s-t" min="273" max="373" step="1">
+          <span class="hint" id="h-t"></span>
+        </div>
+        <div class="ctl" id="ctl-h" hidden>
+          <label for="s-h">ΔH°soln <output id="o-h"></output></label>
+          <input type="range" id="s-h" min="-100" max="100" step="0.5">
+        </div>
+        <div class="ctl" id="ctl-s" hidden>
+          <label for="s-s">ΔS°soln <output id="o-s"></output></label>
+          <input type="range" id="s-s" min="-150" max="150" step="0.5">
+        </div>
+      </div>
+      <table class="factors" aria-label="Sign of ΔH and ΔS for each step">
+        <thead><tr><th>Step</th><th>ΔH</th><th>ΔS</th></tr></thead>
+        <tbody id="fac"></tbody>
+      </table>
+      <p class="note">Red: works against dissolving. Green: works for it. The overall row is the measured total for the selected salt.</p>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend dots" id="legend"></div>
+    <div class="eqn" id="eqn"></div>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Overall: ΔG° = ΔH° − TΔS° <small id="b-sub"></small></h3>
+      <svg class="chart" id="bars" role="img" aria-label="Bars for the enthalpy term, the entropy term, and their sum, the free energy of dissolution"></svg>
+    </div>
+    <div class="card graph-card">
+      <h3>ΔG° vs. temperature <small>all six salts</small></h3>
+      <svg class="chart" id="gt" role="img" aria-label="Free energy of dissolution against temperature for each salt"></svg>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">ΔH°soln</div><div class="v" id="r-h"></div><div class="sub" id="r-h2"></div></div>
+    <div class="stat"><div class="k">ΔS°soln</div><div class="v" id="r-s"></div><div class="sub" id="r-s2"></div></div>
+    <div class="stat"><div class="k">ΔG°soln at this T</div><div class="v" id="r-g"></div><div class="sub" id="r-g2"></div></div>
+    <div class="stat"><div class="k">K = e<sup>−ΔG°/RT</sup></div><div class="v" id="r-k"></div><div class="sub" id="r-k2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">Values are calculated from standard enthalpies, entropies, and free energies of formation of the solid and the aqueous ions (25 °C, 1 M), rounded; tables differ by a few tenths. For very soluble salts the 1 M standard state is far from the real saturated solution, so K is a rough guide to solubility, not a prediction of grams per liter. For a sparingly soluble salt, K is K<sub>sp</sub>.</p>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Step 1</span><h3>Break solute–solute attractions</h3><p>Pulling the ions out of the lattice takes energy (ΔH &gt; 0, often hundreds of kJ/mol) and frees them from fixed positions (ΔS &gt; 0). Small, highly charged ions are held most strongly.</p></div>
+    <div class="card"><span class="tag">Step 2</span><h3>Reorganize the solvent</h3><p>Some hydrogen bonds between water molecules must break to make room (ΔH &gt; 0). Water molecules then line up around each ion in a hydration shell, which restricts their motion (ΔS &lt; 0). The ordering is strongest around small or highly charged ions such as Li⁺, Ca²⁺, F⁻, and CO₃²⁻.</p></div>
+    <div class="card"><span class="tag">Step 3</span><h3>Form solute–solvent attractions</h3><p>Ion–dipole attractions form: the partially negative oxygen of water points toward cations, and the partially positive hydrogens point toward anions. This releases a large amount of energy (ΔH &lt; 0).</p></div>
+    <div class="card"><span class="tag">Cancellation</span><h3>Big numbers, small difference</h3><p>For NaCl, breaking the lattice costs about 787 kJ/mol and hydrating the ions releases about 783 kJ/mol, so ΔH°soln is only +3.9 kJ/mol. Because large terms nearly cancel, you usually cannot predict the sign of ΔG°soln just by reasoning about the steps.</p></div>
+    <div class="card"><span class="tag">Two drivers</span><h3>Enthalpy-driven or entropy-driven</h3><p>Some salts dissolve because the process is exothermic (CaCl₂ gets hot: ΔH° &lt; 0 outweighs ΔS° &lt; 0). Others dissolve because ΔS° &gt; 0 outweighs an endothermic ΔH° (NH₄NO₃ in a cold pack). Compare the size of ΔH° with TΔS° to tell which.</p></div>
+    <div class="card"><span class="tag">Temperature</span><h3>Hotter is not always more soluble</h3><p>Raising T makes ΔG°soln more negative when ΔS° &gt; 0 and more positive when ΔS° &lt; 0. But whether K for dissolving grows is set by the sign of ΔH°, as Le Châtelier's principle predicts: K increases with T when dissolving is endothermic and decreases when it is exothermic. Li₂CO₃ (ΔH° &lt; 0) is less soluble in hot water.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Dissolution data for the six salts</h2>
+    <p>Standard values at 25 °C, generated from the same data the lab uses. Look at which term, ΔH° or −TΔS°, is larger in each row.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Salt</th><th>ΔH°soln, kJ/mol</th><th>ΔS°soln, J/(mol·K)</th><th>−TΔS° at 298 K, kJ/mol</th><th>ΔG°soln, kJ/mol</th><th>Driven by</th></tr></thead>
+    <tbody id="d-table"></tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Dissolution on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points</h3>
+      <ul>
+        <li>Name the interactions in each step: ion–ion (solute–solute), hydrogen bonds (solvent–solvent), and ion–dipole (solute–solvent).</li>
+        <li>Give the correct sign for each: breaking attractions is endothermic; forming attractions is exothermic.</li>
+        <li>Use observations: a solution that gets cold means ΔH°soln &gt; 0; one that gets warm means ΔH°soln &lt; 0.</li>
+        <li>If an endothermic dissolution is favored, conclude that ΔS° &gt; 0 and TΔS° &gt; ΔH°.</li>
+        <li>For ΔS° &lt; 0, explain with ordering of water molecules in hydration shells around small or highly charged ions.</li>
+        <li>For a calculation, use ΔG° = ΔH° − TΔS° with ΔS° in kJ/(mol·K), and connect the sign of ΔG° to whether dissolving is favored.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying "bonds break, so energy is released." Separating ions always absorbs energy.</li>
+        <li>Assuming ΔS°soln is always positive. Hydration shells can make it negative.</li>
+        <li>Assuming every salt dissolves better in hot water. Li₂CO₃ dissolves exothermically, and its K<sub>sp</sub> decreases as the temperature rises.</li>
+        <li>Claiming that because dissolving is endothermic, it cannot be favored.</li>
+        <li>Pointing the hydrogens of water toward cations in a particle diagram. Oxygen (δ−) faces cations; hydrogen (δ+) faces anions.</li>
+        <li>Predicting ΔG°soln from step-by-step reasoning alone. The terms nearly cancel; use measured values.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 9.6. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-9.html">Unit 9 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var R = 8.314;
+
+  // ---------- Data at 298 K: [ΔH°f kJ/mol, ΔG°f kJ/mol, S° J/(mol·K)] ----------
+  var D = {
+    "Na^+": [-240.1, -261.9, 59.0], "NH4^+": [-132.5, -79.3, 113.4], "Ca^2+": [-542.8, -553.6, -53.1], "Ag^+": [105.6, 77.1, 72.7], "Li^+": [-278.5, -293.3, 13.4],
+    "Cl^-": [-167.2, -131.2, 56.5], "NO3^-": [-205.0, -108.7, 146.4], "F^-": [-332.6, -278.8, -13.8], "CO3^2-": [-677.1, -527.8, -56.9],
+    "NaCl": [-411.2, -384.1, 72.1], "NH4NO3": [-365.6, -183.9, 151.1], "CaCl2": [-795.8, -748.1, 104.6], "AgCl": [-127.1, -109.8, 96.2], "LiF": [-616.0, -587.7, 35.7], "Li2CO3": [-1215.9, -1132.1, 90.4]
+  };
+  var SALTS = [
+    { key: "NaCl", cat: "Na^+", an: "Cl^-", nc: 1, na: 1, rc: 5.5, ra: 7.5,
+      why: "Breaking the lattice and hydrating the ions nearly cancel (ΔH° is only +3.9 kJ/mol). The small positive ΔS° tips ΔG° negative: dissolving is slightly entropy-driven." },
+    { key: "NH4NO3", cat: "NH4^+", an: "NO3^-", nc: 1, na: 1, rc: 7, ra: 8,
+      why: "Strongly endothermic: the solution gets cold, which is how instant cold packs work. NH₄⁺ and NO₃⁻ are large, singly charged ions that order little water, so ΔS° is large and positive, and −TΔS° outweighs ΔH°. Entropy-driven." },
+    { key: "CaCl2", cat: "Ca^2+", an: "Cl^-", nc: 1, na: 2, rc: 5.5, ra: 7.5,
+      why: "Strongly exothermic: the solution gets hot (used in hot packs and to melt ice). The small, doubly charged Ca²⁺ ion holds water tightly in its hydration shell, so ΔS° is negative. The enthalpy term wins easily. Enthalpy-driven." },
+    { key: "AgCl", cat: "Ag^+", an: "Cl^-", nc: 1, na: 1, rc: 6, ra: 7.5,
+      why: "Very endothermic: the attractions in solid AgCl are strong and are not repaid by hydration. ΔS° is positive but far too small to compensate, so ΔG° is large and positive and K<sub>sp</sub> is tiny." },
+    { key: "LiF", cat: "Li^+", an: "F^-", nc: 1, na: 1, rc: 4.5, ra: 6.5,
+      why: "Both ions are small, so the lattice is strong and both ions order water strongly: ΔS° is negative. ΔH° is slightly positive, so neither term helps and ΔG° > 0. LiF is only slightly soluble." },
+    { key: "Li2CO3", cat: "Li^+", an: "CO3^2-", nc: 2, na: 1, rc: 4.5, ra: 8,
+      why: "Exothermic, but the small Li⁺ ions and the doubly charged CO₃²⁻ ion order a great deal of water, so ΔS° is strongly negative and −TΔS° outweighs ΔH°. Because dissolving is exothermic (ΔH° < 0), its K decreases as the temperature rises, so Li₂CO₃ is less soluble in hot water." },
+    { key: "custom", label: "Your own salt", custom: true, cat: "M^+", an: "X^-", nc: 1, na: 1, rc: 6, ra: 7.5 }
+  ];
+  function ionHtml(k) { var m = k.match(/^(.*)\^(\d?)([+\-])$/); return Lab.fmla(m[1] + "^" + m[2] + m[3]); }
+  function ionPlain(k) { var m = k.match(/^(.*)\^(\d?)([+\-])$/); return m[1].replace(/\d/g, function (d) { return "₀₁₂₃₄₅₆₇₈₉"[+d]; }) + (m[2] ? "²" : "") + (m[3] === "+" ? "⁺" : "⁻"); }
+  SALTS.forEach(function (s) {
+    if (s.custom) return;
+    s.label = s.key.replace(/\d/g, function (d) { return "₀₁₂₃₄₅₆₇₈₉"[+d]; });
+    function comb(i) { return s.nc * D[s.cat][i] + s.na * D[s.an][i] - D[s.key][i]; }
+    s.dh = comb(0); s.dg = comb(1); s.ds = comb(2);
+  });
+
+  var S = { key: "NaCl", T: 298, stage: 0, dh: 0, ds: 0 };
+  function salt() { return SALTS.filter(function (s) { return s.key === S.key; })[0]; }
+  function pick(k) { var s = SALTS.filter(function (x) { return x.key === k; })[0]; S.key = k; if (!s.custom) { S.dh = s.dh; S.ds = s.ds; } build(); setStage(0, false); render(); }
+  function G(T) { return S.dh - T * S.ds / 1000; }
+  function sg(v, d) { return (v < 0 ? "−" : v > 0 ? "+" : "") + Math.abs(v).toFixed(d == null ? 1 : d); }
+
+  // ---------- Particle view ----------
+  var pv = document.getElementById("pv"), W = 440, HH = 250, ions = [], waters = [], stopAnim = null;
+  var X0 = 12, X1 = 428, Y0 = 12, Y1 = 238;
+  function wshape(g) {
+    Lab.el("circle", { cx: 0, cy: 0, r: 5, fill: "var(--c1)", stroke: "var(--surface)", "stroke-width": 0.8 }, g);
+    Lab.el("circle", { cx: -4.6, cy: 4, r: 3, fill: "var(--ghost)", stroke: "var(--surface)", "stroke-width": 0.8 }, g);
+    Lab.el("circle", { cx: 4.6, cy: 4, r: 3, fill: "var(--ghost)", stroke: "var(--surface)", "stroke-width": 0.8 }, g);
+  }
+  function build() {
+    var s = salt();
+    pv.setAttribute("viewBox", "0 0 " + W + " " + HH);
+    while (pv.firstChild) pv.removeChild(pv.firstChild);
+    Lab.el("rect", { x: X0 - 6, y: Y0 - 6, width: X1 - X0 + 12, height: Y1 - Y0 + 12, rx: 8, fill: "var(--accent)", opacity: 0.06 }, pv);
+    ions = []; waters = [];
+    // ion list: unit cell of 6 ions keeping the formula ratio
+    var per = s.nc + s.na, units = Math.round(6 / per), list = [];
+    for (var u = 0; u < units; u++) { for (var i = 0; i < s.nc; i++) list.push("c"); for (var j = 0; j < s.na; j++) list.push("a"); }
+    // lattice: rows of 3, alternating, bottom-left
+    var sp = 27, lat = [];
+    var cols = 3, rows = Math.ceil(list.length / cols);
+    // order lattice so that neighbors alternate where possible
+    var cs = list.filter(function (t) { return t === "c"; }), as = list.filter(function (t) { return t === "a"; }), ordered = [];
+    for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) {
+      var wantC = (r + c) % 2 === 0;
+      if (wantC && cs.length) ordered.push(cs.pop()); else if (as.length) ordered.push(as.pop()); else if (cs.length) ordered.push(cs.pop());
+    }
+    // targets: hydration sites spread through the box
+    var sites = [[80, 70], [215, 60], [350, 75], [100, 180], [235, 175], [360, 185]];
+    ordered.forEach(function (t, k) {
+      var r2 = Math.floor(k / cols), c2 = k % cols;
+      var p0 = [40 + c2 * sp, Y1 - 16 - r2 * sp];
+      var p1 = [30 + c2 * 44, Y1 - 22 - r2 * 60];
+      var g = Lab.el("g", {}, pv), rad = 1.5 * (t === "c" ? s.rc : s.ra);
+      Lab.el("circle", { cx: 0, cy: 0, r: rad, fill: t === "c" ? "var(--c4)" : "var(--c2)", stroke: "var(--surface)", "stroke-width": 1.2 }, g);
+      Lab.el("text", { x: 0, y: 4.5, "text-anchor": "middle", style: "fill:var(--surface); font-size:12px; font-weight:700" }, g, t === "c" ? "+" : "−");
+      ions.push({ g: g, t: t, rad: rad, pos: [p0, p1, p1, sites[k]] });
+    });
+    // waters: 4 per ion around its site; stage 0/1 in a loose grid on the right; stage 2/3 in shells
+    var grid = [];
+    for (var gy = 0; gy < 5; gy++) for (var gx = 0; gx < 6; gx++) grid.push([172 + gx * 46 + (gy % 2) * 16, 30 + gy * 45]);
+    var seed = 5;
+    function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+    var n = 0;
+    ions.forEach(function (ion, k) {
+      for (var q = 0; q < 4; q++) {
+        var th = (q * 90 + 45 + k * 15) * Math.PI / 180, d = ion.rad + 14;
+        var sx = ion.pos[3][0] + Math.cos(th) * d, sy = ion.pos[3][1] + Math.sin(th) * d;
+        var rot = ion.t === "c" ? th * 180 / Math.PI - 90 : th * 180 / Math.PI + 90;
+        var gp = grid[n % grid.length], r0 = rnd() * 360;
+        var g = Lab.el("g", {}, pv); wshape(g);
+        waters.push({ g: g, pos: [[gp[0], gp[1], r0], [gp[0], gp[1], r0], [sx, sy, rot], [sx, sy, rot]] });
+        n++;
+      }
+    });
+    // extra waters stay in the bulk; in stages 2-3 they move to open spots away from the ions
+    var free = [];
+    for (var fy2 = 24; fy2 <= 226; fy2 += 28) for (var fx2 = 24; fx2 <= 416; fx2 += 30) {
+      var ok = ions.every(function (ion) { return Math.hypot(fx2 - ion.pos[3][0], fy2 - ion.pos[3][1]) > ion.rad + 36; });
+      if (ok) free.push([fx2, fy2]);
+    }
+    for (var e = n; e < grid.length; e++) {
+      var gp2 = grid[e], r1 = rnd() * 360, g2 = Lab.el("g", {}, pv); wshape(g2);
+      var f = free[Math.floor((e - n) * free.length / (grid.length - n))];
+      var alt = [f[0], f[1], r1 + 40];
+      waters.push({ g: g2, pos: [[gp2[0], gp2[1], r1], [gp2[0], gp2[1], r1], alt, alt] });
+    }
+    ions.forEach(function (ion) { pv.appendChild(ion.g); });
+  }
+  function place(a, b, t) {
+    ions.forEach(function (ion) {
+      var p = ion.pos[a], q = ion.pos[b];
+      ion.g.setAttribute("transform", "translate(" + (p[0] + (q[0] - p[0]) * t).toFixed(1) + " " + (p[1] + (q[1] - p[1]) * t).toFixed(1) + ")");
+    });
+    waters.forEach(function (w) {
+      var p = w.pos[a], q = w.pos[b];
+      var dr = ((q[2] - p[2]) % 360 + 540) % 360 - 180;
+      w.g.setAttribute("transform", "translate(" + (p[0] + (q[0] - p[0]) * t).toFixed(1) + " " + (p[1] + (q[1] - p[1]) * t).toFixed(1) + ") rotate(" + (p[2] + dr * t).toFixed(1) + ") scale(1.35)");
+    });
+  }
+  function setStage(k, anim) {
+    var from = S.stage; S.stage = k;
+    if (stopAnim) { stopAnim(); stopAnim = null; }
+    if (anim && from !== k) stopAnim = Lab.animate(700, function (t) { place(from, k, t); });
+    else place(k, k, 1);
+  }
+
+  // ---------- Factor table ----------
+  var STAGES = [
+    { name: "Start", cap: "Solid salt and pure water. The ions are held in the lattice by ion–ion attractions; water molecules are held together by hydrogen bonds." },
+    { name: "1. Separate the ions", h: ["up", "+ (large)"], s: ["up2", "+"], cap: "Step 1: pull the ions apart. This breaks solute–solute (ion–ion) attractions, so it absorbs energy: ΔH > 0. The ions are no longer locked in place: ΔS > 0." },
+    { name: "2. Reorganize the water", h: ["up", "+"], s: ["dn2", "−"], cap: "Step 2: some hydrogen bonds between water molecules break to make room (ΔH > 0), and the water molecules turn to line up around where the ions will sit. Organizing them into shells lowers their freedom: ΔS < 0." },
+    { name: "3. Form ion–water attractions", h: ["dn", "− (large)"], s: ["sm", "ions dispersed; water held"], cap: "Step 3: ion–dipole attractions form. Oxygen (δ−) points toward each cation and hydrogens (δ+) toward each anion. Forming attractions releases energy: ΔH < 0. The ions end up spread through the solution, but each holds its shell of water." }
+  ];
+  function facTable() {
+    document.getElementById("fac").innerHTML = STAGES.slice(1).map(function (st, i) {
+      function cell(x) { return '<td class="' + (x[0] === "up" ? "up" : x[0] === "dn" ? "dn" : x[0] === "up2" ? "dn" : x[0] === "dn2" ? "up" : "sm") + '">' + x[1] + "</td>"; }
+      return '<tr class="' + (S.stage === i + 1 ? "on" : "") + '"><td>' + st.name + "</td>" + cell(st.h) + cell(st.s) + "</tr>";
+    }).join("") + '<tr class="' + (S.stage === 3 ? "on" : "") + '"><td><b>Overall</b></td><td><b>' + sg(S.dh) + '</b> kJ/mol</td><td><b>' + sg(S.ds) + '</b> J/(mol·K)</td></tr>';
+  }
+
+  // ---------- Bars and ΔG(T) ----------
+  function niceStep(span) { var raw = span / 5, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p; }
+  function ticks(lo, hi) { var st = niceStep(hi - lo), out = []; for (var v = Math.ceil(lo / st) * st; v <= hi + 1e-9; v += st) out.push(+v.toFixed(6)); return out; }
+  function fy(v) { return (v < 0 ? "−" : "") + Math.abs(+v.toFixed(2)); }
+  function drawBars() {
+    var h = S.dh, ts = -S.T * S.ds / 1000, g = h + ts;
+    var lo = Math.min(0, h, g, h + ts, ts), hi = Math.max(0, h, g, h + ts, ts);
+    if (hi - lo < 10) { hi += 5; lo -= 5; }
+    var pad = (hi - lo) * 0.14; lo -= pad; hi += pad;
+    var F = Lab.frame(document.getElementById("bars"), { x: [0, 3], y: [lo, hi], yTicks: ticks(lo, hi), fmtY: fy, yLabel: "kJ/mol", xLabel: "", width: 440, height: 280 });
+    Lab.hline(F, 0, "var(--ink)", 1.2);
+    function bar(x, y0, y1, col, lbl) {
+      Lab.rect(F, x - 0.3, y0, x + 0.3, y1, col, 0.85);
+      Lab.el("text", { x: F.sx(x), y: F.sy(y1 >= y0 ? Math.max(y0, y1) : Math.min(y0, y1)) + (y1 >= y0 ? -6 : 15), "text-anchor": "middle", "class": "lbl", style: "fill:" + col }, F.svg, lbl);
+    }
+    bar(0.5, 0, h, h > 0 ? "var(--bad)" : "var(--good)", sg(h));
+    bar(1.5, h, h + ts, ts > 0 ? "var(--bad)" : "var(--good)", sg(ts));
+    Lab.line(F, [[0.8, h], [1.2, h]], "var(--muted)", 1, "3 3");
+    Lab.line(F, [[1.8, g], [2.2, g]], "var(--muted)", 1, "3 3");
+    bar(2.5, 0, g, "var(--accent)", sg(g));
+    [["ΔH°", 0.5], ["−TΔS°", 1.5], ["ΔG°", 2.5]].forEach(function (a) { Lab.el("text", { x: F.sx(a[1]), y: F.H - F.M.b + 18, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, F.svg, a[0]); });
+  }
+  var COL = { NaCl: "var(--accent)", NH4NO3: "var(--c3)", CaCl2: "var(--c1)", AgCl: "var(--ink)", LiF: "var(--c2)", Li2CO3: "var(--c4)", custom: "var(--muted)" };
+  function drawGT() {
+    var F = Lab.frame(document.getElementById("gt"), { x: [273, 373], y: [-80, 70], xTicks: [273, 298, 323, 348, 373], yTicks: [-80, -60, -40, -20, 0, 20, 40, 60],
+      fmtX: function (v) { return v; }, fmtY: fy, xLabel: "Temperature (K)", yLabel: "ΔG°soln (kJ/mol)", width: 440, height: 280 });
+    Lab.rect(F, 273, -80, 373, 0, "var(--good)", 0.08);
+    Lab.hline(F, 0, "var(--ink)", 1.2);
+    var list = SALTS.filter(function (s) { return !s.custom; });
+    if (S.key === "custom") list = list.concat([{ key: "custom", label: "yours", dh: S.dh, ds: S.ds }]);
+    var labs = [];
+    list.forEach(function (s) {
+      var on = s.key === S.key, gl = s.dh - 373 * s.ds / 1000;
+      Lab.line(F, [[273, s.dh - 273 * s.ds / 1000], [373, gl]], COL[s.key], on ? 3.5 : 1.6, on ? null : "5 3");
+      labs.push({ s: s, on: on, py: F.sy(Math.max(-78, Math.min(68, gl))) - 5 });
+    });
+    // spread labels so they do not overlap (at least 12 px apart)
+    labs.sort(function (a, b) { return a.py - b.py; });
+    for (var i = 1; i < labs.length; i++) if (labs[i].py - labs[i - 1].py < 12) labs[i].py = labs[i - 1].py + 12;
+    labs.forEach(function (l) {
+      Lab.el("text", { x: F.sx(371), y: l.py, "text-anchor": "end", "class": "lbl", style: "fill:" + COL[l.s.key] + (l.on ? "" : "; opacity:.8; font-weight:500") }, F.svg, l.s.label);
+    });
+    Lab.vline(F, S.T, "var(--muted)", 1, "2 3");
+    Lab.dot(F, S.T, Math.max(-80, Math.min(70, G(S.T))), COL[S.key]);
+  }
+
+  // ---------- Render ----------
+  var elT = document.getElementById("s-t"), elH = document.getElementById("s-h"), elS = document.getElementById("s-s");
+  function kTxt(ln) {
+    var l10 = ln / Math.LN10;
+    if (Math.abs(l10) < 3) return Lab.sig(Math.exp(ln), 2);
+    var e = Math.floor(l10), m = Math.pow(10, l10 - e); if (+m.toFixed(1) >= 10) { m = 1; e++; }
+    return m.toFixed(1) + " × 10<sup>" + String(e).replace("-", "−") + "</sup>";
+  }
+  function render() {
+    var s = salt(), g = G(S.T), ln = -g * 1000 / (R * S.T);
+    Object.keys(btns).forEach(function (k) { btns[k].setAttribute("aria-pressed", k === S.key ? "true" : "false"); });
+    for (var i = 0; i < 4; i++) document.getElementById("st-" + i).setAttribute("aria-pressed", S.stage === i ? "true" : "false");
+    document.getElementById("ctl-h").hidden = !s.custom; document.getElementById("ctl-s").hidden = !s.custom;
+    elT.value = S.T; elH.value = S.dh; elS.value = S.ds;
+    document.getElementById("o-t").textContent = S.T + " K";
+    document.getElementById("h-t").textContent = (S.T - 273) + " °C";
+    document.getElementById("o-h").textContent = sg(S.dh) + " kJ/mol";
+    document.getElementById("o-s").textContent = sg(S.ds) + " J/(mol·K)";
+    document.getElementById("v-sub").textContent = (s.custom ? "M⁺X⁻" : s.label) + " · " + STAGES[S.stage].name.replace(/^\d\. /, "");
+    document.getElementById("cap").textContent = STAGES[S.stage].cap;
+    document.getElementById("b-sub").textContent = "at " + S.T + " K";
+    document.getElementById("eqn").innerHTML = (s.custom ? "MX(s)" : Lab.fmla(s.key) + "(s)") + " → " + (s.nc > 1 ? s.nc : "") + ionHtml(s.cat) + "(aq) + " + (s.na > 1 ? s.na : "") + ionHtml(s.an) + "(aq)";
+    document.getElementById("legend").innerHTML = '<span style="color:var(--c4)">Cation ' + ionPlain(s.cat) + '</span><span style="color:var(--c2)">Anion ' + ionPlain(s.an) + '</span><span style="color:var(--c1)">O of water (δ−)</span><span style="color:var(--ghost)">H of water (δ+)</span>';
+    facTable(); drawBars(); drawGT();
+    document.getElementById("r-h").textContent = sg(S.dh);
+    document.getElementById("r-h2").textContent = S.dh > 0 ? "kJ/mol · endothermic (gets cold)" : S.dh < 0 ? "kJ/mol · exothermic (gets warm)" : "kJ/mol";
+    document.getElementById("r-s").textContent = sg(S.ds);
+    document.getElementById("r-s2").textContent = "J/(mol·K) · " + (S.ds > 0 ? "dispersal wins" : S.ds < 0 ? "water ordering wins" : "balanced");
+    var rg = document.getElementById("r-g"); rg.textContent = sg(g); rg.className = "v " + (g < 0 ? "fav" : g > 0 ? "unf" : "");
+    document.getElementById("r-g2").textContent = "kJ/mol · " + (g < 0 ? "dissolving favored" : g > 0 ? "not favored" : "balanced");
+    document.getElementById("r-k").innerHTML = kTxt(ln);
+    document.getElementById("r-k2").textContent = S.key === "AgCl" || S.key === "LiF" || S.key === "Li2CO3" ? "Ksp at " + S.T + " K" : S.key === "custom" ? "K for dissolving" : "rough guide only (soluble salt)";
+    document.getElementById("story").innerHTML = story(s, g);
+  }
+  function story(s, g) {
+    var li = [], ts = S.T * S.ds / 1000;
+    if (!s.custom) li.push("<b>" + s.label + ".</b> " + s.why);
+    li.push("At " + S.T + " K: ΔG° = ΔH° − TΔS° = " + sg(S.dh) + " − (" + S.T + ")(" + sg(S.ds / 1000, 4) + ") = " + sg(S.dh) + " " + (ts >= 0 ? "− " : "+ ") + Math.abs(ts).toFixed(1) + " = " + sg(g) + " kJ/mol.");
+    var drv = S.dh === 0 && S.ds === 0 ? "Both ΔH° and ΔS° are zero, so ΔG° = 0." : S.dh === 0 ? "ΔH° = 0, so the entropy term alone sets the sign of ΔG°." : S.ds === 0 ? "ΔS° = 0, so ΔH° alone sets the sign of ΔG°." : S.dh < 0 && S.ds > 0 ? "Both terms favor dissolving." : S.dh > 0 && S.ds < 0 ? "Neither term favors dissolving." :
+      g < 0 ? (S.dh < 0 ? "Dissolving is enthalpy-driven: the exothermic ΔH° outweighs the unfavorable −TΔS°." : "Dissolving is entropy-driven: −TΔS° outweighs the endothermic ΔH°.") :
+      (S.dh > 0 ? "The endothermic ΔH° outweighs the favorable −TΔS°, so dissolving is not favored." : "The unfavorable −TΔS° outweighs the exothermic ΔH°, so dissolving is not favored.");
+    li.push(drv);
+    li.push((S.ds > 0 ? "ΔS° &gt; 0, so raising the temperature makes ΔG° more negative." : S.ds < 0 ? "ΔS° &lt; 0, so raising the temperature makes ΔG° more positive." : "ΔS° = 0, so ΔG° does not change with temperature in this model.") +
+      " K = e<sup>−ΔG°/RT</sup> has T in it too, so whether K grows is set by ΔH°: " + (S.dh > 0 ? "dissolving is endothermic, so K increases as T rises" : S.dh < 0 ? "dissolving is exothermic, so K decreases as T rises" : "with ΔH° = 0, K does not change") + " (Le Châtelier's principle)." +
+      (S.key === "Li2CO3" ? " That is why Li₂CO₃ is less soluble in hot water." : S.key === "CaCl2" ? " (Real CaCl₂ is so soluble that its saturated solution is far from ideal, and its measured solubility actually rises with temperature; the simple K picture does not apply there.)" : ""));
+    var h = "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+    h += "<p><b>AP answer:</b> Dissolving " + (s.custom ? "this salt" : s.label) + " has ΔH° " + (S.dh > 0 ? "&gt;" : S.dh < 0 ? "&lt;" : "=") + " 0 (energy to separate the ions " + (S.dh > 0 ? "exceeds" : S.dh < 0 ? "is less than" : "equals") + " the energy released by ion–dipole attractions with water) and ΔS° " + (S.ds > 0 ? "&gt;" : S.ds < 0 ? "&lt;" : "=") + " 0 (" + (S.ds > 0 ? "dispersal of the ions outweighs the ordering of water around them" : S.ds < 0 ? "ordering of water around the ions outweighs the dispersal of the ions" : "dispersal of the ions and ordering of water balance") + "). At " + S.T + " K, ΔG° = " + sg(g) + " kJ/mol, so dissolving is " + (g < 0 ? "thermodynamically favored." : "not thermodynamically favored.") + "</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  var btns = {}, box = document.getElementById("sc");
+  SALTS.forEach(function (s) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = s.label;
+    b.addEventListener("click", function () { pick(s.key); });
+    box.appendChild(b); btns[s.key] = b;
+  });
+  for (var i = 0; i < 4; i++) (function (k) { document.getElementById("st-" + k).addEventListener("click", function () { setStage(k, true); render(); }); })(i);
+  elT.addEventListener("input", function () { S.T = +elT.value; render(); });
+  elH.addEventListener("input", function () { S.dh = +elH.value; render(); });
+  elS.addEventListener("input", function () { S.ds = +elS.value; render(); });
+
+  // ---------- Data table (generated) ----------
+  document.getElementById("d-table").innerHTML = SALTS.filter(function (s) { return !s.custom; }).map(function (s) {
+    var ts = -298 * s.ds / 1000, drv = s.dg < 0 ? (s.dh < 0 ? "Enthalpy (favored)" : "Entropy (favored)") : "Not favored: " + (s.dh > 0 && s.ds < 0 ? "both terms unfavorable" : s.dh > 0 ? "ΔH° too large" : "−TΔS° too large");
+    return "<tr><td>" + Lab.fmla(s.key) + "</td><td>" + sg(s.dh) + "</td><td>" + sg(s.ds) + "</td><td>" + sg(ts) + "</td><td><b>" + sg(s.dg) + "</b></td><td>" + drv + "</td></tr>";
+  }).join("");
+
+  pick("NaCl");
+
+  // ---------- Self-check ----------
+  (function () {
+    function bad(m) { console.error("9.6 self-check: " + m); }
+    var expect = { NaCl: [3.9, 43.4, -9.0], NH4NO3: [28.1, 108.7, -4.1], CaCl2: [-81.4, -44.7, -67.9], AgCl: [65.5, 33.0, 55.7], LiF: [4.9, -36.1, 15.6], Li2CO3: [-18.2, -120.5, 17.7] };
+    SALTS.forEach(function (s) {
+      if (s.custom) return;
+      var e = expect[s.key];
+      if (Math.abs(s.dh - e[0]) > 0.051 || Math.abs(s.ds - e[1]) > 0.051 || Math.abs(s.dg - e[2]) > 0.051) bad(s.key + " totals " + [s.dh, s.ds, s.dg].map(function (v) { return v.toFixed(2); }).join(", "));
+      if (Math.abs(s.dh - 298.15 * s.ds / 1000 - s.dg) > 0.5) bad(s.key + " ΔH° − TΔS° disagrees with ΣΔG°f");
+      // formula and charge balance
+      var c = Lab.parseFormula(s.key), qc = +(s.cat.match(/\^(\d?)/)[1] || 1), qa = +(s.an.match(/\^(\d?)/)[1] || 1);
+      if (s.nc * qc !== s.na * qa) bad(s.key + " charge");
+      var ions = {}; [[s.cat, s.nc], [s.an, s.na]].forEach(function (x) { var f = Lab.parseFormula(x[0].split("^")[0]); for (var el in f) ions[el] = (ions[el] || 0) + x[1] * f[el]; });
+      Object.keys(c).concat(Object.keys(ions)).forEach(function (el) { if ((c[el] || 0) !== (ions[el] || 0)) bad(s.key + " atoms " + el); });
+    });
+    var ag = SALTS.filter(function (s) { return s.key === "AgCl"; })[0];
+    if (Math.abs(Math.exp(-ag.dg * 1000 / (R * 298.15)) / 1.8e-10 - 1) > 0.1) bad("AgCl Ksp");
+    // quiz numbers
+    if (Math.abs(65.5 - 298 * 0.0330 - 55.7) > 0.05 || Math.abs(65.5 + 298 * 0.0330 - 75.3) > 0.05 || Math.abs(65.5 - 298 * 33.0 + 9768) > 1) bad("quiz 4");
+    if (Math.abs(3.9 - 298 * 0.0434 + 9.0) > 0.05) bad("quiz 8");
+    var k298 = Math.exp(-(-18.2 + 298 * 0.1205) * 1000 / (R * 298)), k373 = Math.exp(-(-18.2 + 373 * 0.1205) * 1000 / (R * 373));
+    if (Math.abs(k298 / 7.9e-4 - 1) > 0.01 || Math.abs(k373 / 1.8e-4 - 1) > 0.01 || Math.abs(-18.2 + 373 * 0.1205 - 26.7) > 0.05) bad("quiz 5 " + k298 + " " + k373);
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "When solid NH₄NO₃ dissolves in water at 25 °C, the temperature of the solution drops, yet the solid dissolves readily. Which statement best explains why dissolving is thermodynamically favored?",
+      o: ["The process is exothermic, so ΔG° < 0.", "The increase in entropy as the ions disperse makes −TΔS° more negative than ΔH° is positive.", "The ion–dipole attractions formed are stronger than the ion–ion attractions broken.", "ΔS° is negative, so −TΔS° is negative."], c: 1,
+      w: "The temperature drops, so dissolving is endothermic (ΔH° ≈ +28 kJ/mol). For ΔG° to be negative, the entropy term must win: ΔS° ≈ +109 J/(mol·K) gives −TΔS° ≈ −32 kJ/mol at 298 K. Choice C would make the process exothermic, which contradicts the cooling. Choice D has the sign wrong: a negative ΔS° makes −TΔS° positive." },
+    { s: "Which step in the dissolution of an ionic solid in water releases energy?",
+      o: ["Separating the cations from the anions in the crystal lattice", "Breaking some hydrogen bonds between water molecules", "Moving the separated ions apart from one another", "Forming ion–dipole attractions between the ions and water molecules"], c: 3,
+      w: "Forming attractions releases energy (ΔH &lt; 0). The ion–dipole attractions between ions and polar water molecules are the exothermic step. Choices A, B, and C all involve overcoming attractions, which absorbs energy." },
+    { s: "For CaCl₂(s) → Ca²⁺(aq) + 2Cl⁻(aq), ΔS° is about −45 J/(mol·K), even though the ions leave an ordered solid. Which statement best explains the negative entropy change?",
+      o: ["The small, doubly charged Ca²⁺ ion holds water molecules tightly in an ordered hydration shell, and this decrease in water's entropy outweighs the increase from dispersing the ions.", "The dissolved ions are more ordered than they were in the crystal lattice.", "The process is exothermic, and exothermic processes always have ΔS° < 0.", "The number of particles decreases when CaCl₂ dissolves."], c: 0,
+      w: "The ions themselves become more dispersed, but Ca²⁺ has a high charge density and organizes many water molecules around it, restricting their motion. That ordering of the solvent is the larger effect. Choice D is false: one formula unit becomes three ions. Choice C confuses ΔH with ΔS." },
+    { s: "For AgCl(s) → Ag⁺(aq) + Cl⁻(aq), ΔH° = +65.5 kJ/mol and ΔS° = +33.0 J/(mol·K). What is ΔG° at 298 K, and is dissolving thermodynamically favored?",
+      o: ["−9.77 × 10³ kJ/mol; favored", "+75.3 kJ/mol; not favored", "+55.7 kJ/mol; not favored", "−55.7 kJ/mol; favored"], c: 2,
+      w: "ΔG° = 65.5 − (298)(0.0330) = 65.5 − 9.8 = +55.7 kJ/mol. ΔG° &gt; 0, so dissolving is not favored, consistent with K<sub>sp</sub> ≈ 1.7 × 10<sup>−10</sup>. Choice A forgets to convert ΔS° to kJ. Choice B adds TΔS° instead of subtracting it." },
+    { s: "For the dissolution of Li₂CO₃ in water, ΔH° = −18.2 kJ/mol and ΔS° = −120.5 J/(mol·K). Which statement correctly describes the effect of raising the temperature from 298 K to 373 K?",
+      o: ["ΔG° for dissolving becomes more positive and K decreases, so Li₂CO₃ is less soluble at the higher temperature.", "ΔG° becomes more negative and K increases, because all salts are more soluble at higher temperature.", "ΔG° becomes more negative, because dissolving is exothermic.", "ΔG° does not change, because ΔH° and ΔS° are constant."], c: 0,
+      w: "ΔS° &lt; 0, so −TΔS° is positive and grows with T: ΔG° goes from +17.7 kJ/mol at 298 K to about +26.7 kJ/mol at 373 K. K = e<sup>−ΔG°/RT</sup> falls from about 7.9 × 10<sup>−4</sup> to about 1.8 × 10<sup>−4</sup>, as expected for an exothermic process. Choice B is a common overgeneralization. Choice D ignores that T itself appears in ΔG° = ΔH° − TΔS°." },
+    { s: "Why is it difficult to predict whether a salt will dissolve by reasoning only about the attractions broken and formed?",
+      o: ["Ion–ion attractions are always weaker than ion–dipole attractions.", "The entropy change for dissolving is always zero.", "Dissolving is never affected by temperature.", "The enthalpy and entropy contributions of the steps are large and of opposite sign, so they largely cancel and the small net ΔG° is hard to estimate."], c: 3,
+      w: "Breaking the lattice costs a lot of energy and hydrating the ions releases nearly as much (for NaCl, about +787 and −783 kJ/mol). Entropy contributions also oppose each other (ion dispersal versus water ordering). The small difference that decides ΔG° can have either sign. Choices A, B, and C are each false in general." },
+    { s: "A particle diagram shows a Na⁺ ion surrounded by water molecules. Which orientation of the water molecules is correct?",
+      o: ["The hydrogen atoms of each water molecule point toward Na⁺.", "The water molecules are randomly oriented, because Na⁺ has no effect on water.", "The oxygen atom of each water molecule points toward Na⁺.", "Each water molecule donates a hydrogen bond to Na⁺."], c: 2,
+      w: "Oxygen carries a partial negative charge (δ−), so it is attracted to the positive ion: an ion–dipole attraction. Choice A shows the orientation around an anion such as Cl⁻. Choice D misuses \"hydrogen bond\"; the attraction to Na⁺ is an ion–dipole interaction." },
+    { s: "For NaCl(s) → Na⁺(aq) + Cl⁻(aq), ΔH° = +3.9 kJ/mol and ΔS° = +43.4 J/(mol·K). Which statement is correct at 298 K?",
+      o: ["ΔG° = +3.9 kJ/mol, so dissolving is not favored.", "ΔG° ≈ −9.0 kJ/mol; dissolving is favored, and the favorable term is the entropy term.", "ΔG° ≈ −9.0 kJ/mol; dissolving is favored, and the favorable term is the enthalpy term.", "ΔG° ≈ +16.8 kJ/mol; dissolving is not favored because it is endothermic."], c: 1,
+      w: "ΔG° = 3.9 − (298)(0.0434) = 3.9 − 12.9 = −9.0 kJ/mol. ΔH° is slightly unfavorable (positive), so the negative ΔG° comes from −TΔS°: dissolving NaCl is entropy-driven. Choice A ignores the entropy term. Choice C names the wrong term. Choice D adds TΔS° instead of subtracting it." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("9.6");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [9], topic: "9.6", compact: true, storageKey: "topic-9.6" });</script>
+</body>
+</html>

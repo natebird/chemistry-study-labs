@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reaction Quotient and Equilibrium Constant Study Lab</title>
+<meta name="description" content="Write Kc and Kp expressions for gas, aqueous, and heterogeneous reactions, leave out solids and liquids, plug in current amounts to get Q, and see where Q sits relative to K on a log scale.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 18px; overflow: hidden; max-width: 100%; }
+.seg button { border: 0; border-radius: 0; padding: 6px 14px; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.seg button:disabled { opacity: .45; cursor: not-allowed; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.ctlcard { display: grid; gap: 16px; }
+.ctlcard .controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ctl.inert label { color: var(--muted); }
+.note { font-size: .82rem; color: var(--muted); }
+.graph-card { align-content: start; }
+.expr { font-family: var(--mono); font-size: 1.12rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 0; }
+.frac { display: inline-grid; text-align: center; vertical-align: middle; }
+.frac > span:first-child { border-bottom: 1.5px solid currentColor; padding: 0 6px 3px; }
+.frac > span:last-child { padding: 3px 6px 0; }
+.lhs { font-weight: 600; color: var(--accent); }
+.excl { font-size: .88rem; color: var(--muted); }
+.excl s { color: var(--bad); }
+.subst { font-family: var(--mono); font-size: .9rem; background: var(--paper); border-radius: 8px; padding: 8px 12px; overflow-x: auto; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button { border-radius: 8px; display: grid; gap: 2px; justify-items: center; min-width: 7.5em; }
+.chips button small { font-size: .72rem; color: var(--muted); }
+.chips button[data-st="num"] { border-color: var(--c2); }
+.chips button[data-st="den"] { border-color: var(--c1); }
+.chips button[data-st="out"] { border-style: dashed; color: var(--muted); }
+.chips button.ok { background: var(--good-soft); }
+.chips button.no { background: var(--bad-soft); }
+.fb { font-size: .92rem; }
+@media (max-width: 860px) { .ctlcard .controls { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .ctlcard .controls { grid-template-columns: 1fr; } .expr { font-size: .98rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 7 · Topic 7.3</span>
+  <h1>Reaction Quotient and Equilibrium Constant Study Lab</h1>
+  <p class="lede">Every reversible reaction has an expression built from its balanced equation: products over reactants, each raised to its coefficient. Fill it with the amounts present at any moment and you get the reaction quotient Q; fill it with equilibrium amounts and you get the equilibrium constant K. Build the expressions for six reactions, see which substances are left out and why, and watch Q move relative to K as you change the amounts.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The expression builder</h2>
+    <p>Pick a reaction and choose K<sub>c</sub> (concentrations) or K<sub>p</sub> (partial pressures). The expression is generated from the balanced equation. Move the sliders to change the current amounts; Q is recalculated and placed on a log scale next to K. The K values are given values for a fixed temperature, as they would be on an exam.</p>
+  </div>
+
+  <div class="eqn" id="eqn"></div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Expression <small id="expr-sub"></small></h3>
+      <div class="expr" id="expr"></div>
+      <div class="excl" id="excl"></div>
+      <div class="subst" id="subst"></div>
+    </div>
+    <div class="card graph-card">
+      <h3>Q compared with K <small>log scale</small></h3>
+      <svg class="chart" id="line" role="img" aria-label="Number line on a log scale showing the reaction quotient Q and the equilibrium constant K"></svg>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <div class="tag">Reaction</div>
+      <div class="scenarios" id="sc"></div>
+    </div>
+    <div class="btnrow">
+      <div class="seg" role="group" aria-label="Expression type">
+        <button type="button" id="b-kc" aria-pressed="true">K<sub>c</sub> (concentrations)</button>
+        <button type="button" id="b-kp" aria-pressed="false">K<sub>p</sub> (partial pressures)</button>
+      </div>
+      <button type="button" id="b-eq">Set amounts so Q = K</button>
+      <button type="button" id="b-preset">Reset to the example amounts</button>
+    </div>
+    <div class="controls" id="sliders"></div>
+    <p class="note" id="kpnote"></p>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Reaction quotient Q</div><div class="v" id="r-q"></div><div class="sub" id="r-q2"></div></div>
+    <div class="stat"><div class="k">Equilibrium constant K</div><div class="v" id="r-k"></div><div class="sub" id="r-k2"></div></div>
+    <div class="stat"><div class="k">Comparison</div><div class="v" id="r-c"></div><div class="sub" id="r-c2"></div></div>
+    <div class="stat"><div class="k">Net direction</div><div class="v" id="r-d"></div><div class="sub" id="r-d2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+
+  <div class="card group" id="drill">
+    <h3>Test yourself: where does each substance go?</h3>
+    <p class="note">For the reaction above, tap each substance to cycle it through <b>numerator</b>, <b>denominator</b>, and <b>left out</b>. Then check. (Exponents are always the coefficients.)</p>
+    <div class="chips" id="chips"></div>
+    <div class="btnrow"><button type="button" id="b-check">Check my expression</button><button type="button" id="b-clear">Clear</button></div>
+    <div class="fb" id="fb" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Law of mass action</span><h3>Products over reactants</h3><p>For aA + bB ⇌ cC + dD, the expression is [C]<sup>c</sup>[D]<sup>d</sup> / ([A]<sup>a</sup>[B]<sup>b</sup>). Coefficients become exponents. Multiply within the numerator and within the denominator; never add.</p></div>
+    <div class="card"><span class="tag">Same form</span><h3>Q and K use one expression</h3><p>Q uses the amounts present at any moment. K is the special value of Q when the system is at equilibrium. As a reaction proceeds, Q changes and tends toward K; at equilibrium K<sub>c</sub> = Q<sub>c</sub> and K<sub>p</sub> = Q<sub>p</sub>.</p></div>
+    <div class="card"><span class="tag">Left out</span><h3>Pure solids and liquids</h3><p>A pure solid or pure liquid has a concentration that does not depend on how much of it is present, so it does not appear in Q or K. Water as the solvent in an aqueous reaction is left out. Water as a gas, H<sub>2</sub>O(g), is included.</p></div>
+    <div class="card"><span class="tag">Two kinds</span><h3>K<sub>c</sub> and K<sub>p</sub></h3><p>K<sub>c</sub> uses molar concentrations, written [X]. K<sub>p</sub> uses partial pressures of gases, written P<sub>X</sub>. Only gases can appear in K<sub>p</sub>. For the same reaction they usually have different values, so check which one a question uses. Converting between them is not on the AP exam.</p></div>
+    <div class="card"><span class="tag">Comparing</span><h3>Q tells you how far from equilibrium</h3><p>If Q &lt; K, there is too little product relative to reactant, so the reaction will proceed forward. If Q &gt; K, it will proceed in reverse. If Q = K, the system is at equilibrium. (Topic 7.10 uses this to predict shifts.)</p></div>
+    <div class="card"><span class="tag">Units</span><h3>K is written without units</h3><p>K and Q are normally reported as plain numbers, and AP questions give them that way. Use mol/L for K<sub>c</sub> and, normally, atm for K<sub>p</sub> when you substitute.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Expressions for common reaction types</h2>
+    <p>Write the expression from the balanced equation, then cross out anything that is (s) or (l).</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Reaction</th><th>K<sub>c</sub></th><th>K<sub>p</sub></th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>N<sub>2</sub>(g) + 3H<sub>2</sub>(g) ⇌ 2NH<sub>3</sub>(g)</td><td>[NH<sub>3</sub>]<sup>2</sup> / ([N<sub>2</sub>][H<sub>2</sub>]<sup>3</sup>)</td><td>(P<sub>NH₃</sub>)<sup>2</sup> / ((P<sub>N₂</sub>)(P<sub>H₂</sub>)<sup>3</sup>)</td><td>All gases: <b>both</b> forms exist</td></tr>
+      <tr><td>CaCO<sub>3</sub>(s) ⇌ CaO(s) + CO<sub>2</sub>(g)</td><td>[CO<sub>2</sub>]</td><td>P<sub>CO₂</sub></td><td>Both solids <b>left out</b></td></tr>
+      <tr><td>C(s) + H<sub>2</sub>O(g) ⇌ CO(g) + H<sub>2</sub>(g)</td><td>[CO][H<sub>2</sub>] / [H<sub>2</sub>O]</td><td>(P<sub>CO</sub>)(P<sub>H₂</sub>) / P<sub>H₂O</sub></td><td>Water is a gas here, so it <b>stays in</b></td></tr>
+      <tr><td>CH<sub>3</sub>COOH(aq) + H<sub>2</sub>O(l) ⇌ CH<sub>3</sub>COO<sup>−</sup>(aq) + H<sub>3</sub>O<sup>+</sup>(aq)</td><td>[CH<sub>3</sub>COO<sup>−</sup>][H<sub>3</sub>O<sup>+</sup>] / [CH<sub>3</sub>COOH]</td><td>none (aqueous)</td><td>Liquid water <b>left out</b>; this K is called K<sub>a</sub> (Unit 8)</td></tr>
+      <tr><td>AgCl(s) ⇌ Ag<sup>+</sup>(aq) + Cl<sup>−</sup>(aq)</td><td>[Ag<sup>+</sup>][Cl<sup>−</sup>]</td><td>none (aqueous)</td><td>No denominator; this K is called K<sub>sp</sub> (topic 7.11)</td></tr>
+      <tr><td>Reactants only, no products present</td><td colspan="2">Q = 0</td><td>Q &lt; K: proceeds forward</td></tr>
+      <tr><td>Products only, no reactants present</td><td colspan="2">Q is infinitely large (denominator 0)</td><td>Q &gt; K: proceeds in reverse</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Q and K on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write the expression exactly as asked: K<sub>c</sub> with square brackets, K<sub>p</sub> with partial pressures. An expression for the wrong one usually earns no credit.</li>
+        <li>Put products in the numerator and reactants in the denominator, with coefficients as exponents.</li>
+        <li>Leave out solids, pure liquids, and solvent water; keep every (g) and (aq) species.</li>
+        <li>When asked for Q, show the substitution with the given values, then the number.</li>
+        <li>Justify a direction by comparing Q with K in words: "Q &lt; K, so the reaction proceeds to the right (toward products)."</li>
+        <li>Report K and Q without units.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Writing reactants over products.</li>
+        <li>Multiplying a concentration by its coefficient (2[NH<sub>3</sub>]) instead of raising it to that power ([NH<sub>3</sub>]<sup>2</sup>).</li>
+        <li>Including a solid or H<sub>2</sub>O(l) in the expression, or leaving out H<sub>2</sub>O(g).</li>
+        <li>Putting aqueous ions into a K<sub>p</sub> expression; only gases have partial pressures.</li>
+        <li>Using initial amounts in K. K uses equilibrium amounts; anything else gives Q.</li>
+        <li>Adding terms in the denominator ([N<sub>2</sub>] + [H<sub>2</sub>]<sup>3</sup>) instead of multiplying them.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 7.3. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-7.html">Unit 7 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Reactions ----------
+  // sp: [html, unicode, coefficient (negative = reactant), phase]
+  // kc / kp: given K values (kp null when not all included species are gases). Kp values are consistent with Kc at the stated T.
+  // c / p: example amounts (M / atm) for each included species, in sp order; lo/hi: slider decades.
+  var RX = {
+    nh3: { name: "N₂ + 3H₂ ⇌ 2NH₃", sp: [["N<sub>2</sub>", "N₂", -1, "g"], ["H<sub>2</sub>", "H₂", -3, "g"], ["NH<sub>3</sub>", "NH₃", 2, "g"]],
+      kc: 0.50, T: 673, c: [0.50, 1.0, 0.20], p: [5.0, 10, 2.0], lo: [-3, 1], plo: [-2, 2] },
+    so3: { name: "2SO₂ + O₂ ⇌ 2SO₃", sp: [["SO<sub>2</sub>", "SO₂", -2, "g"], ["O<sub>2</sub>", "O₂", -1, "g"], ["SO<sub>3</sub>", "SO₃", 2, "g"]],
+      kc: 280, T: 1000, c: [0.20, 0.10, 2.0], p: [1.0, 0.50, 1.0], lo: [-3, 1], plo: [-2, 2] },
+    caco3: { name: "CaCO₃(s) ⇌ CaO(s) + CO₂", sp: [["CaCO<sub>3</sub>", "CaCO₃", -1, "s"], ["CaO", "CaO", 1, "s"], ["CO<sub>2</sub>", "CO₂", 1, "g"]],
+      kc: 2.5e-3, T: 1073, c: [1.0e-3], p: [0.50], lo: [-5, 0], plo: [-3, 1] },
+    water: { name: "C(s) + H₂O(g) ⇌ CO + H₂", sp: [["C", "C", -1, "s"], ["H<sub>2</sub>O", "H₂O", -1, "g"], ["CO", "CO", 1, "g"], ["H<sub>2</sub>", "H₂", 1, "g"]],
+      kc: 0.12, T: 1100, c: [0.10, 0.20, 0.20], p: [2.0, 4.0, 4.0], lo: [-3, 1], plo: [-2, 2] },
+    acid: { name: "CH₃COOH + H₂O(l) ⇌ CH₃COO⁻ + H₃O⁺", sp: [["CH<sub>3</sub>COOH", "CH₃COOH", -1, "aq"], ["H<sub>2</sub>O", "H₂O", -1, "l"], ["CH<sub>3</sub>COO<sup>−</sup>", "CH₃COO⁻", 1, "aq"], ["H<sub>3</sub>O<sup>+</sup>", "H₃O⁺", 1, "aq"]],
+      kc: 1.8e-5, c: [0.10, 0.010, 1.0e-3], lo: [-7, 0], kname: "K<sub>a</sub>" },
+    agcl: { name: "AgCl(s) ⇌ Ag⁺ + Cl⁻", sp: [["AgCl", "AgCl", -1, "s"], ["Ag<sup>+</sup>", "Ag⁺", 1, "aq"], ["Cl<sup>−</sup>", "Cl⁻", 1, "aq"]],
+      kc: 1.8e-10, c: [1.0e-5, 1.0e-5], lo: [-8, -2], kname: "K<sub>sp</sub>" }
+  };
+  var ORDER = ["nh3", "so3", "caco3", "water", "acid", "agcl"];
+  var R = 0.08206;
+  ORDER.forEach(function (k) {
+    var x = RX[k], dn = 0, allGas = true;
+    x.sp.forEach(function (s) { if (s[3] === "g") dn += s[2]; if (s[3] === "aq") allGas = false; });
+    x.dn = dn;
+    // Kp is a given value too; here it is generated from Kc so the pair is consistent at temperature T (the conversion itself is not on the exam).
+    x.kp = allGas && x.T ? +(x.kc * Math.pow(R * x.T, dn)).toPrecision(2) : null;
+  });
+
+  // "Nice" values for sliders: 1, 1.2, 1.5, 1.8, 2, 2.5, 3, 4, 5, 6, 8 in every decade
+  var MANT = [1, 1.2, 1.5, 1.8, 2, 2.5, 3, 4, 5, 6, 8];
+  function niceList(lo, hi) { var o = []; for (var d = lo; d < hi; d++) MANT.forEach(function (m) { o.push(+(m * Math.pow(10, d)).toPrecision(2)); }); o.push(Math.pow(10, hi)); return o; }
+  function nearestIdx(list, v) { var b = 0, bd = 1e9; list.forEach(function (x, i) { var d = Math.abs(Math.log(x / v)); if (d < bd) { bd = d; b = i; } }); return b; }
+
+  var S = { key: "nh3", mode: "c", vals: [] };
+  function rx() { return RX[S.key]; }
+  function inc(s, mode) { return mode === "p" ? s[3] === "g" : (s[3] === "g" || s[3] === "aq"); }
+  function included() { var x = rx(); return x.sp.filter(function (s) { return inc(s, S.mode); }); }
+  function excluded() { var x = rx(); return x.sp.filter(function (s) { return !inc(s, S.mode); }); }
+  function K() { return S.mode === "p" ? rx().kp : rx().kc; }
+  function Kname() { return S.mode === "p" ? "K<sub>p</sub>" : (rx().kname || "K<sub>c</sub>"); }
+  function Qname() { return S.mode === "p" ? "Q<sub>p</sub>" : "Q<sub>c</sub>"; }
+  function term(s) { var e = Math.abs(s[2]); return (S.mode === "p" ? "(P<sub>" + s[1] + "</sub>)" : "[" + s[0] + "]") + (e > 1 ? "<sup>" + e + "</sup>" : ""); }
+  function calcQ(vals) { var q = 1; included().forEach(function (s, i) { q *= Math.pow(vals[i], s[2]); }); return q; }
+
+  // ---------- Rendering ----------
+  function eqnHTML() {
+    var x = rx(), L = [], Rr = [];
+    x.sp.forEach(function (s) { var t = (Math.abs(s[2]) > 1 ? Math.abs(s[2]) : "") + s[0] + "(" + s[3] + ")"; (s[2] < 0 ? L : Rr).push(t); });
+    return L.join(" + ") + " ⇌ " + Rr.join(" + ") + "&nbsp;&nbsp;&nbsp;" + Kname() + " = " + Lab.sci(K(), 2);
+  }
+  function exprHTML(lhs) {
+    var inc_ = included(), num = inc_.filter(function (s) { return s[2] > 0; }).map(term).join(""), den = inc_.filter(function (s) { return s[2] < 0; }).map(term).join("");
+    var body = den ? '<span class="frac"><span>' + (num || "1") + '</span><span>' + den + '</span></span>' : num;
+    return '<span class="lhs">' + lhs + '</span><span>=</span>' + body;
+  }
+  function fv(v) { return Lab.sci(v, 2); }
+  function substHTML() {
+    var inc_ = included(), num = [], den = [];
+    inc_.forEach(function (s, i) { var e = Math.abs(s[2]), t = "(" + fv(S.vals[i]) + ")" + (e > 1 ? "<sup>" + e + "</sup>" : ""); (s[2] > 0 ? num : den).push(t); });
+    var q = calcQ(S.vals);
+    return Qname() + " = " + (num.join("") || "1") + (den.length ? " / " + (den.length > 1 ? "[" + den.join("") + "]" : den[0]) : "") + " = <b>" + fv(q) + "</b>";
+  }
+  var SUP = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+  function pow10(n) { return "10" + String(n).split("").map(function (c) { return SUP[c]; }).join(""); }
+  function cmp(q, k) { var d = Math.log10(q / k); return Math.abs(d) < 0.005 ? 0 : d < 0 ? -1 : 1; }
+  function drawLine(q, k) {
+    var svg = document.getElementById("line"), E = Lab.el, W = 440, H = 230;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var lq = Math.log10(q), lk = Math.log10(k), a = Math.floor(Math.min(lq, lk)) - 1, b = Math.ceil(Math.max(lq, lk)) + 1;
+    while (b - a < 6) { a--; if (b - a < 6) b++; }
+    var X0 = 30, X1 = W - 30, Y = 120, sx = function (v) { return X0 + (v - a) / (b - a) * (X1 - X0); };
+    var c = cmp(q, k);
+    // Regions
+    E("rect", { x: X0, y: Y - 34, width: sx(lk) - X0, height: 68, fill: "var(--c2)", opacity: .08 }, svg);
+    E("rect", { x: sx(lk), y: Y - 34, width: X1 - sx(lk), height: 68, fill: "var(--c4)", opacity: .08 }, svg);
+    E("text", { x: X0 + 4, y: Y + 50, style: "fill:var(--c2); font-weight:600" }, svg, "Q < K: proceeds forward");
+    E("text", { x: X1 - 4, y: Y + 50, "text-anchor": "end", style: "fill:var(--c4); font-weight:600" }, svg, "Q > K: proceeds in reverse");
+    E("line", { x1: X0, x2: X1, y1: Y, y2: Y, stroke: "var(--ink)", "stroke-width": 1.5 }, svg);
+    var step = b - a > 12 ? 2 : 1;
+    for (var n = a; n <= b; n++) {
+      E("line", { x1: sx(n), x2: sx(n), y1: Y - 5, y2: Y + 5, stroke: "var(--ink)" }, svg);
+      if ((n - a) % step === 0) E("text", { x: sx(n), y: Y + 22, "text-anchor": "middle" }, svg, pow10(n));
+    }
+    // K marker
+    E("line", { x1: sx(lk), x2: sx(lk), y1: Y - 44, y2: Y + 34, stroke: "var(--accent)", "stroke-width": 3 }, svg);
+    E("text", { x: sx(lk), y: Y - 50, "text-anchor": "middle", "class": "lbl", style: "fill:var(--accent)" }, svg, "K = " + Lab.sci(k, 2).replace(/<sup>(.*?)<\/sup>/, function (m, e) { return e.split("").map(function (ch) { return SUP[ch === "−" ? "-" : ch] || ch; }).join(""); }));
+    // Q marker and arrow toward K
+    var qx = sx(lq), qcol = c === 0 ? "var(--good)" : "var(--c1)";
+    E("circle", { cx: qx, cy: Y, r: 8, fill: qcol, stroke: "var(--surface)", "stroke-width": 2 }, svg);
+    var qlab = "Q = " + Lab.sci(q, 2).replace(/<sup>(.*?)<\/sup>/, function (m, e) { return e.split("").map(function (ch) { return SUP[ch === "−" ? "-" : ch] || ch; }).join(""); });
+    var anchor = qx < 90 ? "start" : qx > W - 90 ? "end" : "middle";
+    E("text", { x: qx, y: Y - 64 - (Math.abs(qx - sx(lk)) < 70 ? 14 : 0) + 0, "text-anchor": anchor, "class": "lbl", style: "fill:" + qcol }, svg, qlab);
+    if (c !== 0) {
+      var x2 = sx(lk) + (c < 0 ? -10 : 10), yA = Y - 20;
+      if (Math.abs(x2 - qx) > 16) {
+        E("path", { d: "M" + qx + " " + yA + " L" + x2 + " " + yA, stroke: "var(--c1)", "stroke-width": 2.5, fill: "none" }, svg);
+        var s = c < 0 ? 1 : -1;
+        E("path", { d: "M" + x2 + " " + yA + " l" + (-s * 9) + " -6 l0 12 Z", fill: "var(--c1)" }, svg);
+      }
+    } else {
+      E("text", { x: sx(lk), y: Y + 72, "text-anchor": "middle", style: "fill:var(--good); font-weight:600" }, svg, "Q = K: at equilibrium");
+    }
+    E("text", { x: W / 2, y: 20, "text-anchor": "middle", style: "fill:var(--muted)" }, svg, "Q changes as the reaction proceeds and moves toward K");
+  }
+
+  var slBox = document.getElementById("sliders"), lists = [];
+  function buildSliders() {
+    var x = rx(); slBox.innerHTML = ""; lists = [];
+    var range = S.mode === "p" ? x.plo : x.lo;
+    included().forEach(function (s, i) {
+      var list = niceList(range[0], range[1]); lists.push(list);
+      var d = document.createElement("div"); d.className = "ctl";
+      var nm = S.mode === "p" ? "P<sub>" + s[1] + "</sub>" : "[" + s[0] + "]";
+      d.innerHTML = '<label for="s' + i + '"><span>' + nm + ' (' + (s[2] > 0 ? "product" : "reactant") + ')</span> <output id="o' + i + '"></output></label><input type="range" id="s' + i + '" min="0" max="' + (list.length - 1) + '" step="1">';
+      slBox.appendChild(d);
+      d.querySelector("input").addEventListener("input", function (ev) { S.vals[i] = list[+ev.target.value]; render(); });
+    });
+    excluded().forEach(function (s) {
+      if (s[3] === "l") return;
+      var d = document.createElement("div"); d.className = "ctl inert";
+      var id = "ex-" + s[1];
+      d.innerHTML = '<label for="' + id + '"><span>Amount of ' + s[0] + '(' + s[3] + ')</span> <output id="' + id + '-o">10 g</output></label><input type="range" id="' + id + '" min="1" max="50" step="1" value="10"><span class="hint">' + (s[3] === "s" ? "A pure solid: not in the expression" : "Not in a K<sub>p</sub> expression") + '</span>';
+      slBox.appendChild(d);
+      d.querySelector("input").addEventListener("input", function (ev) { document.getElementById(id + "-o").textContent = ev.target.value + " g"; S.inertMoved = s[0] + "(" + s[3] + ")"; render(); });
+    });
+  }
+  function setPreset() {
+    var x = rx(); S.vals = (S.mode === "p" ? x.p : x.c).slice(); S.inertMoved = null;
+  }
+  function story(q, k) {
+    var x = rx(), c = cmp(q, k), ex = excluded(), h = "";
+    h += "<p><b>" + Kname() + " expression.</b> Products go on top and reactants on the bottom, each raised to its coefficient" + (S.mode === "p" ? ", using partial pressures in atm" : ", using molar concentrations") + ".";
+    if (ex.length) {
+      var why = ex.map(function (s) {
+        return s[0] + "(" + s[3] + ") " + (s[3] === "s" ? "is a pure solid" : s[3] === "l" ? "is the liquid solvent" : "is dissolved, so it has no partial pressure");
+      });
+      h += " Left out: " + why.join("; ") + ".";
+    }
+    if (S.key === "water") h += " H<sub>2</sub>O is a <i>gas</i> in this reaction, so it stays in the expression.";
+    h += "</p>";
+    if (S.inertMoved) h += "<p>You changed the amount of " + S.inertMoved + ", and Q did not change. " + (S.inertMoved.indexOf("(s)") > 0 ? "Adding more of a pure solid adds more particles but not a higher concentration: its density, and so its moles per liter, stays the same." : "Only gases contribute partial pressures.") + "</p>";
+    h += "<p><b>Substitute the current amounts:</b> " + substHTML() + ". The given " + Kname() + " is " + fv(k) + ".</p>";
+    if (c < 0) h += "<p>Q &lt; K: there is too little product relative to reactant compared with the equilibrium ratio. The reaction will proceed forward, raising the numerator and lowering the denominator, so Q rises toward K.</p>";
+    else if (c > 0) h += "<p>Q &gt; K: there is too much product relative to reactant. The reaction will proceed in reverse, so Q falls toward K.</p>";
+    else h += "<p>Q = K: the current amounts already satisfy the equilibrium expression, so the system is at equilibrium and no net change will occur.</p>";
+    if (S.mode === "p" && x.dn !== 0) h += "<p>Note: for this reaction the moles of gas change (Δn = " + (x.dn > 0 ? "+" : "−") + Math.abs(x.dn) + "), so K<sub>p</sub> (" + fv(x.kp) + ") and K<sub>c</sub> (" + fv(x.kc) + ") are different numbers at the same temperature. Use the one the question gives.</p>";
+    var inc_ = included(), num = inc_.filter(function (s) { return s[2] > 0; }).map(term).join(""), den = inc_.filter(function (s) { return s[2] < 0; }).map(term).join("");
+    h += "<p><b>AP answer:</b> " + Kname() + " = " + (den ? (num || "1") + " / " + (inc_.filter(function (s) { return s[2] < 0; }).length > 1 ? "(" + den + ")" : den) : num) + (ex.length ? ", with " + ex.map(function (s) { return s[0] + "(" + s[3] + ")"; }).join(" and ") + " left out" : "") + ". " +
+      (c < 0 ? "Since Q (" + fv(q) + ") &lt; K (" + fv(k) + "), the reaction proceeds toward products." : c > 0 ? "Since Q (" + fv(q) + ") &gt; K (" + fv(k) + "), the reaction proceeds toward reactants." : "Since Q = K, the system is at equilibrium.") + "</p>";
+    return h;
+  }
+  var scBtns = {};
+  function render() {
+    var x = rx(), k = K(), q = calcQ(S.vals), c = cmp(q, k);
+    document.getElementById("eqn").innerHTML = eqnHTML();
+    document.getElementById("expr").innerHTML = exprHTML(Kname() + " or " + Qname());
+    document.getElementById("expr-sub").innerHTML = S.mode === "p" ? "partial pressures (atm)" : "molar concentrations (M)";
+    var ex = excluded();
+    document.getElementById("excl").innerHTML = ex.length ? "Left out: " + ex.map(function (s) { return "<s>" + s[0] + "(" + s[3] + ")</s>"; }).join(", ") : "Every species is included.";
+    document.getElementById("subst").innerHTML = substHTML();
+    included().forEach(function (s, i) {
+      var el = document.getElementById("s" + i); if (!el) return;
+      el.value = nearestIdx(lists[i], S.vals[i]);
+      document.getElementById("o" + i).innerHTML = fv(S.vals[i]) + (S.mode === "p" ? " atm" : " M");
+    });
+    Object.keys(scBtns).forEach(function (kk) { scBtns[kk].setAttribute("aria-pressed", S.key === kk ? "true" : "false"); });
+    document.getElementById("b-kc").setAttribute("aria-pressed", S.mode === "c" ? "true" : "false");
+    document.getElementById("b-kp").setAttribute("aria-pressed", S.mode === "p" ? "true" : "false");
+    document.getElementById("b-kp").disabled = x.kp == null;
+    document.getElementById("kpnote").innerHTML = x.kp == null ? "K<sub>p</sub> is not available: this reaction has dissolved (aq) species, which have concentrations but not partial pressures." :
+      "Given values at " + x.T + " K: K<sub>c</sub> = " + fv(x.kc) + ", K<sub>p</sub> = " + fv(x.kp) + (x.dn === 0 ? " (equal, because the moles of gas do not change)." : ". They differ because the moles of gas change.");
+    drawLine(q, k);
+    document.getElementById("r-q").innerHTML = fv(q);
+    document.getElementById("r-q2").innerHTML = "from the current amounts";
+    document.getElementById("r-k").innerHTML = fv(k);
+    document.getElementById("r-k2").innerHTML = Kname() + " (given)";
+    document.getElementById("r-c").innerHTML = c < 0 ? "Q &lt; K" : c > 0 ? "Q &gt; K" : "Q = K";
+    document.getElementById("r-c2").textContent = "Q / K = " + Lab.sig(q / k, 2);
+    document.getElementById("r-d").innerHTML = c < 0 ? "→ forward" : c > 0 ? "← reverse" : "none";
+    document.getElementById("r-d2").textContent = c < 0 ? "toward products" : c > 0 ? "toward reactants" : "at equilibrium";
+    document.getElementById("story").innerHTML = story(q, k);
+  }
+  function pick(k) { S.key = k; if (RX[k].kp == null) S.mode = "c"; setPreset(); buildSliders(); buildChips(); render(); }
+  function setMode(m) { if (m === "p" && rx().kp == null) return; S.mode = m; setPreset(); buildSliders(); render(); }
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = RX[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pick(k); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  document.getElementById("b-kc").addEventListener("click", function () { setMode("c"); });
+  document.getElementById("b-kp").addEventListener("click", function () { setMode("p"); });
+  document.getElementById("b-preset").addEventListener("click", function () { setPreset(); buildSliders(); render(); });
+  document.getElementById("b-eq").addEventListener("click", function () {
+    // Solve for the last product's amount so that Q = K
+    var inc_ = included(), j = inc_.length - 1, s = inc_[j], k = K(), rest = 1;
+    inc_.forEach(function (t, i) { if (i !== j) rest *= Math.pow(S.vals[i], t[2]); });
+    S.vals[j] = +Math.pow(k / rest, 1 / s[2]).toPrecision(3);
+    render();
+  });
+
+  // ---------- Drill ----------
+  var CYCLE = ["", "num", "den", "out"], LABEL = { "": "tap to place", num: "numerator", den: "denominator", out: "left out" }, chipSt = [];
+  function buildChips() {
+    var box = document.getElementById("chips"); box.innerHTML = ""; chipSt = [];
+    document.getElementById("fb").innerHTML = "";
+    rx().sp.forEach(function (s, i) {
+      chipSt.push("");
+      var b = document.createElement("button"); b.type = "button";
+      b.innerHTML = "<span>" + s[0] + "(" + s[3] + ")</span><small>" + LABEL[""] + "</small>";
+      b.addEventListener("click", function () {
+        chipSt[i] = CYCLE[(CYCLE.indexOf(chipSt[i]) + 1) % CYCLE.length];
+        b.setAttribute("data-st", chipSt[i]); b.classList.remove("ok", "no");
+        b.querySelector("small").textContent = LABEL[chipSt[i]];
+      });
+      box.appendChild(b);
+    });
+  }
+  function rightPlace(s) { return !inc(s, S.mode) ? "out" : s[2] > 0 ? "num" : "den"; }
+  document.getElementById("b-check").addEventListener("click", function () {
+    var btns = document.querySelectorAll("#chips button"), wrong = [], blank = 0;
+    rx().sp.forEach(function (s, i) {
+      if (!chipSt[i]) { blank++; return; }
+      var ok = chipSt[i] === rightPlace(s); btns[i].classList.toggle("ok", ok); btns[i].classList.toggle("no", !ok);
+      if (!ok) wrong.push(s[0] + "(" + s[3] + ") belongs " + (rightPlace(s) === "out" ? "outside the expression (" + (s[3] === "s" ? "pure solid" : s[3] === "l" ? "pure liquid" : "no partial pressure for a dissolved species") + ")" : "in the " + LABEL[rightPlace(s)] + " (" + (s[2] > 0 ? "product" : "reactant") + ")"));
+    });
+    var fb = document.getElementById("fb");
+    if (blank) { fb.innerHTML = "<span style='color:var(--bad)'>Place every substance first (" + blank + " left).</span>"; return; }
+    fb.innerHTML = wrong.length ? "<span style='color:var(--bad)'><b>Not yet.</b></span> " + wrong.join("; ") + "." : "<span style='color:var(--good)'><b>Correct.</b></span> That matches the " + Kname() + " expression above.";
+  });
+  document.getElementById("b-clear").addEventListener("click", buildChips);
+
+  pick("nh3");
+
+  // ---------- Self-check ----------
+  (function () {
+    function bad(m) { console.error("7.3 self-check: " + m); }
+    var save = [S.key, S.mode];
+    // Hand-computed Q for every example, and the expected comparison with K
+    var EXPECT = { nh3: { c: [0.080, -1], p: [8.0e-4, 1] }, so3: { c: [1000, 1], p: [2.0, -1] }, caco3: { c: [1.0e-3, -1], p: [0.50, 1] },
+      water: { c: [0.40, 1], p: [8.0, -1] }, acid: { c: [1.0e-4, 1] }, agcl: { c: [1.0e-10, -1] } };
+    var KP = { nh3: 1.6e-4, so3: 3.4, caco3: 0.22, water: 11 };   // Kc (RT)^dn, rounded to 2 sig figs
+    ORDER.forEach(function (k) {
+      S.key = k;
+      ["c", "p"].forEach(function (m) {
+        var e = EXPECT[k][m]; if (!e) { if (m === "p" && RX[k].kp != null) bad(k + ": unexpected Kp"); return; }
+        S.mode = m; var vals = (m === "p" ? RX[k].p : RX[k].c);
+        if (vals.length !== included().length) bad(k + " " + m + ": example amounts do not match the included species");
+        var q = calcQ(vals); if (Math.abs(q / e[0] - 1) > 1e-9) bad(k + " " + m + ": Q = " + q + ", expected " + e[0]);
+        if (cmp(q, K()) !== e[1]) bad(k + " " + m + ": wrong Q vs K comparison");
+      });
+      if (KP[k] != null && Math.abs(RX[k].kp / KP[k] - 1) > 1e-9) bad(k + ": Kp = " + RX[k].kp + ", expected " + KP[k]);
+    });
+    S.key = save[0]; S.mode = save[1];
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Which is the correct Kc expression for 4NH₃(g) + 5O₂(g) ⇌ 4NO(g) + 6H₂O(g)?",
+      o: ["[NO]⁴[H₂O]⁶ / ([NH₃]⁴[O₂]⁵)", "[NO]⁴ / ([NH₃]⁴[O₂]⁵)", "(4[NO] + 6[H₂O]) / (4[NH₃] + 5[O₂])", "[NH₃]⁴[O₂]⁵ / ([NO]⁴[H₂O]⁶)"], c: 0,
+      w: "Products over reactants, each raised to its coefficient. Water is a gas here, so it is included (choice B wrongly drops it). Choice C multiplies by coefficients and adds terms; choice D is upside down." },
+    { s: "Which is the correct Kp expression for CaCO₃(s) ⇌ CaO(s) + CO₂(g)?",
+      o: ["Kp = (P_CaO)(P_CO₂) / P_CaCO₃", "Kp = P_CO₂", "Kp = 1 / P_CO₂", "Kp = [CaO][CO₂] / [CaCO₃]"], c: 1,
+      w: "CaCO₃ and CaO are pure solids, so they do not appear. Only CO₂(g) remains, in the numerator because it is a product. Choice D is a Kc-style expression that also wrongly includes the solids." },
+    { s: "For the reaction CH₃COOH(aq) + H₂O(l) ⇌ CH₃COO⁻(aq) + H₃O⁺(aq), why is H₂O left out of the equilibrium expression?",
+      o: ["Water is a product.", "Water does not take part in the reaction.", "Water is a weak electrolyte.", "As the pure liquid solvent, its concentration is essentially constant and does not depend on the amount present."], c: 3,
+      w: "Pure liquids and solids have concentrations that do not depend on how much is present, so they are not included in Q or K. Choice B is false: water accepts a proton in this reaction; it is left out because of its phase, not because it does not react." },
+    { s: "For N₂(g) + 3H₂(g) ⇌ 2NH₃(g), Kc = 0.50 at a certain temperature. A mixture has [N₂] = 1.0 M, [H₂] = 2.0 M, and [NH₃] = 2.0 M. What is Qc, and how does it compare with Kc?",
+      o: ["Qc = 1.0; Qc > Kc", "Qc = 0.25; Qc < Kc", "Qc = 0.50; Qc = Kc", "Qc = 2.0; Qc > Kc"], c: 2,
+      w: "Qc = [NH₃]² / ([N₂][H₂]³) = (2.0)² / ((1.0)(2.0)³) = 4.0 / 8.0 = 0.50, which equals Kc, so the mixture is at equilibrium. Choice A squares [H₂] instead of cubing it (4.0 / 4.0 = 1.0), and choice D leaves the exponent off [H₂] entirely (4.0 / 2.0 = 2.0)." },
+    { s: "For H₂(g) + I₂(g) ⇌ 2HI(g), Kc = 50 at 450 °C. A flask at 450 °C contains [H₂] = 0.10 M, [I₂] = 0.10 M, and [HI] = 0.50 M. Which statement is correct?",
+      o: ["Qc = 50, so the system is at equilibrium.", "Qc = 25, so the reaction proceeds toward products.", "Qc = 100, so the reaction proceeds toward reactants.", "Qc = 0.040, so the reaction proceeds toward products."], c: 1,
+      w: "Qc = (0.50)² / ((0.10)(0.10)) = 0.25 / 0.010 = 25. Since Qc < Kc, there is too little HI, and the net reaction goes toward products. Choice C uses 2 × 0.50 instead of (0.50)² and gets 100." },
+    { s: "A student writes Kp for the reaction AgCl(s) ⇌ Ag⁺(aq) + Cl⁻(aq) as Kp = (P_Ag⁺)(P_Cl⁻). What is wrong with this?",
+      o: ["Nothing; it is correct.", "AgCl(s) should be in the denominator.", "Dissolved ions do not have partial pressures; only a Kc-type expression, [Ag⁺][Cl⁻], applies.", "The expression should be inverted."], c: 2,
+      w: "Partial pressures apply only to gases. Aqueous species are described by molar concentration, so this equilibrium has K = [Ag⁺][Cl⁻] (called Ksp in topic 7.11). Choice B is wrong because AgCl is a pure solid and stays out of any expression." },
+    { s: "The reaction 2SO₂(g) + O₂(g) ⇌ 2SO₃(g) is studied at a fixed temperature. Which statement about Kc and Kp for this reaction is correct?",
+      o: ["Kc and Kp always have the same value.", "Kp uses concentrations and Kc uses partial pressures.", "Kc can be used only for reactions in solution.", "Kc and Kp have different values here, so a question must state which constant it gives."], c: 3,
+      w: "Kc uses molar concentrations and Kp uses partial pressures. Because the moles of gas change (3 → 2), the two constants have different numerical values. The AP exam does not ask you to convert between them, but it expects you to use the one given. Choice B swaps the definitions." },
+    { s: "Initially a flask contains only N₂O₄(g). Which is true of Q for N₂O₄(g) ⇌ 2NO₂(g) at that moment, and what happens next?",
+      o: ["Q is infinitely large, so the reaction proceeds in reverse.", "Q = K, so no net reaction occurs.", "Q = 1, so the reaction proceeds forward only if K > 1.", "Q = 0, so Q < K and the reaction proceeds forward."], c: 3,
+      w: "With no NO₂, the numerator [NO₂]² is zero, so Q = 0. Any positive K is larger, so the reaction proceeds forward, and Q increases toward K. Choice A describes the opposite situation, a flask containing only product." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("7.3");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [7], topic: "7.3", compact: true, storageKey: "topic-7.3" });</script>
+</body>
+</html>

@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Molecular Structure of Acids and Bases Study Lab</title>
+<meta name="description" content="Pull the proton off acids side by side, see where the conjugate base's negative charge ends up, and rank families of acids and bases by strength from their structures.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.ctlcard { display: grid; gap: 16px; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v { overflow-wrap: anywhere; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 600; }
+.rank { display: grid; gap: 8px; }
+.rank .slots { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .9rem; }
+.rank .slot { font-family: var(--mono); font-size: .86rem; border: 1px dashed var(--rule); border-radius: 8px; padding: 4px 10px; min-width: 3.5em; text-align: center; color: var(--muted); }
+.rank .slot.filled { border-style: solid; color: var(--ink); background: var(--accent-soft); }
+.rank .lt { color: var(--muted); font-family: var(--mono); }
+.fb { font-size: .9rem; }
+.fb.ok { color: var(--good); } .fb.no { color: var(--bad); }
+.note { font-size: .82rem; color: var(--muted); }
+svg .atom-t { font-family: var(--body); font-size: 13px; font-weight: 600; fill: var(--ink); }
+svg .chg { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 8 · Topic 8.6</span>
+  <h1>Molecular Structure of Acids and Bases Study Lab</h1>
+  <p class="lede">An acid is strong when the base left behind after it loses H<sup>+</sup> is stable and content to stay that way. Electronegative atoms, electron-withdrawing neighbors, resonance and weak H–X bonds all help. Pull the proton off acids in seven families, watch where the negative charge goes, and rank each family from weakest to strongest.</p>
+</header>
+
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The proton-removal bench</h2>
+    <p>Pick a family, then a member. The left drawing is the acid with its acidic hydrogen ringed; the right drawing is what is left after that H<sup>+</sup> leaves. Shaded halos show where the negative charge sits, split among atoms when resonance spreads it. The dot plot compares the whole family. Then try the ranking challenge without looking at the numbers.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Acid and conjugate base <small id="mol-sub"></small></h3>
+      <svg class="chart" id="mol" role="img" aria-label="Structure of the selected acid and of its conjugate base, with the negative charge shaded"></svg>
+    </div>
+    <div class="card graph-card">
+      <h3><span>The family on a strength scale</span> <small id="lad-sub">lower pK<sub>a</sub> = stronger acid</small></h3>
+      <svg class="chart" id="lad" role="img" aria-label="Dot plot of pKa values for the selected family"></svg>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <div class="tag">Family (the structural feature that changes)</div>
+      <div class="scenarios" id="sc"></div>
+    </div>
+    <div class="group">
+      <div class="tag">Member</div>
+      <div class="chips" id="members"></div>
+    </div>
+    <div class="group rank">
+      <div class="tag" id="rank-tag">Ranking challenge</div>
+      <div class="note" id="rank-help"></div>
+      <div class="chips" id="rank-pool"></div>
+      <div class="slots" id="rank-slots"></div>
+      <div class="chips"><button type="button" id="rank-clear">Clear ranking</button></div>
+      <div class="fb" id="rank-fb" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend">
+      <span class="l-c1">Acidic H (leaves as H⁺)</span>
+      <span class="l-c4">Negative charge (shared by resonance when split)</span>
+      <span class="l-c3">Electron-withdrawing atoms</span>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k" id="r-pk-k">pK<sub>a</sub></div><div class="v" id="r-pk"></div><div class="sub" id="r-pk2"></div></div>
+    <div class="stat"><div class="k" id="r-k-k">K<sub>a</sub></div><div class="v" id="r-k"></div><div class="sub" id="r-k2"></div></div>
+    <div class="stat"><div class="k" id="r-pct-k">Percent ionized at 0.10 M</div><div class="v" id="r-pct"></div><div class="sub" id="r-pct2"></div></div>
+    <div class="stat"><div class="k">Rank in family</div><div class="v" id="r-rank"></div><div class="sub" id="r-rank2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">Values are at 25 °C. pK<sub>a</sub> values marked ≈ are rough estimates: strong acids ionize completely in water, so their K<sub>a</sub> cannot be measured there and sources differ by several units. Only their order matters here. The ranking reasons in this lab are the standard qualitative ones; the CED asks you to explain these trends from structure, so there is no need to memorize pK<sub>a</sub> values.</p>
+</section>
+
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">The one question</span><h3>How stable is the conjugate base?</h3><p>Ionization is HA + H<sub>2</sub>O ⇌ H<sub>3</sub>O<sup>+</sup> + A<sup>−</sup>. Anything that makes A<sup>−</sup> more stable (lower in energy) pushes this equilibrium to the right, so K<sub>a</sub> is larger and pK<sub>a</sub> is smaller. Every trend below is a reason A<sup>−</sup> is more or less stable.</p></div>
+    <div class="card"><span class="tag">Which H?</span><h3>Acidic protons sit on electronegative atoms</h3><p>In CH<sub>3</sub>COOH only the H on oxygen is acidic, so acetic acid is monoprotic. C–H hydrogens are not acidic in water. Structure tells you which protons take part and how many.</p></div>
+    <div class="card"><span class="tag">Electronegativity</span><h3>Pulling electron density away</h3><p>An electronegative atom holds the negative charge of A<sup>−</sup> well. Across period 2, HF &gt; H<sub>2</sub>O &gt; NH<sub>3</sub> &gt; CH<sub>4</sub> as acids. In H–O–X, a more electronegative X (Cl &gt; Br &gt; I) makes the acid stronger.</p></div>
+    <div class="card"><span class="tag">Inductive effect and more O</span><h3>Withdrawing through bonds</h3><p>Electronegative atoms near the acidic group pull electron density through the bonds and stabilize A<sup>−</sup>. Each Cl on the carbon next to COOH lowers the pK<sub>a</sub>. Each extra O on the central atom of an oxyacid does the same, so HClO &lt; HClO<sub>2</sub> &lt; HClO<sub>3</sub> &lt; HClO<sub>4</sub>.</p></div>
+    <div class="card"><span class="tag">Resonance</span><h3>Spreading the charge</h3><p>A charge shared over several atoms is more stable than one stuck on a single atom. Acetate spreads −1 over two O atoms; ethoxide (from ethanol) cannot. That is why carboxylic acids, a common class of weak acids, are about 10<sup>11</sup> times more acidic than alcohols.</p></div>
+    <div class="card"><span class="tag">Bases</span><h3>Strong vs. weak bases</h3><p>Group 1 and 2 hydroxides are strong bases; their conjugate acid, H<sub>2</sub>O, is very weak. Common weak bases are nitrogen bases with a lone pair (NH<sub>3</sub>, amines) and carboxylate ions. The conjugate base of a strong acid (Cl<sup>−</sup>, NO<sub>3</sub><sup>−</sup>, ClO<sub>4</sub><sup>−</sup>) is too weak to act as a base in water.</p></div>
+  </div>
+</section>
+
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Structure-and-strength cheat sheet</h2>
+    <p>Name the feature, say what it does to the conjugate base, then state the effect on K<sub>a</sub>. That three-step chain is the whole explanation.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Comparison</th><th>Order of acid strength</th><th>Structural reason</th></tr></thead>
+    <tbody>
+      <tr><td>Binary acids down group 17</td><td><b>HF &lt; HCl &lt; HBr &lt; HI</b></td><td>The H–X bond gets longer and weaker, and the larger X<sup>−</sup> spreads its charge over more volume. Bond strength wins over electronegativity down a group.</td></tr>
+      <tr><td>Hydrides across period 2</td><td><b>CH<sub>4</sub> &lt; NH<sub>3</sub> &lt; H<sub>2</sub>O &lt; HF</b></td><td>Electronegativity of the atom holding the charge: F holds a negative charge best.</td></tr>
+      <tr><td>Oxyacids, same central atom</td><td><b>HClO &lt; HClO<sub>2</sub> &lt; HClO<sub>3</sub> &lt; HClO<sub>4</sub></b></td><td>Each extra O withdraws electron density and adds a resonance position for the charge on the anion.</td></tr>
+      <tr><td>Oxyacids H–O–X, different X</td><td><b>HOI &lt; HOBr &lt; HOCl</b></td><td>More electronegative X pulls electron density from the O–H bond and stabilizes XO<sup>−</sup>.</td></tr>
+      <tr><td>Carboxylic acids with Cl substituents</td><td><b>CH<sub>3</sub>COOH &lt; ClCH<sub>2</sub>COOH &lt; Cl<sub>2</sub>CHCOOH &lt; Cl<sub>3</sub>CCOOH</b></td><td>Inductive effect: each Cl withdraws electron density through the bonds toward itself.</td></tr>
+      <tr><td>Alcohol vs. carboxylic acid</td><td><b>CH<sub>3</sub>CH<sub>2</sub>OH &lt; CH<sub>3</sub>COOH</b></td><td>Resonance spreads the charge of acetate over two O atoms.</td></tr>
+      <tr><td>Bases</td><td><b>Cl<sup>−</sup> &lt; CH<sub>3</sub>COO<sup>−</sup> &lt; NH<sub>3</sub> &lt; OH<sup>−</sup></b></td><td>The weaker the conjugate acid, the stronger the base. OH<sup>−</sup> from Group 1 and 2 hydroxides is a strong base.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Structure arguments on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Name the specific structural difference: "HClO<sub>4</sub> has three more O atoms bonded to Cl than HClO does."</li>
+        <li>Connect it to the conjugate base: "the extra O atoms withdraw electron density and delocalize the negative charge of ClO<sub>4</sub><sup>−</sup>, stabilizing it."</li>
+        <li>Finish with the equilibrium consequence: "so HClO<sub>4</sub> ionizes more completely and has the larger K<sub>a</sub>."</li>
+        <li>Identify the acidic proton in a structure (the H on O in –COOH) and use it to explain why a molecule with several H atoms is monoprotic.</li>
+        <li>When you compare two acids, talk about both of them. "HOCl is stronger because Cl is electronegative" earns less than "Cl is more electronegative than Br, so it pulls more electron density from the O–H bond and stabilizes OCl⁻ more than Br stabilizes OBr⁻."</li>
+        <li>For bases, argue through the conjugate acid: the weaker the conjugate acid, the stronger the base.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying HF is the strongest hydrohalic acid because F is most electronegative. Down a group, the very strong H–F bond makes HF the weakest.</li>
+        <li>Counting all H atoms as acidic. CH<sub>3</sub>COOH releases only the O–H proton.</li>
+        <li>Saying more O atoms make an acid stronger because "there are more O atoms to lose H from." The acidic H count does not change; the electron withdrawal does.</li>
+        <li>Saying the Cl atoms in Cl<sub>3</sub>CCOOH come off as Cl<sup>−</sup> ions. They stay bonded; they only pull electron density.</li>
+        <li>Mixing up direction: a stronger acid has a <i>larger</i> K<sub>a</sub> and a <i>smaller</i> pK<sub>a</sub>, and a <i>weaker</i> conjugate base.</li>
+        <li>Calling Cl<sup>−</sup> a weak base that raises pH. It is the conjugate base of a strong acid and has no measurable effect on pH.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 8.6. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-8.html">Unit 8 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Helpers ----------
+  var SUBS = "₀₁₂₃₄₅₆₇₈₉";
+  // "ClCH2COOH^-" -> "ClCH₂COOH⁻" for SVG text and quiz stems
+  function uni(s) {
+    var m = String(s).match(/\^([0-9]*)([+\-])$/), ch = "";
+    if (m) { ch = (m[1] === "2" ? "²" : m[1] === "3" ? "³" : "") + (m[2] === "+" ? "⁺" : "⁻"); s = s.slice(0, m.index); }
+    return s.replace(/(\D)(\d+)/g, function (a, b, d) { return b + d.split("").map(function (x) { return SUBS[+x]; }).join(""); }) + ch;
+  }
+  function chargeOf(s) { var m = String(s).match(/\^([0-9]*)([+\-])$/); if (!m) return 0; return (m[1] ? +m[1] : 1) * (m[2] === "+" ? 1 : -1); }
+  // percent ionized for a weak acid (or base) at formal concentration C: x^2/(C-x) = K
+  function pctIon(K, C) { var x = (-K + Math.sqrt(K * K + 4 * K * C)) / 2; return 100 * x / C; }
+
+  // ---------- Data ----------
+  // Each species is drawn in its protonated form (P). atoms: [label, x, y]; bonds: [i, j, order];
+  // h: index of the acidic H; neg: atoms sharing the -1 charge after H+ leaves (resonance when > 1);
+  // ew: electron-withdrawing atoms to tint; cP / cD: other formal charges in the protonated / deprotonated form.
+  // K: Ka of the acid (or Kb of the base in the bases family); est: pK value is a rough estimate (strong).
+  var SP = {
+    HF:  { P: "HF", D: "F^-", K: 6.8e-4, atoms: [["F", 70, 95], ["H", 121, 95]], bonds: [[0, 1, 1]], h: 1, neg: [0], bl: 92, be: 567,
+           why: "F is very electronegative, but the H–F bond is short and strong (567 kJ/mol), and the small F⁻ ion packs its charge into a tiny volume. HF is a weak acid." },
+    HCl: { P: "HCl", D: "Cl^-", pK: -6, est: true, atoms: [["Cl", 60, 95], ["H", 130, 95]], bonds: [[0, 1, 1]], h: 1, neg: [0], bl: 127, be: 431,
+           why: "The H–Cl bond (127 pm, 431 kJ/mol) is much weaker than H–F, and Cl⁻ is larger, so its charge is spread over more volume. HCl is a strong acid." },
+    HBr: { P: "HBr", D: "Br^-", pK: -9, est: true, atoms: [["Br", 55, 95], ["H", 133, 95]], bonds: [[0, 1, 1]], h: 1, neg: [0], bl: 141, be: 366,
+           why: "The H–Br bond is longer and weaker still (141 pm, 366 kJ/mol). HBr is a strong acid." },
+    HI:  { P: "HI", D: "I^-", pK: -10, est: true, atoms: [["I", 50, 95], ["H", 139, 95]], bonds: [[0, 1, 1]], h: 1, neg: [0], bl: 161, be: 299,
+           why: "H–I is the longest and weakest H–X bond (161 pm, 299 kJ/mol), and I⁻ is the largest, most diffuse anion. HI is the strongest of the four." },
+
+    CH4: { P: "CH4", D: "CH3^-", pK: 50, est: true, atoms: [["C", 95, 95], ["H", 95, 48], ["H", 52, 115], ["H", 95, 142], ["H", 140, 95]], bonds: [[0, 1, 1], [0, 2, 1], [0, 3, 1], [0, 4, 1]], h: 4, neg: [0],
+           why: "Carbon is the least electronegative of the four, so a negative charge on C (CH₃⁻) is very unstable. Methane is not acidic in water at all." },
+    NH3a: { P: "NH3", D: "NH2^-", pK: 38, est: true, atoms: [["N", 95, 95], ["H", 70, 55], ["H", 70, 135], ["H", 140, 95]], bonds: [[0, 1, 1], [0, 2, 1], [0, 3, 1]], h: 3, neg: [0],
+           why: "N is more electronegative than C, but NH₂⁻ is still far too unstable to form in water. As an acid, NH₃ is negligible (it acts as a base instead)." },
+    H2Oa: { P: "H2O", D: "OH^-", pK: 16, est: true, atoms: [["O", 95, 95], ["H", 65, 125], ["H", 138, 95]], bonds: [[0, 1, 1], [0, 2, 1]], h: 2, neg: [0],
+           why: "O is more electronegative than N, so OH⁻ is more stable than NH₂⁻. Water is a much weaker acid than HF but far stronger than NH₃." },
+    HF2: { P: "HF", D: "F^-", K: 6.8e-4, atoms: [["F", 95, 95], ["H", 138, 95]], bonds: [[0, 1, 1]], h: 1, neg: [0],
+           why: "F is the most electronegative element, so F⁻ holds its negative charge best of the period 2 anions. HF is the strongest acid of this row (though still weak)." },
+
+    HClO:  { P: "HClO", D: "ClO^-", K: 3.0e-8, atoms: [["H", 22, 118], ["O", 58, 100], ["Cl", 106, 100]], bonds: [[0, 1, 1], [1, 2, 1]], h: 0, neg: [1], ew: [2],
+             why: "With no extra O atoms, the charge of ClO⁻ sits on one O atom. HClO is a weak acid." },
+    HClO2: { P: "HClO2", D: "ClO2^-", K: 1.1e-2, atoms: [["H", 22, 118], ["O", 58, 100], ["Cl", 106, 100], ["O", 158, 100]], bonds: [[0, 1, 1], [1, 2, 1], [2, 3, 2]], h: 0, neg: [1, 3], ew: [3],
+             why: "One extra O pulls electron density from Cl and the O–H bond, and resonance shares the charge of ClO₂⁻ over two O atoms. HClO₂ is a much stronger weak acid." },
+    HClO3: { P: "HClO3", D: "ClO3^-", pK: -1, est: true, atoms: [["H", 22, 118], ["O", 58, 100], ["Cl", 106, 100], ["O", 158, 100], ["O", 106, 50]], bonds: [[0, 1, 1], [1, 2, 1], [2, 3, 2], [2, 4, 2]], h: 0, neg: [1, 3, 4], ew: [3, 4],
+             why: "Two extra O atoms; the charge of ClO₃⁻ is shared by three O atoms. HClO₃ ionizes essentially completely and many textbooks call it strong, though it is not one of the six strong acids the CED lists." },
+    HClO4: { P: "HClO4", D: "ClO4^-", pK: -10, est: true, atoms: [["H", 22, 118], ["O", 58, 100], ["Cl", 106, 100], ["O", 158, 100], ["O", 106, 50], ["O", 106, 150]], bonds: [[0, 1, 1], [1, 2, 1], [2, 3, 2], [2, 4, 2], [2, 5, 2]], h: 0, neg: [1, 3, 4, 5], ew: [3, 4, 5],
+             why: "Three extra O atoms withdraw the most electron density, and ClO₄⁻ spreads its charge over four equivalent O atoms. HClO₄ is one of the strongest acids known." },
+
+    HOCl: { P: "HOCl", D: "OCl^-", K: 3.0e-8, en: 3.16, atoms: [["H", 30, 120], ["O", 70, 95], ["Cl", 125, 115]], bonds: [[0, 1, 1], [1, 2, 1]], h: 0, neg: [1], ew: [2],
+            why: "Cl (electronegativity 3.16) is the most electronegative X here. It pulls electron density away from O, weakening the O–H bond and stabilizing OCl⁻." },
+    HOBr: { P: "HOBr", D: "OBr^-", K: 2.5e-9, en: 2.96, atoms: [["H", 30, 120], ["O", 70, 95], ["Br", 128, 115]], bonds: [[0, 1, 1], [1, 2, 1]], h: 0, neg: [1], ew: [2],
+            why: "Br (2.96) withdraws less electron density than Cl, so OBr⁻ is less stable than OCl⁻ and HOBr is weaker than HOCl." },
+    HOI:  { P: "HOI", D: "OI^-", K: 2.3e-11, en: 2.66, atoms: [["H", 30, 120], ["O", 70, 95], ["I", 132, 115]], bonds: [[0, 1, 1], [1, 2, 1]], h: 0, neg: [1], ew: [2],
+            why: "I (2.66) is the least electronegative X, so it does the least to stabilize OI⁻. HOI is the weakest of the three." },
+
+    AA:   { P: "CH3COOH", D: "CH3COO^-", lbl: "CH₃COOH", K: 1.8e-5, atoms: [["C", 62, 100], ["H", 62, 55], ["H", 22, 100], ["H", 62, 145], ["C", 110, 100], ["O", 130, 58], ["O", 150, 126], ["H", 186, 112]], bonds: [[0, 1, 1], [0, 2, 1], [0, 3, 1], [0, 4, 1], [4, 5, 2], [4, 6, 1], [6, 7, 1]], h: 7, neg: [5, 6],
+            why: "Acetic acid has no Cl atoms. Resonance already spreads the charge of acetate over two O atoms, which makes it a typical weak carboxylic acid." },
+    CAA:  { P: "ClCH2COOH", D: "ClCH2COO^-", lbl: "ClCH₂COOH", K: 1.4e-3, atoms: [["C", 62, 100], ["Cl", 62, 52], ["H", 22, 100], ["H", 62, 145], ["C", 110, 100], ["O", 130, 58], ["O", 150, 126], ["H", 186, 112]], bonds: [[0, 1, 1], [0, 2, 1], [0, 3, 1], [0, 4, 1], [4, 5, 2], [4, 6, 1], [6, 7, 1]], h: 7, neg: [5, 6], ew: [1],
+            why: "One Cl on the neighboring carbon pulls electron density through the C–C bond toward itself (inductive effect), stabilizing the carboxylate. The acid is about 80 times stronger than acetic acid." },
+    DCA:  { P: "Cl2CHCOOH", D: "Cl2CHCOO^-", lbl: "Cl₂CHCOOH", K: 5.0e-2, atoms: [["C", 62, 100], ["Cl", 62, 52], ["Cl", 20, 100], ["H", 62, 145], ["C", 110, 100], ["O", 130, 58], ["O", 150, 126], ["H", 186, 112]], bonds: [[0, 1, 1], [0, 2, 1], [0, 3, 1], [0, 4, 1], [4, 5, 2], [4, 6, 1], [6, 7, 1]], h: 7, neg: [5, 6], ew: [1, 2],
+            why: "Two Cl atoms withdraw more electron density, so the conjugate base is more stable still." },
+    TCA:  { P: "Cl3CCOOH", D: "Cl3CCOO^-", lbl: "Cl₃CCOOH", K: 2.2e-1, atoms: [["C", 62, 100], ["Cl", 62, 52], ["Cl", 20, 100], ["Cl", 62, 148], ["C", 110, 100], ["O", 130, 58], ["O", 150, 126], ["H", 186, 112]], bonds: [[0, 1, 1], [0, 2, 1], [0, 3, 1], [0, 4, 1], [4, 5, 2], [4, 6, 1], [6, 7, 1]], h: 7, neg: [5, 6], ew: [1, 2, 3],
+            why: "Three Cl atoms give the largest inductive effect. Trichloroacetic acid is about 10,000 times stronger than acetic acid, though still not fully ionized." },
+
+    EtOH: { P: "C2H5OH", D: "C2H5O^-", lbl: "CH₃CH₂OH", pK: 16, est: true, atoms: [["CH3", 30, 110], ["CH2", 85, 85], ["O", 135, 108], ["H", 175, 92]], bonds: [[0, 1, 1], [1, 2, 1], [2, 3, 1]], h: 3, neg: [2],
+            why: "In ethoxide, CH₃CH₂O⁻, the whole charge is stuck on one O atom; there is no resonance to share it. Ethanol is about as weak an acid as water itself, so it does not change the pH of water." },
+    AA2:  { P: "CH3COOH", D: "CH3COO^-", lbl: "CH₃COOH", K: 1.8e-5, atoms: [["CH3", 50, 100], ["C", 105, 100], ["O", 125, 58], ["O", 145, 126], ["H", 182, 112]], bonds: [[0, 1, 1], [1, 2, 2], [1, 3, 1], [3, 4, 1]], h: 4, neg: [2, 3],
+            why: "In acetate, the C=O oxygen shares the charge: two resonance structures put −1 on either O, so each carries about −½. That delocalization makes acetic acid about 10¹¹ times more acidic than ethanol." },
+
+    // Bases: K is Kb of the base; the drawing still starts from the protonated form (the conjugate acid).
+    Clb:  { P: "HCl", D: "Cl^-", base: true, pK: 20, est: true, atoms: [["Cl", 70, 95], ["H", 140, 95]], bonds: [[0, 1, 1]], h: 1, neg: [0],
+            why: "Cl⁻ is the conjugate base of a strong acid. HCl gives up its proton completely, so Cl⁻ has essentially no tendency to take one back. It does not change the pH of water." },
+    OAc:  { P: "CH3COOH", D: "CH3COO^-", base: true, K: 1.0e-14 / 1.8e-5, atoms: [["CH3", 50, 100], ["C", 105, 100], ["O", 125, 58], ["O", 145, 126], ["H", 182, 112]], bonds: [[0, 1, 1], [1, 2, 2], [1, 3, 1], [3, 4, 1]], h: 4, neg: [2, 3],
+            why: "Acetate is a carboxylate ion, a common weak base. Its conjugate acid is weak (Ka = 1.8 × 10⁻⁵), so CH₃COO⁻ takes H⁺ from water to a small extent: Kb = Kw/Ka = 5.6 × 10⁻¹⁰." },
+    NH3:  { P: "NH4^+", D: "NH3", base: true, K: 1.8e-5, atoms: [["N", 95, 95], ["H", 95, 48], ["H", 52, 115], ["H", 95, 142], ["H", 140, 95]], bonds: [[0, 1, 1], [0, 2, 1], [0, 3, 1], [0, 4, 1]], h: 4, neg: [], cP: [[0, "+"]], lp: [0, 140, 95],
+            why: "NH₃ is a nitrogen base: the lone pair on N accepts H⁺ from water to make NH₄⁺. Its conjugate acid NH₄⁺ is very weak (Ka = 5.6 × 10⁻¹⁰), so NH₃ is a weak base with Kb = 1.8 × 10⁻⁵." },
+    OH:   { P: "H2O", D: "OH^-", base: true, pK: 0, est: true, strongTxt: "strong", atoms: [["O", 95, 95], ["H", 65, 125], ["H", 138, 95]], bonds: [[0, 1, 1], [0, 2, 1]], h: 2, neg: [0],
+            why: "OH⁻ from a Group 1 or 2 hydroxide (NaOH, KOH, Ba(OH)₂) is a strong base: whatever dissolves dissociates completely into metal ions and OH⁻. Its conjugate acid is H₂O, a very weak acid." }
+  };
+
+  // Families, listed weakest to strongest (the self-check verifies this against the pK values).
+  var FAM = {
+    binary:  { name: "Down a group: HX", mem: ["HF", "HCl", "HBr", "HI"], x: [-12, 6], ticks: [-12, -8, -4, 0, 4],
+               feat: "H–X bond strength and anion size",
+               ap: "Down a group, the H–X bond gets longer and weaker and X⁻ gets larger, so the conjugate base is more stable and the acid is stronger: HF < HCl < HBr < HI. Bond strength outweighs electronegativity here, which is why HF is weak." },
+    period:  { name: "Across a period", mem: ["CH4", "NH3a", "H2Oa", "HF2"], x: [0, 55], ticks: [0, 10, 20, 30, 40, 50],
+               feat: "Electronegativity of the atom bonded to H",
+               ap: "Across a period, the atom that keeps the electron pair gets more electronegative (C < N < O < F), so the conjugate base is more stable and the acid is stronger: CH₄ < NH₃ < H₂O < HF." },
+    oxyn:    { name: "Oxyacids: number of O", mem: ["HClO", "HClO2", "HClO3", "HClO4"], x: [-12, 10], ticks: [-12, -8, -4, 0, 4, 8],
+               feat: "Number of O atoms on the central atom",
+               ap: "Each additional O on Cl withdraws electron density from the O–H bond and adds a resonance position for the negative charge, so HClO < HClO₂ < HClO₃ < HClO₄." },
+    oxyx:    { name: "Oxyacids: central atom", mem: ["HOI", "HOBr", "HOCl"], x: [6, 12], ticks: [6, 7, 8, 9, 10, 11, 12],
+               feat: "Electronegativity of X in H–O–X",
+               ap: "A more electronegative X pulls electron density away from the O–H bond and stabilizes XO⁻, so HOI < HOBr < HOCl." },
+    induct:  { name: "Inductive effect", mem: ["AA", "CAA", "DCA", "TCA"], x: [0, 6], ticks: [0, 1, 2, 3, 4, 5, 6],
+               feat: "Number of Cl atoms near the COOH group",
+               ap: "Electronegative Cl atoms withdraw electron density through the bonds (inductive effect), stabilizing the carboxylate ion. More Cl atoms, closer to the COOH group, give a stronger acid." },
+    reson:   { name: "Resonance", mem: ["EtOH", "AA2"], x: [0, 20], ticks: [0, 4, 8, 12, 16, 20],
+               feat: "Whether the conjugate base has resonance",
+               ap: "Acetate's negative charge is delocalized over two O atoms by resonance; ethoxide's charge sits on one O. The more stable acetate makes acetic acid the far stronger acid." },
+    bases:   { name: "Bases", mem: ["Clb", "OAc", "NH3", "OH"], x: [-2, 22], ticks: [0, 4, 8, 12, 16, 20], base: true,
+               feat: "How weak the conjugate acid is",
+               ap: "The weaker the conjugate acid, the stronger the base. Cl⁻ (from strong HCl) is negligible, carboxylates and NH₃ are weak bases, and OH⁻ from Group 1 and 2 hydroxides is strong." }
+  };
+  var FORDER = ["binary", "period", "oxyn", "oxyx", "induct", "reson", "bases"];
+
+  function pK(s) { return s.K ? -Math.log10(s.K) : s.pK; }
+  function lbl(s, form) { return form === "D" ? uni(s.D) : (s.lbl || uni(s.P)); }
+  function name(s) { return s.base ? uni(s.D) : (s.lbl || uni(s.P)); }
+
+  // ---------- State ----------
+  var st = { fam: "binary", sp: "HCl", rank: [] };
+
+  // ---------- Structure drawing ----------
+  var svgM = document.getElementById("mol");
+  var R = { H: 9, C: 13, N: 13, O: 13, F: 12, Cl: 16, Br: 18, I: 21, CH3: 18, CH2: 18 };
+  function drawForm(g, s, form, ox) {
+    var drop = form === "D" ? s.h : -1;
+    var spread = form === "D" ? s.neg : [];
+    var ew = s.ew || [];
+    // bonds
+    s.bonds.forEach(function (b) {
+      if (b[0] === drop || b[1] === drop) return;
+      var A = s.atoms[b[0]], B = s.atoms[b[1]];
+      var x1 = ox + A[1], y1 = A[2], x2 = ox + B[1], y2 = B[2];
+      var dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy), nx = -dy / L * 3, ny = dx / L * 3;
+      var deloc = form === "D" && spread.length > 1 && (spread.indexOf(b[0]) >= 0 || spread.indexOf(b[1]) >= 0) && b[0] !== s.h && b[1] !== s.h;
+      if (deloc) {
+        Lab.el("line", { x1: x1 + nx, y1: y1 + ny, x2: x2 + nx, y2: y2 + ny, stroke: "var(--ink)", "stroke-width": 1.8 }, g);
+        Lab.el("line", { x1: x1 - nx, y1: y1 - ny, x2: x2 - nx, y2: y2 - ny, stroke: "var(--ink)", "stroke-width": 1.8, "stroke-dasharray": "4 3" }, g);
+      } else if (b[2] === 2) {
+        Lab.el("line", { x1: x1 + nx, y1: y1 + ny, x2: x2 + nx, y2: y2 + ny, stroke: "var(--ink)", "stroke-width": 1.8 }, g);
+        Lab.el("line", { x1: x1 - nx, y1: y1 - ny, x2: x2 - nx, y2: y2 - ny, stroke: "var(--ink)", "stroke-width": 1.8 }, g);
+      } else {
+        var isH = b[0] === s.h || b[1] === s.h;
+        Lab.el("line", { x1: x1, y1: y1, x2: x2, y2: y2, stroke: isH && form === "P" ? "var(--c1)" : "var(--ink)", "stroke-width": isH && form === "P" ? 2.6 : 1.8 }, g);
+      }
+    });
+    // charge halos
+    spread.forEach(function (i) {
+      var A = s.atoms[i], r = (R[A[0]] || 13) + 9;
+      Lab.el("circle", { cx: ox + A[1], cy: A[2], r: r, fill: "var(--c4)", opacity: 0.12 + 0.5 / spread.length }, g);
+    });
+    // atoms
+    s.atoms.forEach(function (A, i) {
+      if (i === drop) return;
+      var r = R[A[0]] || 13, x = ox + A[1], y = A[2];
+      var isAcidH = form === "P" && i === s.h, isEw = ew.indexOf(i) >= 0;
+      Lab.el("circle", { cx: x, cy: y, r: r, fill: "var(--surface)", stroke: isAcidH ? "var(--c1)" : isEw ? "var(--c3)" : "var(--rule)", "stroke-width": isAcidH || isEw ? 2.4 : 1.2 }, g);
+      Lab.el("text", { x: x, y: y + 4.5, "text-anchor": "middle", "class": "atom-t", style: isEw ? "fill:var(--c3)" : isAcidH ? "fill:var(--c1)" : null }, g, uni(A[0]));
+    });
+    // charges
+    var n = spread.length, part = n === 1 ? "−" : n === 2 ? "−½" : n === 3 ? "−⅓" : "−¼";
+    spread.forEach(function (i) {
+      var A = s.atoms[i], r = R[A[0]] || 13;
+      Lab.el("text", { x: ox + A[1] + r + 4, y: A[2] - r + 2, "class": "chg", style: "fill:var(--c4)" }, g, part);
+    });
+    var extra = form === "P" ? (s.cP || []) : (s.cD || []);
+    extra.forEach(function (c) {
+      var A = s.atoms[c[0]], r = R[A[0]] || 13;
+      Lab.el("text", { x: ox + A[1] + r + 3, y: A[2] - r + 2, "class": "chg", style: "fill:var(--accent)" }, g, c[1]);
+    });
+    // lone pair where the proton was (bases like NH3)
+    if (form === "D" && s.lp) {
+      var a = s.atoms[s.lp[0]], hx = s.lp[1], hy = s.lp[2];
+      var ux = (hx - a[1]), uy = (hy - a[2]), L = Math.hypot(ux, uy); ux /= L; uy /= L;
+      var cx = ox + a[1] + ux * 21, cy = a[2] + uy * 21;
+      Lab.el("circle", { cx: cx - uy * 4, cy: cy + ux * 4, r: 2.4, fill: "var(--ink)" }, g);
+      Lab.el("circle", { cx: cx + uy * 4, cy: cy - ux * 4, r: 2.4, fill: "var(--ink)" }, g);
+    }
+  }
+  function drawMol() {
+    var s = SP[st.sp];
+    svgM.setAttribute("viewBox", "0 0 440 230");
+    while (svgM.firstChild) svgM.removeChild(svgM.firstChild);
+    var g = Lab.el("g", {}, svgM);
+    // base family: show base on the left, conjugate acid on the right
+    var left = s.base ? "D" : "P", right = s.base ? "P" : "D";
+    drawForm(g, s, left, 0);
+    drawForm(g, s, right, 236);
+    // arrow
+    Lab.el("path", { d: "M207 95 L233 95", stroke: "var(--ink)", "stroke-width": 2 }, g);
+    Lab.el("path", { d: "M233 95 L226 91 L226 99 Z", fill: "var(--ink)" }, g);
+    Lab.el("text", { x: 220, y: 82, "text-anchor": "middle", "class": "chg", style: "fill:var(--c1)" }, g, s.base ? "+ H⁺" : "− H⁺");
+    // captions
+    var capL = s.base ? "base: " + lbl(s, "D") : "acid: " + lbl(s, "P");
+    var capR = s.base ? "conjugate acid: " + lbl(s, "P") : "conjugate base: " + lbl(s, "D");
+    Lab.el("text", { x: 100, y: 205, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, g, capL);
+    Lab.el("text", { x: 336, y: 205, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, g, capR);
+    if (s.bl) Lab.el("text", { x: 100, y: 222, "text-anchor": "middle" }, g, "H–X bond " + s.bl + " pm, " + s.be + " kJ/mol");
+    if (s.en) Lab.el("text", { x: 100, y: 222, "text-anchor": "middle" }, g, "electronegativity of " + s.atoms[2][0] + " = " + s.en.toFixed(2));
+    var n = s.base ? 0 : s.neg.length;
+    if (n > 1) Lab.el("text", { x: 336, y: 222, "text-anchor": "middle" }, g, "resonance: charge on " + n + " O atoms");
+    else if (n === 1) Lab.el("text", { x: 336, y: 222, "text-anchor": "middle" }, g, "charge on one atom");
+    document.getElementById("mol-sub").textContent = s.base ? "base gains H⁺" : "acid loses H⁺";
+  }
+
+  // ---------- Dot plot ----------
+  var svgL = document.getElementById("lad");
+  function drawLadder() {
+    var f = FAM[st.fam], mem = f.mem.slice(), n = mem.length;
+    var F = Lab.frame(svgL, { x: f.x, y: [0, n + 1], width: 440, height: 300, xTicks: f.ticks, fmtX: function (v) { return String(v).replace("-", "−"); },
+      xLabel: f.base ? "pKb of the base (smaller = stronger base)" : "pKa (smaller = stronger acid)", yLabel: "" });
+    mem.forEach(function (k, i) {
+      var s = SP[k], y = n - i, v = pK(s), sel = k === st.sp;
+      var col = sel ? "var(--accent)" : "var(--muted)";
+      Lab.line(F, [[f.x[0], y], [f.x[1], y]], "var(--grid)", 1);
+      var xv = s.strongTxt ? f.x[0] + 0.02 * (f.x[1] - f.x[0]) : v;
+      Lab.el("circle", { cx: F.sx(xv), cy: F.sy(y), r: sel ? 8 : 6, fill: s.est ? "var(--surface)" : col, stroke: col, "stroke-width": 2.5 }, F.g);
+      var txt = name(s) + "  " + (s.strongTxt ? "(strong)" : (s.est ? "≈ " : "") + (s.est ? Math.round(v) : v.toFixed(2)).toString().replace("-", "−"));
+      var right = F.sx(xv) < (F.sx(f.x[0]) + F.sx(f.x[1])) / 2;
+      Lab.el("text", { x: F.sx(xv) + (right ? 12 : -12), y: F.sy(y) - 10, "text-anchor": right ? "start" : "end", "class": "lbl", style: "fill:" + col }, F.svg, txt);
+      if (sel) Lab.el("circle", { cx: F.sx(xv), cy: F.sy(y), r: 12, fill: "none", stroke: "var(--accent)", "stroke-width": 1.2, opacity: 0.6 }, F.g);
+    });
+    // direction arrow
+    var y0 = 0.45;
+    Lab.arrow(F, f.x[0] + 0.55 * (f.x[1] - f.x[0]), y0, f.x[0] + 0.1 * (f.x[1] - f.x[0]), y0, "var(--c2)");
+    Lab.tag(F, f.x[0] + 0.57 * (f.x[1] - f.x[0]), y0 - 0.08, f.base ? "stronger base" : "stronger acid", "var(--c2)");
+    document.getElementById("lad-sub").innerHTML = f.base ? "lower pK<sub>b</sub> = stronger base; hollow = estimate" : "lower pK<sub>a</sub> = stronger acid; hollow = estimate";
+  }
+
+  // ---------- Readouts + story ----------
+  function ordered() {
+    // family members sorted weakest -> strongest (largest pK first)
+    return FAM[st.fam].mem.slice().sort(function (a, b) { return pK(SP[b]) - pK(SP[a]); });
+  }
+  function readouts() {
+    var s = SP[st.sp], f = FAM[st.fam], v = pK(s), b = !!s.base;
+    document.getElementById("r-pk-k").innerHTML = b ? "pK<sub>b</sub> of " + Lab.fmla(s.D) : "pK<sub>a</sub> of " + (s.lbl ? s.lbl : Lab.fmla(s.P));
+    document.getElementById("r-k-k").innerHTML = b ? "K<sub>b</sub>" : "K<sub>a</sub>";
+    document.getElementById("r-pct-k").innerHTML = b ? "Percent that reacts with water at 0.10 M" : "Percent ionized at 0.10 M";
+    var pkTxt = s.strongTxt ? "strong" : (s.est ? "≈ " + Math.round(v) : v.toFixed(2)).toString().replace("-", "−");
+    document.getElementById("r-pk").textContent = pkTxt;
+    document.getElementById("r-pk2").textContent = s.est ? (s.strongTxt ? "completely dissociated in water" : "rough estimate") : (b ? "pKb = −log Kb" : "pKa = −log Ka");
+    if (s.K) { document.getElementById("r-k").innerHTML = Lab.sci(s.K, 2, true); document.getElementById("r-k2").textContent = "measured at 25 °C"; }
+    else if (s.strongTxt || v < 0) { document.getElementById("r-k").textContent = "very large"; document.getElementById("r-k2").textContent = "ionization is complete"; }
+    else { document.getElementById("r-k").innerHTML = "≈ " + Lab.sci(Math.pow(10, -v), 1, true); document.getElementById("r-k2").textContent = "negligible in water"; }
+    var pct;
+    if (s.strongTxt || v < 0) { pct = "≈ 100%"; document.getElementById("r-pct2").textContent = b ? "strong base" : "strong acid"; }
+    else {
+      var p = pctIon(Math.pow(10, -v), 0.10);
+      pct = p >= 0.1 ? Lab.sig(p, 2) + "%" : Lab.sci(p, 1, true) + "%";
+      document.getElementById("r-pct2").textContent = p > 55 ? "mostly ionized, but not completely" : p >= 45 ? "about half ionized" : p < 1e-3 ? "effectively none" : "most molecules stay intact";
+    }
+    document.getElementById("r-pct").innerHTML = pct;
+    var o = ordered(), i = o.indexOf(st.sp);
+    document.getElementById("r-rank").textContent = (i + 1) + " of " + o.length;
+    document.getElementById("r-rank2").textContent = i === o.length - 1 ? "strongest " + (f.base ? "base" : "acid") + " here" : i === 0 ? "weakest " + (f.base ? "base" : "acid") + " here" : "1 = weakest";
+  }
+  function story() {
+    var s = SP[st.sp], f = FAM[st.fam], o = ordered(), i = o.indexOf(st.sp);
+    var h = "<p><b>" + name(s) + ".</b> " + s.why + "</p>";
+    var weaker = i > 0 ? name(SP[o[i - 1]]) : null, stronger = i < o.length - 1 ? name(SP[o[i + 1]]) : null;
+    var kind = f.base ? "base" : "acid";
+    var cmp = [];
+    if (stronger) cmp.push("weaker " + kind + " than " + stronger);
+    if (weaker) cmp.push("stronger " + kind + " than " + weaker);
+    h += "<p><b>Feature that changes in this family:</b> " + f.feat + ". " + name(s) + " is a " + cmp.join(" and a ") + ".</p>";
+    h += "<p><b>Order, weakest to strongest:</b> " + o.map(function (k) { return k === st.sp ? "<b>" + name(SP[k]) + "</b>" : name(SP[k]); }).join(" &lt; ") + "</p>";
+    h += "<p><b>AP answer:</b> " + f.ap + "</p>";
+    document.getElementById("story").innerHTML = h;
+  }
+
+  // ---------- Ranking challenge ----------
+  var shuffled = {};
+  function pool() {
+    if (!shuffled[st.fam]) {
+      var a = FAM[st.fam].mem.slice(), seed = st.fam.length * 7 + 3;
+      // deterministic shuffle that never leaves the list in the correct order
+      for (var i = a.length - 1; i > 0; i--) { seed = (seed * 9301 + 49297) % 233280; var j = Math.floor(seed / 233280 * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+      var o = ordered();
+      if (a.join() === o.join()) a.reverse();
+      shuffled[st.fam] = a;
+    }
+    return shuffled[st.fam];
+  }
+  function drawRank() {
+    var f = FAM[st.fam], kind = f.base ? "base" : "acid";
+    document.getElementById("rank-tag").textContent = "Ranking challenge: weakest to strongest " + kind;
+    document.getElementById("rank-help").textContent = "Click the members in order, starting with the weakest " + kind + ". Reason from structure, not from the plot.";
+    var pe = document.getElementById("rank-pool"); pe.innerHTML = "";
+    pool().forEach(function (k) {
+      var b = document.createElement("button"); b.type = "button"; b.textContent = name(SP[k]);
+      b.disabled = st.rank.indexOf(k) >= 0;
+      b.addEventListener("click", function () { if (st.rank.indexOf(k) < 0) { st.rank.push(k); drawRank(); } });
+      pe.appendChild(b);
+    });
+    var se = document.getElementById("rank-slots"); se.innerHTML = "";
+    f.mem.forEach(function (x, i) {
+      if (i) { var lt = document.createElement("span"); lt.className = "lt"; lt.textContent = "<"; se.appendChild(lt); }
+      var d = document.createElement("span"); d.className = "slot" + (st.rank[i] ? " filled" : "");
+      d.textContent = st.rank[i] ? name(SP[st.rank[i]]) : String(i + 1);
+      se.appendChild(d);
+    });
+    var fb = document.getElementById("rank-fb"), o = ordered();
+    if (st.rank.length < f.mem.length) { fb.className = "fb"; fb.textContent = st.rank.length ? "" : ""; return; }
+    if (st.rank.join() === o.join()) { fb.className = "fb ok"; fb.textContent = "Correct. " + f.ap; }
+    else {
+      var firstBad = 0; while (st.rank[firstBad] === o[firstBad]) firstBad++;
+      fb.className = "fb no";
+      fb.textContent = "Not quite: position " + (firstBad + 1) + " should be " + name(SP[o[firstBad]]) + ". Think about " + f.feat.toLowerCase() + ". Clear and try again.";
+    }
+  }
+  document.getElementById("rank-clear").addEventListener("click", function () { st.rank = []; drawRank(); });
+
+  // ---------- Controls ----------
+  var famBtns = {};
+  function render() {
+    Object.keys(famBtns).forEach(function (k) { famBtns[k].setAttribute("aria-pressed", k === st.fam ? "true" : "false"); });
+    var me = document.getElementById("members"); me.innerHTML = "";
+    FAM[st.fam].mem.forEach(function (k) {
+      var b = document.createElement("button"); b.type = "button"; b.textContent = name(SP[k]);
+      b.setAttribute("aria-pressed", k === st.sp ? "true" : "false");
+      b.addEventListener("click", function () { st.sp = k; render(); });
+      me.appendChild(b);
+    });
+    drawMol(); drawLadder(); readouts(); story(); drawRank();
+  }
+  FORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = FAM[k].name;
+    b.addEventListener("click", function () {
+      st.fam = k; st.rank = [];
+      var o = ordered(); st.sp = o[o.length - 1];
+      render();
+    });
+    document.getElementById("sc").appendChild(b); famBtns[k] = b;
+  });
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    Object.keys(SP).forEach(function (k) {
+      var s = SP[k];
+      try {
+        var a = Lab.parseFormula(s.P), b = Lab.parseFormula(s.D), atoms = {};
+        // conjugate pair: differ by exactly one H and one unit of charge
+        for (var e in a) { var d = a[e] - (b[e] || 0); if (e === "H" ? d !== 1 : d !== 0) bad.push(k + ": " + s.P + "/" + s.D + " not a conjugate pair in " + e); }
+        for (var e2 in b) if (!(e2 in a)) bad.push(k + ": extra " + e2);
+        if (chargeOf(s.P) - chargeOf(s.D) !== 1) bad.push(k + ": charges differ by " + (chargeOf(s.P) - chargeOf(s.D)));
+        // the drawing has the same atoms as the formula of the protonated form
+        s.atoms.forEach(function (x) { var c = Lab.parseFormula(x[0]); for (var q in c) atoms[q] = (atoms[q] || 0) + c[q]; });
+        for (var q in a) if (atoms[q] !== a[q]) bad.push(k + ": drawing has " + (atoms[q] || 0) + " " + q + ", formula " + a[q]);
+        if (s.atoms[s.h][0] !== "H") bad.push(k + ": acidic atom is not H");
+        // drawn charge: the deprotonated form carries -1 on its neg atoms, unless the protonated form was +1
+        if (chargeOf(s.D) === -1 && s.neg.length === 0) bad.push(k + ": anion with no charge drawn");
+        if (chargeOf(s.D) === 0 && s.neg.length) bad.push(k + ": neutral base drawn with charge");
+        if (chargeOf(s.P) === 1 && !(s.cP && s.cP.length)) bad.push(k + ": cation without + drawn");
+      } catch (err) { bad.push(k + ": " + err.message); }
+    });
+    // each family is listed weakest -> strongest
+    FORDER.forEach(function (fk) {
+      var m = FAM[fk].mem;
+      for (var i = 1; i < m.length; i++) if (!(pK(SP[m[i]]) < pK(SP[m[i - 1]]))) bad.push(fk + " order broken at " + m[i]);
+    });
+    // hand-worked values
+    if (Math.abs(pK(SP.AA) - 4.74) > 0.005) bad.push("acetic pKa");
+    if (Math.abs(pK(SP.OAc) - 9.26) > 0.005) bad.push("acetate pKb");
+    if (Math.abs(pctIon(1.8e-5, 0.10) - 1.33) > 0.01) bad.push("acetic % ionized");
+    if (Math.abs(pK(SP.HF) - 3.17) > 0.005) bad.push("HF pKa");
+    if (Math.abs(SP.TCA.K / SP.AA.K - 12222) > 1) bad.push("TCA/AA ratio");
+    if (bad.length) console.error("8.6 self-check failed: " + bad.join("; "));
+  })();
+
+  famBtns.binary.click();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Which of the following is the strongest acid?",
+      o: ["HOI", "HOBr", "HOCl", "H₂O"], c: 2,
+      w: "In H–O–X acids the X atom pulls electron density away from the O–H bond and stabilizes the XO⁻ ion. Cl (electronegativity 3.16) is more electronegative than Br (2.96) and I (2.66), so HOCl is the strongest. Choice A reverses the trend, as if the larger atom made the acid stronger the way it does for binary acids; that size argument applies only when the H is bonded directly to X." },
+    { s: "HClO₄ is a much stronger acid than HClO. Which of the following best explains this difference?",
+      o: ["The additional O atoms in HClO₄ withdraw electron density from the O–H bond, and the negative charge of ClO₄⁻ is delocalized over four O atoms.",
+          "HClO₄ has more hydrogen atoms that can ionize than HClO does.",
+          "The Cl–O bonds in HClO₄ are weaker, so ClO₄⁻ breaks apart easily in water.",
+          "HClO₄ has a larger molar mass, so more of it dissociates."], c: 0,
+      w: "Both acids have exactly one acidic H, on an O atom, so choice B is false. The difference is the three extra O atoms on Cl: they withdraw electron density and give the anion more resonance positions for its charge, making ClO₄⁻ very stable. A stable conjugate base means a larger Ka. Molar mass (choice D) has nothing to do with acid strength." },
+    { s: "Acetic acid, CH₃COOH, has pKa = 4.74. Trichloroacetic acid, Cl₃CCOOH, has pKa ≈ 0.7. Which statement correctly accounts for the lower pKa of trichloroacetic acid?",
+      o: ["The Cl atoms donate electron density to the COOH group, strengthening the O–H bond.",
+          "Trichloroacetic acid has more acidic hydrogen atoms than acetic acid.",
+          "The C–Cl bonds break in water, releasing Cl⁻ ions that make the solution more acidic.",
+          "The electronegative Cl atoms withdraw electron density through the bonds, stabilizing the Cl₃CCOO⁻ ion."], c: 3,
+      w: "This is the inductive effect: electronegative Cl atoms pull electron density toward themselves through the C–C bond, which spreads out and stabilizes the negative charge of the carboxylate, so the acid ionizes more. Choice A has the direction backward: if Cl donated electron density, the acid would be weaker. Choice B is wrong because Cl₃CCOOH has only one H at all." },
+    { s: "Fluorine is more electronegative than chlorine, yet HF is a weak acid and HCl is a strong acid. Which of the following best explains this?",
+      o: ["F⁻ is a larger ion than Cl⁻, so it holds the proton more tightly.",
+          "The H–F bond is much shorter and stronger than the H–Cl bond, and the small F⁻ ion concentrates its charge.",
+          "HF molecules are nonpolar, so they do not interact with water.",
+          "HCl contains more electrons, so it donates H⁺ more easily."], c: 1,
+      w: "For binary acids down a group, bond strength and ion size outweigh electronegativity. The H–F bond (about 567 kJ/mol) is much stronger than H–Cl (431 kJ/mol), and F⁻ is small, so its charge is concentrated and less stable in the sense that matters here. Choice A has the sizes backward: F⁻ is smaller than Cl⁻. HF is very polar, so choice C is false." },
+    { s: "Which of the following ions is the strongest base in water?",
+      o: ["Cl⁻", "NO₃⁻", "CH₃COO⁻", "ClO₄⁻"], c: 2,
+      w: "The weaker the conjugate acid, the stronger the base. Cl⁻, NO₃⁻ and ClO₄⁻ are conjugate bases of the strong acids HCl, HNO₃ and HClO₄, so they have essentially no tendency to accept a proton in water. Acetate is the conjugate base of the weak acid CH₃COOH, so it is a weak base (Kb = 5.6 × 10⁻¹⁰). Choice D is a trap: four O atoms do not make ClO₄⁻ basic; they make it a very stable, very weak base." },
+    { s: "Ethanol, CH₃CH₂OH, has pKa ≈ 16, while acetic acid, CH₃COOH, has pKa = 4.74. Both lose an H⁺ from an O–H group. Which of the following best explains why acetic acid is the far stronger acid?",
+      o: ["Ethanol has more H atoms, so each one is held more tightly.",
+          "The O–H bond in ethanol is ionic, so it cannot break in water.",
+          "The C=O group in acetic acid donates electron density to the O–H oxygen, strengthening the O–H bond.",
+          "In acetate, the negative charge is delocalized over two O atoms by resonance; in ethoxide it is localized on one O atom."], c: 3,
+      w: "Acetate has two resonance structures that put the charge on either O, so the charge is shared and the ion is stabilized. Ethoxide, CH₃CH₂O⁻, has no such resonance. A more stable conjugate base means a stronger acid. Choice C gets the direction wrong: the C=O group withdraws electron density, which would weaken (not strengthen) the O–H bond." },
+    { s: "Acetic acid, CH₃COOH, contains four hydrogen atoms. How many of them ionize in water, and which ones?",
+      o: ["Four; all H atoms in an acid ionize.",
+          "One; the H bonded to O.",
+          "Three; the H atoms bonded to C.",
+          "One; an H bonded to the carbon next to the C=O group."], c: 1,
+      w: "Acidic protons are on electronegative atoms. Losing the O–H proton gives acetate, whose charge is stabilized on the electronegative O atoms and by resonance. C–H bonds are not polar enough, and the resulting carbanion is not stable enough, for those protons to ionize in water, so acetic acid is monoprotic. Choice A assumes every H in an acid is acidic." },
+    { s: "Which of the following species acts as a weak base in water, establishing an equilibrium with a measurable Kb?",
+      o: ["CH₃NH₂ (methylamine)", "KOH", "I⁻", "CH₄"], c: 0,
+      w: "Methylamine is a nitrogen base, like NH₃: the lone pair on N accepts H⁺ from water, and only a small fraction reacts. KOH (choice B) is a strong base that dissolves completely to give OH⁻. I⁻ is the conjugate base of the strong acid HI and does not measurably accept protons. CH₄ has no lone pair to accept a proton." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("8.6");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [8], topic: "8.6", compact: true, storageKey: "topic-8.6" });</script>
+</body>
+</html>

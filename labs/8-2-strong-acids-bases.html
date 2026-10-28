@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pH and pOH of Strong Acids and Bases Study Lab</title>
+<meta name="description" content="Dissolve strong acids and strong bases, watch every formula unit come apart in the particle view, and calculate pH and pOH from concentration (and back again), including Group 2 hydroxides and tenfold dilutions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.ctlcard { display: grid; gap: 16px; }
+.ctlcard .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pickrow { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center; }
+.pickrow .tag { white-space: nowrap; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.plegend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: .8rem; color: var(--muted); }
+.plegend span { display: inline-flex; align-items: center; gap: 5px; }
+.plegend i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+.note { font-size: .82rem; color: var(--muted); }
+.legend .l-b1 { color: var(--c3); } .legend .l-b2 { color: var(--c4); } .legend .l-a { color: var(--c1); }
+.legend .l-pin::before { width: 10px; height: 10px; border-radius: 50%; background: none; border: 2px solid var(--ghost); }
+.legend .l-pin { color: var(--muted); }
+.lab-bar > * { min-width: 0; max-width: 100%; }
+#part text { font-size: 9px; font-weight: 600; fill: var(--surface); pointer-events: none; }
+#part text.cap { font-size: 12px; fill: var(--muted); font-weight: 500; }
+@media (max-width: 860px) { .ctlcard .controls { grid-template-columns: 1fr; } }
+@media (max-width: 520px) {
+  .pickrow { grid-template-columns: 1fr; }
+  .lab-bar .eqn { white-space: normal; }
+  #ph text { font-size: 13px; }
+  #ph .lbl { font-size: 13.5px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 8 · Topic 8.2</span>
+  <h1>pH and pOH of Strong Acids and Bases Study Lab</h1>
+  <p class="lede">A strong acid or strong base comes apart completely in water, so no equilibrium calculation is needed: the concentration of H₃O⁺ or OH⁻ follows straight from the label on the bottle. Dissolve each of the common strong acids and bases, see the particles separate, and work pH and pOH from concentration, from pH back to concentration, and through a tenfold dilution.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The strong acid and base bench</h2>
+    <p>Pick a solute and a concentration (or a target pH), and the page shows what is in the beaker and works the pH. The particle view is a small representative sample at 25 °C: the ratio of particles is right, the absolute count is not. Water molecules are not shown. Concentrations run from 1.0 × 10<sup>−5</sup> M to 1.0 M; below about 10<sup>−6</sup> M the H₃O⁺ from water itself would start to matter.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Particle view <small id="part-sub"></small></h3>
+      <svg class="chart" id="part" role="img" aria-label="Particle diagram of the solute in a beaker, before and after it dissolves"></svg>
+      <div class="plegend" id="plegend"></div>
+    </div>
+    <div class="card graph-card">
+      <h3>pH against concentration <small>25 °C</small></h3>
+      <svg class="chart" id="ph" role="img" aria-label="Graph of pH against the logarithm of concentration for strong acids, Group 1 hydroxides, and Group 2 hydroxides"></svg>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <div class="tag">Classic exam cases</div>
+      <div class="scenarios" id="sc"></div>
+    </div>
+    <div class="pickrow">
+      <div class="tag">Strong acid</div><div class="seg" role="group" aria-label="Strong acids" id="pick-a"></div>
+      <div class="tag">Strong base</div><div class="seg" role="group" aria-label="Strong bases" id="pick-b"></div>
+      <div class="tag">You are given</div><div class="seg" role="group" aria-label="Given quantity" id="modes"></div>
+    </div>
+    <div class="controls">
+      <div class="ctl">
+        <label for="s-val"><span id="l-val"></span> <output id="o-val"></output></label>
+        <input type="range" id="s-val" step="0.01">
+        <span class="hint" id="h-val"></span>
+      </div>
+      <div class="ctl">
+        <span class="tag">Dilute with water</span>
+        <div class="btnrow">
+          <button type="button" id="b-d10">Dilute 10×</button>
+          <button type="button" id="b-d2">Dilute 2×</button>
+          <button type="button" id="b-pin">Pin this point</button>
+          <button type="button" id="b-unpin">Clear pin</button>
+        </div>
+        <span class="hint">Dilution pins the starting point so you can compare.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-a">Strong acid (one H₃O⁺ each)</span><span class="l-b1">Group 1 hydroxide (one OH⁻ each)</span><span class="l-b2">Group 2 hydroxide (two OH⁻ each)</span><span class="l-pin">Pinned point</span></div>
+    <div class="eqn" id="eqn"></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">[H₃O⁺]</div><div class="v" id="r-h"></div><div class="sub" id="r-h2"></div></div>
+    <div class="stat"><div class="k">[OH⁻]</div><div class="v" id="r-oh"></div><div class="sub" id="r-oh2"></div></div>
+    <div class="stat"><div class="k">pH</div><div class="v" id="r-ph"></div><div class="sub" id="r-ph2"></div></div>
+    <div class="stat"><div class="k">pOH</div><div class="v" id="r-poh"></div><div class="sub" id="r-poh2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Complete ionization</span><h3>Strong means "all the way"</h3><p>A strong acid gives its proton to water with essentially no molecules left over: HCl(aq) + H₂O(l) → H₃O⁺(aq) + Cl⁻(aq), written with a single arrow. A particle diagram of a strong acid shows only H₃O⁺ and the anion, never intact HA.</p></div>
+    <div class="card"><span class="tag">Memorize</span><h3>The strong acids</h3><p>HCl, HBr, HI, HNO₃, HClO₄, and H₂SO₄. Any other acid you meet in AP Chemistry (HF, HNO₂, CH₃COOH, HCN, …) is weak. HF is the classic trap: it is a hydrohalic acid but a weak one.</p></div>
+    <div class="card"><span class="tag">Strong bases</span><h3>Group 1 and Group 2 hydroxides</h3><p>LiOH, NaOH, KOH (one OH⁻ each) and Ca(OH)₂, Sr(OH)₂, Ba(OH)₂ (two OH⁻ each) dissociate completely. So [OH⁻] equals the concentration of a Group 1 hydroxide and twice the concentration of a Group 2 hydroxide.</p></div>
+    <div class="card"><span class="tag">The calculation</span><h3>Concentration → ion → pH</h3><p>Acid: [H₃O⁺] = C, pH = −log C. Base: [OH⁻] = C or 2C, pOH = −log[OH⁻], pH = 14.00 − pOH. Going backward, undo each step: 10<sup>−pH</sup> gives [H₃O⁺], and dividing [OH⁻] by 2 gives the concentration of a Group 2 hydroxide.</p></div>
+    <div class="card"><span class="tag">Dilution</span><h3>Tenfold dilution = one pH unit</h3><p>Diluting a strong acid 10 times divides [H₃O⁺] by 10, so pH rises by exactly 1.00. Diluting a strong base 10 times lowers pH by 1.00. Dilution pushes pH toward 7 but never past it: no amount of water turns an acid basic.</p></div>
+    <div class="card"><span class="tag">Strong ≠ concentrated</span><h3>Strength and concentration are different</h3><p>"Strong" describes how completely the solute ionizes; "concentrated" describes how much is dissolved. A 1.0 × 10<sup>−4</sup> M HCl solution is strong but dilute (pH 4.00). Ca(OH)₂ and Sr(OH)₂ are only slightly soluble, but what dissolves is fully dissociated, so they are still strong bases.</p></div>
+  </div>
+  <p class="note">Simplification: H₂SO₄ is on the list of strong acids because its first proton ionizes completely. The second proton (from HSO₄⁻) ionizes only partly, so [H₃O⁺] in an H₂SO₄ solution falls between C and 2C. This lab leaves H₂SO₄ out of the pH calculator for that reason.</p>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Strong acid and base cheat sheet</h2>
+    <p>The equation tells you how many H₃O⁺ or OH⁻ each formula unit releases; that number is the whole calculation. Examples are at 25 °C.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Solute</th><th>What happens in water</th><th>Ion concentration</th><th>Worked example</th></tr></thead>
+    <tbody id="tbl"></tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Strong acids and bases on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>State why the shortcut works: "HNO₃ is a strong acid, so it ionizes completely and [H₃O⁺] = [HNO₃]₀ = 0.025 M."</li>
+        <li>For a base, get [OH⁻] first, then pOH, then pH = 14.00 − pOH. Show all three lines.</li>
+        <li>For a Group 2 hydroxide, write the dissociation equation with the coefficient 2 so the grader sees where [OH⁻] = 2C comes from.</li>
+        <li>Report pH with as many decimal places as the concentration has significant figures (0.025 M → pH 1.60).</li>
+        <li>When asked for concentration from pH, show the inverse log as its own step: [OH⁻] = 10<sup>−pOH</sup>.</li>
+        <li>For dilution, use moles: n = M × V stays the same, so C<sub>new</sub> = n ÷ V<sub>new</sub>. A tenfold dilution changes pH by exactly 1.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Forgetting the 2 for Ba(OH)₂, Sr(OH)₂, and Ca(OH)₂, which makes the pH 0.30 too low.</li>
+        <li>Reporting pOH as the pH of a base. A base must have pH above 7 at 25 °C.</li>
+        <li>Setting up an ICE table and K<sub>a</sub> for a strong acid. There is no equilibrium to solve; the reaction goes to completion.</li>
+        <li>Calling HF a strong acid because the other hydrogen halides are.</li>
+        <li>Thinking that diluting an acid enough makes it basic. Very dilute acid approaches pH 7 from below.</li>
+        <li>Drawing intact HCl molecules in a particle diagram of hydrochloric acid.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation. All solutions are at 25 °C.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 8.2. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-8.html">Unit 8 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Solutes ----------
+  // kind "a": strong monoprotic acid HX + H2O -> H3O+ + X-.  kind "b": M(OH)n -> M^n+ + n OH-.
+  // max: largest concentration offered (Ca(OH)2 and Sr(OH)2 are only slightly soluble).
+  var SOL = {
+    HCl: { kind: "a", f: "HCl", an: "Cl^-", lab: "Cl⁻", max: 1 },
+    HBr: { kind: "a", f: "HBr", an: "Br^-", lab: "Br⁻", max: 1 },
+    HI: { kind: "a", f: "HI", an: "I^-", lab: "I⁻", max: 1 },
+    HNO3: { kind: "a", f: "HNO3", an: "NO3^-", lab: "NO₃⁻", max: 1 },
+    HClO4: { kind: "a", f: "HClO4", an: "ClO4^-", lab: "ClO₄⁻", max: 1 },
+    LiOH: { kind: "b", f: "LiOH", cat: "Li^+", lab: "Li⁺", n: 1, max: 1 },
+    NaOH: { kind: "b", f: "NaOH", cat: "Na^+", lab: "Na⁺", n: 1, max: 1 },
+    KOH: { kind: "b", f: "KOH", cat: "K^+", lab: "K⁺", n: 1, max: 1 },
+    "Ca(OH)2": { kind: "b", f: "Ca(OH)2", cat: "Ca^2+", lab: "Ca²⁺", n: 2, max: 0.02 },
+    "Sr(OH)2": { kind: "b", f: "Sr(OH)2", cat: "Sr^2+", lab: "Sr²⁺", n: 2, max: 0.02 },
+    "Ba(OH)2": { kind: "b", f: "Ba(OH)2", cat: "Ba^2+", lab: "Ba²⁺", n: 2, max: 0.1 }
+  };
+  var ACIDS = ["HCl", "HBr", "HI", "HNO3", "HClO4"], BASES = ["LiOH", "NaOH", "KOH", "Ca(OH)2", "Sr(OH)2", "Ba(OH)2"];
+  var CMIN = 1.0e-5;
+  function nOf(x) { return x.kind === "a" ? 1 : x.n; }
+  function eqn(x) {
+    if (x.kind === "a") return Lab.fmla(x.f) + "(aq) + H<sub>2</sub>O(l) → H<sub>3</sub>O<sup>+</sup>(aq) + " + Lab.fmla(x.an) + "(aq)";
+    return Lab.fmla(x.f) + "(s) → " + Lab.fmla(x.cat) + "(aq) + " + (x.n > 1 ? x.n : "") + "OH<sup>−</sup>(aq)";
+  }
+
+  // ---------- Number helpers ----------
+  var SUP = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "-": "⁻" };
+  function supTxt(n) { return String(n).split("").map(function (c) { return SUP[c] || c; }).join(""); }
+  function roundTo(v, d) { var k = Math.pow(10, d); return Math.round(v * k) / k; }
+  function roundSig(v, n) { if (v === 0) return 0; var e = Math.floor(Math.log10(Math.abs(v))); return roundTo(v / Math.pow(10, e), n - 1) * Math.pow(10, e); }
+  function fx(v, d) { return roundTo(v, d).toFixed(d).replace("-", "−"); }
+  function M(v) { return Lab.sci(v, 2, true) + " M"; }
+
+  // ---------- Model ----------
+  var S = { sol: "HCl", mode: "c", v: 0.010, pin: null, key: null };
+  // solve: concentration C of solute, ion concentrations, pH/pOH (2 decimal places, 2 significant figures)
+  function solve(st) {
+    var x = SOL[st.sol], n = nOf(x), r = { x: x, n: n };
+    if (st.mode === "c") {
+      r.C = st.v;
+      if (x.kind === "a") { r.H = r.C; r.pHr = roundTo(-Math.log10(r.H), 2); r.pOHr = roundTo(14 - r.pHr, 2); r.OH = 1e-14 / r.H; }
+      else { r.OH = n * r.C; r.pOHr = roundTo(-Math.log10(r.OH), 2); r.pHr = roundTo(14 - r.pOHr, 2); r.H = 1e-14 / r.OH; }
+    } else {
+      r.pHr = st.v; r.pOHr = roundTo(14 - r.pHr, 2);
+      r.H = Math.pow(10, -r.pHr); r.OH = Math.pow(10, -r.pOHr);
+      r.C = x.kind === "a" ? r.H : r.OH / n;
+    }
+    r.pH = -Math.log10(r.H);
+    return r;
+  }
+  function pHrange(x) {
+    var n = nOf(x);
+    if (x.kind === "a") return [roundTo(-Math.log10(x.max), 2), roundTo(-Math.log10(CMIN), 2)];
+    return [roundTo(14 + Math.log10(n * CMIN), 2), roundTo(14 + Math.log10(n * x.max), 2)];
+  }
+
+  // ---------- Particle view ----------
+  var part = document.getElementById("part");
+  var PW = 440, PH = 300, BX = [40, 400], BY = [40, 270];
+  // seeded layout so the picture is stable for a given solute
+  function rng(seed) { var s = seed; return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+  function layout(x) {
+    var units = x.kind === "a" ? 6 : x.n === 2 ? 4 : 6;
+    var nPart = units * (1 + nOf(x)), cols = 6, rows = Math.ceil(nPart / cols) + 1;
+    var cells = [], seed = 7; for (var i = 0; i < x.f.length; i++) seed = seed * 31 + x.f.charCodeAt(i);
+    var R = rng(seed % 2147483646 + 1);
+    var cw = (BX[1] - BX[0] - 40) / cols, ch = (BY[1] - BY[0] - 50) / rows;
+    for (var rr = 0; rr < rows; rr++) for (var cc = 0; cc < cols; cc++) cells.push([BX[0] + 20 + cw * (cc + 0.5) + (R() - 0.5) * cw * 0.45, BY[0] + 40 + ch * (rr + 0.5) + (R() - 0.5) * ch * 0.4]);
+    for (var k = cells.length - 1; k > 0; k--) { var j = Math.floor(R() * (k + 1)), t = cells[k]; cells[k] = cells[j]; cells[j] = t; }
+    var P = [], ci = 0;
+    for (var u = 0; u < units; u++) {
+      // "before": formula units packed at the bottom (solid) or as molecules (acid)
+      var bx = x.kind === "a" ? BX[0] + 60 + (u % 3) * 110 + (Math.floor(u / 3) % 2) * 40 : BX[0] + 70 + (u % 4) * 72;
+      var by = x.kind === "a" ? BY[0] + 70 + Math.floor(u / 3) * 90 : BY[1] - 38 - Math.floor(u / 4) * 40;
+      if (x.kind === "a") {
+        P.push({ t: "an", b: [bx, by], a: cells[ci++] });
+        P.push({ t: "h", b: [bx - 19, by - 6], a: cells[ci++] });
+      } else {
+        P.push({ t: "cat", b: [bx, by], a: cells[ci++] });
+        for (var m = 0; m < x.n; m++) P.push({ t: "oh", b: [bx + (m === 0 ? 24 : -24), by + (x.n === 2 ? 4 : 0)], a: cells[ci++] });
+      }
+    }
+    return { P: P, units: units };
+  }
+  var stopAnim = null, lastSol = null, prog = 1;
+  function drawPart(x, k) {
+    part.setAttribute("viewBox", "0 0 " + PW + " " + PH);
+    while (part.firstChild) part.removeChild(part.firstChild);
+    Lab.el("path", { d: "M" + BX[0] + " " + (BY[0] - 10) + " L" + BX[0] + " " + BY[1] + " Q" + BX[0] + " " + (BY[1] + 14) + " " + (BX[0] + 14) + " " + (BY[1] + 14) + " L" + (BX[1] - 14) + " " + (BY[1] + 14) + " Q" + BX[1] + " " + (BY[1] + 14) + " " + BX[1] + " " + BY[1] + " L" + BX[1] + " " + (BY[0] - 10), fill: "none", stroke: "var(--muted)", "stroke-width": 2 }, part);
+    Lab.el("rect", { x: BX[0] + 2, y: BY[0] + 10, width: BX[1] - BX[0] - 4, height: BY[1] - BY[0] + 2, fill: "var(--accent)", opacity: 0.06 }, part);
+    var L = layout(x);
+    L.P.forEach(function (p) {
+      var px = p.b[0] + (p.a[0] - p.b[0]) * k, py = p.b[1] + (p.a[1] - p.b[1]) * k;
+      var col, r, label;
+      if (p.t === "an") { col = "var(--c2)"; r = 16; label = x.lab; }
+      else if (p.t === "h") { col = "var(--c1)"; r = 9 + 7 * k; label = k > 0.6 ? "H₃O⁺" : "H"; }
+      else if (p.t === "cat") { col = "var(--c4)"; r = 15; label = x.lab; }
+      else { col = "var(--c3)"; r = 14; label = "OH⁻"; }
+      Lab.el("circle", { cx: px, cy: py, r: r, fill: col, stroke: "var(--surface)", "stroke-width": 1.5 }, part);
+      Lab.el("text", { x: px, y: py + 3.2, "text-anchor": "middle" }, part, label);
+    });
+    var cap = k < 0.02 ? (x.kind === "a" ? "Before: " + L.units + " " + x.f + " molecules" : "Before: " + L.units + " formula units of solid " + x.f) :
+      k > 0.98 ? (x.kind === "a" ? "After: " + L.units + " H₃O⁺ + " + L.units + " " + x.lab + ", no " + x.f + " left" : "After: " + L.units + " " + x.lab + " + " + L.units * x.n + " OH⁻") : "";
+    Lab.el("text", { x: PW / 2, y: 22, "text-anchor": "middle", "class": "cap" }, part, cap);
+    document.getElementById("part-sub").textContent = x.kind === "a" ? "ionizes completely" : "dissociates completely";
+    var leg = x.kind === "a" ? [["var(--c1)", "H₃O⁺ (H on a water molecule)"], ["var(--c2)", x.lab + " (conjugate base)"]] : [["var(--c4)", x.lab + " (spectator cation)"], ["var(--c3)", "OH⁻"]];
+    document.getElementById("plegend").innerHTML = leg.map(function (l) { return '<span><i style="background:' + l[0] + '"></i>' + l[1] + "</span>"; }).join("");
+  }
+  function dissolve(x) {
+    if (stopAnim) stopAnim();
+    prog = 0; drawPart(x, 0);
+    setTimeout(function () { stopAnim = Lab.animate(1100, function (t) { prog = t; drawPart(x, t); }); }, 350);
+  }
+
+  // ---------- pH graph ----------
+  var phs = document.getElementById("ph");
+  function lineFor(x) { return x.kind === "a" ? "var(--c1)" : x.n === 2 ? "var(--c4)" : "var(--c3)"; }
+  function phAt(x, lc) { return x.kind === "a" ? -lc : 14 + lc + Math.log10(nOf(x)); }
+  function drawPH(r) {
+    var x = r.x, F = Lab.frame(phs, {
+      x: [-5.3, 0.3], y: [0, 14], xLabel: "concentration of solute (M, log scale)", yLabel: "pH",
+      xTicks: [-5, -4, -3, -2, -1, 0], yTicks: [0, 2, 4, 6, 7, 8, 10, 12, 14],
+      fmtX: function (v) { return v === 0 ? "1" : "10" + supTxt(v); }, fmtY: function (v) { return v; }
+    });
+    Lab.hline(F, 7, "var(--ghost)", 1.5, "5 4");
+    Lab.tag(F, -5.2, 7.3, "neutral (pH 7)", "var(--muted)", "start");
+    var groups = [{ kind: "a" }, { kind: "b", n: 1 }, { kind: "b", n: 2 }];
+    groups.forEach(function (g) {
+      var on = g.kind === x.kind && (g.kind === "a" || g.n === x.n);
+      var hi = g.kind === "b" && g.n === 2 ? Math.log10(on ? x.max : 0.1) : 0;
+      Lab.line(F, [[-5, phAt(g, -5)], [hi, phAt(g, hi)]], lineFor(g), on ? 3 : 1.5, on ? null : "4 4");
+    });
+    if (S.pin && SOL[S.pin.sol]) {
+      var px = SOL[S.pin.sol];
+      Lab.el("circle", { cx: F.sx(Math.log10(S.pin.C)), cy: F.sy(S.pin.pH), r: 6, fill: "none", stroke: "var(--ghost)", "stroke-width": 2.5 }, F.g);
+      if (S.pin.sol === S.sol) { var x0 = Math.log10(S.pin.C), y0 = S.pin.pH, x1 = Math.log10(r.C), y1 = r.pH; Lab.arrow(F, x0 + (x1 - x0) * 0.12, y0 + (y1 - y0) * 0.12, x0 + (x1 - x0) * 0.85, y0 + (y1 - y0) * 0.85, "var(--muted)"); }
+    }
+    var lc = Math.log10(r.C);
+    Lab.dot(F, lc, r.pH, lineFor(x), true);
+    var right = lc < -1.8;
+    Lab.el("text", { x: F.sx(lc) + (right ? 10 : -10), y: F.sy(r.pH) + (x.kind === "a" ? -8 : 16), "text-anchor": right ? "start" : "end", "class": "lbl", style: "fill:" + lineFor(x) }, F.svg, "pH " + fx(r.pHr, 2));
+  }
+
+  // ---------- Story ----------
+  function story(r) {
+    var x = r.x, n = r.n, h = "", st = [];
+    h += "<p><b>" + Lab.fmla(x.f) + " is a strong " + (x.kind === "a" ? "acid" : "base") + "</b>, so it " + (x.kind === "a" ? "ionizes" : "dissociates") + " completely (single arrow, no equilibrium): " + eqn(x) + ".</p>";
+    if (S.mode === "c") {
+      if (x.kind === "a") {
+        st.push("Each " + Lab.fmla(x.f) + " gives one H₃O⁺, so [H₃O⁺] = [" + Lab.fmla(x.f) + "]<sub>0</sub> = <b>" + M(r.H) + "</b>");
+        st.push("pH = −log[H₃O⁺] = −log(" + Lab.sci(r.H, 2, true) + ") = <b>" + fx(r.pHr, 2) + "</b>");
+        st.push("pOH = 14.00 − pH = <b>" + fx(r.pOHr, 2) + "</b>, and [OH⁻] = K<sub>w</sub> ÷ [H₃O⁺] = <b>" + M(r.OH) + "</b>");
+      } else {
+        st.push(n === 2 ? "Each " + Lab.fmla(x.f) + " gives two OH⁻, so [OH⁻] = 2 × " + M(r.C) + " = <b>" + M(r.OH) + "</b>" : "Each " + Lab.fmla(x.f) + " gives one OH⁻, so [OH⁻] = [" + Lab.fmla(x.f) + "]<sub>0</sub> = <b>" + M(r.OH) + "</b>");
+        st.push("pOH = −log[OH⁻] = −log(" + Lab.sci(r.OH, 2, true) + ") = <b>" + fx(r.pOHr, 2) + "</b>");
+        st.push("pH = 14.00 − pOH = 14.00 − " + fx(r.pOHr, 2) + " = <b>" + fx(r.pHr, 2) + "</b>");
+      }
+    } else {
+      if (x.kind === "a") {
+        st.push("[H₃O⁺] = 10<sup>−pH</sup> = 10<sup>−" + fx(r.pHr, 2) + "</sup> = <b>" + M(r.H) + "</b>");
+        st.push("Complete ionization, one H₃O⁺ per " + Lab.fmla(x.f) + ": [" + Lab.fmla(x.f) + "]<sub>0</sub> = [H₃O⁺] = <b>" + M(r.C) + "</b>");
+      } else {
+        st.push("pOH = 14.00 − pH = 14.00 − " + fx(r.pHr, 2) + " = <b>" + fx(r.pOHr, 2) + "</b>");
+        st.push("[OH⁻] = 10<sup>−pOH</sup> = 10<sup>−" + fx(r.pOHr, 2) + "</sup> = <b>" + M(r.OH) + "</b>");
+        st.push(n === 2 ? "Two OH⁻ per " + Lab.fmla(x.f) + ": [" + Lab.fmla(x.f) + "]<sub>0</sub> = [OH⁻] ÷ 2 = <b>" + M(r.C) + "</b>" : "One OH⁻ per " + Lab.fmla(x.f) + ": [" + Lab.fmla(x.f) + "]<sub>0</sub> = [OH⁻] = <b>" + M(r.C) + "</b>");
+      }
+    }
+    h += "<ol class=\"steps\">" + st.map(function (s) { return "<li>" + s + "</li>"; }).join("") + "</ol>";
+    if (x.kind === "b") h += "<p>" + Lab.fmla(x.cat) + " is a spectator: it does not react with water, so it has no effect on pH.</p>";
+    if (S.pin) {
+      var p = S.pin, d = r.pH - p.pH, f = p.C / r.C;
+      if (p.sol === S.sol && Math.abs(Math.log10(f)) > 0.01) {
+        h += "<p><b>Compared with the pinned solution</b> (" + M(p.C) + " " + Lab.fmla(SOL[p.sol].f) + ", pH " + fx(p.pHr, 2) + "): the concentration changed by a factor of " + Lab.sig(f > 1 ? f : 1 / f, 3).replace(/\.?0+$/, "") + ", so pH moved by " + fx(Math.abs(d), 2) + " toward " + (Math.abs(r.pH - 7) < Math.abs(p.pH - 7) ? "7" : "the extreme") + ". A tenfold change in concentration always shifts pH by exactly 1.00; dilution approaches pH 7 but cannot cross it.</p>";
+      } else if (p.sol !== S.sol) {
+        h += "<p><b>Compared with the pinned solution</b> (" + M(p.C) + " " + Lab.fmla(SOL[p.sol].f) + ", pH " + fx(p.pHr, 2) + "): pH differs by " + fx(Math.abs(d), 2) + "." + (Math.abs(p.C - r.C) / r.C < 0.001 && SOL[p.sol].kind === "b" && x.kind === "b" && SOL[p.sol].n !== n ? " Same concentration, but the Group 2 hydroxide releases twice as many OH⁻, and log 2 = 0.30, so its pH is 0.30 higher." : "") + "</p>";
+      }
+    }
+    var ap = x.kind === "a" ? "a strong acid ionizes completely, so [H₃O⁺] = [" + Lab.fmla(x.f) + "]<sub>0</sub> and pH = −log[H₃O⁺]." :
+      n === 2 ? "a Group 2 hydroxide dissociates completely and releases two OH⁻ per formula unit, so [OH⁻] = 2[" + Lab.fmla(x.f) + "]<sub>0</sub>; find pOH, then pH = 14.00 − pOH." :
+      "a Group 1 hydroxide dissociates completely, so [OH⁻] = [" + Lab.fmla(x.f) + "]<sub>0</sub>; find pOH, then pH = 14.00 − pOH.";
+    h += "<p><b>AP answer:</b> " + ap + "</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  var elV = document.getElementById("s-val"), pickBtns = {}, modeBtns = {}, scBtns = {};
+  function clampState() {
+    var x = SOL[S.sol];
+    if (S.mode === "c") S.v = Math.max(CMIN, Math.min(x.max, S.v));
+    else { var R = pHrange(x); S.v = Math.max(Math.min(R[0], R[1]), Math.min(Math.max(R[0], R[1]), S.v)); }
+  }
+  function render(anim) {
+    clampState();
+    var r = solve(S), x = r.x;
+    if (S.mode === "c") {
+      elV.min = Math.log10(CMIN); elV.max = Math.log10(x.max).toFixed(3); elV.step = "0.01"; elV.value = Math.log10(S.v);
+      document.getElementById("l-val").innerHTML = "[" + Lab.fmla(x.f) + "]";
+      document.getElementById("o-val").innerHTML = M(S.v);
+      document.getElementById("h-val").innerHTML = "Logarithmic slider, 2 significant figures" + (x.max < 1 ? "; " + Lab.fmla(x.f) + " is only slightly soluble, so the slider stops at " + x.max + " M" : "");
+    } else {
+      var R = pHrange(x);
+      elV.min = Math.min(R[0], R[1]); elV.max = Math.max(R[0], R[1]); elV.step = "0.01"; elV.value = S.v;
+      document.getElementById("l-val").textContent = "Target pH";
+      document.getElementById("o-val").textContent = fx(S.v, 2);
+      document.getElementById("h-val").innerHTML = "Work backward from pH to the concentration of " + Lab.fmla(x.f);
+    }
+    Object.keys(pickBtns).forEach(function (k) { pickBtns[k].setAttribute("aria-pressed", S.sol === k ? "true" : "false"); });
+    Object.keys(modeBtns).forEach(function (k) { modeBtns[k].setAttribute("aria-pressed", S.mode === k ? "true" : "false"); });
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    document.getElementById("eqn").innerHTML = eqn(x);
+    if (anim || lastSol !== S.sol) { lastSol = S.sol; dissolve(x); } else drawPart(x, prog);
+    drawPH(r);
+    document.getElementById("r-h").innerHTML = Lab.sci(r.H, 2, true);
+    document.getElementById("r-h2").innerHTML = x.kind === "a" ? "= [" + Lab.fmla(x.f) + "]<sub>0</sub>" : "from K<sub>w</sub> ÷ [OH⁻]";
+    document.getElementById("r-oh").innerHTML = Lab.sci(r.OH, 2, true);
+    document.getElementById("r-oh2").innerHTML = x.kind === "a" ? "from K<sub>w</sub> ÷ [H₃O⁺]" : (r.n === 2 ? "= 2 × [" : "= [") + Lab.fmla(x.f) + "]<sub>0</sub>";
+    document.getElementById("r-ph").textContent = fx(r.pHr, 2);
+    document.getElementById("r-ph2").textContent = x.kind === "a" ? "acidic" : "basic";
+    document.getElementById("r-poh").textContent = fx(r.pOHr, 2);
+    document.getElementById("r-poh2").textContent = "pH + pOH = 14.00";
+    document.getElementById("story").innerHTML = story(r);
+  }
+  function setSol(k) {
+    var r = solve(S);
+    S.sol = k; S.key = null;
+    if (S.mode === "ph") { var x = SOL[k]; S.v = x.kind === "a" ? roundTo(-Math.log10(Math.min(x.max, r.C)), 2) : roundTo(14 + Math.log10(nOf(x) * Math.min(x.max, r.C)), 2); }
+    else S.v = r.C;
+    render(true);
+  }
+  function addPick(boxId, list) {
+    list.forEach(function (k) {
+      var b = document.createElement("button"); b.type = "button"; b.innerHTML = Lab.fmla(SOL[k].f); b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", function () { setSol(k); });
+      document.getElementById(boxId).appendChild(b); pickBtns[k] = b;
+    });
+  }
+  addPick("pick-a", ACIDS); addPick("pick-b", BASES);
+  [["c", "Concentration"], ["ph", "pH (work backward)"]].forEach(function (m) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = m[1]; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () {
+      var r = solve(S); S.mode = m[0]; S.key = null;
+      S.v = m[0] === "c" ? roundSig(r.C, 2) : r.pHr;
+      render();
+    });
+    document.getElementById("modes").appendChild(b); modeBtns[m[0]] = b;
+  });
+  elV.addEventListener("input", function () {
+    var v = parseFloat(elV.value);
+    S.v = S.mode === "c" ? roundSig(Math.pow(10, v), 2) : roundTo(v, 2);
+    S.key = null; render();
+  });
+  function pinNow() { var r = solve(S); S.pin = { sol: S.sol, C: r.C, pH: r.pH, pHr: r.pHr }; }
+  function dilute(f) {
+    var r = solve(S);
+    if (r.C / f < CMIN * 0.999) { document.getElementById("h-val").textContent = "Too dilute for this model: water's own H₃O⁺ and OH⁻ would matter."; return; }
+    pinNow(); S.key = null;
+    if (S.mode === "c") S.v = r.C / f;
+    else S.v = roundTo(r.x.kind === "a" ? r.pHr + Math.log10(f) : r.pHr - Math.log10(f), 2);
+    render();
+  }
+  document.getElementById("b-d10").addEventListener("click", function () { dilute(10); });
+  document.getElementById("b-d2").addEventListener("click", function () { dilute(2); });
+  document.getElementById("b-pin").addEventListener("click", function () { pinNow(); render(); });
+  document.getElementById("b-unpin").addEventListener("click", function () { S.pin = null; render(); });
+
+  // ---------- Scenarios ----------
+  var SC = [
+    { k: "hcl", name: "0.010 M HCl", set: { sol: "HCl", mode: "c", v: 0.010 }, expect: { pH: "2.00" } },
+    { k: "hno3", name: "0.025 M HNO₃", set: { sol: "HNO3", mode: "c", v: 0.025 }, expect: { pH: "1.60" } },
+    { k: "naoh", name: "0.050 M NaOH", set: { sol: "NaOH", mode: "c", v: 0.050 }, expect: { pH: "12.70", pOH: "1.30" } },
+    { k: "ba", name: "0.0050 M Ba(OH)₂", set: { sol: "Ba(OH)2", mode: "c", v: 0.0050 }, expect: { pH: "12.00", OH: 0.010 } },
+    { k: "cmp", name: "Same C: NaOH vs. Ba(OH)₂", set: { sol: "Ba(OH)2", mode: "c", v: 0.010 }, pin: { sol: "NaOH", C: 0.010 }, expect: { pH: "12.30" } },
+    { k: "dil", name: "Dilute 0.10 M HCl 10×", set: { sol: "HCl", mode: "c", v: 0.010 }, pin: { sol: "HCl", C: 0.10 }, expect: { pH: "2.00" } },
+    { k: "koh", name: "KOH at pH 11.50: find [KOH]", set: { sol: "KOH", mode: "ph", v: 11.50 }, expect: { C: 3.2e-3 } },
+    { k: "ca", name: "Ca(OH)₂ at pH 12.30: find C", set: { sol: "Ca(OH)2", mode: "ph", v: 12.30 }, expect: { C: 0.010 } }
+  ];
+  SC.forEach(function (s) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = s.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () {
+      var anim = S.sol !== s.set.sol;
+      S.sol = s.set.sol; S.mode = s.set.mode; S.v = s.set.v; S.key = s.k; S.pin = null;
+      if (s.pin) { var pr = solve({ sol: s.pin.sol, mode: "c", v: s.pin.C }); S.pin = { sol: s.pin.sol, C: s.pin.C, pH: pr.pH, pHr: pr.pHr }; }
+      render(anim);
+    });
+    document.getElementById("sc").appendChild(b); scBtns[s.k] = b;
+  });
+
+  // ---------- Table (generated) ----------
+  var TB = [["HCl", 0.0020], ["HNO3", 0.15], ["KOH", 0.0030], ["Ba(OH)2", 0.025]];
+  var groupsTxt = { a: "[H₃O⁺] = C", b1: "[OH⁻] = C", b2: "[OH⁻] = 2C" };
+  document.getElementById("tbl").innerHTML =
+    "<tr><td>Strong acids: HCl, HBr, HI, HNO₃, HClO₄</td><td>" + eqn(SOL.HCl).replace("HCl", "HX").replace(Lab.fmla("Cl^-"), "X<sup>−</sup>") + "</td><td><b>" + groupsTxt.a + "</b></td><td>" + ex("HCl", 0.0020) + "<br>" + ex("HNO3", 0.15) + "</td></tr>" +
+    "<tr><td>H₂SO₄</td><td>First proton: H<sub>2</sub>SO<sub>4</sub> + H<sub>2</sub>O → H<sub>3</sub>O<sup>+</sup> + HSO<sub>4</sub><sup>−</sup>; second proton only partly</td><td><b>Between C and 2C</b></td><td>Strong acid, but not a one-line pH calculation</td></tr>" +
+    "<tr><td>Group 1 hydroxides: LiOH, NaOH, KOH</td><td>" + eqn(SOL.NaOH).replace("Na", "M").replace(Lab.fmla("Na^+"), "M<sup>+</sup>") + "</td><td><b>" + groupsTxt.b1 + "</b></td><td>" + ex("KOH", 0.0030) + "</td></tr>" +
+    "<tr><td>Group 2 hydroxides: Ca(OH)₂, Sr(OH)₂, Ba(OH)₂</td><td>" + eqn(SOL["Ba(OH)2"]).replace("Ba", "M").replace(Lab.fmla("Ba^2+"), "M<sup>2+</sup>") + "</td><td><b>" + groupsTxt.b2 + "</b></td><td>" + ex("Ba(OH)2", 0.025) + "</td></tr>" +
+    "<tr><td>Any of these, diluted 10×</td><td>Moles of H₃O⁺ or OH⁻ unchanged, volume × 10</td><td><b>Ion concentration ÷ 10</b></td><td>Acid: pH up 1.00. Base: pH down 1.00.</td></tr>";
+  function ex(k, C) {
+    var r = solve({ sol: k, mode: "c", v: C }), x = SOL[k];
+    return Lab.sig(C, 2) + " M " + Lab.fmla(x.f) + ": " + (x.kind === "a" ? "pH = " + fx(r.pHr, 2) : "[OH⁻] = " + Lab.sig(r.OH, 2) + " M, pOH = " + fx(r.pOHr, 2) + ", pH = " + fx(r.pHr, 2));
+  }
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "What is the pH of 0.0040 M HNO₃(aq)?",
+      o: ["11.60", "3.40", "2.40", "4.00"], c: 2,
+      w: "HNO₃ is a strong acid, so [H₃O⁺] = 0.0040 M and pH = −log(0.0040) = 2.40. Choice A is the pOH (14.00 − 2.40). Choice B comes from misplacing the decimal (0.00040 M)." },
+    { s: "What is the pH of 0.020 M Ba(OH)₂(aq)?",
+      o: ["12.60", "12.30", "1.40", "1.70"], c: 0,
+      w: "Ba(OH)₂(s) → Ba²⁺(aq) + 2OH⁻(aq), so [OH⁻] = 2 × 0.020 = 0.040 M. pOH = −log(0.040) = 1.40, and pH = 14.00 − 1.40 = 12.60. Choice B forgets the factor of 2 (it treats [OH⁻] as 0.020 M). Choice C is the pOH." },
+    { s: "Which description best matches a particle diagram of 0.1 M HBr(aq)? (Water molecules are not shown.)",
+      o: ["Mostly intact HBr molecules with a few H₃O⁺ and Br⁻ ions", "H₃O⁺ ions only, because the bromine leaves as Br₂", "Equal numbers of HBr molecules, H₃O⁺ ions, and Br⁻ ions", "H₃O⁺ and Br⁻ ions in equal numbers, with no HBr molecules"], c: 3,
+      w: "HBr is a strong acid, so every molecule transfers its proton to water: HBr + H₂O → H₃O⁺ + Br⁻. The diagram shows only the two ions, one for one. Choice A describes a weak acid such as HF, which is mostly un-ionized." },
+    { s: "A student dilutes 10.0 mL of 0.10 M HCl with water to a total volume of 1.00 L. What is the pH of the diluted solution?",
+      o: ["1.00", "3.00", "2.00", "7.00"], c: 1,
+      w: "Moles of HCl = 0.10 mol/L × 0.0100 L = 1.0 × 10⁻³ mol. In 1.00 L, [H₃O⁺] = 1.0 × 10⁻³ M, so pH = 3.00. That is a 100-fold dilution, which raises pH by 2 units. Choice C counts it as a 10-fold dilution, and choice D assumes dilution makes the solution neutral." },
+    { s: "Solution 1 is 0.010 M NaOH and solution 2 is 0.010 M Ca(OH)₂. Which statement is correct?",
+      o: ["Solution 2 has the higher pH, by 0.30 units, because it has twice the [OH⁻].", "Both solutions have pH 12.00, because they have the same concentration.", "Solution 1 has the higher pH, because NaOH is more soluble than Ca(OH)₂.", "Solution 2 has twice the pH of solution 1."], c: 0,
+      w: "NaOH gives [OH⁻] = 0.010 M (pH 12.00); Ca(OH)₂ gives [OH⁻] = 0.020 M (pOH 1.70, pH 12.30). Doubling [OH⁻] changes pOH by log 2 = 0.30. Choice B ignores the two hydroxides per formula unit, and choice D treats pH as linear." },
+    { s: "A KOH solution has a pH of 11.70. What is the concentration of KOH?",
+      o: ["2.0 × 10⁻¹² M", "2.5 × 10⁻³ M", "1.2 × 10⁻² M", "5.0 × 10⁻³ M"], c: 3,
+      w: "pOH = 14.00 − 11.70 = 2.30, so [OH⁻] = 10⁻²·³⁰ = 5.0 × 10⁻³ M. KOH gives one OH⁻ per formula unit, so [KOH] = 5.0 × 10⁻³ M. Choice A is [H₃O⁺], and choice B divides by 2 as if KOH were a Group 2 hydroxide." },
+    { s: "Which list contains only strong acids?",
+      o: ["HCl, HF, HNO₃", "HClO₄, HNO₂, HBr", "HI, HClO₄, HNO₃", "H₂SO₄, CH₃COOH, HCl"], c: 2,
+      w: "HI, HClO₄, and HNO₃ are all on the list of strong acids (with HCl, HBr, and H₂SO₄). Choice A includes HF, choice B includes nitrous acid HNO₂ (not nitric acid), and choice D includes acetic acid; all three are weak." },
+    { s: "Which statement best explains why the pH of 0.10 M HCl(aq) is 1.00?",
+      o: ["HCl is a strong acid, so the solution is concentrated.", "HCl ionizes completely, so [H₃O⁺] = 0.10 M and pH = −log(0.10) = 1.00.", "HCl ionizes partly and reaches equilibrium with Ka = 0.10.", "Kw equals 0.10 in an acidic solution."], c: 1,
+      w: "The pH comes from [H₃O⁺], and complete ionization makes [H₃O⁺] equal to the acid concentration. Choice A confuses strength with concentration: 0.10 M is not especially concentrated, and a strong acid can be very dilute. Choice C describes a weak acid." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("8.2");
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    function chargeOf(s) { var m = String(s).match(/\^(\d*)([+\-])$/); return m ? (m[2] === "+" ? 1 : -1) * (m[1] ? +m[1] : 1) : 0; }
+    function strip(s) { return String(s).replace(/\^.*$/, ""); }
+    function add(t, f, k) { var c = Lab.parseFormula(f); for (var e in c) t[e] = (t[e] || 0) + k * c[e]; }
+    // every dissociation equation balances in atoms and charge
+    Object.keys(SOL).forEach(function (k) {
+      var x = SOL[k], t = {}, q = 0;
+      if (x.kind === "a") { add(t, x.f, 1); add(t, "H2O", 1); add(t, "H3O", -1); add(t, strip(x.an), -1); q = 1 + chargeOf(x.an); }
+      else { add(t, x.f, 1); add(t, strip(x.cat), -1); add(t, "OH", -x.n); q = chargeOf(x.cat) - x.n; }
+      for (var e in t) if (Math.abs(t[e]) > 1e-9) bad.push(k + " unbalanced in " + e);
+      if (q !== 0) bad.push(k + " charge does not balance");
+      if (x.kind === "b" && chargeOf(x.cat) !== x.n) bad.push(k + " cation charge should equal number of OH-");
+    });
+    // scenarios match hand-worked answers
+    SC.forEach(function (s) {
+      var r = solve(s.set), e = s.expect;
+      if (e.pH && fx(r.pHr, 2) !== e.pH) bad.push(s.k + " pH " + fx(r.pHr, 2) + " vs " + e.pH);
+      if (e.pOH && fx(r.pOHr, 2) !== e.pOH) bad.push(s.k + " pOH");
+      if (e.OH && Math.abs(r.OH - e.OH) > 1e-12) bad.push(s.k + " [OH-]");
+      if (e.C && Math.abs(roundSig(r.C, 2) - e.C) > 1e-9 * e.C) bad.push(s.k + " C " + r.C);
+      if (Math.abs(r.pHr + r.pOHr - 14) > 1e-9) bad.push(s.k + " pH + pOH");
+    });
+    // round trip: concentration -> pH -> concentration (2 s.f.)
+    Object.keys(SOL).forEach(function (k) {
+      [2.0e-5, 3.3e-3, 0.010].forEach(function (C) {
+        if (C > SOL[k].max) return;
+        var r = solve({ sol: k, mode: "c", v: C }), b = solve({ sol: k, mode: "ph", v: r.pHr });
+        if (Math.abs(roundSig(b.C, 2) - C) / C > 0.05) bad.push(k + " round trip at " + C);
+      });
+    });
+    // dilution: 10x always changes pH by exactly 1
+    var a1 = solve({ sol: "HCl", mode: "c", v: 0.05 }), a2 = solve({ sol: "HCl", mode: "c", v: 0.005 });
+    if (Math.abs(a2.pH - a1.pH - 1) > 1e-9) bad.push("acid dilution");
+    var b1 = solve({ sol: "Sr(OH)2", mode: "c", v: 0.01 }), b2 = solve({ sol: "Sr(OH)2", mode: "c", v: 0.001 });
+    if (Math.abs(b1.pH - b2.pH - 1) > 1e-9) bad.push("base dilution");
+    // quiz arithmetic
+    if (fx(solve({ sol: "HNO3", mode: "c", v: 0.0040 }).pHr, 2) !== "2.40") bad.push("quiz 1");
+    if (fx(solve({ sol: "Ba(OH)2", mode: "c", v: 0.020 }).pHr, 2) !== "12.60") bad.push("quiz 2");
+    if (fx(solve({ sol: "HCl", mode: "c", v: 0.10 * 0.0100 / 1.00 }).pHr, 2) !== "3.00") bad.push("quiz 4");
+    if (fx(solve({ sol: "Ca(OH)2", mode: "c", v: 0.010 }).pHr, 2) !== "12.30" || fx(solve({ sol: "NaOH", mode: "c", v: 0.010 }).pHr, 2) !== "12.00") bad.push("quiz 5");
+    if (Lab.sig(solve({ sol: "KOH", mode: "ph", v: 11.70 }).C * 1e3, 2) !== "5.0") bad.push("quiz 6");
+    var used = {}; Q.forEach(function (q) { used[q.c] = 1; if (q.o.length !== 4) bad.push("quiz options"); });
+    if (Object.keys(used).length < 4) bad.push("answer letters do not vary");
+    if (bad.length) console.error("8.2 self-check failed: " + bad.join("; "));
+  })();
+
+  document.querySelector("#sc button").click();
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [8], topic: "8.2", compact: true, storageKey: "topic-8.2" });</script>
+</body>
+</html>

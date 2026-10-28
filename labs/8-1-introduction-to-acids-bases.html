@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Introduction to Acids and Bases Study Lab</title>
+<meta name="description" content="Move a solution along the pH scale and watch [H₃O⁺] and [OH⁻] trade places on a log graph: convert among pH, pOH, and concentrations step by step, and see why pure water is neutral but not always pH 7.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.side .controls { grid-template-columns: 1fr; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.entry { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.entry input[type="text"] { font: inherit; font-size: .95rem; width: 10em; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.entry input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.fb { font-size: .86rem; color: var(--bad); min-height: 1.2em; }
+.note { font-size: .82rem; color: var(--muted); }
+.legend .l-h { color: var(--c1); } .legend .l-oh { color: var(--c3); }
+.legend .l-pin::before { width: 10px; height: 10px; border-radius: 50%; background: none; border: 2px solid var(--ghost); }
+.legend .l-pin { color: var(--muted); }
+input[type="range"]:disabled { opacity: .4; }
+.lab-bar > * { min-width: 0; max-width: 100%; }
+@media (max-width: 520px) {
+  .lab-bar .eqn { white-space: normal; }
+  #chart text { font-size: 13px; }
+  #chart .lbl { font-size: 13.5px; }
+  #bar text { font-size: 14px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 8 · Topic 8.1</span>
+  <h1>Introduction to Acids and Bases Study Lab</h1>
+  <p class="lede">Every aqueous solution contains both H₃O⁺ and OH⁻, because water itself transfers protons to a tiny extent. The two concentrations are locked together by K<sub>w</sub>: when one goes up tenfold, the other goes down tenfold. Slide a solution across the pH scale, convert among pH, pOH, [H₃O⁺], and [OH⁻] step by step, and heat pure water to see why "neutral" does not always mean pH 7.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The pH explorer</h2>
+    <p>Choose which quantity you are given, set it with the slider or type a value, and the page works out the other three. The graph plots the logarithm of each ion concentration against pH: the two lines are mirror images, and they cross at the neutral point. K<sub>w</sub> at temperatures other than 25 °C uses approximate literature values; at 25 °C it is exactly the reference-sheet value, 1.0 × 10<sup>−14</sup>.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>[H₃O⁺] and [OH⁻] across the pH scale <small id="chart-sub"></small></h3>
+      <svg class="chart" id="chart" role="img" aria-label="Graph of log concentration of hydronium and hydroxide ions against pH. The hydronium line falls and the hydroxide line rises; they cross at the neutral point."></svg>
+      <svg class="chart" id="bar" role="img" aria-label="A bar of length pKw split into a pH part and a pOH part"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Classic exam cases</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="group">
+        <div class="tag">You are given</div>
+        <div class="seg" role="group" aria-label="Given quantity" id="modes"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-val"><span id="l-val">pH</span> <output id="o-val"></output></label>
+          <input type="range" id="s-val" min="0" max="14" step="0.01">
+          <span class="hint" id="h-val"></span>
+        </div>
+        <div class="ctl">
+          <label for="s-t">Temperature <output id="o-t"></output></label>
+          <input type="range" id="s-t" min="0" max="100" step="5">
+          <span class="hint" id="h-t"></span>
+        </div>
+      </div>
+      <div class="group">
+        <div class="tag">Or type a value</div>
+        <div class="entry">
+          <label for="ans" id="l-ans">pH =</label>
+          <input id="ans" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 4.25">
+          <button type="button" id="b-use">Use</button>
+        </div>
+        <div class="fb" id="fb" aria-live="polite"></div>
+        <p class="note">Significant figures carry through: a concentration with 2 significant figures gives a pH with 2 decimal places, and back again.</p>
+      </div>
+      <div class="btnrow">
+        <button type="button" id="b-pin">Pin this point to compare</button>
+        <button type="button" id="b-unpin">Clear pin</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-h">log [H₃O⁺]</span><span class="l-oh">log [OH⁻]</span><span class="l-ghost">Neutral point</span><span class="l-pin">Pinned point</span></div>
+    <div class="eqn" id="eqn">K<sub>w</sub> = [H₃O⁺][OH⁻] &nbsp;·&nbsp; pH = −log[H₃O⁺] &nbsp;·&nbsp; pOH = −log[OH⁻] &nbsp;·&nbsp; pH + pOH = pK<sub>w</sub></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">pH</div><div class="v" id="r-ph"></div><div class="sub" id="r-ph2"></div></div>
+    <div class="stat"><div class="k">pOH</div><div class="v" id="r-poh"></div><div class="sub" id="r-poh2"></div></div>
+    <div class="stat"><div class="k">[H₃O⁺]</div><div class="v" id="r-h"></div><div class="sub" id="r-h2"></div></div>
+    <div class="stat"><div class="k">[OH⁻]</div><div class="v" id="r-oh"></div><div class="sub" id="r-oh2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Water reacts with itself</span><h3>Autoionization and K<sub>w</sub></h3><p>One water molecule can give a proton to another: 2H₂O(l) ⇌ H₃O⁺(aq) + OH⁻(aq). The equilibrium constant is K<sub>w</sub> = [H₃O⁺][OH⁻] = 1.0 × 10<sup>−14</sup> at 25 °C. Water is a pure liquid, so it does not appear in the expression. This equilibrium is present in every aqueous solution, not only in pure water.</p></div>
+    <div class="card"><span class="tag">Logarithms</span><h3>pH and pOH</h3><p>pH = −log[H₃O⁺] and pOH = −log[OH⁻]. The minus sign means a higher concentration gives a lower number. Because the scale is logarithmic, each change of 1 pH unit is a tenfold change in [H₃O⁺]; a change of 3 units is a factor of 1000.</p></div>
+    <div class="card"><span class="tag">The seesaw</span><h3>pH + pOH = 14.00 at 25 °C</h3><p>Taking −log of both sides of K<sub>w</sub> = [H₃O⁺][OH⁻] gives pK<sub>w</sub> = pH + pOH. At 25 °C, pK<sub>w</sub> = 14.00. Raising [H₃O⁺] tenfold must lower [OH⁻] tenfold, so the product stays the same. Neither ion ever falls to zero.</p></div>
+    <div class="card"><span class="tag">Definition</span><h3>Acidic, neutral, basic</h3><p>The definitions compare the two ions: acidic means [H₃O⁺] &gt; [OH⁻], neutral means [H₃O⁺] = [OH⁻], basic means [H₃O⁺] &lt; [OH⁻]. At 25 °C those match pH &lt; 7, pH = 7, and pH &gt; 7, but the pH cutoffs are a consequence, not the definition.</p></div>
+    <div class="card"><span class="tag">Temperature</span><h3>K<sub>w</sub> changes with temperature</h3><p>Autoionization is endothermic, so K<sub>w</sub> grows as water warms. At 50 °C, K<sub>w</sub> ≈ 5.5 × 10<sup>−14</sup>, and pure water has pH ≈ 6.63. It is still neutral, because both ions increased by the same amount. Only at 25 °C is neutral exactly pH 7.00.</p></div>
+    <div class="card"><span class="tag">Notation</span><h3>H⁺ or H₃O⁺, and decimal places</h3><p>H⁺(aq) and H₃O⁺(aq) mean the same ion; hydronium is preferred, and both are accepted on the AP Exam. For logs, the number of decimal places in pH equals the number of significant figures in [H₃O⁺]: 2.5 × 10<sup>−4</sup> M gives pH 3.60, not 3.6 or 3.602.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Conversion cheat sheet</h2>
+    <p>Four quantities, two equations that link them. Every conversion below is at 25 °C; at another temperature, replace 14.00 with that temperature's pK<sub>w</sub>.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>You know</th><th>You want</th><th>Use</th><th>Worked example (25 °C)</th></tr></thead>
+    <tbody id="tbl"></tbody>
+  </table>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Temperature</th><th>K<sub>w</sub> (approximate)</th><th>pK<sub>w</sub></th><th>pH of pure (neutral) water</th></tr></thead>
+    <tbody id="tbl-kw"></tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. pH and K<sub>w</sub> on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write the relationship before plugging in: "pH = −log[H₃O⁺] = −log(2.5 × 10<sup>−4</sup>) = 3.60."</li>
+        <li>To go from pH to concentration, undo the log: [H₃O⁺] = 10<sup>−pH</sup>. Show it as a separate step.</li>
+        <li>Use K<sub>w</sub> = [H₃O⁺][OH⁻] or pH + pOH = 14.00 to get the other ion; say "at 25 °C" when you use 14.00.</li>
+        <li>Justify "neutral" with [H₃O⁺] = [OH⁻], not with "pH = 7," especially when the temperature is not 25 °C.</li>
+        <li>For a temperature question, connect the trend to the equilibrium: K<sub>w</sub> increases with temperature, so autoionization is endothermic, and both [H₃O⁺] and [OH⁻] increase in pure water.</li>
+        <li>Compare two solutions by their pH difference: a difference of n units means a factor of 10<sup>n</sup> in [H₃O⁺].</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Reporting pOH when the question asks for pH (or the reverse). Check: a solution with excess OH⁻ must have pH above 7 at 25 °C.</li>
+        <li>Saying a basic solution "has no H₃O⁺." Both ions are always present; their product is K<sub>w</sub>.</li>
+        <li>Thinking pH 2 is "twice as acidic" as pH 4. It has 100 times the [H₃O⁺].</li>
+        <li>Writing [H₃O⁺] + [OH⁻] = 1.0 × 10<sup>−14</sup>. It is the product, not the sum.</li>
+        <li>Calling warm pure water acidic because its pH is below 7. It is neutral at any temperature.</li>
+        <li>Keeping too many digits: 4.0 × 10<sup>−8</sup> M has two significant figures, so pH = 7.40.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 8.1. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-8.html">Unit 8 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Kw versus temperature ----------
+  // pKw of pure water (approximate literature values). 25 °C is the reference-sheet value, exactly 14.00.
+  var PKW = [[0, 14.94], [10, 14.53], [20, 14.17], [25, 14.00], [30, 13.83], [40, 13.53], [50, 13.26], [60, 13.02], [70, 12.80], [80, 12.60], [90, 12.42], [100, 12.26]];
+  function pKwAt(T) {
+    for (var i = 0; i < PKW.length - 1; i++) {
+      var a = PKW[i], b = PKW[i + 1];
+      if (T >= a[0] && T <= b[0]) return Math.round((a[1] + (b[1] - a[1]) * (T - a[0]) / (b[0] - a[0])) * 100) / 100;
+    }
+    return T < 0 ? PKW[0][1] : PKW[PKW.length - 1][1];
+  }
+
+  // ---------- Number helpers ----------
+  var SUP = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "-": "⁻" };
+  function supTxt(n) { return String(n).split("").map(function (c) { return SUP[c] || c; }).join(""); }
+  function roundTo(v, d) { var k = Math.pow(10, d); return Math.round(v * k) / k; }
+  function roundSig(v, n) { if (v === 0) return 0; var e = Math.floor(Math.log10(Math.abs(v))); return roundTo(v / Math.pow(10, e), n - 1) * Math.pow(10, e); }
+  function conc(v, sf) { return Lab.sci(v, sf, true) + " M"; }
+  function fx(v, d) { return roundTo(v, d).toFixed(d).replace("-", "−"); }
+  // significant figures in a typed number ("0.00025" -> 2, "2.50e-4" -> 3)
+  function sfOf(str) {
+    var m = String(str).trim().toLowerCase().replace(/\s/g, "").replace(/×10\^?|x10\^?|\*10\^?/, "e").split("e")[0].replace(/^[+\-]/, "");
+    var digits = m.replace(".", "").replace(/^0+/, "");
+    if (m.indexOf(".") < 0) digits = digits.replace(/0+$/, "") || digits;
+    return Math.max(1, Math.min(4, digits.length || 1));
+  }
+  function dpOf(str) { var s = String(str).trim(), i = s.indexOf("."); return i < 0 ? 0 : Math.min(4, s.length - i - 1); }
+  function parseNum(str) {
+    var s = String(str).trim().toLowerCase().replace(/\s/g, "").replace(/−/g, "-").replace(/×10\^?|x10\^?|\*10\^?/, "e");
+    if (!/^[+\-]?(\d+\.?\d*|\.\d+)(e[+\-]?\d+)?$/.test(s)) return NaN;
+    return parseFloat(s);
+  }
+
+  // ---------- Model ----------
+  var MODES = [
+    { k: "ph", name: "pH", log: true }, { k: "poh", name: "pOH", log: true },
+    { k: "h", name: "[H₃O⁺]", log: false }, { k: "oh", name: "[OH⁻]", log: false },
+    { k: "pure", name: "Pure water", log: true }
+  ];
+  var S = { mode: "ph", v: 7, prec: 2, T: 25, pin: null, key: null };
+
+  // solve(state) -> every quantity, unrounded, plus display precision.
+  function solve(st) {
+    var pKw = pKwAt(st.T), Kw = Math.pow(10, -pKw), r = { pKw: pKw, Kw: Kw, T: st.T, mode: st.mode };
+    if (st.mode === "h") { r.H = st.v; r.OH = Kw / st.v; r.pH = -Math.log10(st.v); r.dp = st.prec; r.sf = st.prec; }
+    else if (st.mode === "oh") { r.OH = st.v; r.H = Kw / st.v; r.pOH = -Math.log10(st.v); r.dp = st.prec; r.sf = st.prec; }
+    else if (st.mode === "ph") { r.pH = st.v; r.dp = st.prec; r.sf = Math.max(1, st.prec); }
+    else if (st.mode === "poh") { r.pOH = st.v; r.dp = st.prec; r.sf = Math.max(1, st.prec); }
+    else { r.pH = pKw / 2; r.dp = 2; r.sf = 2; }
+    // rounded logs: the second log comes from pKw minus the first, so they always add up to pKw on screen
+    if (r.pH != null && r.pOH == null) { r.pHr = roundTo(r.pH, r.dp); r.pOHr = roundTo(pKw - r.pHr, r.dp); r.pOH = pKw - r.pH; }
+    else if (r.pOH != null && r.pH == null) { r.pOHr = roundTo(r.pOH, r.dp); r.pHr = roundTo(pKw - r.pOHr, r.dp); r.pH = pKw - r.pOH; }
+    else { r.pHr = roundTo(r.pH, r.dp); r.pOHr = roundTo(pKw - r.pHr, r.dp); r.pOH = pKw - r.pH; }
+    if (r.H == null) r.H = Math.pow(10, -r.pH);
+    if (r.OH == null) r.OH = Math.pow(10, -r.pOH);
+    var d = Math.log10(r.H / r.OH);
+    r.kind = Math.abs(d) < 1e-6 ? "neutral" : d > 0 ? "acidic" : "basic";
+    return r;
+  }
+
+  // ---------- Drawing ----------
+  var svg = document.getElementById("chart"), bar = document.getElementById("bar");
+  function draw(r) {
+    var F = Lab.frame(svg, {
+      x: [0, 15], y: [-15, 0.6], xLabel: "pH", yLabel: "log of concentration (M)",
+      xTicks: [0, 2, 4, 6, 8, 10, 12, 14], yTicks: [-14, -12, -10, -8, -6, -4, -2, 0],
+      fmtX: function (v) { return v; }, fmtY: function (v) { return v === 0 ? "1" : "10" + supTxt(v); }, width: 440, height: 330
+    });
+    var pKw = r.pKw, n = pKw / 2;
+    Lab.rect(F, 0, -15, n, 0.6, "var(--c1)", 0.07);
+    Lab.rect(F, n, -15, pKw, 0.6, "var(--c3)", 0.07);
+    Lab.rect(F, pKw, -15, 15, 0.6, "var(--ghost)", 0.12);
+    Lab.tag(F, 0.3, -14.4, "acidic", "var(--c1)", "start");
+    Lab.tag(F, pKw - 0.3, -14.4, "basic", "var(--c3)", "end");
+    Lab.vline(F, n, "var(--ghost)", 1.5, "5 4");
+    Lab.line(F, [[0, 0], [pKw, -pKw]], "var(--c1)", 3);
+    Lab.line(F, [[0, -pKw], [pKw, 0]], "var(--c3)", 3);
+    Lab.tag(F, 1.9, -0.8, "[H₃O⁺]", "var(--c1)", "start");
+    Lab.tag(F, pKw - 1.9, -0.8, "[OH⁻]", "var(--c3)", "end");
+    Lab.tag(F, n, -0.8, "neutral " + fx(n, 2), "var(--muted)", "middle");
+    if (S.pin) {
+      var pp = S.pin;
+      if (pp.pH <= pKw + 1e-9) {
+        Lab.el("circle", { cx: F.sx(pp.pH), cy: F.sy(-pp.pH), r: 6, fill: "none", stroke: "var(--ghost)", "stroke-width": 2.5 }, F.g);
+        Lab.el("circle", { cx: F.sx(pp.pH), cy: F.sy(pp.pH - pKw), r: 6, fill: "none", stroke: "var(--ghost)", "stroke-width": 2.5 }, F.g);
+      }
+    }
+    var x = r.pH;
+    Lab.line(F, [[x, -15], [x, 0.6]], "var(--muted)", 1, "3 3");
+    Lab.dot(F, x, -r.pH, "var(--c1)", false);
+    Lab.dot(F, x, -r.pOH, "var(--c3)", false);
+    // value labels next to the dots, kept inside the plot
+    var right = x < 9.5, close = Math.abs(r.pH - r.pOH) < 1.6, up = r.pH <= r.pOH ? 1 : -1;
+    var yH = F.sy(-r.pH) + 4 + (close ? up * -10 : 0), yOH = F.sy(-r.pOH) + 4 + (close ? up * 10 : 0);
+    Lab.el("text", { x: F.sx(x) + (right ? 10 : -10), y: yH, "text-anchor": right ? "start" : "end", "class": "lbl", style: "fill:var(--c1)" }, F.svg, "pH " + fx(r.pHr, r.dp));
+    Lab.el("text", { x: F.sx(x) + (right ? 10 : -10), y: yOH, "text-anchor": right ? "start" : "end", "class": "lbl", style: "fill:var(--c3)" }, F.svg, "pOH " + fx(r.pOHr, r.dp));
+    document.getElementById("chart-sub").textContent = r.T + " °C, pKw = " + r.pKw.toFixed(2);
+
+    // pH + pOH bar
+    var W = 440, H = 74, L = 18, R = 422;
+    bar.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (bar.firstChild) bar.removeChild(bar.firstChild);
+    var sxB = function (v) { return L + (R - L) * v / 15; };
+    var xe = sxB(Math.max(0, Math.min(pKw, r.pH)));
+    Lab.el("rect", { x: sxB(0), y: 26, width: Math.max(0, xe - sxB(0)), height: 20, fill: "var(--c1)", opacity: 0.85, rx: 3 }, bar);
+    Lab.el("rect", { x: xe, y: 26, width: Math.max(0, sxB(pKw) - xe), height: 20, fill: "var(--c3)", opacity: 0.85, rx: 3 }, bar);
+    Lab.el("line", { x1: sxB(pKw), x2: sxB(pKw), y1: 20, y2: 52, stroke: "var(--ink)", "stroke-width": 1.5 }, bar);
+    Lab.el("line", { x1: sxB(0), x2: sxB(0), y1: 20, y2: 52, stroke: "var(--ink)", "stroke-width": 1.5 }, bar);
+    Lab.el("text", { x: (sxB(0) + sxB(pKw)) / 2, y: 14, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, bar, "pH + pOH = pKw = " + r.pKw.toFixed(2) + " at " + r.T + " °C");
+    var wPH = xe - sxB(0), wPOH = sxB(pKw) - xe;
+    if (wPH > 48) Lab.el("text", { x: (sxB(0) + xe) / 2, y: 40, "text-anchor": "middle", "class": "lbl", style: "fill:var(--surface)" }, bar, "pH " + fx(r.pHr, r.dp));
+    if (wPOH > 48) Lab.el("text", { x: (xe + sxB(pKw)) / 2, y: 40, "text-anchor": "middle", "class": "lbl", style: "fill:var(--surface)" }, bar, "pOH " + fx(r.pOHr, r.dp));
+    Lab.el("text", { x: sxB(0), y: 66, "text-anchor": "start" }, bar, "0");
+    Lab.el("text", { x: sxB(pKw), y: 66, "text-anchor": "middle" }, bar, r.pKw.toFixed(2));
+  }
+
+  // ---------- Story ----------
+  function given(r) {
+    var m = S.mode;
+    if (m === "h") return "[H₃O⁺] = " + conc(S.v, r.sf);
+    if (m === "oh") return "[OH⁻] = " + conc(S.v, r.sf);
+    if (m === "ph") return "pH = " + fx(S.v, r.dp);
+    if (m === "poh") return "pOH = " + fx(S.v, r.dp);
+    return "pure water";
+  }
+  function kwTxt(r) { return r.T === 25 ? "1.0 × 10<sup>−14</sup>" : Lab.sci(r.Kw, 2, true); }
+  function pk(r) { return r.pKw.toFixed(2); }
+  function steps(r) {
+    var s = [], m = S.mode, sf = r.sf, dp = r.dp;
+    if (m === "h") {
+      s.push("pH = −log[H₃O⁺] = −log(" + Lab.sci(r.H, sf, true) + ") = <b>" + fx(r.pHr, dp) + "</b>");
+      s.push("pOH = pK<sub>w</sub> − pH = " + pk(r) + " − " + fx(r.pHr, dp) + " = <b>" + fx(r.pOHr, dp) + "</b>");
+      s.push("[OH⁻] = K<sub>w</sub> ÷ [H₃O⁺] = " + kwTxt(r) + " ÷ " + Lab.sci(r.H, sf, true) + " = <b>" + conc(r.OH, sf) + "</b>");
+    } else if (m === "oh") {
+      s.push("pOH = −log[OH⁻] = −log(" + Lab.sci(r.OH, sf, true) + ") = <b>" + fx(r.pOHr, dp) + "</b>");
+      s.push("pH = pK<sub>w</sub> − pOH = " + pk(r) + " − " + fx(r.pOHr, dp) + " = <b>" + fx(r.pHr, dp) + "</b>");
+      s.push("[H₃O⁺] = K<sub>w</sub> ÷ [OH⁻] = " + kwTxt(r) + " ÷ " + Lab.sci(r.OH, sf, true) + " = <b>" + conc(r.H, sf) + "</b>");
+    } else if (m === "ph") {
+      s.push("[H₃O⁺] = 10<sup>−pH</sup> = 10<sup>−" + fx(r.pHr, dp) + "</sup> = <b>" + conc(r.H, sf) + "</b>");
+      s.push("pOH = pK<sub>w</sub> − pH = " + pk(r) + " − " + fx(r.pHr, dp) + " = <b>" + fx(r.pOHr, dp) + "</b>");
+      s.push("[OH⁻] = 10<sup>−pOH</sup> = 10<sup>−" + fx(r.pOHr, dp) + "</sup> = <b>" + conc(r.OH, sf) + "</b>");
+    } else if (m === "poh") {
+      s.push("[OH⁻] = 10<sup>−pOH</sup> = 10<sup>−" + fx(r.pOHr, dp) + "</sup> = <b>" + conc(r.OH, sf) + "</b>");
+      s.push("pH = pK<sub>w</sub> − pOH = " + pk(r) + " − " + fx(r.pOHr, dp) + " = <b>" + fx(r.pHr, dp) + "</b>");
+      s.push("[H₃O⁺] = 10<sup>−pH</sup> = 10<sup>−" + fx(r.pHr, dp) + "</sup> = <b>" + conc(r.H, sf) + "</b>");
+    } else {
+      s.push("Every H₃O⁺ made by autoionization comes with one OH⁻, so [H₃O⁺] = [OH⁻] = x.");
+      s.push("K<sub>w</sub> = x² = " + kwTxt(r) + ", so x = √K<sub>w</sub> = <b>" + conc(r.H, 2) + "</b>");
+      s.push("pH = −log x = ½ pK<sub>w</sub> = ½(" + pk(r) + ") = <b>" + fx(r.pHr, 2) + "</b>, and pOH = <b>" + fx(r.pOHr, 2) + "</b>");
+    }
+    return s;
+  }
+  function story(r) {
+    var h = "<p><b>Given:</b> " + given(r) + " at " + r.T + " °C, where K<sub>w</sub> = " + kwTxt(r) + " and pK<sub>w</sub> = " + pk(r) + (r.T === 25 ? "." : " (approximate value at this temperature).") + "</p>";
+    h += "<ol class=\"steps\">" + steps(r).map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ol>";
+    var ratio = r.H / r.OH, neutralPH = r.pKw / 2;
+    if (r.kind === "neutral") {
+      h += "<p>[H₃O⁺] equals [OH⁻], so the water is <b>neutral</b>." + (r.T === 25 ? " At 25 °C that is pH 7.00." : " Its pH is " + fx(neutralPH, 2) + ", not 7.00, because K<sub>w</sub> " + (r.T > 25 ? "is larger" : "is smaller") + " at " + r.T + " °C: autoionization is endothermic, so " + (r.T > 25 ? "warming water makes more" : "cooling water makes fewer") + " of both ions. Neutral is defined by equal concentrations, not by pH 7.") + "</p>";
+    } else {
+      var big = r.kind === "acidic" ? "[H₃O⁺]" : "[OH⁻]", small = r.kind === "acidic" ? "[OH⁻]" : "[H₃O⁺]";
+      var f = r.kind === "acidic" ? ratio : 1 / ratio;
+      h += "<p>" + big + " is larger than " + small + " (by a factor of about " + bigNum(f) + "), so the solution is <b>" + r.kind + "</b>. On the graph the " + (r.kind === "acidic" ? "orange" : "purple") + " line is on top. At " + r.T + " °C the neutral point is pH " + fx(neutralPH, 2) + (r.T === 25 ? "" : ", so compare to that, not to 7") + ".</p>";
+      if (r.T !== 25 && ((r.pHr <= 7 && r.kind === "basic") || (r.pHr >= 7 && r.kind === "acidic"))) {
+        h += "<p>Notice the trap: this pH is " + (r.pHr < 7 ? "below 7" : r.pHr > 7 ? "above 7" : "exactly 7") + ", yet the solution is " + r.kind + ", because at " + r.T + " °C neutral water has pH " + fx(neutralPH, 2) + ".</p>";
+      }
+    }
+    if (S.pin) {
+      var dpH = S.pin.pH - r.pH, fac = Math.pow(10, Math.abs(dpH));
+      if (Math.abs(dpH) < 0.005) h += "<p>Same pH as the pinned point.</p>";
+      else h += "<p><b>Compared with the pinned point</b> (pH " + fx(S.pin.pHr, S.pin.dp) + "): the pH is " + fx(Math.abs(dpH), 2) + " units " + (dpH > 0 ? "lower" : "higher") + ", so [H₃O⁺] is " + bigNum(fac) + " times " + (dpH > 0 ? "greater" : "smaller") + " and [OH⁻] is " + bigNum(fac) + " times " + (dpH > 0 ? "smaller" : "greater") + "." + (Math.abs(Math.abs(dpH) - Math.round(Math.abs(dpH))) < 0.005 ? " A pH difference of " + Math.round(Math.abs(dpH)) + " always means a factor of 10<sup>" + Math.round(Math.abs(dpH)) + "</sup>." : "") + "</p>";
+    }
+    var ap;
+    if (S.mode === "pure") ap = "pure water is neutral because autoionization makes [H₃O⁺] = [OH⁻] = √K<sub>w</sub>; pH = 7.00 only at 25 °C, where K<sub>w</sub> = 1.0 × 10<sup>−14</sup>.";
+    else if (S.mode === "h" || S.mode === "oh") ap = "pH = −log[H₃O⁺], and [H₃O⁺][OH⁻] = K<sub>w</sub>" + (r.T === 25 ? " = 1.0 × 10<sup>−14</sup>" : "") + "; report pH with as many decimal places as the concentration has significant figures.";
+    else ap = "undo the log with [H₃O⁺] = 10<sup>−pH</sup>, and use pH + pOH = " + (r.T === 25 ? "14.00 at 25 °C" : "pK<sub>w</sub> (14.00 only at 25 °C)") + " to switch between pH and pOH.";
+    h += "<p><b>AP answer:</b> " + ap + "</p>";
+    return h;
+  }
+  function bigNum(f) {
+    if (f < 1000) return Lab.sig(f, 2).replace(/\.0$/, "");
+    if (f < 1e6) return Math.round(roundSig(f, 2)).toLocaleString("en-US");
+    return Lab.sci(f, 2, true);
+  }
+
+  // ---------- Controls ----------
+  var elV = document.getElementById("s-val"), elT = document.getElementById("s-t"), ans = document.getElementById("ans"), fb = document.getElementById("fb");
+  var modeBtns = {}, scBtns = {};
+  function modeOf(k) { return MODES.filter(function (m) { return m.k === k; })[0]; }
+  function sliderSync() {
+    var r = solve(S), pKw = r.pKw, m = S.mode;
+    elV.disabled = m === "pure";
+    if (m === "h" || m === "oh") { elV.min = (-pKw).toFixed(2); elV.max = "0"; elV.step = "0.01"; elV.value = Math.log10(S.v); }
+    else { elV.min = "0"; elV.max = pKw.toFixed(2); elV.step = "0.01"; elV.value = m === "pure" ? r.pH : S.v; }
+    document.getElementById("l-val").textContent = m === "pure" ? "pH of pure water" : modeOf(m).name;
+    document.getElementById("o-val").innerHTML = m === "h" || m === "oh" ? conc(S.v, r.sf) : fx(m === "pure" ? r.pHr : S.v, r.dp);
+    document.getElementById("h-val").textContent = m === "pure" ? "Set by temperature alone; change the temperature" : m === "h" || m === "oh" ? "Logarithmic slider, rounded to 2 significant figures" : "0 to pKw at this temperature";
+    elT.value = S.T;
+    document.getElementById("o-t").textContent = S.T + " °C";
+    document.getElementById("h-t").textContent = "Kw ≈ " + (S.T === 25 ? "1.0 × 10⁻¹⁴" : Lab.sci(r.Kw, 2, true).replace(/<sup>(.*)<\/sup>/, function (a, b) { return supTxt(b.replace("−", "-")); })) + ", pKw = " + r.pKw.toFixed(2);
+    document.getElementById("l-ans").textContent = (m === "pure" ? "pH" : modeOf(m).name) + " =";
+    ans.placeholder = m === "h" || m === "oh" ? "e.g. 2.5e-4" : "e.g. 4.25";
+    ans.disabled = m === "pure"; document.getElementById("b-use").disabled = m === "pure";
+  }
+  function render() {
+    var r = solve(S);
+    sliderSync();
+    draw(r);
+    Object.keys(modeBtns).forEach(function (k) { modeBtns[k].setAttribute("aria-pressed", S.mode === k ? "true" : "false"); });
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    document.getElementById("r-ph").textContent = fx(r.pHr, r.dp);
+    document.getElementById("r-ph2").textContent = r.kind + (r.T === 25 ? "" : " (neutral is " + fx(r.pKw / 2, 2) + " here)");
+    document.getElementById("r-poh").textContent = fx(r.pOHr, r.dp);
+    document.getElementById("r-poh2").textContent = "pH + pOH = " + (r.pHr + r.pOHr).toFixed(2);
+    document.getElementById("r-h").innerHTML = Lab.sci(r.H, r.sf, true);
+    document.getElementById("r-h2").textContent = "mol/L";
+    document.getElementById("r-oh").innerHTML = Lab.sci(r.OH, r.sf, true);
+    document.getElementById("r-oh2").innerHTML = "product = " + Lab.sci(r.H * r.OH, 2, true);
+    document.getElementById("story").innerHTML = story(r);
+  }
+  // keep the same solution when switching the given quantity
+  function setMode(k) {
+    var r = solve(S);
+    if (k === "ph") { S.v = roundTo(r.pH, 2); S.prec = 2; }
+    else if (k === "poh") { S.v = roundTo(r.pOH, 2); S.prec = 2; }
+    else if (k === "h") { S.v = roundSig(r.H, 2); S.prec = 2; }
+    else if (k === "oh") { S.v = roundSig(r.OH, 2); S.prec = 2; }
+    S.mode = k; S.key = null; fb.textContent = "";
+    render();
+  }
+  MODES.forEach(function (m) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = m.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { setMode(m.k); });
+    document.getElementById("modes").appendChild(b); modeBtns[m.k] = b;
+  });
+  elV.addEventListener("input", function () {
+    var x = parseFloat(elV.value);
+    if (S.mode === "h" || S.mode === "oh") S.v = roundSig(Math.pow(10, x), 2); else S.v = roundTo(x, 2);
+    S.prec = 2; S.key = null; fb.textContent = ""; render();
+  });
+  elT.addEventListener("input", function () {
+    S.T = parseInt(elT.value, 10); S.key = null;
+    var pKw = pKwAt(S.T);
+    if ((S.mode === "ph" || S.mode === "poh") && S.v > pKw) S.v = pKw;
+    if ((S.mode === "h" || S.mode === "oh") && S.v < Math.pow(10, -pKw)) S.v = roundSig(Math.pow(10, -pKw), 2);
+    render();
+  });
+  function useTyped() {
+    var raw = ans.value, v = parseNum(raw), m = S.mode, pKw = pKwAt(S.T);
+    if (!isFinite(v)) { fb.textContent = m === "h" || m === "oh" ? "Type a concentration such as 2.5e-4 or 0.00025." : "Type a number such as 4.25."; return; }
+    if (m === "h" || m === "oh") {
+      if (v <= 0 || v > 1) { fb.textContent = "Use a concentration greater than 0 and at most 1 M for this explorer."; return; }
+      if (v < Math.pow(10, -pKw)) { fb.textContent = "That is below " + Lab.sci(Math.pow(10, -pKw), 2, true).replace(/<\/?sup>/g, "") + " M; the other ion would exceed 1 M."; return; }
+      S.v = v; S.prec = sfOf(raw);
+    } else {
+      if (v < 0 || v > pKw) { fb.textContent = "Use a value from 0 to " + pKw.toFixed(2) + " (pKw at this temperature)."; return; }
+      S.v = v; S.prec = Math.max(1, dpOf(raw));
+    }
+    fb.textContent = ""; S.key = null; render();
+  }
+  document.getElementById("b-use").addEventListener("click", useTyped);
+  ans.addEventListener("keydown", function (e) { if (e.key === "Enter") useTyped(); });
+  document.getElementById("b-pin").addEventListener("click", function () { var r = solve(S); S.pin = { pH: r.pH, pHr: r.pHr, dp: r.dp }; render(); });
+  document.getElementById("b-unpin").addEventListener("click", function () { S.pin = null; render(); });
+
+  // ---------- Scenarios ----------
+  var SC = [
+    { k: "w25", name: "Pure water, 25 °C", set: { mode: "pure", T: 25 } },
+    { k: "h3", name: "[H₃O⁺] = 1.0 × 10⁻³ M", set: { mode: "h", v: 1.0e-3, prec: 2, T: 25 } },
+    { k: "oh", name: "[OH⁻] = 2.5 × 10⁻⁴ M", set: { mode: "oh", v: 2.5e-4, prec: 2, T: 25 } },
+    { k: "ph425", name: "pH 4.25: find [OH⁻]", set: { mode: "ph", v: 4.25, prec: 2, T: 25 } },
+    { k: "cmp", name: "pH 3 vs. pH 5", set: { mode: "ph", v: 3.00, prec: 2, T: 25 }, pin: 5.00 },
+    { k: "w50", name: "Pure water, 50 °C", set: { mode: "pure", T: 50 } },
+    { k: "w0", name: "Pure water, 0 °C", set: { mode: "pure", T: 0 } },
+    { k: "ph7hot", name: "pH 7.00 at 50 °C", set: { mode: "ph", v: 7.00, prec: 2, T: 50 } }
+  ];
+  SC.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () {
+      for (var k in x.set) S[k] = x.set[k];
+      S.key = x.k; fb.textContent = ""; ans.value = "";
+      S.pin = null;
+      if (x.pin != null) S.pin = { pH: x.pin, pHr: x.pin, dp: 2 };
+      render();
+    });
+    document.getElementById("sc").appendChild(b); scBtns[x.k] = b;
+  });
+
+  // ---------- Tables (generated, so they cannot drift from the math) ----------
+  function at25(mode, v, prec) { return solve({ mode: mode, v: v, prec: prec, T: 25 }); }
+  var EX = [
+    { know: "[H₃O⁺]", want: "pH", use: "pH = −log[H₃O⁺]", r: at25("h", 2.0e-3, 2), txt: function (r) { return "[H₃O⁺] = 2.0 × 10<sup>−3</sup> M → pH = " + fx(r.pHr, 2); }, check: function (r) { return fx(r.pHr, 2) === "2.70"; } },
+    { know: "pH", want: "[H₃O⁺]", use: "[H₃O⁺] = 10<sup>−pH</sup>", r: at25("ph", 8.60, 2), txt: function (r) { return "pH 8.60 → [H₃O⁺] = " + conc(r.H, 2); }, check: function (r) { return Lab.sig(r.H * 1e9, 2) === "2.5"; } },
+    { know: "[OH⁻]", want: "pOH", use: "pOH = −log[OH⁻]", r: at25("oh", 5.0e-5, 2), txt: function (r) { return "[OH⁻] = 5.0 × 10<sup>−5</sup> M → pOH = " + fx(r.pOHr, 2); }, check: function (r) { return fx(r.pOHr, 2) === "4.30"; } },
+    { know: "[H₃O⁺]", want: "[OH⁻]", use: "[OH⁻] = K<sub>w</sub> ÷ [H₃O⁺]", r: at25("h", 4.0e-6, 2), txt: function (r) { return "[H₃O⁺] = 4.0 × 10<sup>−6</sup> M → [OH⁻] = " + conc(r.OH, 2); }, check: function (r) { return Lab.sig(r.OH * 1e9, 2) === "2.5"; } },
+    { know: "pH", want: "pOH", use: "pOH = 14.00 − pH", r: at25("ph", 3.15, 2), txt: function (r) { return "pH 3.15 → pOH = " + fx(r.pOHr, 2); }, check: function (r) { return fx(r.pOHr, 2) === "10.85"; } },
+    { know: "pOH", want: "[H₃O⁺]", use: "pH = 14.00 − pOH, then 10<sup>−pH</sup>", r: at25("poh", 2.40, 2), txt: function (r) { return "pOH 2.40 → pH " + fx(r.pHr, 2) + " → [H₃O⁺] = " + conc(r.H, 2); }, check: function (r) { return fx(r.pHr, 2) === "11.60" && Lab.sig(r.H * 1e12, 2) === "2.5"; } }
+  ];
+  document.getElementById("tbl").innerHTML = EX.map(function (e) {
+    return "<tr><td>" + e.know + "</td><td>" + e.want + "</td><td><b>" + e.use + "</b></td><td>" + e.txt(e.r) + "</td></tr>";
+  }).join("") + "<tr><td>pH (at 25 °C)</td><td>Acidic, neutral, or basic</td><td><b>Compare to 7.00</b></td><td>Below 7: acidic; 7.00: neutral; above 7: basic. At other temperatures, compare to ½ pK<sub>w</sub>.</td></tr>";
+  document.getElementById("tbl-kw").innerHTML = [0, 25, 50, 100].map(function (T) {
+    var r = solve({ mode: "pure", T: T });
+    return "<tr><td>" + T + " °C</td><td>" + (T === 25 ? "1.0 × 10<sup>−14</sup>" : Lab.sci(r.Kw, 2, true)) + "</td><td>" + r.pKw.toFixed(2) + "</td><td><b>" + fx(r.pHr, 2) + "</b> (neutral)</td></tr>";
+  }).join("");
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "At 25 °C, a solution has [H₃O⁺] = 3.2 × 10⁻⁴ M. What is its pH?",
+      o: ["3.49", "10.51", "4.32", "0.51"], c: 0,
+      w: "pH = −log(3.2 × 10⁻⁴) = 3.49, with two decimal places because the concentration has two significant figures. Choice B is the pOH (14.00 − 3.49); a solution with that much H₃O⁺ must have a pH below 7." },
+    { s: "At 25 °C, a solution has pH = 9.30. What is [OH⁻]?",
+      o: ["5.0 × 10⁻¹⁰ M", "2.0 × 10⁻⁵ M", "9.3 × 10⁻¹⁴ M", "4.7 × 10⁻⁵ M"], c: 1,
+      w: "pOH = 14.00 − 9.30 = 4.70, so [OH⁻] = 10⁻⁴·⁷⁰ = 2.0 × 10⁻⁵ M. Choice A is [H₃O⁺] (10⁻⁹·³⁰), not [OH⁻]. Choice D treats the pOH as if it were the mantissa of the concentration." },
+    { s: "Solution X has pH 2.0 and solution Y has pH 5.0, both at 25 °C. Which statement is correct?",
+      o: ["[H₃O⁺] in X is 3 times [H₃O⁺] in Y.", "[H₃O⁺] in Y is 1000 times [H₃O⁺] in X.", "[H₃O⁺] in X is 1000 times [H₃O⁺] in Y.", "[OH⁻] in X is 1000 times [OH⁻] in Y."], c: 2,
+      w: "A difference of 3 pH units is a factor of 10³ = 1000, and the lower pH has the higher [H₃O⁺], so X has 1000 times the [H₃O⁺] of Y. Choice A reads the log scale as linear. Choice D has the direction backward: X has 1000 times less OH⁻." },
+    { s: "At 50 °C, Kw = 5.5 × 10⁻¹⁴ and pure water has a pH of 6.63. Which statement about pure water at 50 °C is correct?",
+      o: ["It is acidic, because its pH is less than 7.", "[H₃O⁺] is greater than [OH⁻], because Kw has increased.", "It is basic, because its pOH is less than 7.", "It is neutral, because [H₃O⁺] = [OH⁻]."], c: 3,
+      w: "Autoionization produces one OH⁻ for every H₃O⁺, so in pure water the two concentrations are always equal: that is the definition of neutral. Both are √(5.5 × 10⁻¹⁴) = 2.3 × 10⁻⁷ M, giving pH = pOH = 6.63. Choice A applies the 25 °C cutoff of pH 7 at the wrong temperature." },
+    { s: "Kw is 1.0 × 10⁻¹⁴ at 25 °C and 2.9 × 10⁻¹⁴ at 40 °C. Which claim is best supported by these data?",
+      o: ["Pure water at 40 °C is slightly acidic.", "The autoionization of water is exothermic.", "The autoionization of water is endothermic, so raising the temperature increases both [H₃O⁺] and [OH⁻] in pure water.", "At 40 °C, pH + pOH = 14.00 for any aqueous solution."], c: 2,
+      w: "K increases with temperature only for an endothermic process, so autoionization absorbs heat, and warming pure water raises both ion concentrations equally. Choice A forgets that pure water stays neutral. Choice D is wrong because pKw at 40 °C is −log(2.9 × 10⁻¹⁴) = 13.54, not 14.00." },
+    { s: "At 25 °C, a solution of a base has [OH⁻] = 1.0 × 10⁻² M. Which statement about H₃O⁺ in this solution is correct?",
+      o: ["[H₃O⁺] = 1.0 × 10⁻¹² M, because [H₃O⁺][OH⁻] = 1.0 × 10⁻¹⁴.", "[H₃O⁺] = 0 M, because a basic solution contains no hydronium ions.", "[H₃O⁺] = 1.0 × 10⁻² M, because water ionizes into equal amounts of each ion.", "[H₃O⁺] = 1.0 × 10⁻⁷ M, because that is the value for water at 25 °C."], c: 0,
+      w: "The autoionization equilibrium is present in every aqueous solution, so [H₃O⁺] = Kw ÷ [OH⁻] = 1.0 × 10⁻¹⁴ ÷ 1.0 × 10⁻² = 1.0 × 10⁻¹² M (pH 12.00). Choice B is the classic misconception: H₃O⁺ is never zero. Choice D uses the pure-water value, which no longer applies once a base is dissolved." },
+    { s: "At 25 °C, [H₃O⁺] in a sample of blood plasma is 4.0 × 10⁻⁸ M. Which value correctly reports the pH?",
+      o: ["7.4", "7.40", "7.398", "6.60"], c: 1,
+      w: "−log(4.0 × 10⁻⁸) = 7.398, but the concentration has two significant figures, so the pH gets two decimal places: 7.40. (The digits before the decimal point only locate the power of ten.) Choice C keeps too many digits, and choice D is the pOH." },
+    { s: "Which statement is true for every aqueous solution at 25 °C?",
+      o: ["[H₃O⁺] + [OH⁻] = 1.0 × 10⁻¹⁴", "pH × pOH = 14.00", "[H₃O⁺] = [OH⁻] = 1.0 × 10⁻⁷ M", "[H₃O⁺][OH⁻] = 1.0 × 10⁻¹⁴ and pH + pOH = 14.00"], c: 3,
+      w: "Kw is the product of the two concentrations, and taking −log of that product gives pH + pOH = pKw = 14.00 at 25 °C. Choice A uses a sum instead of a product. Choice C is true only for a neutral solution." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("8.1");
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    function near(a, b, tol, what) { if (!(Math.abs(a - b) <= tol)) bad.push(what + ": got " + a + ", expected " + b); }
+    // every scenario: product equals Kw, pH + pOH = pKw, classification agrees with the neutral point
+    SC.forEach(function (x) {
+      var st = { mode: x.set.mode, v: x.set.v, prec: x.set.prec || 2, T: x.set.T }, r = solve(st);
+      near(Math.log10(r.H * r.OH), -r.pKw, 1e-9, x.k + " Kw product");
+      near(r.pHr + r.pOHr, r.pKw, 1e-9, x.k + " pH + pOH");
+      var expect = Math.abs(r.pH - r.pKw / 2) < 1e-9 ? "neutral" : r.pH < r.pKw / 2 ? "acidic" : "basic";
+      if (expect !== r.kind) bad.push(x.k + " classification");
+    });
+    // hand-worked values shown in scenarios, the Kw table, and the quiz
+    var r;
+    r = at25("h", 1.0e-3, 2); if (fx(r.pHr, 2) !== "3.00") bad.push("1.0e-3 case pH"); near(r.OH, 1.0e-11, 1e-20, "1.0e-3 case [OH-]");
+    r = at25("oh", 2.5e-4, 2); if (fx(r.pOHr, 2) !== "3.60" || fx(r.pHr, 2) !== "10.40") bad.push("OH 2.5e-4 case");
+    r = at25("ph", 4.25, 2); if (Lab.sig(r.OH * 1e10, 2) !== "1.8" || Lab.sig(r.H * 1e5, 2) !== "5.6") bad.push("pH 4.25 case");
+    r = solve({ mode: "pure", T: 50 }); if (fx(r.pHr, 2) !== "6.63" || Lab.sig(r.Kw * 1e14, 2) !== "5.5") bad.push("50 °C water");
+    r = solve({ mode: "pure", T: 0 }); if (fx(r.pHr, 2) !== "7.47") bad.push("0 °C water");
+    r = solve({ mode: "pure", T: 25 }); if (fx(r.pHr, 2) !== "7.00") bad.push("25 °C water");
+    if (pKwAt(25) !== 14) bad.push("pKw(25) must be 14.00");
+    for (var T = 0; T < 100; T += 5) if (!(pKwAt(T + 5) < pKwAt(T))) bad.push("pKw should fall as T rises at " + T);
+    r = solve({ mode: "pure", T: 40 }); near(r.pKw, -Math.log10(2.9e-14), 0.02, "40 °C Kw used in quiz 5");
+    EX.forEach(function (e, i) { if (!e.check(e.r)) bad.push("table row " + (i + 1)); });
+    // quiz numbers
+    if (fx(-Math.log10(3.2e-4), 2) !== "3.49") bad.push("quiz 1");
+    if (Lab.sig(Math.pow(10, -(14 - 9.30)) * 1e5, 2) !== "2.0" || Lab.sig(Math.pow(10, -9.30) * 1e10, 2) !== "5.0") bad.push("quiz 2");
+    if (Lab.sig(Math.sqrt(5.5e-14) * 1e7, 2) !== "2.3" || fx(-Math.log10(Math.sqrt(5.5e-14)), 2) !== "6.63") bad.push("quiz 4");
+    if (fx(-Math.log10(2.9e-14), 2) !== "13.54") bad.push("quiz 5");
+    if (fx(-Math.log10(4.0e-8), 3) !== "7.398") bad.push("quiz 7");
+    // significant-figure parsing
+    if (sfOf("0.00025") !== 2 || sfOf("2.50e-4") !== 3 || sfOf("1.0 x 10^-3") !== 2 || dpOf("4.25") !== 2 || dpOf("7") !== 0) bad.push("sig-fig parser");
+    if (parseNum("2.5e-4") !== 2.5e-4 || parseNum("2.5×10^-4") !== 2.5e-4 || isFinite(parseNum("abc"))) bad.push("number parser");
+    // answer letters vary
+    var used = {}; Q.forEach(function (q) { used[q.c] = (used[q.c] || 0) + 1; if (q.o.length !== 4) bad.push("quiz options"); });
+    if (Object.keys(used).length < 4) bad.push("answer letters do not vary");
+    if (bad.length) console.error("8.1 self-check failed: " + bad.join("; "));
+  })();
+
+  SC[0] && document.querySelector("#sc button").click();
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [8], topic: "8.1", compact: true, storageKey: "topic-8.1" });</script>
+</body>
+</html>

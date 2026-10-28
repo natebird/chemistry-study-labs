@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculating Equilibrium Concentrations Study Lab</title>
+<meta name="description" content="Start from any initial mixture and a value of K, use Q to find the direction, build the ICE table, and solve for the equilibrium amounts with a perfect square, the small-x approximation, or the quadratic formula.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.ctlcard { display: grid; gap: 16px; }
+.ctlcard .controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.note { font-size: .82rem; color: var(--muted); }
+.graph-card { align-content: start; }
+.ice table { min-width: 0; }
+.ice th { text-transform: none; letter-spacing: 0; }
+.ice th, .ice td { text-align: center; font-family: var(--mono); font-size: .86rem; padding: 8px 8px; }
+.ice th:first-child, .ice td:first-child { text-align: left; font-family: var(--body); font-weight: 600; }
+.ice h3 small { font-family: var(--body); font-weight: 400; }
+.ice td small { display: block; color: var(--muted); font-size: .76rem; }
+.ice tr.eqrow td { background: var(--accent-soft); }
+.story ol.steps { margin-top: 4px; }
+.story .formula { display: inline-block; margin: 2px 0; }
+.legend .l-k { color: var(--c4); }
+.legend .l-k::before { background: none; border-top: 2px dashed currentColor; height: 0; }
+@media (max-width: 860px) { .ctlcard .controls { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .ctlcard .controls { grid-template-columns: 1fr; } .ice th, .ice td { font-size: .74rem; padding: 6px 4px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 7 · Topic 7.7</span>
+  <h1>Calculating Equilibrium Concentrations Study Lab</h1>
+  <p class="lede">If you know the balanced equation, the starting amounts and K, you can predict every equilibrium concentration or partial pressure. The route is always the same: compare Q with K to find the direction, write an ICE table in terms of one unknown x, substitute into the K expression, and solve. Here you set the starting mixture and K, and the lab builds the table, picks the algebra, and checks the answer.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The equilibrium solver</h2>
+    <p>Pick a classic setup, or move the sliders to make your own. The left graph shows Q climbing (or falling) toward K as the reaction proceeds; the equilibrium point is where the curve meets the K line. Press <b>Run to equilibrium</b> to watch the amounts change. The K values here are illustrative teaching values, not data for a particular temperature.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Q as the reaction proceeds <small id="g1-sub"></small></h3>
+      <svg class="chart" id="gq" role="img" aria-label="Graph of the reaction quotient Q on a log scale against the extent of reaction x, with a dashed line at K"></svg>
+    </div>
+    <div class="card graph-card">
+      <h3>Initial and equilibrium amounts <small id="g2-sub"></small></h3>
+      <svg class="chart" id="gb" role="img" aria-label="Bar chart comparing the initial and equilibrium amount of each species"></svg>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <div class="tag">Setups</div>
+      <div class="scenarios" id="sc"></div>
+      <div class="eqn" id="eqn"></div>
+    </div>
+    <div class="controls" id="ctls"></div>
+    <div class="btnrow">
+      <button type="button" class="primary" id="b-run">Run to equilibrium</button>
+      <span class="note" id="run-note"></span>
+    </div>
+  </div>
+
+  <div class="card ice">
+    <h3 style="margin-bottom:8px;">ICE table <small class="note" id="ice-sub"></small></h3>
+    <div class="tbl-wrap"><table id="ice"></table></div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-c1">Q as x grows (gray dot: start)</span><span class="l-k">K</span><span class="l-ghost">Initial amount</span><span class="l-ad">Equilibrium amount</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Initial Q</div><div class="v" id="r-q"></div><div class="sub" id="r-q2"></div></div>
+    <div class="stat"><div class="k">Direction</div><div class="v" id="r-d"></div><div class="sub" id="r-d2"></div></div>
+    <div class="stat"><div class="k">x at equilibrium</div><div class="v" id="r-x"></div><div class="sub" id="r-x2"></div></div>
+    <div class="stat"><div class="k">Check: Q at equilibrium</div><div class="v" id="r-c"></div><div class="sub" id="r-c2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Step 1</span><h3>Q tells you the direction</h3><p>Calculate Q from the starting amounts. If Q &lt; K, the reaction runs forward: reactants are consumed and products form. If Q &gt; K, it runs in reverse. If Q = K, nothing changes overall, because the forward and reverse rates are already equal.</p></div>
+    <div class="card"><span class="tag">Step 2</span><h3>One unknown, many species</h3><p>Every change is tied to the same x through the coefficients. For 2HI ⇌ H<sub>2</sub> + I<sub>2</sub>, if H<sub>2</sub> changes by +x, HI changes by −2x. The signs come from the direction; the multipliers come from the balanced equation.</p></div>
+    <div class="card"><span class="tag">Step 3</span><h3>Substitute the E row</h3><p>Only equilibrium amounts go into the K expression. Write each one from the E row, raise it to its coefficient, and set the result equal to K. Pure solids and liquids still do not appear.</p></div>
+    <div class="card"><span class="tag">Step 4</span><h3>Pick the algebra</h3><p>If both sides are perfect squares, take the square root. If K is small and x will be tiny next to the starting amount, drop x from (C − x) and check that x is under 5% of C. Otherwise rearrange to a quadratic and keep the root that gives no negative amounts.</p></div>
+    <div class="card"><span class="tag">Units</span><h3>Match the amounts to K</h3><p>K<sub>c</sub> takes molar concentrations; K<sub>p</sub> takes partial pressures (usually in atm). Change moles to molarity before the ICE table if you are given moles and a volume. Change values can be in M or atm, but never mix them in one table.</p></div>
+    <div class="card"><span class="tag">Step 5</span><h3>Check by substituting back</h3><p>Put your equilibrium amounts back into the expression. You should get K (to rounding). A negative concentration or a value of Q on the wrong side of K means a sign or root was chosen wrongly.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Choosing the algebra</h2>
+    <p>Problems are usually built so that one of the first two routes works. The quadratic formula always works when the expression reduces to a quadratic.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Route</th><th>When it works</th><th>Example</th><th>What to show</th></tr></thead>
+    <tbody>
+      <tr><td><b>Perfect square</b></td><td>Numerator and denominator are both squares of one expression, e.g. H<sub>2</sub> + I<sub>2</sub> ⇌ 2HI with equal starting [H<sub>2</sub>] and [I<sub>2</sub>]</td><td>49 = (2x)<sup>2</sup>/(0.200 − x)<sup>2</sup> → 7.0 = 2x/(0.200 − x) → x = 0.156</td><td>The square root step, then a linear solve</td></tr>
+      <tr><td><b>Small-x approximation</b></td><td>K is small compared with the starting concentration, so very little reacts</td><td>1.0 × 10<sup>−5</sup> = (2x)<sup>2</sup>/[(0.80)(0.20)] → x = 6.3 × 10<sup>−4</sup></td><td>Write C − x ≈ C, then show x/C × 100% &lt; 5%</td></tr>
+      <tr><td><b>Quadratic formula</b></td><td>x is not small and the expression is not a perfect square</td><td>0.040 = x<sup>2</sup>/(0.200 − x) → x<sup>2</sup> + 0.040x − 0.0080 = 0 → x = 0.0717</td><td>a, b and c, both roots, and why one root is rejected</td></tr>
+      <tr><td><b>Reverse direction</b></td><td>Q &gt; K, including any start with no reactants</td><td>Start with 0.500 M HI only: H<sub>2</sub> and I<sub>2</sub> get +x, HI gets −2x</td><td>The Q &gt; K comparison that justifies the signs</td></tr>
+      <tr><td><b>Already at equilibrium</b></td><td>Q = K</td><td>No change: the starting amounts are the equilibrium amounts</td><td>The calculated Q and the statement that rates are equal</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Equilibrium concentrations on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write the K expression first, then the ICE table with initial, change and equilibrium rows labeled.</li>
+        <li>Justify the direction with numbers: "Q = 0.25, which is less than K = 4.0, so the reaction proceeds to the right."</li>
+        <li>Show the substituted equation, such as 0.15 = (2x)<sup>2</sup>/(1.00 − x), before solving.</li>
+        <li>If you use the small-x approximation, say so and show the 5% check.</li>
+        <li>Report the quantity asked for, which is often 2x or C − x, not x itself, with units (M or atm).</li>
+        <li>A quick plug-back check that Q at equilibrium equals K catches most sign errors.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Reporting x as the answer when the question asks for [HI] = 2x or [PCl<sub>5</sub>] = 0.200 − x.</li>
+        <li>Forgetting to square (2x): writing 2x<sup>2</sup> instead of 4x<sup>2</sup>.</li>
+        <li>Assuming the reaction runs forward when products are present at the start. Check Q first.</li>
+        <li>Using moles in the K<sub>c</sub> expression without dividing by the volume.</li>
+        <li>Keeping the small-x approximation when x turns out to be a large fraction of the starting amount.</li>
+        <li>Keeping the negative root of the quadratic, or a root larger than the starting amount, which would give a negative concentration.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 7.7. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-7.html">Unit 7 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Setups ----------
+  // sp: [formula, signed coefficient] (reactants negative). c0: starting amounts (M, or atm when p is true).
+  // expect: hand-typed equilibrium amounts (3 sig figs) for the self-check.
+  var SC = {
+    hi:   { name: "Perfect square", sp: [["H2", -1], ["I2", -1], ["HI", 2]], c0: [0.20, 0.20, 0], K: 49, expect: [0.0444, 0.0444, 0.311], route: "square" },
+    rev:  { name: "Start from products (Q > K)", sp: [["H2", -1], ["I2", -1], ["HI", 2]], c0: [0, 0, 0.50], K: 49, expect: [0.0556, 0.0556, 0.389], route: "square" },
+    no:   { name: "Tiny K: small-x", sp: [["N2", -1], ["O2", -1], ["NO", 2]], c0: [0.80, 0.20, 0], K: 1.0e-5, expect: [0.799, 0.199, 0.00126], route: "approx" },
+    pcl5: { name: "x is not small: quadratic", sp: [["PCl5", -1], ["PCl3", 1], ["Cl2", 1]], c0: [0.20, 0, 0], K: 0.040, expect: [0.128, 0.0717, 0.0717], route: "quad" },
+    n2o4: { name: "Partial pressures (Kp)", sp: [["N2O4", -1], ["NO2", 2]], c0: [1.00, 0], K: 0.15, p: true, expect: [0.824, 0.352], route: "quad" },
+    co:   { name: "All species present: Q first", sp: [["CO", -1], ["H2O", -1], ["CO2", 1], ["H2", 1]], c0: [0.10, 0.10, 0.05, 0.05], K: 4.0, expect: [0.0500, 0.0500, 0.100, 0.100], route: "square" }
+  };
+  var ORDER = ["hi", "rev", "no", "pcl5", "n2o4", "co"];
+  var S = { key: "hi", c0: [], K: 1, prog: 1 };
+  var stopAnim = null;
+
+  // ---------- Formatting ----------
+  var SUB = "₀₁₂₃₄₅₆₇₈₉", SUP = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+  function uni(f) { return f.replace(/(\D)(\d+)/g, function (m, a, d) { return a + d.split("").map(function (c) { return SUB[+c]; }).join(""); }); }
+  function supText(n) { return String(n).split("").map(function (c) { return SUP[c] || c; }).join(""); }
+  function plain(v, n) { // plain-text number for SVG labels
+    if (v === 0) return "0";
+    var e = Math.floor(Math.log10(Math.abs(v)));
+    if (e >= -2 && e <= 3) return Lab.sig(v, n);
+    var m = v / Math.pow(10, e); if (+m.toFixed(n - 1) >= 10) { m /= 10; e++; }
+    return m.toFixed(n - 1) + "×10" + supText(e);
+  }
+  function N3(v) { return v === 0 ? "0" : Lab.sci(v, 3).replace(/^-/, "−"); }
+  function Kf(v) { return Lab.sci(v, 2); }
+  function sc() { return SC[S.key]; }
+  function unit() { return sc().p ? "atm" : "M"; }
+  function Ksym() { return sc().p ? "K<sub>p</sub>" : "K<sub>c</sub>"; }
+  function amt(f) { return sc().p ? "P<sub>" + Lab.fmla(f) + "</sub>" : "[" + Lab.fmla(f) + "]"; }
+  function coefTxt(n) { return Math.abs(n) === 1 ? "" : String(Math.abs(n)); }
+
+  // ---------- Math ----------
+  function lnQ(sp, c) {
+    var s = 0;
+    for (var i = 0; i < sp.length; i++) s += sp[i][1] * Math.log(c[i]);
+    return s;
+  }
+  function solve(sp, c0, K) {
+    var lq0 = lnQ(sp, c0), lk = Math.log(K), r = { lq0: lq0, sp: sp, c0: c0, K: K };
+    if (isNaN(lq0)) { r.stuck = true; return r; }
+    r.d = Math.abs(lq0 - lk) < 1e-12 ? 0 : (lq0 < lk ? 1 : -1);
+    var dir = r.d || 1;
+    r.nu = sp.map(function (s) { return dir * s[1]; });
+    r.xmax = Infinity;
+    r.nu.forEach(function (n, i) { if (n < 0) r.xmax = Math.min(r.xmax, c0[i] / -n); });
+    r.at = function (x) { return c0.map(function (c, i) { return Math.max(0, c + r.nu[i] * x); }); };
+    if (r.d === 0) { r.x = 0; r.c = c0.slice(); return r; }
+    var lo = 0, hi = r.xmax;
+    for (var k = 0; k < 200; k++) {
+      var mid = (lo + hi) / 2, g = r.d * (lnQ(sp, r.at(mid)) - lk);
+      if (g < 0) lo = mid; else hi = mid;
+    }
+    r.x = (lo + hi) / 2; r.c = r.at(r.x);
+    return r;
+  }
+  // polynomials as coefficient arrays [a0, a1, a2, ...]
+  function pmul(a, b) { var o = []; for (var i = 0; i < a.length + b.length - 1; i++) o.push(0); a.forEach(function (x, i) { b.forEach(function (y, j) { o[i + j] += x * y; }); }); return o; }
+  function polySide(r, sign) {
+    var p = [1];
+    r.sp.forEach(function (s, i) { if (s[1] * sign > 0) for (var k = 0; k < Math.abs(s[1]); k++) p = pmul(p, [r.c0[i], r.nu[i]]); });
+    return p;
+  }
+  // Square-root route: each side is (a0 + a1 x)^2.
+  function squareSide(r, sign) {
+    var idx = []; r.sp.forEach(function (s, i) { if (s[1] * sign > 0) idx.push(i); });
+    if (idx.length === 1 && Math.abs(r.sp[idx[0]][1]) === 2) return [r.c0[idx[0]], r.nu[idx[0]]];
+    if (idx.length === 2 && Math.abs(r.sp[idx[0]][1]) === 1 && Math.abs(r.sp[idx[1]][1]) === 1 &&
+        Math.abs(r.c0[idx[0]] - r.c0[idx[1]]) < 1e-12 && r.nu[idx[0]] === r.nu[idx[1]]) return [r.c0[idx[0]], r.nu[idx[0]]];
+    return null;
+  }
+  function methods(r) {
+    var m = {};
+    if (r.stuck || r.d === 0) return m;
+    var P = squareSide(r, 1), R = squareSide(r, -1);
+    if (P && R) {
+      var s = Math.sqrt(r.K);
+      m.square = { s: s, P: P, R: R, x: (s * R[0] - P[0]) / (P[1] - s * R[1]) };
+    }
+    // small-x: species with c0 > 0 keep c0; species with c0 = 0 contribute (nu x)^coef
+    var A = 1, mexp = 0, zero = false;
+    r.sp.forEach(function (sp, i) {
+      if (r.c0[i] > 0) A *= Math.pow(r.c0[i], sp[1]);
+      else { zero = true; A *= Math.pow(Math.abs(r.nu[i]), sp[1]); mexp += sp[1]; }
+    });
+    if (zero && mexp !== 0) {
+      var xa = Math.pow(r.K / A, 1 / mexp), worst = 0, wi = -1;
+      r.sp.forEach(function (sp, i) { if (r.c0[i] > 0) { var f = Math.abs(r.nu[i]) * xa / r.c0[i]; if (f > worst) { worst = f; wi = i; } } });
+      m.approx = { x: xa, pct: 100 * worst, wi: wi, ok: worst <= 0.05 && xa < r.xmax };
+    }
+    // quadratic: N(x) - K D(x) = 0
+    var Np = polySide(r, 1), Dp = polySide(r, -1), L = Math.max(Np.length, Dp.length), poly = [];
+    for (var i = 0; i < L; i++) poly.push((Np[i] || 0) - r.K * (Dp[i] || 0));
+    var scale = Math.max.apply(null, poly.map(Math.abs));
+    while (poly.length > 1 && Math.abs(poly[poly.length - 1]) < 1e-12 * scale) poly.pop();
+    if (poly.length === 3) {
+      var a = poly[2], b = poly[1], c = poly[0], disc = b * b - 4 * a * c;
+      if (disc >= 0) {
+        var r1 = (-b + Math.sqrt(disc)) / (2 * a), r2 = (-b - Math.sqrt(disc)) / (2 * a);
+        var good = function (x) { return x >= -1e-12 && x <= r.xmax + 1e-12; };
+        m.quad = { a: a, b: b, c: c, roots: [r1, r2], x: good(r1) ? r1 : r2, bad: good(r1) ? r2 : r1 };
+      }
+    } else if (poly.length === 2) {
+      m.linear = { x: -poly[0] / poly[1] };
+    }
+    return m;
+  }
+
+  // ---------- Text builders ----------
+  function eqnHTML() {
+    var x = sc(), L = [], R = [];
+    x.sp.forEach(function (s) { (s[1] < 0 ? L : R).push(coefTxt(s[1]) + Lab.fmla(s[0]) + "(g)"); });
+    return L.join(" + ") + " ⇌ " + R.join(" + ") + "&nbsp;&nbsp;&nbsp;" + Ksym() + " = " + Kf(S.K);
+  }
+  function exprHTML() {
+    var x = sc(), top = [], bot = [];
+    x.sp.forEach(function (s) { var t = amt(s[0]) + (Math.abs(s[1]) > 1 ? "<sup>" + Math.abs(s[1]) + "</sup>" : ""); (s[1] < 0 ? bot : top).push(t); });
+    return Ksym() + " = " + top.join("") + " / " + (bot.length > 1 ? "(" + bot.join("") + ")" : bot.join(""));
+  }
+  function eText(r, i) { // equilibrium entry in terms of x
+    var c = r.c0[i], n = r.nu[i];
+    if (r.d === 0 || n === 0) return N3(c);
+    var xt = coefTxt(n) + "x";
+    if (c === 0) return (n < 0 ? "−" : "") + xt;
+    return N3(c) + (n > 0 ? " + " : " − ") + xt;
+  }
+  function factor(txt, e, many) {
+    var wrap = many || / /.test(txt) || (e > 1 && txt !== "x");
+    return (wrap ? "(" + txt + ")" : txt) + (e > 1 ? "<sup>" + e + "</sup>" : "");
+  }
+  function sideHTML(r, sign, txtOf) {
+    var parts = [];
+    r.sp.forEach(function (s, i) { if (s[1] * sign > 0) parts.push(i); });
+    var out = parts.map(function (i) { return factor(txtOf(i), Math.abs(r.sp[i][1]), parts.length > 1); }).join("");
+    return sign < 0 && parts.length > 1 ? "[" + out + "]" : out;
+  }
+  function subsHTML(r) {
+    var f = function (i) { return eText(r, i); };
+    return Kf(r.K) + " = " + sideHTML(r, 1, f) + " / " + sideHTML(r, -1, f);
+  }
+  function approxHTML(r) {
+    var f = function (i) { return r.c0[i] > 0 ? N3(r.c0[i]) : coefTxt(r.nu[i]) + "x"; };
+    return Kf(r.K) + " ≈ " + sideHTML(r, 1, f) + " / " + sideHTML(r, -1, f);
+  }
+  function polyHTML(q) {
+    function term(v, p, first) {
+      var s = v < 0 ? (first ? "−" : " − ") : (first ? "" : " + ");
+      return s + (p > 0 && Math.abs(Math.abs(v) - 1) < 1e-9 ? "" : N3(Math.abs(v))) + (p === 2 ? "x<sup>2</sup>" : p === 1 ? "x" : "");
+    }
+    // divide through so the x² coefficient is positive
+    var k = q.a < 0 ? -1 : 1;
+    return term(k * q.a, 2, true) + term(k * q.b, 1) + term(k * q.c, 0) + " = 0";
+  }
+
+  // ---------- Drawing ----------
+  function niceStep(max) { var raw = max / 4, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3 ? 2 : m < 7 ? 5 : 10) * p; }
+  function drawQ(r) {
+    var svg = document.getElementById("gq"), lk = Math.log10(r.K);
+    var lo = Math.floor(lk) - 3, hi = Math.ceil(lk) + 3;
+    if (r.stuck) {
+      var F0 = Lab.frame(svg, { x: [0, 1], y: [lo, hi], xLabel: "x", yLabel: "Q (log scale)" });
+      Lab.tag(F0, 0.5, (lo + hi) / 2, "Q is undefined: nothing can react", "var(--bad)", "middle");
+      return;
+    }
+    var xm = isFinite(r.xmax) ? r.xmax : 1;
+    var yt = []; for (var v = lo; v <= hi; v++) yt.push(v);
+    if (yt.length > 8) yt = yt.filter(function (v) { return (v - lo) % 2 === 0; });
+    var st = niceStep(xm), xt = []; for (var t = 0; t <= xm + 1e-12; t += st) xt.push(t);
+    var F = Lab.frame(svg, { x: [0, xm], y: [lo, hi], xLabel: "x (" + unit() + ")" + (r.d === -1 ? ", reverse direction" : ""), yLabel: "Q (log scale)",
+      xTicks: xt, yTicks: yt, fmtX: function (v) { return plain(v, 2); }, fmtY: function (v) { return "10" + supText(v); } });
+    Lab.hline(F, lk, "var(--c4)", 2, "6 4");
+    Lab.tag(F, xm, lk + (r.d === -1 ? -0.35 : 0.25), "K = " + plain(r.K, 2), "var(--c4)", "end");
+    var pts = [];
+    for (var i = 0; i <= 200; i++) {
+      var x = xm * i / 200 * (i === 200 ? 0.9999 : 1), q = lnQ(r.sp, r.at(x)) / Math.LN10;
+      if (!isFinite(q)) q = q > 0 ? hi + 1 : lo - 1;
+      pts.push([x, Math.max(lo - 1, Math.min(hi + 1, q))]);
+    }
+    Lab.line(F, pts, "var(--c1)", 3);
+    var x0 = 0, q0 = Math.max(lo, Math.min(hi, isFinite(r.lq0) ? r.lq0 / Math.LN10 : (r.lq0 > 0 ? hi : lo)));
+    Lab.dot(F, x0, q0, "var(--ghost)");
+    var xp = r.x * S.prog, qp = lnQ(r.sp, r.at(xp)) / Math.LN10;
+    if (!isFinite(qp)) qp = qp > 0 ? hi : lo;
+    qp = Math.max(lo, Math.min(hi, qp));
+    Lab.dot(F, xp, qp, "var(--accent)", S.prog >= 1);
+    if (S.prog >= 1 && r.d !== 0) Lab.tag(F, xp + (xp > xm * 0.6 ? -xm * 0.03 : xm * 0.03), lo + 0.35, "x = " + plain(r.x, 3), "var(--accent)", xp > xm * 0.6 ? "end" : "start");
+    document.getElementById("g1-sub").textContent = r.d === 0 ? "already at equilibrium" : (r.d > 0 ? "Q rises toward K" : "Q falls toward K");
+  }
+  function drawBars(r) {
+    var svg = document.getElementById("gb"), x = sc(), n = x.sp.length;
+    var cur = r.stuck ? r.c0 : r.at(r.x * S.prog);
+    var mx = Math.max.apply(null, r.c0.concat(r.stuck ? [] : r.c).concat([1e-9]));
+    var st = niceStep(mx * 1.1), yt = []; for (var t = 0; t <= mx * 1.15 + 1e-12; t += st) yt.push(t);
+    var ymax = Math.max(mx * 1.18, yt[yt.length - 1]);
+    var F = Lab.frame(svg, { x: [0, n], y: [0, ymax], xLabel: "Species", yLabel: (x.p ? "Partial pressure (atm)" : "Concentration (M)"),
+      xTicks: x.sp.map(function (s, i) { return i + 0.5; }), yTicks: yt, fmtX: function (v) { return uni(x.sp[Math.floor(v)][0]); }, fmtY: function (v) { return plain(v, 2); } });
+    x.sp.forEach(function (s, i) {
+      Lab.rect(F, i + 0.16, 0, i + 0.46, r.c0[i], "var(--ghost)", 0.75);
+      Lab.rect(F, i + 0.54, 0, i + 0.84, cur[i], "var(--accent)", 1);
+      Lab.tag(F, i + 0.69, cur[i] + ymax * 0.03, plain(cur[i], 3), "var(--accent)", "middle");
+    });
+    document.getElementById("g2-sub").textContent = S.prog < 1 ? "reacting..." : (x.p ? "partial pressures in atm" : "concentrations in M");
+  }
+  function iceTable(r) {
+    var x = sc(), h = "<thead><tr><th></th>";
+    x.sp.forEach(function (s) { h += "<th>" + amt(s[0]) + "</th>"; });
+    h += "</tr></thead><tbody><tr><td>Initial</td>";
+    x.sp.forEach(function (s, i) { h += "<td>" + (r.c0[i] === 0 ? "0" : N3(r.c0[i])) + "</td>"; });
+    h += "</tr><tr><td>Change</td>";
+    x.sp.forEach(function (s, i) { h += "<td>" + (r.stuck || r.d === 0 ? "0" : (r.nu[i] > 0 ? "+" : "−") + coefTxt(r.nu[i]) + "x") + "</td>"; });
+    h += "</tr><tr><td>Equilibrium</td>";
+    x.sp.forEach(function (s, i) { h += "<td>" + (r.stuck ? "—" : eText(r, i)) + "</td>"; });
+    h += "</tr><tr class=\"eqrow\"><td>Equilibrium value</td>";
+    x.sp.forEach(function (s, i) { h += "<td>" + (r.stuck ? "—" : N3(r.c[i])) + "<small>" + unit() + "</small></td>"; });
+    h += "</tr></tbody>";
+    document.getElementById("ice").innerHTML = h;
+    document.getElementById("ice-sub").textContent = r.stuck ? "" : r.d === 0 ? "(no change: Q = K)" : r.d > 0 ? "(Q < K: reactants −, products +)" : "(Q > K: products −, reactants +)";
+  }
+
+  // ---------- Story ----------
+  function qWord(r) {
+    if (r.lq0 === Infinity) return "undefined (a reactant amount is zero, so the denominator is zero); treat it as larger than any K";
+    if (r.lq0 === -Infinity) return "0, because a product amount is zero";
+    return N3(Math.exp(r.lq0));
+  }
+  function story(r, m) {
+    var x = sc(), h = "", u = unit();
+    if (r.stuck) {
+      return "<p>With a zero on both sides of the expression, Q is 0/0. A reactant is missing and so is a product, so neither the forward nor the reverse reaction can start. Move a slider to put something on at least one complete side.</p><p><b>AP answer:</b> a reaction can proceed in a direction only if every species consumed in that direction is present.</p>";
+    }
+    h += "<p><b>1. Direction.</b> " + exprHTML() + ". With the starting amounts, Q = " + qWord(r) + ". ";
+    if (r.d === 0) h += "That equals K = " + Kf(r.K) + ", so the system is already at equilibrium: the forward and reverse rates are equal and nothing changes overall.</p>";
+    else h += (r.d > 0 ? "Q &lt; K, so the reaction proceeds <b>forward</b>: reactants are consumed and products form." : "Q &gt; K, so the reaction proceeds in <b>reverse</b>: products are consumed and reactants form.") + "</p>";
+    if (r.d !== 0) {
+      h += "<p><b>2. ICE table.</b> Let x be the amount of reaction in that direction; each change is x times the coefficient. Substituting the E row: <span class=\"formula\">" + subsHTML(r) + "</span></p>";
+      h += "<p><b>3. Solve.</b></p><ol class=\"steps\">";
+      if (m.square) {
+        var par = function (t) { return / /.test(t) ? "(" + t + ")" : t; };
+        var lin = function (L) { return L[0] === 0 ? coefTxt(L[1]) + "x" : N3(L[0]) + (L[1] > 0 ? " + " : " − ") + coefTxt(L[1]) + "x"; };
+        h += "<li>Both sides are perfect squares. Take the square root of each: <span class=\"formula\">" + N3(m.square.s) + " = " + par(lin(m.square.P)) + " / " + par(lin(m.square.R)) + "</span>. This is a linear equation, so x = " + N3(m.square.x) + " " + u + ".</li>";
+      }
+      if (m.approx && !m.square) {
+        var wname = Lab.fmla(x.sp[m.approx.wi][0]);
+        h += "<li>Try the small-x approximation (drop x where it is added to or subtracted from a nonzero amount): <span class=\"formula\">" + approxHTML(r) + "</span> gives x ≈ " + N3(m.approx.x) + " " + u + ". ";
+        h += "Check: the change in " + wname + " is " + Lab.sig(m.approx.pct, 2) + "% of its starting amount, " + (m.approx.ok ? "under 5%, so the approximation is justified.</li>" : "well over 5%, so the approximation <b>fails</b> and x must be found exactly.</li>");
+      }
+      if (m.quad && (!m.square && !(m.approx && m.approx.ok))) {
+        h += "<li>Multiply out and collect terms: <span class=\"formula\">" + polyHTML(m.quad) + "</span>. The quadratic formula gives x = " + N3(m.quad.roots[0]) + " or x = " + N3(m.quad.roots[1]) + ". Keep x = " + N3(m.quad.x) + " " + u + "; the other root " + (m.quad.bad < 0 ? "is negative" : "would make an equilibrium amount negative") + ".</li>";
+      }
+      if (m.approx && m.approx.ok && !m.square) {
+        h += "<li>The exact solution is x = " + N3(r.x) + " " + u + ", a " + Lab.sig(100 * Math.abs(m.approx.x - r.x) / r.x, 2) + "% difference, which is why the approximation is accepted.</li>";
+      }
+      if (!m.square && !m.quad && !(m.approx && m.approx.ok) && !m.linear) {
+        h += "<li>This expression is not a quadratic, so solve it numerically (successive approximation or a graphing calculator): x = " + N3(r.x) + " " + u + ".</li>";
+      }
+      if (m.linear && !m.square) h += "<li>The x<sup>2</sup> terms cancel, leaving a linear equation: x = " + N3(m.linear.x) + " " + u + ".</li>";
+      h += "</ol>";
+      h += "<p><b>4. Equilibrium amounts.</b> " + x.sp.map(function (s, i) { return amt(s[0]) + " = " + eText(r, i) + " = " + N3(r.c[i]) + " " + u; }).join("; ") + ".</p>";
+    }
+    var qe = Math.exp(lnQ(r.sp, r.c));
+    h += "<p><b>Check.</b> Substituting the equilibrium amounts gives Q = " + N3(qe) + ", which matches K = " + Kf(r.K) + " to rounding.</p>";
+    // AP answer
+    var main = x.sp.map(function (s, i) { return amt(s[0]) + " = " + N3(r.c[i]) + " " + u; }).join(", ");
+    var route = m.square ? "taking the square root of both sides" : (m.approx && m.approx.ok) ? "the small-x approximation (justified by the 5% check)" : m.quad ? "the quadratic formula (keeping the root that gives no negative amounts)" : "solving for x";
+    if (r.d === 0) h += "<p><b>AP answer:</b> Q = K, so the system is at equilibrium and the amounts stay as they are: " + main + ".</p>";
+    else h += "<p><b>AP answer:</b> Because Q " + (r.d > 0 ? "&lt;" : "&gt;") + " K, the reaction proceeds " + (r.d > 0 ? "to the right" : "to the left") + ". Writing each equilibrium amount in terms of x and solving by " + route + " gives " + main + ". These values reproduce K, which confirms the answer.</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  var ctls = document.getElementById("ctls"), sliders = [], kSlider;
+  function buildControls() {
+    var x = sc(); ctls.innerHTML = ""; sliders = [];
+    x.sp.forEach(function (s, i) {
+      var d = document.createElement("div"); d.className = "ctl";
+      d.innerHTML = '<label for="s-c' + i + '"><span>Initial ' + amt(s[0]) + '</span> <output id="o-c' + i + '"></output></label><input type="range" id="s-c' + i + '" min="0" max="1" step="0.01"><span class="hint">' + (s[1] < 0 ? "Reactant" : "Product") + ", coefficient " + Math.abs(s[1]) + "</span>";
+      ctls.appendChild(d);
+      var inp = d.querySelector("input");
+      inp.addEventListener("input", function () { S.c0[i] = Math.round(parseFloat(inp.value) * 100) / 100; S.prog = 1; render(); });
+      sliders.push(inp);
+    });
+    var d = document.createElement("div"); d.className = "ctl";
+    d.innerHTML = '<label for="s-k"><span>' + Ksym() + '</span> <output id="o-k"></output></label><input type="range" id="s-k" min="-6" max="3" step="0.05"><span class="hint">Log scale, from 10<sup>−6</sup> to 10<sup>3</sup></span>';
+    ctls.appendChild(d);
+    kSlider = d.querySelector("input");
+    kSlider.addEventListener("input", function () { S.K = +Lab.sig(Math.pow(10, parseFloat(kSlider.value)), 2); S.prog = 1; render(); });
+  }
+  var scBtns = {};
+  function render() {
+    var x = sc(), r = solve(x.sp, S.c0, S.K), m = methods(r);
+    document.getElementById("eqn").innerHTML = eqnHTML();
+    sliders.forEach(function (inp, i) { inp.value = S.c0[i]; document.getElementById("o-c" + i).textContent = Lab.sig(S.c0[i], 3) + " " + unit(); });
+    kSlider.value = Math.log10(S.K);
+    document.getElementById("o-k").innerHTML = Kf(S.K);
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    drawQ(r); drawBars(r); iceTable(r);
+    var rq = document.getElementById("r-q"), rd = document.getElementById("r-d"), rx = document.getElementById("r-x"), rc = document.getElementById("r-c");
+    if (r.stuck) {
+      rq.textContent = "0/0"; document.getElementById("r-q2").textContent = "undefined";
+      rd.textContent = "none"; document.getElementById("r-d2").textContent = "nothing can react";
+      rx.textContent = "—"; document.getElementById("r-x2").textContent = "";
+      rc.textContent = "—"; document.getElementById("r-c2").textContent = "";
+    } else {
+      rq.innerHTML = r.lq0 === Infinity ? "undefined" : N3(Math.exp(r.lq0));
+      document.getElementById("r-q2").innerHTML = r.d === 0 ? "equal to K" : (r.d > 0 ? "less than" : "greater than") + " K = " + Kf(r.K);
+      rd.textContent = r.d === 0 ? "none" : r.d > 0 ? "forward →" : "← reverse";
+      document.getElementById("r-d2").textContent = r.d === 0 ? "rates already equal" : r.d > 0 ? "reactants consumed" : "products consumed";
+      rx.innerHTML = N3(r.x) + " " + unit();
+      document.getElementById("r-x2").innerHTML = m.square ? "by perfect square" : (m.approx && m.approx.ok) ? "small-x (" + Lab.sig(m.approx.pct, 2) + "% change)" : m.quad ? "by quadratic formula" : m.linear ? "linear equation" : r.d === 0 ? "no change" : "solved numerically";
+      rc.innerHTML = N3(Math.exp(lnQ(r.sp, r.c)));
+      document.getElementById("r-c2").innerHTML = "equals K = " + Kf(r.K);
+    }
+    document.getElementById("run-note").textContent = S.prog < 1 ? "Reacting..." : "Showing the equilibrium state.";
+    document.getElementById("story").innerHTML = story(r, m);
+    return r;
+  }
+  function frame() { // redraw only the moving parts during animation
+    var x = sc(), r = solve(x.sp, S.c0, S.K);
+    drawQ(r); drawBars(r);
+    document.getElementById("run-note").textContent = S.prog < 1 ? "Reacting..." : "Showing the equilibrium state.";
+  }
+  function run() {
+    if (stopAnim) stopAnim();
+    S.prog = 0; frame();
+    stopAnim = Lab.animate(1600, function (t) { S.prog = t; frame(); }, function () { S.prog = 1; stopAnim = null; render(); });
+  }
+  function pick(k) {
+    if (stopAnim) { stopAnim(); stopAnim = null; }
+    S.key = k; S.c0 = SC[k].c0.slice(); S.K = SC[k].K; S.prog = 1;
+    buildControls(); render();
+  }
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name;
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pick(k); run(); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  document.getElementById("b-run").addEventListener("click", run);
+  pick("hi");
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    ORDER.forEach(function (k) {
+      var x = SC[k], r = solve(x.sp, x.c0, x.K), m = methods(r);
+      if (Math.abs(lnQ(x.sp, r.c) - Math.log(x.K)) > 1e-6) bad.push(k + ": Q at equilibrium does not equal K");
+      x.expect.forEach(function (e, i) { if (Lab.sig(r.c[i], 3) !== Lab.sig(e, 3)) bad.push(k + ": " + x.sp[i][0] + " = " + Lab.sig(r.c[i], 3) + ", expected " + e); });
+      var used = m.square ? "square" : (m.approx && m.approx.ok) ? "approx" : m.quad ? "quad" : "none";
+      if (used !== x.route) bad.push(k + ": route " + used + ", expected " + x.route);
+      if (m.square && Math.abs(m.square.x - r.x) > 1e-9) bad.push(k + ": square-root x disagrees");
+      if (m.quad && Math.abs(m.quad.x - r.x) > 1e-9 * Math.max(1, r.x)) bad.push(k + ": quadratic root disagrees");
+      // atoms are conserved between the start and equilibrium
+      var t0 = {}, t1 = {};
+      x.sp.forEach(function (s, i) { var a = Lab.parseFormula(s[0]); for (var el in a) { t0[el] = (t0[el] || 0) + a[el] * x.c0[i]; t1[el] = (t1[el] || 0) + a[el] * r.c[i]; } });
+      for (var el in t0) if (Math.abs(t0[el] - t1[el]) > 1e-9) bad.push(k + ": " + el + " not conserved");
+    });
+    if (bad.length) console.error("7.7 self-check failed: " + bad.join("; "));
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "For H₂(g) + I₂(g) ⇌ 2HI(g), Kc = 64 at a certain temperature. A flask initially contains 0.30 M H₂ and 0.30 M I₂ and no HI. What is [HI] at equilibrium?",
+      o: ["0.24 M", "0.060 M", "0.48 M", "2.4 M"], c: 2,
+      w: "Both sides are perfect squares: 64 = (2x)²/(0.30 − x)², so 8 = 2x/(0.30 − x), 2x = 2.4 − 8x and x = 0.24 M. The question asks for [HI] = 2x = 0.48 M. Choice A is x itself, the most common trap; choice B is the [H₂] left at equilibrium (0.30 − 0.24)." },
+    { s: "For X(g) ⇌ 2Y(g), Kc = 4.0 × 10⁻⁷. A 1.0 L flask initially contains 0.10 mol X and no Y. What is [Y] at equilibrium?",
+      o: ["1.0 × 10⁻⁴ M", "2.0 × 10⁻⁴ M", "4.0 × 10⁻⁴ M", "6.3 × 10⁻⁴ M"], c: 1,
+      w: "K is tiny, so 0.10 − x ≈ 0.10: 4.0 × 10⁻⁷ = (2x)²/0.10, so 4x² = 4.0 × 10⁻⁸, x = 1.0 × 10⁻⁴ M and [Y] = 2x = 2.0 × 10⁻⁴ M. The change is 0.1% of 0.10 M, so the approximation holds. Choice A reports x instead of 2x; choice D takes √K and ignores the 0.10 M and the coefficient." },
+    { s: "Which condition best justifies replacing (0.50 − x) with 0.50 when solving an equilibrium problem?",
+      o: ["K is less than 1.", "The reaction is exothermic.", "No products are present initially.", "K is so small relative to 0.50 M that x turns out to be less than 5% of 0.50 M."], c: 3,
+      w: "The approximation is valid only if x is negligible next to 0.50, and the check is that x is under about 5% of it. K &lt; 1 alone (choice A) is not enough: with K = 0.040 and 0.20 M PCl₅, x is about a third of the starting amount. Whether products start at zero (choice C) sets the direction, not the size of x." },
+    { s: "For CO(g) + H₂O(g) ⇌ CO₂(g) + H₂(g), Kc = 4.0. A flask initially contains 0.20 M of each of the four gases. What is [H₂] at equilibrium?",
+      o: ["0.27 M", "0.13 M", "0.40 M", "0.067 M"], c: 0,
+      w: "Q = (0.20)(0.20)/[(0.20)(0.20)] = 1.0 &lt; 4.0, so the reaction runs forward: products +x, reactants −x. 4.0 = (0.20 + x)²/(0.20 − x)², so 2.0 = (0.20 + x)/(0.20 − x), 0.20 + x = 0.40 − 2.0x, and x = 0.067 M. [H₂] = 0.20 + 0.067 = 0.27 M. Choice B uses the wrong direction (0.20 − x); choice D is x alone." },
+    { s: "For PCl₅(g) ⇌ PCl₃(g) + Cl₂(g), Kc = 0.040. A student starts with 0.20 M PCl₅, assumes 0.20 − x ≈ 0.20, and gets x = 0.089 M. Which statement about this result is correct?",
+      o: ["It is acceptable because K is less than 1.", "It is not acceptable because x is about 45% of 0.20 M, so x must be found with the quadratic formula.", "It is not acceptable because x cannot be larger than K.", "It is acceptable because the student kept two significant figures."], c: 1,
+      w: "The 5% check fails: 0.089/0.20 ≈ 45%. Solving x² + 0.040x − 0.0080 = 0 gives x = 0.072 M, noticeably different. Choice A is the trap: a K below 1 does not guarantee that x is small, because x also depends on the starting concentration. There is no rule comparing x to K (choice C)." },
+    { s: "A flask initially contains only SO₃(g). The reaction 2SO₂(g) + O₂(g) ⇌ 2SO₃(g) then approaches equilibrium. Which row correctly gives the change in each amount?",
+      o: ["SO₂: −2x, O₂: −x, SO₃: +2x", "SO₂: +x, O₂: +x, SO₃: −x", "SO₂: +2x, O₂: +2x, SO₃: −2x", "SO₂: +2x, O₂: +x, SO₃: −2x"], c: 3,
+      w: "With no SO₂ or O₂ present, Q is undefined (greater than any K), so the reaction runs in reverse: SO₃ is consumed and SO₂ and O₂ form, in the 2 : 1 : 2 ratio of the coefficients. Choice A has the forward signs. Choices B and C ignore the coefficients." },
+    { s: "For N₂O₄(g) ⇌ 2NO₂(g), Kp = 0.15. A vessel initially contains N₂O₄ at 1.00 atm and no NO₂. Which equation gives the change x in the partial pressure of N₂O₄?",
+      o: ["0.15 = (2x)²/(1.00 − x)", "0.15 = x²/(1.00 − x)", "0.15 = (2x)²/(1.00 − 2x)", "0.15 = 2x/(1.00 − x)"], c: 0,
+      w: "N₂O₄ changes by −x and NO₂ by +2x, and P(NO₂) is squared in the expression because its coefficient is 2. Solving 4x² + 0.15x − 0.15 = 0 gives x = 0.176 atm, so P(NO₂) = 0.35 atm. Choice B forgets the coefficient on NO₂; choice C puts it on the wrong species; choice D forgets to square." },
+    { s: "At the same temperature, flask 1 starts with 0.20 M H₂ and 0.20 M I₂, and flask 2 (same volume) starts with 0.40 M HI. Both reach equilibrium for H₂(g) + I₂(g) ⇌ 2HI(g). Which statement is correct?",
+      o: ["Flask 1 contains more HI at equilibrium, because it started with the reactants.", "Flask 2 contains more HI at equilibrium, because it started with HI.", "The equilibrium concentrations are the same in both flasks.", "The flasks reach different values of K."], c: 2,
+      w: "0.40 M HI contains exactly the same H and I atoms as 0.20 M H₂ plus 0.20 M I₂, so both flasks reach the same equilibrium mixture, one from the left (Q &lt; K) and one from the right (Q &gt; K). K depends only on temperature, so choice D is wrong. Choices A and B assume the starting side decides the final mixture." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("7.7");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [7], topic: "7.7", compact: true, storageKey: "topic-7.7" });</script>
+</body>
+</html>

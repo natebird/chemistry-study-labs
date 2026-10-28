@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free Energy and Equilibrium Study Lab</title>
+<meta name="description" content="Convert between ΔG° and K in either direction with a live graph, a worked calculation, and an equilibrium-mixture bar, using real reactions from ammonia synthesis to the autoionization of water.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 18px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 14px; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.side .controls { grid-template-columns: 1fr; }
+.ctl[hidden] { display: none; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.lab-bar > * { min-width: 0; max-width: 100%; }
+.calc .row span:last-child { font-family: var(--mono); font-size: .88rem; text-align: right; }
+.calc .row span:first-child { min-width: 0; }
+.note { font-size: .84rem; color: var(--muted); }
+.mixbar { display: grid; gap: 4px; }
+.mixbar .lbls { display: flex; justify-content: space-between; font-size: .8rem; color: var(--muted); }
+.legend .l-band { color: var(--c3); } .legend .l-band::before { height: 10px; opacity: .3; }
+.legend .l-gh { color: var(--muted); } .legend .l-gh::before { background: none; border-top: 2px dashed var(--ghost); height: 0; }
+@media (max-width: 520px) {
+  .lab-bar .eqn { white-space: normal; }
+  .calc .row { flex-direction: column; gap: 2px; }
+  .calc .row span:last-child { text-align: left; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 9 · Topic 9.5</span>
+  <h1>Free Energy and Equilibrium Study Lab</h1>
+  <p class="lede">ΔG° and K are two ways of saying the same thing: ΔG° = −RT ln K. A negative ΔG° means K &gt; 1 and products are favored at equilibrium; a positive ΔG° means K &lt; 1. Because the relationship is exponential, a few kJ/mol change K by a factor of ten. Convert in both directions below and build a feel for the sizes.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The ΔG° ⇄ K converter</h2>
+    <p>The graph plots log K against ΔG°. Every gridline up or down is a factor of 10 in K. The purple band marks |ΔG°| &lt; RT, where K stays between about 0.37 and 2.7, "close to 1." The bar under the graph shows the equilibrium mixture for a simple reaction A ⇌ B with this K.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>log K vs. ΔG° <small id="g-sub"></small></h3>
+      <svg class="chart" id="gk" role="img" aria-label="Graph of log K against standard free energy change, with the current value marked"></svg>
+      <div class="mixbar">
+        <svg class="chart" id="bar" role="img" aria-label="Equilibrium mixture bar for A in equilibrium with B"></svg>
+        <div class="lbls"><span>A (reactant)</span><span id="bar-txt"></span><span>B (product)</span></div>
+      </div>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Reactions at 298 K</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Start from</div>
+        <div class="seg" role="group" aria-label="Direction of the calculation">
+          <button type="button" id="m-g" aria-pressed="true">ΔG° → K</button>
+          <button type="button" id="m-k" aria-pressed="false">K → ΔG°</button>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="ctl" id="ctl-g">
+          <label for="s-g">ΔG° <output id="o-g"></output></label>
+          <input type="range" id="s-g" min="-80" max="80" step="0.1">
+        </div>
+        <div class="ctl" id="ctl-k" hidden>
+          <label for="s-k">K = 10<sup>x</sup>, x = <output id="o-k"></output></label>
+          <input type="range" id="s-k" min="-14" max="14" step="0.05">
+        </div>
+        <div class="ctl">
+          <label for="s-t">Temperature <output id="o-t"></output></label>
+          <input type="range" id="s-t" min="200" max="1000" step="1">
+          <span class="hint" id="h-t"></span>
+        </div>
+      </div>
+      <p class="note">ΔG° and K must be for the same temperature. Moving the temperature slider here keeps the number you started from fixed, so it shows how the conversion depends on T. For a real reaction, ΔG° itself also changes with T (ΔG° = ΔH° − TΔS°, topic 9.3).</p>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-ad">log K at this T</span><span class="l-gh">298 K</span><span class="l-band">|ΔG°| &lt; RT</span><span class="l-c1">This reaction</span></div>
+    <div class="eqn" id="eqn"></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">ΔG°</div><div class="v" id="r-g"></div><div class="sub">kJ/mol</div></div>
+    <div class="stat"><div class="k">K</div><div class="v" id="r-k"></div><div class="sub" id="r-k2"></div></div>
+    <div class="stat"><div class="k">ln K = −ΔG°/RT</div><div class="v" id="r-ln"></div><div class="sub" id="r-ln2"></div></div>
+    <div class="stat"><div class="k">RT</div><div class="v" id="r-rt"></div><div class="sub">kJ/mol at this T</div></div>
+  </div>
+
+  <div class="card calc" id="calc" aria-live="polite"></div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">The equation</span><h3>ΔG° = −RT ln K</h3><p>Rearranged, K = e<sup>−ΔG°/RT</sup>. The equations sheet gives ΔG° = −RT ln K; the rearranged form is in the CED, and you can get it by solving for K. R = 8.314 J/(mol·K), T in kelvins, and ΔG° must be in joules per mole to match R. Converting kJ to J is the step most often missed.</p></div>
+    <div class="card"><span class="tag">Signs</span><h3>Favored means K &gt; 1</h3><p>ΔG° &lt; 0 ⇔ K &gt; 1: products favored at equilibrium. ΔG° &gt; 0 ⇔ K &lt; 1: reactants favored. ΔG° = 0 ⇔ K = 1. "Thermodynamically favored" is the same claim as "K &gt; 1 under standard conditions."</p></div>
+    <div class="card"><span class="tag">Estimation</span><h3>Compare ΔG° with RT</h3><p>At 298 K, RT = 2.48 kJ/mol. If |ΔG°| is about RT or smaller, K is close to 1 and both sides are present in comparable amounts. If |ΔG°| is many times RT, K is far from 1. You can reason this way without a calculator.</p></div>
+    <div class="card"><span class="tag">Exponential</span><h3>5.7 kJ/mol per factor of 10</h3><p>At 298 K, every 5.7 kJ/mol of ΔG° (2.303RT) changes K by a factor of 10. So ΔG° = −11.4 kJ/mol gives K ≈ 100, and ΔG° = −57 kJ/mol gives K ≈ 10<sup>10</sup>. Small energy differences make huge differences in K.</p></div>
+    <div class="card"><span class="tag">Not K = 0</span><h3>K &lt; 1 still means some product</h3><p>ΔG° &gt; 0 does not mean "no reaction." It means the equilibrium lies toward reactants. Acetic acid (ΔG° ≈ +27 kJ/mol for ionization) still ionizes a little, which is why vinegar is acidic.</p></div>
+    <div class="card"><span class="tag">Any K</span><h3>Works for every type of K</h3><p>The same equation links ΔG° to K<sub>a</sub>, K<sub>b</sub>, K<sub>sp</sub>, K<sub>w</sub>, and K<sub>p</sub>. For dissolving AgCl, ΔG° = +55.7 kJ/mol gives K<sub>sp</sub> ≈ 1.7 × 10<sup>−10</sup>.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. ΔG° and K at 298 K</h2>
+    <p>Generated from K = e<sup>−ΔG°/RT</sup> with RT = 2.479 kJ/mol. The rows at ±5.7, ±11.4, and −57 kJ/mol show the "5.7 kJ per factor of 10" pattern; the others are the lab presets.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>ΔG°, kJ/mol</th><th>K</th><th>At equilibrium</th><th>Example near this value</th></tr></thead>
+    <tbody id="gk-table"></tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. ΔG° and K on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points</h3>
+      <ul>
+        <li>Write ΔG° = −RT ln K, convert ΔG° to J/mol, and show the substitution with R = 8.314 J/(mol·K) and T in K.</li>
+        <li>Report K without units, with a sensible number of significant figures; report ΔG° with sign and kJ/mol.</li>
+        <li>For a qualitative question, connect the sign: "ΔG° &lt; 0, so K &gt; 1 and products are favored at equilibrium."</li>
+        <li>When asked to estimate, compare |ΔG°| with RT ≈ 2.5 kJ/mol at 298 K to decide whether K is close to 1.</li>
+        <li>Use the K that matches the process: K<sub>sp</sub> for dissolving, K<sub>a</sub> for acid ionization, K<sub>p</sub> for gases.</li>
+        <li>If K is given and ΔG° asked, use ln, not log: ln K = 2.303 log K.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Using ΔG° in kJ with R = 8.314 J/(mol·K). The exponent comes out a thousand times too small and K ≈ 1.</li>
+        <li>Dropping the negative sign: K = e<sup>+ΔG°/RT</sup> gives 1/K.</li>
+        <li>Using log instead of ln, which gives a ΔG° 2.303 times too small.</li>
+        <li>Using °C for T.</li>
+        <li>Saying ΔG° &gt; 0 means no products at all. It means K &lt; 1.</li>
+        <li>Confusing K with the rate. A huge K says nothing about how fast equilibrium is reached (topic 9.4).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 9.5. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-9.html">Unit 9 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var R = 8.314;
+
+  // ΔG°f at 298 K, kJ/mol (aqueous ions relative to H⁺(aq) = 0)
+  var GF = { "N2(g)": 0, "H2(g)": 0, "NH3(g)": -16.5, "NO2(g)": 51.3, "N2O4(g)": 97.9, "H2O(l)": -237.1, "H2O(g)": -228.6,
+    "AgCl(s)": -109.8, "Ag+(aq)": 77.1, "Cl-(aq)": -131.2 };
+  function dGf(r, p) { var s = 0; p.forEach(function (t) { s += t[0] * GF[t[1]]; }); r.forEach(function (t) { s -= t[0] * GF[t[1]]; }); return s; }
+  var PR = [
+    { key: "nh3", label: "N₂ + 3H₂ ⇌ 2NH₃", eq: "N<sub>2</sub>(g) + 3H<sub>2</sub>(g) ⇌ 2NH<sub>3</sub>(g)", r: [[1, "N2(g)"], [3, "H2(g)"]], p: [[2, "NH3(g)"]], kname: "K<sub>p</sub>",
+      note: "Ammonia synthesis is favored at 298 K, with K<sub>p</sub> in the hundreds of thousands. (It is also very slow at 298 K, which is why the industrial process uses a catalyst and high temperature.)" },
+    { key: "no2", label: "2NO₂ ⇌ N₂O₄", eq: "2NO<sub>2</sub>(g) ⇌ N<sub>2</sub>O<sub>4</sub>(g)", r: [[2, "NO2(g)"]], p: [[1, "N2O4(g)"]], kname: "K<sub>p</sub>",
+      note: "ΔG° is only about twice RT, so K is modest and a sealed flask contains substantial amounts of both brown NO₂ and colorless N₂O₄." },
+    { key: "vap", label: "H₂O(l) ⇌ H₂O(g)", eq: "H<sub>2</sub>O(l) ⇌ H<sub>2</sub>O(g)", r: [[1, "H2O(l)"]], p: [[1, "H2O(g)"]], kname: "K<sub>p</sub> = P<sub>H₂O</sub>",
+      note: "For evaporation, K<sub>p</sub> is just the equilibrium pressure of water vapor in atm: the vapor pressure. The value from ΔG° is close to the measured 23.8 torr at 25 °C; the small difference comes from rounding in the tables." },
+    { key: "hac", label: "Acetic acid, Ka", eq: "CH<sub>3</sub>COOH(aq) + H<sub>2</sub>O(l) ⇌ H<sub>3</sub>O<sup>+</sup>(aq) + CH<sub>3</sub>COO<sup>−</sup>(aq)", K: 1.8e-5, kname: "K<sub>a</sub>",
+      note: "Starting from the measured K<sub>a</sub> = 1.8 × 10<sup>−5</sup>. A weak acid has K<sub>a</sub> &lt; 1, so its ionization has ΔG° &gt; 0, yet it still ionizes to a small extent." },
+    { key: "agcl", label: "AgCl dissolves, Ksp", eq: "AgCl(s) ⇌ Ag<sup>+</sup>(aq) + Cl<sup>−</sup>(aq)", r: [[1, "AgCl(s)"]], p: [[1, "Ag+(aq)"], [1, "Cl-(aq)"]], kname: "K<sub>sp</sub>",
+      note: "A large positive ΔG° gives a tiny K<sub>sp</sub>: AgCl is only slightly soluble. The tabulated K<sub>sp</sub> is 1.8 × 10<sup>−10</sup>." },
+    { key: "kw", label: "Water autoionization, Kw", eq: "2H<sub>2</sub>O(l) ⇌ H<sub>3</sub>O<sup>+</sup>(aq) + OH<sup>−</sup>(aq)", K: 1.0e-14, kname: "K<sub>w</sub>",
+      note: "Starting from K<sub>w</sub> = 1.0 × 10<sup>−14</sup> at 25 °C. The reverse reaction, neutralization, has ΔG° of the same size with the opposite sign and K = 1.0 × 10<sup>14</sup>." },
+    { key: "zero", label: "ΔG° = 0", eq: "A ⇌ B", g: 0, kname: "K",
+      note: "When ΔG° = 0, K = e<sup>0</sup> = 1: neither side is favored, and at equilibrium the A ⇌ B mixture is half and half." }
+  ];
+  PR.forEach(function (p) { if (p.r) p.g = dGf(p.r, p.p); });
+
+  var S = { key: "nh3", mode: "g", g: 0, lk: 0, T: 298 };
+  function pr() { return PR.filter(function (p) { return p.key === S.key; })[0]; }
+  function rt() { return R * S.T / 1000; }
+  // ln K from the current inputs
+  function lnK() { return S.mode === "g" ? -S.g / rt() : S.lk * Math.LN10; }
+  function dG() { return S.mode === "g" ? S.g : -rt() * S.lk * Math.LN10; }
+  function pick(k) {
+    var p = PR.filter(function (x) { return x.key === k; })[0]; S.key = k; S.T = 298;
+    if (p.K != null) { S.mode = "k"; S.lk = Math.log10(p.K); } else { S.mode = "g"; S.g = p.g; }
+    render();
+  }
+
+  function kHtml(ln) {
+    var l10 = ln / Math.LN10;
+    if (Math.abs(l10) < 3) return Lab.sig(Math.exp(ln), 3);
+    var e = Math.floor(l10), m = Math.pow(10, l10 - e);
+    if (+m.toFixed(1) >= 10) { m = 1; e += 1; }
+    return m.toFixed(1) + " × 10<sup>" + String(e).replace("-", "−") + "</sup>";
+  }
+  function s1(v, d) { return (v < 0 ? "−" : v > 0 ? "+" : "") + Math.abs(v).toFixed(d == null ? 1 : d); }
+
+  // ---------- Graph ----------
+  function draw() {
+    var F = Lab.frame(document.getElementById("gk"), { x: [-80, 80], y: [-15, 15], xTicks: [-80, -60, -40, -20, 0, 20, 40, 60, 80], yTicks: [-15, -10, -5, 0, 5, 10, 15],
+      fmtX: function (v) { return (v < 0 ? "−" : "") + Math.abs(v); }, fmtY: function (v) { return (v < 0 ? "−" : "") + Math.abs(v); },
+      xLabel: "ΔG° (kJ/mol)", yLabel: "log K", width: 440, height: 320 });
+    var r = rt();
+    Lab.rect(F, -r, -15, r, 15, "var(--c3)", 0.16);
+    Lab.rect(F, -80, 0, 0, 15, "var(--good)", 0.06);
+    Lab.rect(F, 0, -15, 80, 0, "var(--bad)", 0.05);
+    Lab.hline(F, 0, "var(--ink)", 1); Lab.vline(F, 0, "var(--ink)", 1);
+    if (S.T !== 298) Lab.fn(F, function (g) { return -g / (2.303 * R * 298 / 1000); }, "var(--ghost)", 2, "6 4", 4);
+    Lab.fn(F, function (g) { return -g / (Math.LN10 * r); }, "var(--accent)", 3, null, 4);
+    Lab.tag(F, -77, 1.3, "K > 1, products favored", "var(--good)");
+    Lab.tag(F, 77, -2.4, "K < 1, reactants favored", "var(--bad)", "end");
+    var g = dG(), l = lnK() / Math.LN10, gc = Math.max(-80, Math.min(80, g)), lc = Math.max(-15, Math.min(15, l));
+    Lab.dot(F, gc, lc, "var(--c1)", true);
+    if (gc > 0) Lab.tag(F, gc - 3, lc - 2, "K = " + plainK(lnK()), "var(--c1)", "end");
+    else Lab.tag(F, gc + 3, lc + (l > 11 ? -2.2 : 1.4), "K = " + plainK(lnK()), "var(--c1)", "start");
+    // mixture bar
+    var bar = document.getElementById("bar");
+    bar.setAttribute("viewBox", "0 0 440 30");
+    while (bar.firstChild) bar.removeChild(bar.firstChild);
+    var lk = lnK(), xb = lk > 0 ? 1 / (1 + Math.exp(-lk)) : Math.exp(lk) / (1 + Math.exp(lk));
+    Lab.el("rect", { x: 0, y: 2, width: 440, height: 26, rx: 6, fill: "var(--accent)" }, bar);
+    Lab.el("rect", { x: 440 * (1 - xb), y: 2, width: 440 * xb, height: 26, rx: 6, fill: "var(--c1)" }, bar);
+    Lab.el("line", { x1: 220, x2: 220, y1: 0, y2: 30, stroke: "var(--surface)", "stroke-width": 2, "stroke-dasharray": "3 2" }, bar);
+    document.getElementById("bar-txt").textContent = pct(1 - xb) + " A · " + pct(xb) + " B";
+  }
+  function pct(x) { return x < 0.001 ? "< 0.1%" : x > 0.999 ? "> 99.9%" : (x * 100).toFixed(1) + "%"; }
+  function plainK(ln) { return kHtml(ln).replace(/<sup>(.*?)<\/sup>/g, function (m, d) { return d.split("").map(function (c) { return c === "−" ? "⁻" : "⁰¹²³⁴⁵⁶⁷⁸⁹"[+c]; }).join(""); }); }
+
+  // ---------- Render ----------
+  var elG = document.getElementById("s-g"), elK = document.getElementById("s-k"), elT = document.getElementById("s-t");
+  function render() {
+    var p = pr(), g = dG(), ln = lnK(), r = rt();
+    Object.keys(btns).forEach(function (k) { btns[k].setAttribute("aria-pressed", k === S.key ? "true" : "false"); });
+    document.getElementById("m-g").setAttribute("aria-pressed", S.mode === "g" ? "true" : "false");
+    document.getElementById("m-k").setAttribute("aria-pressed", S.mode === "k" ? "true" : "false");
+    document.getElementById("ctl-g").hidden = S.mode !== "g";
+    document.getElementById("ctl-k").hidden = S.mode !== "k";
+    elG.value = Math.max(-80, Math.min(80, g)); elK.value = Math.max(-14, Math.min(14, ln / Math.LN10)); elT.value = S.T;
+    document.getElementById("o-g").textContent = s1(g) + " kJ/mol";
+    document.getElementById("o-k").textContent = (ln / Math.LN10).toFixed(2);
+    document.getElementById("o-t").textContent = S.T + " K";
+    document.getElementById("h-t").textContent = (S.T - 273) + " °C";
+    document.getElementById("g-sub").textContent = p ? p.label : "your values";
+    document.getElementById("eqn").innerHTML = p ? p.eq : "A ⇌ B";
+    draw();
+    document.getElementById("r-g").textContent = s1(g);
+    document.getElementById("r-k").innerHTML = kHtml(ln);
+    document.getElementById("r-k2").innerHTML = (p ? p.kname : "K") + (ln > 0.0005 ? " &gt; 1" : ln < -0.0005 ? " &lt; 1" : " = 1");
+    document.getElementById("r-ln").textContent = s1(ln, 2);
+    document.getElementById("r-ln2").textContent = "|ΔG°| = " + (Math.abs(g) / r).toFixed(1) + " × RT";
+    document.getElementById("r-rt").textContent = r.toFixed(3);
+    document.getElementById("calc").innerHTML = calc(p, g, ln, r);
+    document.getElementById("story").innerHTML = story(p, g, ln, r);
+  }
+  function calc(p, g, ln, r) {
+    var h = "<h3>Worked calculation at " + S.T + " K</h3>", kn = p ? p.kname : "K";
+    if (S.mode === "g") {
+      if (p && p.r) h += '<div class="row"><span>ΔG° from ΣΔG°f(products) − ΣΔG°f(reactants)</span><span>' + s1(g) + ' kJ/mol</span></div>';
+      h += '<div class="row"><span>Convert ΔG° to J/mol</span><span>' + s1(g) + " kJ/mol × 1000 = " + s1(g * 1000, 0) + ' J/mol</span></div>';
+      h += '<div class="row"><span>ln K = −ΔG°/RT</span><span>−(' + s1(g * 1000, 0) + ") ÷ [(8.314)(" + S.T + ")] = " + s1(ln, 3) + '</span></div>';
+      h += '<div class="row"><span>' + kn + ' = e<sup>ln K</sup></span><span>e<sup>' + s1(ln, 3) + "</sup> = " + kHtml(ln) + '</span></div>';
+    } else {
+      h += '<div class="row"><span>ln ' + kn + '</span><span>ln(' + kHtml(ln) + ") = " + s1(ln, 3) + '</span></div>';
+      h += '<div class="row"><span>ΔG° = −RT ln K</span><span>−(8.314)(' + S.T + ")(" + s1(ln, 3) + ") = " + s1(g * 1000, 0) + ' J/mol</span></div>';
+      h += '<div class="row"><span>Convert to kJ/mol</span><span>' + s1(g) + ' kJ/mol</span></div>';
+    }
+    return h;
+  }
+  function story(p, g, ln, r) {
+    var li = [], ratio = Math.abs(g) / r;
+    if (p && S.T === 298) li.push(p.note + (p.key === "vap" ? " Here: K<sub>p</sub> = " + Lab.sig(Math.exp(ln), 3) + " atm × 760 = " + Lab.sig(Math.exp(ln) * 760, 3) + " torr." : ""));
+    if (S.T !== 298) li.push("At " + S.T + " K, RT = " + r.toFixed(3) + " kJ/mol. " + (S.mode === "g" ? "With the same ΔG°, K = " + kHtml(ln) + "; at 298 K it would be " + kHtml(-g / (R * 0.298)) + ". " + (Math.abs(g) < 1e-9 ? "With ΔG° = 0, K = 1 at any temperature." : S.T > 298 ? "A higher T shrinks the exponent ΔG°/RT, pulling K toward 1." : "A lower T enlarges the exponent ΔG°/RT, pushing K farther from 1.") : "With the same K, ΔG° = " + s1(g) + " kJ/mol, because ΔG° = −RT ln K scales with T."));
+    li.push(g < -0.0005 ? "ΔG° &lt; 0, so ln K &gt; 0 and K &gt; 1: products are favored at equilibrium." : g > 0.0005 ? "ΔG° &gt; 0, so ln K &lt; 0 and K &lt; 1: reactants are favored at equilibrium, but K is not zero, so some products are present." : "ΔG° = 0, so ln K = 0 and K = 1.");
+    li.push(ratio < 1 ? "|ΔG°| is smaller than RT (" + r.toFixed(2) + " kJ/mol), so K is close to 1: both sides are present in comparable amounts." :
+      ratio < 5 ? "|ΔG°| is " + ratio.toFixed(1) + " times RT, so K differs from 1 by a modest factor (" + kHtml(ln) + ")." :
+      "|ΔG°| is " + ratio.toFixed(0) + " times RT, so K is far from 1: " + (g < 0 ? "the reaction goes essentially to completion." : "products are barely present at equilibrium."));
+    li.push("Rule of thumb at this temperature: every " + (Math.LN10 * r).toFixed(1) + " kJ/mol of ΔG° changes K by a factor of 10. Here that is " + (Math.abs(ln) / Math.LN10).toFixed(1) + " factors of 10.");
+    var h = "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+    h += "<p><b>AP answer:</b> " + (S.mode === "g" ? "K = e<sup>−ΔG°/RT</sup> = e<sup>−(" + s1(g * 1000, 0) + " J/mol)/[(8.314 J/(mol·K))(" + S.T + " K)]</sup> = " + kHtml(ln) + "." :
+      "ΔG° = −RT ln K = −(8.314 J/(mol·K))(" + S.T + " K) ln(" + kHtml(ln) + ") = " + s1(g) + " kJ/mol.") +
+      (g < -0.0005 ? " Because ΔG° &lt; 0, K &gt; 1 and products are favored at equilibrium." : g > 0.0005 ? " Because ΔG° &gt; 0, K &lt; 1 and reactants are favored at equilibrium." : " Because ΔG° = 0, K = 1.") + "</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  var btns = {}, box = document.getElementById("sc");
+  PR.forEach(function (p) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = p.label;
+    b.addEventListener("click", function () { pick(p.key); });
+    box.appendChild(b); btns[p.key] = b;
+  });
+  document.getElementById("m-g").addEventListener("click", function () { if (S.mode !== "g") { S.g = Math.round(dG() * 10) / 10; S.mode = "g"; } render(); });
+  document.getElementById("m-k").addEventListener("click", function () { if (S.mode !== "k") { S.lk = Math.round(lnK() / Math.LN10 * 100) / 100; S.mode = "k"; } render(); });
+  elG.addEventListener("input", function () { S.g = +elG.value; S.key = null; render(); });
+  elK.addEventListener("input", function () { S.lk = +elK.value; S.key = null; render(); });
+  elT.addEventListener("input", function () { S.T = +elT.value; render(); });
+
+  // ---------- Table (generated) ----------
+  (function () {
+    var ex = { "-33.0": "N₂ + 3H₂ ⇌ 2NH₃", "-4.7": "2NO₂ ⇌ N₂O₄", "8.5": "H₂O(l) ⇌ H₂O(g): K<sub>p</sub> = vapor pressure in atm", "27.1": "Acetic acid ionizing: K<sub>a</sub>", "55.7": "AgCl dissolving: K<sub>sp</sub>", "79.9": "2H₂O ⇌ H₃O⁺ + OH⁻: K<sub>w</sub>" };
+    var rows = [-57, -33.0, -11.4, -5.7, -4.7, 0, 5.7, 8.5, 11.4, 27.1, 55.7, 79.9];
+    var r = R * 298.15 / 1000;
+    document.getElementById("gk-table").innerHTML = rows.map(function (g) {
+      var ln = -g / r;
+      return "<tr><td><b>" + s1(g) + "</b></td><td>" + kHtml(ln) + "</td><td>" + (Math.abs(g) < 1e-9 ? "Equal amounts (A ⇌ B)" : Math.abs(ln) < 3 ? "Both sides present; " + (g < 0 ? "products" : "reactants") + " somewhat favored" : g < 0 ? "Mostly products" : "Mostly reactants") + "</td><td>" + (ex[g.toFixed(1)] || "") + "</td></tr>";
+    }).join("");
+  })();
+
+  pick("nh3");
+
+  // ---------- Self-check ----------
+  (function () {
+    function bad(m) { console.error("9.5 self-check: " + m); }
+    var expect = { nh3: -33.0, no2: -4.7, vap: 8.5, agcl: 55.7 };
+    PR.forEach(function (p) { if (p.r && Math.abs(p.g - expect[p.key]) > 0.051) bad(p.key + " ΔG° = " + p.g); });
+    var rt298 = R * 298 / 1000;
+    function K(g) { return Math.exp(-g / rt298); }
+    if (Math.abs(K(-33.0) / 6.05e5 - 1) > 0.01) bad("NH3 K");
+    if (Math.abs(K(55.7) / 1.8e-10 - 1) > 0.1) bad("AgCl Ksp vs table");
+    if (Math.abs(K(8.5) * 760 - 23.8) > 1.5) bad("water vapor pressure");
+    if (Math.abs(-rt298 * Math.log(1.0e-14) - 79.9) > 0.1) bad("Kw ΔG°");
+    if (Math.abs(-rt298 * Math.log(1.8e-5) - 27.1) > 0.05 || Math.abs(-rt298 * Math.log10(1.8e-5) - 11.8) > 0.05) bad("quiz 2");
+    if (Math.abs(1 / K(-33.0) / 1.6e-6 - 1) > 0.03 || Math.abs(Math.pow(10, 33.0 / rt298) / 2.1e13 - 1) > 0.03 || Math.abs(Math.exp(33.0 / (8.314 * 298)) - 1.01) > 0.005) bad("quiz 1");
+    if (Math.abs(K(-11.4) - 100) > 1) bad("quiz 7");
+    if (Math.abs(K(-20) - K(-10) * K(-10)) > 1e-6 * K(-20)) bad("quiz 5");
+    // round trip
+    S.mode = "g"; S.g = -12.3; S.T = 450; var l = lnK(); S.mode = "k"; S.lk = l / Math.LN10; if (Math.abs(dG() + 12.3) > 1e-9) bad("round trip");
+    pick("nh3");
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "For N₂(g) + 3H₂(g) ⇌ 2NH₃(g), ΔG° = −33.0 kJ/mol at 298 K. What is the value of K at 298 K?",
+      o: ["1.01", "1.6 × 10⁻⁶", "6.1 × 10⁵", "2.1 × 10¹³"], c: 2,
+      w: "K = e<sup>−ΔG°/RT</sup> = e<sup>(33,000 J/mol)/[(8.314)(298)]</sup> = e<sup>13.32</sup> = 6.1 × 10<sup>5</sup>. Choice A leaves ΔG° in kJ, so the exponent is 1000 times too small. Choice B drops the negative sign (it is 1/K). Choice D uses 10<sup>x</sup> instead of e<sup>x</sup>." },
+    { s: "Acetic acid has Kₐ = 1.8 × 10⁻⁵ at 298 K. What is ΔG° for the ionization of acetic acid in water at 298 K?",
+      o: ["+27.1 kJ/mol", "−27.1 kJ/mol", "+11.8 kJ/mol", "+2.71 × 10⁴ kJ/mol"], c: 0,
+      w: "ΔG° = −RT ln K = −(8.314)(298)(ln 1.8 × 10<sup>−5</sup>) = −(2478)(−10.93) = +27,100 J/mol = +27.1 kJ/mol. It is positive because K &lt; 1. Choice C uses log instead of ln; choice D forgets to convert J to kJ; choice B has the wrong sign." },
+    { s: "A reaction at 298 K has ΔG° = +0.5 kJ/mol. Which statement best describes the equilibrium mixture?",
+      o: ["No products are present, because ΔG° > 0.", "K is much greater than 1, so the mixture is almost all products.", "K = −0.5, so the reaction runs in reverse.", "K is slightly less than 1, so reactants and products are both present in significant amounts."], c: 3,
+      w: "|ΔG°| = 0.5 kJ/mol is much smaller than RT ≈ 2.5 kJ/mol, so K = e<sup>−0.2</sup> ≈ 0.8: slightly less than 1, with comparable amounts of both. Choice A treats ΔG° &gt; 0 as \"no reaction\"; K can never be negative (choice C)." },
+    { s: "Which value of ΔG° corresponds to K = 1 at any temperature?",
+      o: ["ΔG° = RT", "ΔG° = 0", "ΔG° = 1 kJ/mol", "ΔG° = −RT"], c: 1,
+      w: "ΔG° = −RT ln K, and ln 1 = 0, so ΔG° = 0. Choices A and D give K = e<sup>∓1</sup> = 0.37 or 2.7, which are close to 1 but not equal to it." },
+    { s: "At the same temperature, reaction 1 has ΔG°₁ = −10 kJ/mol and reaction 2 has ΔG°₂ = −20 kJ/mol. How are their equilibrium constants related?",
+      o: ["K₂ = K₁²", "K₂ = 2K₁", "K₂ = K₁/2", "K₂ = K₁ + 10"], c: 0,
+      w: "K = e<sup>−ΔG°/RT</sup>. Doubling ΔG° doubles the exponent, so K₂ = (e<sup>−ΔG°₁/RT</sup>)² = K₁². At 298 K, K₁ ≈ 57 and K₂ ≈ 3.2 × 10<sup>3</sup>. Choice B treats the relationship as linear, which is the key misconception: K depends exponentially on ΔG°." },
+    { s: "A reaction has ΔG° > 0 at 298 K. Which statement is correct?",
+      o: ["The reaction cannot occur at all at 298 K.", "K is negative.", "At equilibrium, reactants are favored (K < 1), but some products are present.", "The reaction is under kinetic control."], c: 2,
+      w: "A positive ΔG° gives a negative ln K, so 0 &lt; K &lt; 1: the equilibrium lies toward reactants but is never completely free of products. K is never negative (B). Kinetic control (D) describes a favored reaction that is too slow, which is a different idea." },
+    { s: "At 298 K, about how large is K for a reaction with ΔG° = −11.4 kJ/mol? (At 298 K, 2.303RT ≈ 5.7 kJ/mol.)",
+      o: ["2", "10", "4.6", "100"], c: 3,
+      w: "Every 5.7 kJ/mol of ΔG° at 298 K is one factor of 10 in K. −11.4 kJ/mol is two such steps, so K ≈ 10² = 100 (e<sup>4.60</sup> = 99.6). Choice C is ln K rather than K. Choice B counts only one factor of 10." },
+    { s: "Four reactions at 298 K have the equilibrium constants listed. Which reaction has the most negative ΔG°?",
+      o: ["K = 30", "K = 2 × 10³", "K = 0.5", "K = 1 × 10⁻⁵"], c: 1,
+      w: "ΔG° = −RT ln K is most negative when K is largest, so K = 2 × 10³ (ΔG° ≈ −18.8 kJ/mol). Choice D has the largest-looking exponent but K &lt; 1, which makes ΔG° positive (+28.5 kJ/mol)." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("9.5");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [9], topic: "9.5", compact: true, storageKey: "topic-9.5" });</script>
+</body>
+</html>

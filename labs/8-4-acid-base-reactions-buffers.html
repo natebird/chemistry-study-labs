@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acid–Base Reactions and Buffers Study Lab</title>
+<meta name="description" content="Mix strong and weak acids and bases in any amounts, let the reaction run to completion in a before–change–after table, and decide what is left: excess strong acid or base, a buffer, or a conjugate that sets the pH.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.graph-card, .side { align-content: start; }
+.side { display: grid; gap: 12px; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.ctlcard { display: grid; gap: 16px; }
+.pickrow { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center; }
+.pickrow [hidden] { display: none; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.note { font-size: .82rem; color: var(--muted); }
+table.bca { min-width: 0; font-variant-numeric: tabular-nums; }
+table.bca th, table.bca td { padding: 7px 8px; font-size: .86rem; text-align: center; }
+table.bca th:first-child, table.bca td:first-child { text-align: left; }
+table.bca td.zero { color: var(--muted); }
+table.bca td.left { color: var(--c1); font-weight: 600; }
+ul.flow { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+ul.flow li { border: 1px solid var(--rule); border-radius: 8px; padding: 6px 10px; font-size: .86rem; color: var(--muted); }
+ul.flow li.on { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); font-weight: 500; }
+ul.flow li b { color: inherit; }
+.legend .l-before::before { background: none; border: 2px dashed var(--ghost); height: 8px; width: 12px; }
+.legend .l-before { color: var(--muted); }
+.legend .l-after { color: var(--c2); }
+.legend .l-after::before { height: 10px; width: 12px; }
+.lab-bar > * { min-width: 0; max-width: 100%; }
+@media (max-width: 860px) { .ctlcard .controls { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) {
+  .ctlcard .controls { grid-template-columns: 1fr; }
+  .pickrow { grid-template-columns: 1fr; }
+  .lab-bar .eqn, #rxn { white-space: normal; }
+  #bars text { font-size: 13px; }
+  #bars .lbl { font-size: 13.5px; }
+  table.bca th, table.bca td { padding: 6px 4px; font-size: .8rem; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 8 · Topic 8.4</span>
+  <h1>Acid–Base Reactions and Buffers Study Lab</h1>
+  <p class="lede">When a strong acid or strong base is mixed with another acid or base, the reaction runs essentially to completion first. Only then do you ask what is left and which equilibrium sets the pH. Mix any amounts, follow the moles through a before–change–after table, and see which of five situations you land in, including the one that makes a buffer.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The mixing bench</h2>
+    <p>Pick a pair, set the volume and concentration of the solution in the flask and of the solution you add, and read the result. Work in millimoles (mmol = M × mL), which keeps the numbers small. K values are typical textbook values at 25 °C. The pH shown is the one the AP method gives; the page also solves the full equilibrium in the background and warns you when the AP shortcut is not accurate.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Amounts before and after the reaction <small>mmol</small></h3>
+      <svg class="chart" id="bars" role="img" aria-label="Bar chart of millimoles of each species before and after the reaction"></svg>
+      <div class="eqn" id="rxn"></div>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Before → change → after (mmol)</div>
+        <div class="tbl-wrap"><table class="bca" id="bca"></table></div>
+      </div>
+      <div class="group">
+        <div class="tag">What is left decides the method</div>
+        <ul class="flow" id="flow"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <div class="tag">Classic exam cases</div>
+      <div class="scenarios" id="sc"></div>
+    </div>
+    <div class="pickrow">
+      <div class="tag">Mixture</div><div class="seg" role="group" aria-label="Type of mixture" id="sys"></div>
+      <div class="tag" id="t-wa">Weak acid</div><div class="seg" role="group" aria-label="Weak acid" id="pick-a"></div>
+      <div class="tag" id="t-wb">Weak base</div><div class="seg" role="group" aria-label="Weak base" id="pick-b"></div>
+    </div>
+    <div class="controls">
+      <div class="ctl">
+        <label for="s-v1"><span id="l-v1">Flask volume</span> <output id="o-v1"></output></label>
+        <input type="range" id="s-v1" min="10" max="100" step="5">
+        <span class="hint" id="h-v1"></span>
+      </div>
+      <div class="ctl">
+        <label for="s-c1"><span id="l-c1">Flask concentration</span> <output id="o-c1"></output></label>
+        <input type="range" id="s-c1" min="0.050" max="0.500" step="0.005">
+        <span class="hint">mol/L</span>
+      </div>
+      <div class="ctl">
+        <label for="s-v2"><span id="l-v2">Volume added</span> <output id="o-v2"></output></label>
+        <input type="range" id="s-v2" min="0" max="100" step="0.5">
+        <span class="hint" id="h-v2"></span>
+      </div>
+      <div class="ctl">
+        <label for="s-c2"><span id="l-c2">Added concentration</span> <output id="o-c2"></output></label>
+        <input type="range" id="s-c2" min="0.050" max="0.500" step="0.005">
+        <span class="hint">mol/L</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-before">Before reacting (just mixed)</span><span class="l-after">After the reaction</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">What is left</div><div class="v" id="r-st"></div><div class="sub" id="r-st2"></div></div>
+    <div class="stat"><div class="k">Total volume</div><div class="v" id="r-v"></div><div class="sub" id="r-v2"></div></div>
+    <div class="stat"><div class="k">pH (AP method)</div><div class="v" id="r-ph"></div><div class="sub" id="r-ph2"></div></div>
+    <div class="stat"><div class="k" id="r-kk">K for the reaction</div><div class="v" id="r-k"></div><div class="sub" id="r-k2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Step 1</span><h3>React first, with moles</h3><p>A strong acid or strong base reacts essentially completely with any acid or base it meets. So start with a before–change–after table in moles (or mmol): the limiting reactant goes to zero, and the other is reduced by the same amount. Equilibrium comes second.</p></div>
+    <div class="card"><span class="tag">Why "complete"</span><h3>Huge K values</h3><p>H₃O⁺ + OH⁻ → 2H₂O has K = 1/K<sub>w</sub> = 1.0 × 10<sup>14</sup>. HA + OH⁻ → A⁻ + H₂O has K = K<sub>a</sub>/K<sub>w</sub>, which is 1.8 × 10<sup>9</sup> for acetic acid. Values that large mean the limiting reactant is used up.</p></div>
+    <div class="card"><span class="tag">Step 2</span><h3>Excess strong acid or base</h3><p>If strong acid or strong base is left over, it controls the pH: [H₃O⁺] or [OH⁻] = moles in excess ÷ total volume (in liters). The weak conjugate that is also present barely matters next to it.</p></div>
+    <div class="card"><span class="tag">Step 2</span><h3>Weak + its conjugate = buffer</h3><p>If some weak acid HA is left along with its conjugate base A⁻ (or B with BH⁺), the mixture is a buffer. Use pH = pK<sub>a</sub> + log([A⁻]/[HA]); both are in the same volume, so the mole ratio works. When the two are equal, pH = pK<sub>a</sub>.</p></div>
+    <div class="card"><span class="tag">Step 2</span><h3>Only the conjugate is left</h3><p>When a weak acid and a strong base are exactly equimolar, only A⁻ remains, and it is a weak base: K<sub>b</sub> = K<sub>w</sub>/K<sub>a</sub>, so the solution is slightly basic. Weak base + strong acid at equal moles leaves BH⁺, which is slightly acidic. Strong + strong at equal moles is neutral.</p></div>
+    <div class="card"><span class="tag">Weak + weak</span><h3>An equilibrium, not completion</h3><p>HA + B ⇌ A⁻ + BH⁺ has K = K<sub>a</sub>(HA) × K<sub>b</sub>(B) / K<sub>w</sub>. Acetic acid and ammonia give K ≈ 3 × 10<sup>4</sup>, so the reaction lies far to the right, but a very weak acid such as HCN gives K near 1, a true mixture of reactants and products.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. After-the-reaction cheat sheet</h2>
+    <p>Every row assumes you have already run the reaction to completion in moles. Examples use 50.0 mL of 0.100 M in the flask and 0.100 M added solution, at 25 °C; the numbers are computed by this page.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>What is left</th><th>Major species</th><th>How to get pH</th><th>Example</th></tr></thead>
+    <tbody id="tbl"></tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Mixtures and buffers on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write the net ionic equation for the neutralization with the weak acid or base as a molecule: CH₃COOH + OH⁻ → CH₃COO⁻ + H₂O, not H⁺ + OH⁻.</li>
+        <li>Convert every volume and molarity to moles first, then subtract. Graders look for the moles of each species remaining.</li>
+        <li>Name the situation before calculating: "HA and A⁻ are both present in significant amounts, so the solution is a buffer."</li>
+        <li>For a buffer, write pH = pK<sub>a</sub> + log([A⁻]/[HA]) and show the ratio. Mole amounts can replace concentrations because the volume cancels.</li>
+        <li>For excess strong base, divide the excess moles of OH⁻ by the total volume of the mixture, not the volume of base added.</li>
+        <li>At equal moles of weak acid and strong base, justify "basic" with the reaction A⁻ + H₂O ⇌ HA + OH⁻.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Plugging starting concentrations into K<sub>a</sub> or Henderson–Hasselbalch before letting the strong acid or base react.</li>
+        <li>Saying any equimolar acid–base mixture has pH 7. Only strong + strong does.</li>
+        <li>Using the volume of one solution instead of the total volume after mixing.</li>
+        <li>Calling a weak acid + excess strong base a buffer. Once the weak acid is gone, there is no buffer, only excess OH⁻.</li>
+        <li>Flipping the ratio in Henderson–Hasselbalch: it is base over acid, [A⁻]/[HA], so more conjugate base means pH above pK<sub>a</sub>.</li>
+        <li>Mixing HCl with NaCl and calling it a buffer. Cl⁻ is the conjugate of a strong acid and does not react with H₃O⁺, so nothing resists pH change.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation. All solutions are at 25 °C.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 8.4. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-8.html">Unit 8 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  var KW = 1.0e-14;
+  // ---------- Data ----------
+  var WA = {
+    hac: { f: "CH3COOH", conj: "CH3COO^-", name: "acetic acid", Ka: 1.8e-5 },
+    hf: { f: "HF", conj: "F^-", name: "hydrofluoric acid", Ka: 7.2e-4 },
+    hcn: { f: "HCN", conj: "CN^-", name: "hydrocyanic acid", Ka: 6.2e-10 }
+  };
+  var WB = {
+    nh3: { f: "NH3", conj: "NH4^+", name: "ammonia", Kb: 1.8e-5 },
+    mea: { f: "CH3NH2", conj: "CH3NH3^+", name: "methylamine", Kb: 4.4e-4 }
+  };
+  var SYS = {
+    ss: { name: "Strong acid + strong base", flask: "HCl", add: "NaOH" },
+    wa: { name: "Weak acid + strong base", flask: "WA", add: "NaOH" },
+    wb: { name: "Weak base + strong acid", flask: "WB", add: "HCl" },
+    ww: { name: "Weak acid + weak base", flask: "WA", add: "WB" }
+  };
+  var F = function (s) { return Lab.fmla(s); };
+  function roundTo(v, d) { var k = Math.pow(10, d); return Math.round(v * k) / k; }
+  function fx(v, d) { return roundTo(v, d).toFixed(d).replace("-", "−"); }
+  function sc(v, n) { return Lab.sci(v, n || 2, true); }
+  function kTxt(K) { return K >= 0.1 && K < 1000 ? Lab.sig(K, 2) : sc(K, 2); }
+  function mL(v) { return v.toFixed(1) + " mL"; }
+  function mm(v) { return Math.abs(v) < 5e-7 ? "0" : Lab.sig(v, 3); }
+  var EPS = 1e-9;
+
+  var S = { sys: "wa", a: "hac", b: "nh3", v1: 50, c1: 0.100, v2: 25, c2: 0.100, key: null };
+
+  // ---------- Model: react to completion, then classify ----------
+  function solve(st) {
+    var sys = st.sys, A = WA[st.a], B = WB[st.b], n1 = st.v1 * st.c1, n2 = st.v2 * st.c2, V = st.v1 + st.v2;
+    var r = { sys: sys, A: A, B: B, n1: n1, n2: n2, V: V, st: st };
+    var lim = Math.min(n1, n2);
+    if (sys === "ss") {
+      r.sp = [{ f: "H3O^+", b: n1, a: n1 - lim, c: "var(--c1)" }, { f: "OH^-", b: n2, a: n2 - lim, c: "var(--c3)" }];
+      r.eq = "H<sub>3</sub>O<sup>+</sup>(aq) + OH<sup>−</sup>(aq) → 2H<sub>2</sub>O(l)";
+      r.K = 1 / KW; r.Kwhy = "1/K<sub>w</sub>";
+      r.spect = "Cl<sup>−</sup> and Na<sup>+</sup> are spectators.";
+    } else if (sys === "wa") {
+      r.sp = [{ f: A.f, b: n1, a: n1 - lim, c: "var(--c3)" }, { f: "OH^-", b: n2, a: n2 - lim, c: "var(--c4)" }, { f: A.conj, b: 0, a: lim, c: "var(--c2)" }];
+      r.eq = F(A.f) + "(aq) + OH<sup>−</sup>(aq) → " + F(A.conj) + "(aq) + H<sub>2</sub>O(l)";
+      r.K = A.Ka / KW; r.Kwhy = "K<sub>a</sub>/K<sub>w</sub>";
+      r.spect = "Na<sup>+</sup> is a spectator.";
+    } else if (sys === "wb") {
+      r.sp = [{ f: B.f, b: n1, a: n1 - lim, c: "var(--c3)" }, { f: "H3O^+", b: n2, a: n2 - lim, c: "var(--c1)" }, { f: B.conj, b: 0, a: lim, c: "var(--c2)" }];
+      r.eq = F(B.f) + "(aq) + H<sub>3</sub>O<sup>+</sup>(aq) → " + F(B.conj) + "(aq) + H<sub>2</sub>O(l)";
+      r.K = B.Kb / KW; r.Kwhy = "K<sub>b</sub>/K<sub>w</sub>";
+      r.spect = "Cl<sup>−</sup> is a spectator.";
+    } else {
+      // weak + weak: an equilibrium. In moles the volume cancels: K = y^2 / ((n1 - y)(n2 - y)).
+      r.K = A.Ka * B.Kb / KW; r.Kwhy = "K<sub>a</sub> × K<sub>b</sub> / K<sub>w</sub>";
+      var y = wwExtent(r.K, n1, n2);
+      r.y = y;
+      r.sp = [{ f: A.f, b: n1, a: n1 - y, c: "var(--c3)" }, { f: B.f, b: n2, a: n2 - y, c: "var(--c4)" }, { f: A.conj, b: 0, a: y, c: "var(--c2)" }, { f: B.conj, b: 0, a: y, c: "var(--c1)" }];
+      r.eq = F(A.f) + "(aq) + " + F(B.f) + "(aq) ⇌ " + F(A.conj) + "(aq) + " + F(B.conj) + "(aq)";
+      r.spect = "";
+    }
+    classify(r);
+    return r;
+  }
+  function wwExtent(K, a, b) {
+    if (a <= 0 || b <= 0) return 0;
+    var lo = 0, hi = Math.min(a, b);
+    for (var i = 0; i < 200; i++) { var m = (lo + hi) / 2, q = m * m / ((a - m) * (b - m)); if (q > K) hi = m; else lo = m; }
+    return (lo + hi) / 2;
+  }
+  function classify(r) {
+    var n1 = r.n1, n2 = r.n2, V = r.V / 1000, d = n1 - n2, same = Math.abs(d) < EPS * Math.max(1, n1);
+    if (r.sys === "ww") { r.state = "ww"; r.pH = null; return; }
+    if (r.sys === "ss") {
+      if (same) { r.state = "neutral"; r.pH = 7; }
+      else if (d > 0) { r.state = "xsH"; r.cx = d / 1000 / V; r.pH = -Math.log10(r.cx); }
+      else { r.state = "xsOH"; r.cx = -d / 1000 / V; r.pH = 14 + Math.log10(r.cx); }
+    } else if (r.sys === "wa") {
+      var Ka = r.A.Ka;
+      r.pKa = -Math.log10(Ka);
+      if (n2 < EPS) { r.state = "weak"; r.C = n1 / 1000 / V; r.x = weakX(Ka, r.C); r.pH = -Math.log10(r.x); }
+      else if (same) { r.state = "conj"; r.C = n1 / 1000 / V; r.Kc = KW / Ka; r.x = weakX(r.Kc, r.C); r.pH = 14 + Math.log10(r.x); }
+      else if (d > 0) { r.state = "buffer"; r.ratio = n2 / (n1 - n2); r.pH = hh(r.pKa, r.ratio); }
+      else { r.state = "xsOH"; r.cx = -d / 1000 / V; r.pH = 14 + Math.log10(r.cx); }
+    } else {
+      var Kb = r.B.Kb, Ka2 = KW / Kb;
+      r.pKa = -Math.log10(Ka2);
+      if (n2 < EPS) { r.state = "weak"; r.C = n1 / 1000 / V; r.x = weakX(Kb, r.C); r.pH = 14 + Math.log10(r.x); }
+      else if (same) { r.state = "conj"; r.C = n1 / 1000 / V; r.Kc = Ka2; r.x = weakX(Ka2, r.C); r.pH = -Math.log10(r.x); }
+      else if (d > 0) { r.state = "buffer"; r.ratio = (n1 - n2) / n2; r.pH = hh(r.pKa, r.ratio); }
+      else { r.state = "xsH"; r.cx = -d / 1000 / V; r.pH = -Math.log10(r.cx); }
+    }
+    r.exact = exactPH(r);
+  }
+  // Henderson–Hasselbalch, unrounded; only the final pH is rounded (to 2 decimal places) for display
+  function hh(pKa, ratio) { return pKa + Math.log10(ratio); }
+  // AP route for a lone weak acid/base: shortcut if under 5%, quadratic otherwise
+  function weakX(K, C) { var xa = Math.sqrt(K * C); return xa / C < 0.05 ? xa : (-K + Math.sqrt(K * K + 4 * K * C)) / 2; }
+  // full charge balance including water, by bisection on log[H3O+]
+  function exactPH(r) {
+    var V = r.V / 1000, lo = -15, hi = 1;
+    for (var i = 0; i < 200; i++) {
+      var m = (lo + hi) / 2, h = Math.pow(10, m), oh = KW / h, f;
+      if (r.sys === "ss") f = h + r.n2 / 1000 / V - oh - r.n1 / 1000 / V;
+      else if (r.sys === "wa") { var Ct = r.n1 / 1000 / V, Na = r.n2 / 1000 / V, Ka = r.A.Ka; f = h + Na - oh - Ct * Ka / (Ka + h); }
+      else { var Bt = r.n1 / 1000 / V, Cl = r.n2 / 1000 / V, Kc = KW / r.B.Kb; f = h + Bt * h / (Kc + h) - oh - Cl; }
+      if (f > 0) hi = m; else lo = m;
+    }
+    return -(lo + hi) / 2;
+  }
+
+  // ---------- Text pieces ----------
+  var STATE = {
+    xsH: { short: "Excess H₃O⁺", long: "excess strong acid" },
+    xsOH: { short: "Excess OH⁻", long: "excess strong base" },
+    buffer: { short: "Buffer", long: "a buffer" },
+    conj: { short: "Conjugate only", long: "only the conjugate" },
+    neutral: { short: "Neutral", long: "neutral water and spectator ions" },
+    weak: { short: "Weak only", long: "only the weak acid or base (nothing added yet)" },
+    ww: { short: "Equilibrium", long: "an equilibrium mixture" }
+  };
+  function weakName(r) { return r.sys === "wa" ? F(r.A.f) : F(r.B.f); }
+  function conjName(r) { return r.sys === "wa" ? F(r.A.conj) : F(r.B.conj); }
+  function flowItems(r) {
+    var w = r.sys === "ss" ? "weak acid" : r.sys === "wa" ? F(r.A.f) : F(r.B.f);
+    var c = r.sys === "wa" ? F(r.A.conj) : r.sys === "wb" ? F(r.B.conj) : "conjugate";
+    return [
+      { k: "xsH", t: "<b>Excess strong acid</b>: [H₃O⁺] = mol excess ÷ total V" },
+      { k: "xsOH", t: "<b>Excess strong base</b>: [OH⁻] = mol excess ÷ total V" },
+      { k: "buffer", t: "<b>Buffer</b> (" + w + " and " + c + " both left): pH = pK<sub>a</sub> + log(base/acid)" },
+      { k: "conj", t: "<b>Only " + c + " left</b> (equal moles): K = K<sub>w</sub> ÷ K of the weak partner, then ICE" },
+      { k: "neutral", t: "<b>Strong + strong, equal moles</b>: pH = 7.00" },
+      { k: "weak", t: "<b>Nothing added yet</b>: weak acid or base alone, ICE with K<sub>a</sub> or K<sub>b</sub>" },
+      { k: "ww", t: "<b>Weak + weak</b>: equilibrium with K = K<sub>a</sub>K<sub>b</sub>/K<sub>w</sub>" }
+    ].filter(function (it) {
+      if (r.sys === "ss") return ["xsH", "xsOH", "neutral"].indexOf(it.k) >= 0;
+      if (r.sys === "ww") return it.k === "ww";
+      if (r.sys === "wa") return ["xsOH", "buffer", "conj", "weak"].indexOf(it.k) >= 0;
+      return ["xsH", "buffer", "conj", "weak"].indexOf(it.k) >= 0;
+    });
+  }
+
+  // ---------- Drawing ----------
+  var bars = document.getElementById("bars");
+  function drawBars(r) {
+    var top = 0; r.sp.forEach(function (s) { top = Math.max(top, s.b, s.a); });
+    top = Math.max(1, top) * 1.18;
+    var step = top > 40 ? 10 : top > 16 ? 5 : top > 6 ? 2 : 1, ticks = [];
+    for (var t = 0; t <= top; t += step) ticks.push(t);
+    var n = r.sp.length;
+    var G = Lab.frame(bars, { x: [0, n], y: [0, top], yLabel: "amount (mmol)", xLabel: "", yTicks: ticks, fmtY: function (v) { return v; }, height: 300 });
+    r.sp.forEach(function (s, i) {
+      var x0 = i + 0.14, x1 = i + 0.47, x2 = i + 0.53, x3 = i + 0.86;
+      if (s.b > 0) Lab.el("rect", { x: G.sx(x0), y: G.sy(s.b), width: G.sx(x1) - G.sx(x0), height: G.sy(0) - G.sy(s.b), fill: "none", stroke: "var(--ghost)", "stroke-width": 2, "stroke-dasharray": "4 3" }, G.g);
+      if (s.a > 1e-9) Lab.el("rect", { x: G.sx(x2), y: G.sy(s.a), width: G.sx(x3) - G.sx(x2), height: G.sy(0) - G.sy(s.a), fill: s.c, opacity: 0.9 }, G.g);
+      Lab.el("text", { x: G.sx((x0 + x1) / 2), y: G.sy(s.b) - 5, "text-anchor": "middle" }, G.svg, mm(s.b));
+      Lab.el("text", { x: G.sx((x2 + x3) / 2), y: G.sy(Math.max(0, s.a)) - 5, "text-anchor": "middle", "class": "lbl", style: "fill:" + s.c }, G.svg, mm(s.a));
+      var lbl = Lab.el("text", { x: G.sx(i + 0.5), y: G.H - G.M.b + 18, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, G.svg);
+      lbl.innerHTML = svgF(s.f);
+    });
+  }
+  // subscripts/superscripts as tspans for SVG labels
+  function svgF(f) {
+    return F(f).replace(/<sub>(.*?)<\/sub>/g, '<tspan baseline-shift="sub" font-size="9">$1</tspan>').replace(/<sup>(.*?)<\/sup>/g, '<tspan baseline-shift="super" font-size="9">$1</tspan>');
+  }
+  function drawBCA(r) {
+    var h = "<thead><tr><th></th>" + r.sp.map(function (s) { return "<th>" + F(s.f) + "</th>"; }).join("") + "</tr></thead><tbody>";
+    h += "<tr><td><b>Before</b></td>" + r.sp.map(function (s) { return "<td>" + mm(s.b) + "</td>"; }).join("") + "</tr>";
+    h += "<tr><td><b>Change</b></td>" + r.sp.map(function (s) { var c = s.a - s.b; return "<td>" + (Math.abs(c) < 5e-7 ? "0" : (c > 0 ? "+" : "−") + Lab.sig(Math.abs(c), 3)) + "</td>"; }).join("") + "</tr>";
+    h += "<tr><td><b>After</b></td>" + r.sp.map(function (s) { var z = s.a < 5e-7; return "<td class=\"" + (z ? "zero" : "left") + "\">" + mm(s.a) + "</td>"; }).join("") + "</tr></tbody>";
+    document.getElementById("bca").innerHTML = h;
+    document.getElementById("flow").innerHTML = flowItems(r).map(function (it) { return "<li class=\"" + (it.k === r.state ? "on" : "") + "\">" + it.t + "</li>"; }).join("");
+  }
+
+  // ---------- Story ----------
+  function story(r) {
+    var h = "", st = [], V = r.V, L = (V / 1000);
+    var f1 = r.sys === "ss" ? "HCl" : r.sys === "wb" ? r.B.f : r.A.f, f2 = r.sys === "ss" || r.sys === "wa" ? "NaOH" : r.sys === "wb" ? "HCl" : r.B.f;
+    st.push("Moles before: " + F(f1) + " = " + Lab.sig(r.st.c1, 3) + " M × " + mL(r.st.v1) + " = " + mm(r.n1) + " mmol; " + F(f2) + " = " + Lab.sig(r.st.c2, 3) + " M × " + mL(r.st.v2) + " = " + mm(r.n2) + " mmol. Total volume " + mL(V) + ".");
+    if (r.sys !== "ww" && r.n2 > EPS) {
+      st.push("React to completion (" + r.eq + ", K = " + r.Kwhy + " = " + kTxt(r.K) + "): " + (Math.abs(r.n1 - r.n2) < EPS ? "equal amounts, so both are used up." : (r.n1 > r.n2 ? F(f2) + " is limiting; " + mm(r.n1 - r.n2) + " mmol of " + F(r.sys === "ss" ? "H3O^+" : r.sys === "wa" ? r.A.f : r.B.f) + " is left" : F(f1) + " is limiting; " + mm(r.n2 - r.n1) + " mmol of " + F(r.sys === "wb" ? "H3O^+" : "OH^-") + " is left") + (r.sys !== "ss" && r.n2 > EPS ? ", and " + mm(Math.min(r.n1, r.n2)) + " mmol of " + conjName(r) + " has formed." : ".")));
+    }
+    var pH = r.pH;
+    switch (r.state) {
+      case "xsH":
+        st.push("Excess strong acid controls the pH: [H₃O⁺] = " + mm(Math.abs(r.n1 - r.n2)) + " mmol ÷ " + mL(V) + " = " + Lab.sci(r.cx, 3) + " M" + (r.sys === "wb" ? " (the weak acid " + conjName(r) + " adds a negligible amount)" : ""));
+        st.push("pH = −log(" + Lab.sci(r.cx, 3) + ") = <b>" + fx(pH, 2) + "</b>");
+        break;
+      case "xsOH":
+        st.push("Excess strong base controls the pH: [OH⁻] = " + mm(Math.abs(r.n1 - r.n2)) + " mmol ÷ " + mL(V) + " = " + Lab.sci(r.cx, 3) + " M" + (r.sys === "wa" ? " (the weak base " + conjName(r) + " adds a negligible amount)" : ""));
+        st.push("pOH = −log(" + Lab.sci(r.cx, 3) + ") = " + fx(14 - pH, 2) + ", so pH = 14.00 − pOH = <b>" + fx(pH, 2) + "</b>");
+        break;
+      case "neutral":
+        st.push("Only water, Na<sup>+</sup>, and Cl<sup>−</sup> remain. Neither ion reacts with water, so pH = <b>7.00</b>.");
+        break;
+      case "buffer":
+        var acid = r.sys === "wa" ? F(r.A.f) : conjName(r), base = r.sys === "wa" ? conjName(r) : F(r.B.f);
+        var nA = r.sys === "wa" ? r.n2 : r.n1 - r.n2, nHA = r.sys === "wa" ? r.n1 - r.n2 : r.n2;
+        var poor = r.ratio < 0.1 || r.ratio > 10;
+        st.push("Both " + acid + " and " + base + " are present" + (poor ? ", but one is less than a tenth of the other, so this is at best a weak <b>buffer</b> and Henderson–Hasselbalch is only an estimate." : " in significant amounts: this is a <b>buffer</b>.") + (r.sys === "wb" ? " The acid of the pair is " + conjName(r) + ", with K<sub>a</sub> = K<sub>w</sub>/K<sub>b</sub> = " + sc(KW / r.B.Kb, 2) + "." : ""));
+        st.push("pH = pK<sub>a</sub> + log([" + base + "]/[" + acid + "]) = " + fx(r.pKa, 4) + " + log(" + mm(nA) + " / " + mm(nHA) + ") = " + fx(r.pKa, 4) + " + (" + fx(Math.log10(r.ratio), 4) + ") = <b>" + fx(pH, 2) + "</b> (keep extra digits and round only at the end)" + (Math.abs(nA - nHA) < 1e-6 ? ". Equal amounts, so pH = pK<sub>a</sub>: this is the half-neutralized mixture." : ""));
+        break;
+      case "conj":
+        var acidic = r.sys === "wb";
+        st.push("Equal moles, so the only acid–base species left is " + conjName(r) + ": [" + conjName(r) + "] = " + mm(r.n1) + " mmol ÷ " + mL(V) + " = " + Lab.sci(r.C, 3) + " M.");
+        st.push(conjName(r) + " is a weak " + (acidic ? "acid" : "base") + ": " + (acidic ? "K<sub>a</sub> = K<sub>w</sub>/K<sub>b</sub>" : "K<sub>b</sub> = K<sub>w</sub>/K<sub>a</sub>") + " = " + sc(r.Kc, 2) + ". " + (acidic ? conjName(r) + " + H<sub>2</sub>O ⇌ " + F(r.B.f) + " + H<sub>3</sub>O<sup>+</sup>" : conjName(r) + " + H<sub>2</sub>O ⇌ " + F(r.A.f) + " + OH<sup>−</sup>"));
+        st.push((acidic ? "[H₃O⁺]" : "[OH⁻]") + " = √(" + sc(r.Kc, 2) + " × " + Lab.sci(r.C, 3) + ") = " + sc(r.x, 3) + " M, so " + (acidic ? "pH = <b>" + fx(pH, 2) + "</b>, slightly acidic." : "pOH = " + fx(14 - pH, 2) + " and pH = <b>" + fx(pH, 2) + "</b>, slightly basic."));
+        break;
+      case "weak":
+        st.push("Nothing has been added, so this is just the weak " + (r.sys === "wa" ? "acid" : "base") + " at " + Lab.sci(r.C, 3) + " M. ICE: x = " + sc(r.x, 3) + " M, pH = <b>" + fx(pH, 2) + "</b>. Add some " + (r.sys === "wa" ? "NaOH" : "HCl") + " to see a buffer form.");
+        break;
+      case "ww":
+        var y = r.y;
+        st.push("A weak acid and a weak base react to an equilibrium: " + r.eq + ".");
+        st.push("K = K<sub>a</sub>(" + F(r.A.f) + ") × K<sub>b</sub>(" + F(r.B.f) + ") ÷ K<sub>w</sub> = " + sc(r.A.Ka, 2) + " × " + sc(r.B.Kb, 2) + " ÷ 1.0 × 10<sup>−14</sup> = <b>" + kTxt(r.K) + "</b>.");
+        st.push("Solving K = y² / [(" + mm(r.n1) + " − y)(" + mm(r.n2) + " − y)] in mmol gives y = " + mm(y) + " mmol, so " + (Math.min(r.n1, r.n2) > 0 ? Lab.sig(100 * y / Math.min(r.n1, r.n2), 3) + "% of the limiting reactant has reacted" : "nothing reacts") + ". " + (r.K > 1e3 ? "K is large, so the reaction lies far to the right." : r.K > 1e-1 ? "K is near 1, so reactants and products are both present in large amounts." : "K is small, so little reacts."));
+        break;
+    }
+    if (r.exact != null && r.pH != null && Math.abs(r.exact - r.pH) > 0.05) {
+      h = "";
+      st.push("<i>Accuracy note:</i> the full equilibrium (including water) gives pH " + fx(r.exact, 2) + ". " + (r.state === "buffer" ? "Henderson–Hasselbalch is rough here because one buffer component is very small next to the other." : "The AP shortcut ignores a small contribution that matters at this point."));
+    }
+    h += "<p><b>" + STATE[r.state].short + ".</b> " + (r.spect ? r.spect : "") + "</p>";
+    h += "<ol class=\"steps\">" + st.map(function (s) { return "<li>" + s + "</li>"; }).join("") + "</ol>";
+    var ap = {
+      xsH: "react first in moles; with strong acid in excess, [H₃O⁺] = excess moles ÷ total volume.",
+      xsOH: "react first in moles; with strong base in excess, [OH⁻] = excess moles ÷ total volume, then pH = 14.00 − pOH.",
+      buffer: "react first in moles; weak " + (r.sys === "wa" ? "acid" : "base") + " and its conjugate are both left, so the solution is a buffer and pH = pK<sub>a</sub> + log([base]/[acid]).",
+      conj: "at equal moles only the conjugate is left, so the solution is slightly " + (r.sys === "wb" ? "acidic (BH⁺ donates protons to water)" : "basic (A⁻ accepts protons from water)") + "; use K = K<sub>w</sub>/K and an ICE table.",
+      neutral: "strong acid + strong base in equal moles leaves only spectator ions, so pH = 7.00 at 25 °C.",
+      weak: "with nothing added, use K<sub>a</sub> or K<sub>b</sub> and an ICE table for the weak acid or base alone.",
+      ww: "a weak acid and a weak base react to an equilibrium with K = K<sub>a</sub>K<sub>b</sub>/K<sub>w</sub>; a large K means mostly products."
+    }[r.state];
+    h += "<p><b>AP answer:</b> " + ap + "</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  var el = function (id) { return document.getElementById(id); };
+  var sysBtns = {}, aBtns = {}, bBtns = {}, scBtns = {};
+  function labels() {
+    var sys = S.sys, A = WA[S.a], B = WB[S.b];
+    var flask = sys === "ss" ? "HCl" : sys === "wb" ? B.f : A.f, add = sys === "ss" || sys === "wa" ? "NaOH" : sys === "wb" ? "HCl" : B.f;
+    el("l-v1").innerHTML = "Volume of " + F(flask) + " (flask)"; el("l-c1").innerHTML = "[" + F(flask) + "]";
+    el("l-v2").innerHTML = "Volume of " + F(add) + " added"; el("l-c2").innerHTML = "[" + F(add) + "]";
+    var eq = S.v1 * S.c1 / S.c2;
+    el("h-v1").textContent = "mmol in flask = " + Lab.sig(S.v1 * S.c1, 3);
+    el("h-v2").textContent = "Equal moles at " + Lab.sig(eq, 3) + " mL" + (eq > 100 ? " (beyond this slider)" : "");
+    var showA = sys !== "ss" && sys !== "wb", showB = sys === "wb" || sys === "ww";
+    el("t-wa").hidden = !showA; el("pick-a").hidden = !showA;
+    el("t-wb").hidden = !showB; el("pick-b").hidden = !showB;
+  }
+  function render() {
+    var r = solve(S);
+    labels();
+    el("s-v1").value = S.v1; el("o-v1").textContent = S.v1 + " mL";
+    el("s-c1").value = S.c1; el("o-c1").textContent = S.c1.toFixed(3) + " M";
+    el("s-v2").value = S.v2; el("o-v2").textContent = S.v2.toFixed(1) + " mL";
+    el("s-c2").value = S.c2; el("o-c2").textContent = S.c2.toFixed(3) + " M";
+    Object.keys(sysBtns).forEach(function (k) { sysBtns[k].setAttribute("aria-pressed", S.sys === k ? "true" : "false"); });
+    Object.keys(aBtns).forEach(function (k) { aBtns[k].setAttribute("aria-pressed", S.a === k ? "true" : "false"); });
+    Object.keys(bBtns).forEach(function (k) { bBtns[k].setAttribute("aria-pressed", S.b === k ? "true" : "false"); });
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    el("rxn").innerHTML = r.eq;
+    drawBars(r); drawBCA(r);
+    el("r-st").textContent = STATE[r.state].short;
+    el("r-st2").innerHTML = r.state === "buffer" ? (r.sys === "wa" ? "HA and A⁻ both present" : "B and BH⁺ both present") : r.state === "conj" ? conjName(r) + " sets the pH" : r.state === "xsH" || r.state === "xsOH" ? Lab.sig(Math.abs(r.n1 - r.n2), 3) + " mmol excess" : r.state === "ww" ? "see K" : "";
+    el("r-v").textContent = mL(r.V);
+    el("r-v2").textContent = "= " + Lab.sig(r.V / 1000, 3) + " L";
+    el("r-ph").textContent = r.pH == null ? "—" : fx(r.pH, 2);
+    el("r-ph2").textContent = r.pH == null ? "not calculated for weak + weak" : r.state === "buffer" ? "pKa " + fx(r.pKa, 4) + ", log ratio " + fx(Math.log10(r.ratio), 4) : (Math.abs(r.exact - r.pH) > 0.05 ? "full equilibrium: " + fx(r.exact, 2) : "full equilibrium agrees");
+    el("r-kk").textContent = r.sys === "ww" ? "K for HA + B" : "K for the reaction";
+    el("r-k").innerHTML = kTxt(r.K);
+    el("r-k2").innerHTML = "K = " + r.Kwhy + (r.K > 1e3 ? ": essentially complete" : r.K > 0.1 ? ": a real equilibrium" : ": little reaction");
+    el("story").innerHTML = story(r);
+  }
+  function addBtns(box, obj, store, onPick, label) {
+    Object.keys(obj).forEach(function (k) {
+      var b = document.createElement("button"); b.type = "button"; b.innerHTML = label(obj[k]); b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", function () { onPick(k); });
+      el(box).appendChild(b); store[k] = b;
+    });
+  }
+  addBtns("sys", SYS, sysBtns, function (k) { S.sys = k; S.key = null; render(); }, function (x) { return x.name; });
+  addBtns("pick-a", WA, aBtns, function (k) { S.a = k; S.key = null; render(); }, function (x) { return F(x.f); });
+  addBtns("pick-b", WB, bBtns, function (k) { S.b = k; S.key = null; render(); }, function (x) { return F(x.f); });
+  [["s-v1", "v1"], ["s-c1", "c1"], ["s-v2", "v2"], ["s-c2", "c2"]].forEach(function (p) {
+    el(p[0]).addEventListener("input", function () { S[p[1]] = parseFloat(el(p[0]).value); S.key = null; render(); });
+  });
+
+  // ---------- Scenarios ----------
+  var SC = [
+    { k: "s1", name: "HCl + less NaOH", set: { sys: "ss", v1: 50, c1: 0.100, v2: 30, c2: 0.100 }, expect: { state: "xsH", pH: "1.60" } },
+    { k: "s2", name: "HCl + equal NaOH", set: { sys: "ss", v1: 50, c1: 0.100, v2: 50, c2: 0.100 }, expect: { state: "neutral", pH: "7.00" } },
+    { k: "s3", name: "HCl + excess NaOH", set: { sys: "ss", v1: 50, c1: 0.100, v2: 60, c2: 0.100 }, expect: { state: "xsOH", pH: "11.96" } },
+    { k: "w1", name: "CH₃COOH + some NaOH", set: { sys: "wa", a: "hac", v1: 50, c1: 0.100, v2: 10, c2: 0.100 }, expect: { state: "buffer", pH: "4.14" } },
+    { k: "w2", name: "CH₃COOH + half NaOH", set: { sys: "wa", a: "hac", v1: 50, c1: 0.100, v2: 25, c2: 0.100 }, expect: { state: "buffer", pH: "4.74" } },
+    { k: "w3", name: "CH₃COOH + equal NaOH", set: { sys: "wa", a: "hac", v1: 50, c1: 0.100, v2: 50, c2: 0.100 }, expect: { state: "conj", pH: "8.72" } },
+    { k: "b1", name: "NH₃ + half HCl", set: { sys: "wb", b: "nh3", v1: 50, c1: 0.100, v2: 25, c2: 0.100 }, expect: { state: "buffer", pH: "9.26" } },
+    { k: "b2", name: "NH₃ + equal HCl", set: { sys: "wb", b: "nh3", v1: 50, c1: 0.100, v2: 50, c2: 0.100 }, expect: { state: "conj", pH: "5.28" } },
+    { k: "ww", name: "CH₃COOH + NH₃", set: { sys: "ww", a: "hac", b: "nh3", v1: 50, c1: 0.100, v2: 50, c2: 0.100 }, expect: { state: "ww" } },
+    { k: "ww2", name: "HCN + NH₃", set: { sys: "ww", a: "hcn", b: "nh3", v1: 50, c1: 0.100, v2: 50, c2: 0.100 }, expect: { state: "ww" } }
+  ];
+  SC.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { for (var k in x.set) S[k] = x.set[k]; S.key = x.k; render(); });
+    el("sc").appendChild(b); scBtns[x.k] = b;
+  });
+  function stOf(set) { var s = { sys: "wa", a: "hac", b: "nh3", v1: 50, c1: 0.1, v2: 0, c2: 0.1 }; for (var k in set) s[k] = set[k]; return s; }
+
+  // ---------- Table (generated) ----------
+  (function () {
+    var rows = [
+      ["xsH", "H₃O⁺ (plus spectators and any weak conjugate)", "[H₃O⁺] = excess mol ÷ total V", { sys: "ss", v2: 30 }, "50.0 mL HCl + 30.0 mL NaOH"],
+      ["xsOH", "OH⁻ (plus spectators and any weak conjugate)", "[OH⁻] = excess mol ÷ total V; pH = 14.00 − pOH", { sys: "wa", v2: 60 }, "50.0 mL CH₃COOH + 60.0 mL NaOH"],
+      ["buffer", "HA and A⁻ (or B and BH⁺)", "pH = pK<sub>a</sub> + log([A⁻]/[HA])", { sys: "wa", v2: 10 }, "50.0 mL CH₃COOH + 10.0 mL NaOH"],
+      ["conj", "A⁻ only (or BH⁺ only)", "K<sub>b</sub> = K<sub>w</sub>/K<sub>a</sub> (or K<sub>a</sub> = K<sub>w</sub>/K<sub>b</sub>), then ICE", { sys: "wb", v2: 50 }, "50.0 mL NH₃ + 50.0 mL HCl"],
+      ["neutral", "Spectator ions only", "pH = 7.00 at 25 °C", { sys: "ss", v2: 50 }, "50.0 mL HCl + 50.0 mL NaOH"]
+    ];
+    el("tbl").innerHTML = rows.map(function (rw) {
+      var r = solve(stOf(rw[3]));
+      if (r.state !== rw[0]) console.error("8.4 table row " + rw[0] + " classified as " + r.state);
+      return "<tr><td><b>" + STATE[rw[0]].long.charAt(0).toUpperCase() + STATE[rw[0]].long.slice(1) + "</b></td><td>" + rw[1] + "</td><td>" + rw[2] + "</td><td>" + rw[4] + ": pH " + fx(r.pH, 2) + "</td></tr>";
+    }).join("") +
+    "<tr><td><b>Weak acid + weak base</b></td><td>HA, B, A⁻, BH⁺ at equilibrium</td><td>K = K<sub>a</sub>K<sub>b</sub>/K<sub>w</sub> tells how far it goes</td><td>CH₃COOH + NH₃: K = " + sc(solve(stOf({ sys: "ww", v2: 50 })).K, 2) + "</td></tr>";
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "50.0 mL of 0.200 M HCl is mixed with 50.0 mL of 0.100 M NaOH. What is the pH of the mixture?",
+      o: ["1.00", "0.70", "7.00", "1.30"], c: 3,
+      w: "mmol HCl = 50.0 × 0.200 = 10.0; mmol NaOH = 50.0 × 0.100 = 5.00. After reaction, 5.00 mmol H₃O⁺ remain in the total 100.0 mL, so [H₃O⁺] = 0.0500 M and pH = 1.30. Choice A divides by only the 50.0 mL of acid; choice B uses the original 0.200 M and ignores the reaction." },
+    { s: "A solution is made by mixing 40.0 mL of 0.100 M CH₃COOH (Ka = 1.8 × 10⁻⁵) with 10.0 mL of 0.100 M NaOH. Which statement is correct?",
+      o: ["The solution is basic, because NaOH is a strong base.", "The solution is a buffer with pH less than the pKa of acetic acid.", "The solution is a buffer with pH greater than the pKa of acetic acid.", "The pH is 7.00, because the acid has been neutralized."], c: 1,
+      w: "mmol CH₃COOH = 4.00, mmol OH⁻ = 1.00. After reaction: 3.00 mmol CH₃COOH and 1.00 mmol CH₃COO⁻, a buffer. pH = pKa + log(1.00/3.00) = 4.7447 − 0.4771 = 4.2676 = 4.27 (rounding to 4.74 − 0.48 first would give 4.26; round only at the end), below the pKa of 4.74 because there is more acid than conjugate base. Choice A ignores that the NaOH was the limiting reactant." },
+    { s: "Equal volumes of 0.10 M NH₃ and 0.10 M HCl are mixed. Which species is mainly responsible for the pH of the resulting solution, and is the solution acidic or basic?",
+      o: ["NH₄⁺; slightly acidic", "Cl⁻; basic", "NH₃; basic", "H₃O⁺ from excess HCl; strongly acidic"], c: 0,
+      w: "Equal moles react completely: NH₃ + H₃O⁺ → NH₄⁺ + H₂O. Only NH₄⁺ (and the spectator Cl⁻) remain. NH₄⁺ is a weak acid (Ka = Kw/Kb = 5.6 × 10⁻¹⁰), so the solution is slightly acidic. Choice D assumes HCl is left over, but none is, and choice B wrongly treats Cl⁻ as a base." },
+    { s: "50.0 mL of 0.100 M HCOOH (formic acid, Ka = 1.8 × 10⁻⁴) is mixed with 25.0 mL of 0.100 M NaOH. What is the pH?",
+      o: ["2.37", "4.74", "3.74", "7.00"], c: 2,
+      w: "mmol HCOOH = 5.00 and mmol OH⁻ = 2.50, so after reaction 2.50 mmol HCOOH and 2.50 mmol HCOO⁻ remain. Equal amounts make pH = pKa = −log(1.8 × 10⁻⁴) = 3.74. Choice B is the pKa of acetic acid, a common slip; choice A ignores the NaOH and treats the formic acid alone." },
+    { s: "Which mixture, after reaction, is a buffer?",
+      o: ["0.10 mol HCl + 0.10 mol NaCl", "0.10 mol CH₃COOH + 0.10 mol NaOH", "0.10 mol HNO₃ + 0.20 mol KOH", "0.20 mol NH₃ + 0.10 mol HCl"], c: 3,
+      w: "0.10 mol HCl converts 0.10 mol NH₃ to NH₄⁺, leaving 0.10 mol NH₃ and 0.10 mol NH₄⁺: a weak base with its conjugate acid. Choice A has no weak acid–base pair (Cl⁻ does not react with H₃O⁺). Choice B leaves only CH₃COO⁻, and choice C leaves excess strong base." },
+    { s: "25.0 mL of 0.100 M CH₃COOH is mixed with 35.0 mL of 0.100 M NaOH. Which expression gives [OH⁻] in the mixture, to a good approximation?",
+      o: ["(0.0035 mol) ÷ (0.0350 L)", "(0.0010 mol) ÷ (0.0600 L)", "√(Kb × 0.0417), with Kb = Kw/Ka", "(0.0010 mol) ÷ (0.0350 L)"], c: 1,
+      w: "mmol CH₃COOH = 2.50 and mmol OH⁻ = 3.50, so 1.00 mmol (0.0010 mol) OH⁻ is in excess. The excess strong base controls the pH; divide by the total volume, 60.0 mL: [OH⁻] = 0.0167 M. Choice D divides by only the base's volume, and choice C would apply only at exactly equal moles." },
+    { s: "Acetic acid (Ka = 1.8 × 10⁻⁵) is mixed with ammonia (Kb = 1.8 × 10⁻⁵) in equal amounts: CH₃COOH + NH₃ ⇌ CH₃COO⁻ + NH₄⁺. Which statement about this reaction is correct?",
+      o: ["K = 3.2 × 10⁴, so the reaction lies far to the right.", "K = 3.2 × 10⁻¹⁰, so almost no reaction occurs.", "K = 1.0 × 10⁻¹⁴, the same as Kw.", "K cannot be determined from Ka and Kb."], c: 0,
+      w: "Adding CH₃COOH + H₂O ⇌ CH₃COO⁻ + H₃O⁺ (Ka), NH₃ + H₂O ⇌ NH₄⁺ + OH⁻ (Kb), and H₃O⁺ + OH⁻ ⇌ 2H₂O (1/Kw) gives the overall reaction, so K = KaKb/Kw = (1.8 × 10⁻⁵)² ÷ 1.0 × 10⁻¹⁴ = 3.2 × 10⁴. Choice B is Ka × Kb without dividing by Kw." },
+    { s: "50.0 mL of 0.100 M CH₃COOH is titrated with 50.0 mL of 0.100 M NaOH. Which statement about the resulting solution is correct?",
+      o: ["Its pH is 7.00, because equal moles of acid and base reacted.", "It is a buffer, because it contains acetate ions.", "Its pH is greater than 7, because CH₃COO⁻ reacts with water to produce OH⁻.", "Its pH is less than 7, because some acetic acid remains un-ionized."], c: 2,
+      w: "Equal moles leave only CH₃COO⁻ (0.0500 M) and Na⁺. Acetate is a weak base: Kb = 5.6 × 10⁻¹⁰, [OH⁻] = 5.3 × 10⁻⁶ M, pH = 8.72. Choice A applies only to strong acid + strong base. Choice B needs significant CH₃COOH as well, and there is essentially none." }
+  ];
+  Lab.quiz(Q, el("quiz"), el("score"), el("quiz-reset"));
+  Lab.nav("8.4");
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    function chg(f) { var m = String(f).match(/\^(\d*)([+\-])$/); return m ? (m[2] === "+" ? 1 : -1) * (m[1] ? +m[1] : 1) : 0; }
+    function strip(f) { return String(f).replace(/\^.*$/, ""); }
+    // conjugate pairs differ by one H and one charge
+    function pair(acid, base, what) {
+      var A = Lab.parseFormula(strip(acid)), B = Lab.parseFormula(strip(base)), ks = {};
+      for (var e in A) ks[e] = 1; for (var e2 in B) ks[e2] = 1;
+      for (var e3 in ks) if ((A[e3] || 0) - (B[e3] || 0) !== (e3 === "H" ? 1 : 0)) bad.push(what + " pair differs in " + e3);
+      if (chg(acid) - chg(base) !== 1) bad.push(what + " pair charge");
+    }
+    Object.keys(WA).forEach(function (k) { pair(WA[k].f, WA[k].conj, k); });
+    Object.keys(WB).forEach(function (k) { pair(WB[k].conj, WB[k].f, k); });
+    // scenarios: classification and pH match hand-worked values; AP pH agrees with the full equilibrium
+    SC.forEach(function (x) {
+      var r = solve(stOf(x.set)), e = x.expect;
+      if (r.state !== e.state) bad.push(x.k + " state " + r.state);
+      if (e.pH && fx(r.pH, 2) !== e.pH) bad.push(x.k + " pH " + fx(r.pH, 2) + " vs " + e.pH);
+      if (r.pH != null && Math.abs(r.exact - r.pH) > 0.03) bad.push(x.k + " AP vs exact " + r.exact);
+      // mass balance on the acid–base pair
+      if (r.sys === "wa" || r.sys === "wb") { var tot = r.sp[0].a + r.sp[2].a; if (Math.abs(tot - r.n1) > 1e-9) bad.push(x.k + " pair not conserved"); }
+    });
+    var ww = solve(stOf({ sys: "ww", v2: 50 })); if (Lab.sig(ww.K / 1e4, 2) !== "3.2") bad.push("ww K");
+    var ww2 = solve(stOf({ sys: "ww", a: "hcn", v2: 50 })); if (Math.abs(ww2.y * ww2.y / ((ww2.n1 - ww2.y) * (ww2.n2 - ww2.y)) - ww2.K) > 1e-6 * ww2.K) bad.push("ww extent");
+    // quiz arithmetic
+    if (fx(solve(stOf({ sys: "ss", v1: 50, c1: 0.2, v2: 50, c2: 0.1 })).pH, 2) !== "1.30") bad.push("quiz 1");
+    if (fx(solve(stOf({ sys: "wa", v1: 40, c1: 0.1, v2: 10, c2: 0.1 })).pH, 2) !== "4.27") bad.push("quiz 2");
+    if (fx(-Math.log10(1.8e-4), 2) !== "3.74") bad.push("quiz 4");
+    var q6 = solve(stOf({ sys: "wa", v1: 25, c1: 0.1, v2: 35, c2: 0.1 })); if (q6.state !== "xsOH" || Lab.sig(q6.cx, 3) !== "0.0167") bad.push("quiz 6");
+    var q8 = solve(stOf({ sys: "wa", v1: 50, c1: 0.1, v2: 50, c2: 0.1 })); if (fx(q8.pH, 2) !== "8.72" || Lab.sig(q8.x * 1e6, 2) !== "5.3") bad.push("quiz 8");
+    var used = {}; Q.forEach(function (q) { used[q.c] = 1; if (q.o.length !== 4) bad.push("quiz options"); });
+    if (Object.keys(used).length < 4) bad.push("answer letters do not vary");
+    if (bad.length) console.error("8.4 self-check failed: " + bad.slice(0, 8).join("; "));
+  })();
+
+  document.querySelector("#sc button").click();
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [8], topic: "8.4", compact: true, storageKey: "topic-8.4" });</script>
+</body>
+</html>

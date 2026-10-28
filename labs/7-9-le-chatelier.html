@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Introduction to Le Châtelier’s Principle Study Lab</title>
+<meta name="description" content="Stress six classic equilibrium systems by adding or removing a species, heating or cooling, compressing, diluting, or adding a catalyst, and watch the shift in color, pH and concentration.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+/* Solution colors used in the flask drawings (real colors of the species, adjusted for each theme). */
+:root { --sol-brown: #9a4a1c; --sol-pink: #e889b0; --sol-blue: #2c58c9; --sol-red: #a8162a; --sol-pale: #f3eab8; --sol-yellow: #e8c611; --sol-orange: #df6a16; --sol-clear: #eef3f8; }
+:root[data-theme="dark"] { --sol-brown: #c0652d; --sol-pink: #e98fb5; --sol-blue: #4f7ae6; --sol-red: #d3324a; --sol-pale: #cfc58d; --sol-yellow: #e2c22a; --sol-orange: #ee8030; --sol-clear: #2a3341; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --sol-brown: #c0652d; --sol-pink: #e98fb5; --sol-blue: #4f7ae6; --sol-red: #d3324a; --sol-pale: #cfc58d; --sol-yellow: #e2c22a; --sol-orange: #ee8030; --sol-clear: #2a3341; } }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.stresses button { font-size: .86rem; padding: 6px 12px; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v { font-size: 1.05rem; }
+.ctlcard { display: grid; gap: 16px; }
+.ctlcard .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.graph-card { align-content: start; }
+.note { font-size: .82rem; color: var(--muted); }
+svg.flasks { width: 100%; height: auto; display: block; }
+@media (max-width: 520px) { .ctlcard .controls { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 7 · Topic 7.9</span>
+  <h1>Introduction to Le Châtelier’s Principle Study Lab</h1>
+  <p class="lede">When a system at equilibrium is disturbed, it shifts in the direction that partly counteracts the disturbance, and a new equilibrium is set up. Le Châtelier’s principle predicts which way: toward the side that uses up an added substance, replaces a removed one, absorbs added heat, or makes fewer gas particles when squeezed. Here you apply each kind of stress to six classic systems and see the shift in color, pH and concentration.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The stress tester</h2>
+    <p>Choose a classic case, or pick a system and then a stress. The flasks show the mixture at the original equilibrium and at the new one; the graph shows each concentration relative to its value before the stress. Equilibrium constants, the size of each stress, and the change in K on heating are illustrative; the directions and colors are real.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Before and after <small id="fl-sub"></small></h3>
+      <svg class="flasks" id="flasks" viewBox="0 0 440 270" role="img" aria-label="Two flasks: the original equilibrium mixture and the new equilibrium mixture after the stress"></svg>
+    </div>
+    <div class="card graph-card">
+      <h3>Concentrations over time <small>relative to before the stress</small></h3>
+      <svg class="chart" id="g" role="img" aria-label="Graph of each concentration divided by its value before the stress, against time"></svg>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <div class="tag">Classic cases</div>
+      <div class="scenarios" id="sc"></div>
+    </div>
+    <div class="group">
+      <div class="tag">System</div>
+      <div class="scenarios" id="sys"></div>
+      <div class="eqn" id="eqn"></div>
+    </div>
+    <div class="group">
+      <div class="tag">Stress</div>
+      <div class="scenarios stresses" id="st"></div>
+    </div>
+    <div class="controls">
+      <div class="ctl">
+        <label for="s-p"><span>Size of the stress</span> <output id="o-p"></output></label>
+        <input type="range" id="s-p" min="0.2" max="1" step="0.05">
+        <span class="hint" id="p-hint"></span>
+      </div>
+      <div class="ctl">
+        <label><span>How the stress is applied</span></label>
+        <span class="hint" id="how"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Stress</div><div class="v" id="r-s"></div><div class="sub" id="r-s2"></div></div>
+    <div class="stat"><div class="k">Shift</div><div class="v" id="r-d"></div><div class="sub" id="r-d2"></div></div>
+    <div class="stat"><div class="k">Value of K</div><div class="v" id="r-k"></div><div class="sub" id="r-k2"></div></div>
+    <div class="stat"><div class="k">What you would observe</div><div class="v" id="r-o"></div><div class="sub" id="r-o2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Concentration</span><h3>Use up what was added</h3><p>Adding a reactant or removing a product shifts the reaction right; adding a product or removing a reactant shifts it left. The shift only partly undoes the change: an added substance ends up above its old equilibrium value, a removed one below it.</p></div>
+    <div class="card"><span class="tag">Pure solids and liquids</span><h3>Adding more does nothing</h3><p>Pure solids and liquids do not appear in the K expression, so adding more CaCO<sub>3</sub>(s) to CaCO<sub>3</sub>(s) ⇌ CaO(s) + CO<sub>2</sub>(g) does not shift the equilibrium. Removing a solid has no effect either, as long as some remains. Adding water to an aqueous equilibrium is different: it dilutes the dissolved species (see Dilution).</p></div>
+    <div class="card"><span class="tag">Volume and pressure</span><h3>Count the gas particles</h3><p>Decreasing the volume of a gas mixture shifts it toward the side with fewer moles of gas; increasing the volume shifts it toward more. If both sides have the same number of moles of gas, there is no shift. Adding an inert gas at constant volume changes no partial pressure, so nothing shifts.</p></div>
+    <div class="card"><span class="tag">Dilution</span><h3>The aqueous version</h3><p>Adding water to an aqueous equilibrium lowers every dissolved concentration, and the system shifts toward the side with more dissolved particles. For Co(H<sub>2</sub>O)<sub>6</sub><sup>2+</sup> + 4Cl<sup>−</sup> ⇌ CoCl<sub>4</sub><sup>2−</sup> + 6H<sub>2</sub>O, dilution turns the solution pink.</p></div>
+    <div class="card"><span class="tag">Temperature</span><h3>Treat heat as a substance</h3><p>For an endothermic reaction, heat is a reactant: heating shifts right. For an exothermic reaction, heat is a product: heating shifts left. Temperature is the only stress that changes the value of K.</p></div>
+    <div class="card"><span class="tag">Catalyst</span><h3>Faster, not further</h3><p>A catalyst lowers the activation energy for the forward and reverse reactions equally. Equilibrium is reached sooner, but the equilibrium amounts and K are unchanged.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Stress and response cheat sheet</h2>
+    <p>Example system: N<sub>2</sub>(g) + 3H<sub>2</sub>(g) ⇌ 2NH<sub>3</sub>(g), ΔH° = −92 kJ/mol<sub>rxn</sub> (4 mol gas on the left, 2 on the right).</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Stress</th><th>Shift</th><th>Does K change?</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Add N<sub>2</sub> or H<sub>2</sub></td><td><span class="shift">Right</span></td><td>No</td><td>Uses up some of the added reactant</td></tr>
+      <tr><td>Remove NH<sub>3</sub></td><td><span class="shift">Right</span></td><td>No</td><td>Replaces some of the removed product (this is how industry drives the yield up)</td></tr>
+      <tr><td>Decrease the volume (increase the pressure)</td><td><span class="shift">Right</span></td><td>No</td><td>2 mol of gas on the right versus 4 on the left</td></tr>
+      <tr><td>Increase the volume</td><td><span class="lshift">Left</span></td><td>No</td><td>Toward more moles of gas</td></tr>
+      <tr><td>Heat</td><td><span class="lshift">Left</span></td><td>Yes, K decreases</td><td>Exothermic forward: heat is a product</td></tr>
+      <tr><td>Cool</td><td><span class="shift">Right</span></td><td>Yes, K increases</td><td>Removing heat favors the exothermic direction</td></tr>
+      <tr><td>Add Ar at constant volume</td><td>None</td><td>No</td><td>Partial pressures of N<sub>2</sub>, H<sub>2</sub> and NH<sub>3</sub> are unchanged</td></tr>
+      <tr><td>Add a catalyst</td><td>None</td><td>No</td><td>Speeds both directions equally</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Le Châtelier on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Name the direction (toward reactants or toward products) and tie it to the specific stress: "the added Cl<sup>−</sup> is partly consumed."</li>
+        <li>For volume changes, count moles of gas on each side and say which side has fewer.</li>
+        <li>For temperature, state whether the forward reaction is endothermic or exothermic, and say that K changes.</li>
+        <li>Connect the shift to what you would see or measure: color, pH, temperature, mass of precipitate, pressure.</li>
+        <li>For "no shift" answers, give the reason: solid not in the expression, equal moles of gas, catalyst affects both rates equally.</li>
+        <li>A justification using Q and K (topic 7.10) is often accepted and is more precise than "the system wants to."</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying the shift completely restores the original concentration. It only partly offsets the stress.</li>
+        <li>Shifting the reaction when a pure solid or liquid is added.</li>
+        <li>Thinking any increase in total pressure causes a shift. Adding an inert gas at constant volume does not.</li>
+        <li>Claiming a catalyst increases the yield at equilibrium.</li>
+        <li>Saying K changes when a concentration or the volume changes. Only temperature changes K.</li>
+        <li>Mixing up which way heat goes: ΔH &gt; 0 means heat is absorbed in the forward direction.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 7.9. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-7.html">Unit 7 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Systems ----------
+  // sp: [formula for Lab.fmla, signed coefficient, phase]. Species in s or l phase are left out of Q.
+  // start: amounts the lab reacts to equilibrium on load (M; illustrative). dH: sign of the forward ΔH (0 = not used).
+  // stresses: ids from the STRESS table below. color(c): fill for the flask.
+  var SYS = {
+    no2: { name: "N₂O₄ ⇌ 2NO₂", sp: [["N2O4", -1, "g"], ["NO2", 2, "g"]], K: 4.6e-3, start: [0.050, 0], dH: 1, dHtxt: "ΔH° = +57 kJ/mol<sub>rxn</sub> (endothermic)",
+      stresses: ["add1", "rem1", "add0", "rem0", "heat", "cool", "comp", "exp", "inert", "cat"],
+      color: function (c) { return mix("--sol-brown", Math.min(95, 100 * c[1] / 0.03), "--sol-clear"); },
+      look: function (a, b) { return cmp(b[1], a[1], "darker brown", "paler brown"); }, lookNote: "N₂O₄ is colorless; NO₂ is brown" },
+    co: { name: "Cobalt chloride (pink ⇌ blue)", sp: [["Co(H2O)6^2+", -1, "aq"], ["Cl^-", -4, "aq"], ["CoCl4^2-", 1, "aq"], ["H2O", 6, "l"]], K: 7.7e-4, start: [0.10, 6.2, 0], dH: 1, dHtxt: "forward reaction endothermic",
+      stresses: ["add1", "rem1", "add0", "dil", "heat", "cool"],
+      color: function (c) { return mix("--sol-blue", 100 * c[2] / (c[0] + c[2]), "--sol-pink"); },
+      look: function (a, b) { return cmp(b[2] / (b[0] + b[2]), a[2] / (a[0] + a[2]), "bluer", "pinker"); }, lookNote: "Co(H₂O)₆²⁺ is pink; CoCl₄²⁻ is blue" },
+    fe: { name: "Iron(III) thiocyanate", sp: [["Fe^3+", -1, "aq"], ["SCN^-", -1, "aq"], ["FeSCN^2+", 1, "aq"]], K: 200, start: [2.0e-3, 2.0e-3, 0], dH: -1, dHtxt: "forward reaction exothermic",
+      stresses: ["add0", "add1", "rem1", "add2", "dil", "heat", "cool"],
+      color: function (c) { return mix("--sol-red", Math.min(95, 100 * c[2] / 1.6e-3), "--sol-pale"); },
+      look: function (a, b) { return cmp(b[2], a[2], "deeper red", "paler red"); }, lookNote: "Fe³⁺ is pale yellow; FeSCN²⁺ is blood red" },
+    nh3: { name: "Haber process", sp: [["N2", -1, "g"], ["H2", -3, "g"], ["NH3", 2, "g"]], K: 0.50, start: [1.0, 3.0, 0], dH: -1, dHtxt: "ΔH° = −92 kJ/mol<sub>rxn</sub> (exothermic)",
+      stresses: ["add0", "add1", "rem2", "heat", "cool", "comp", "exp", "inert", "cat"],
+      color: function () { return "var(--sol-clear)"; },
+      look: function (a, b) { return cmp(b[2], a[2], "richer in NH₃", "poorer in NH₃"); }, lookNote: "all three gases are colorless; measure the amount of NH₃" },
+    caco3: { name: "CaCO₃(s) ⇌ CaO(s) + CO₂(g)", sp: [["CaCO3", -1, "s"], ["CaO", 1, "s"], ["CO2", 1, "g"]], K: 0.010, start: [0, 0, 0.004], dH: 1, dHtxt: "ΔH° = +178 kJ/mol<sub>rxn</sub> (endothermic)",
+      stresses: ["adds0", "add2", "rem2", "heat", "cool", "comp", "exp"],
+      color: function () { return "var(--sol-clear)"; },
+      look: function (a, b) { return cmp(b[2], a[2], "richer in CO₂", "poorer in CO₂"); }, lookNote: "colorless gas over two white solids; measure the CO₂ pressure" },
+    cr: { name: "Chromate ⇌ dichromate", sp: [["CrO4^2-", -2, "aq"], ["H^+", -2, "fix"], ["Cr2O7^2-", 1, "aq"], ["H2O", 1, "l"]], K: 4.0e14, start: [0.010, 0, 0], pH: 7.0, dH: 0,
+      stresses: ["acid", "base", "add0"],
+      color: function (c) { return mix("--sol-orange", 100 * 2 * c[2] / (c[0] + 2 * c[2]), "--sol-yellow"); },
+      look: function (a, b) { var fa = 2 * a[2] / (a[0] + 2 * a[2]), fb = 2 * b[2] / (b[0] + 2 * b[2]); return cmp(fb, fa, "more orange", "more yellow"); }, lookNote: "CrO₄²⁻ is yellow; Cr₂O₇²⁻ is orange" }
+  };
+  // ---------- Stresses ----------
+  // kind: add / rem (species i), dil, comp, exp, heat, cool, inert, cat, adds (add solid), addl (add liquid), acid, base
+  function stressInfo(sys, id) {
+    var m = id.match(/^(add|rem|adds|addl)(\d)$/), x = SYS[sys];
+    if (m) {
+      var sp = x.sp[+m[2]], f = Lab.fmla(sp[0]), how = HOW[sys + ":" + id] || "";
+      if (m[1] === "adds") return { kind: "adds", i: +m[2], label: "Add " + f + "(s)", how: how || "Add more of the pure solid." };
+      if (m[1] === "addl") return { kind: "addl", i: +m[2], label: "Add " + f + "(l)", how: how || "Add more of the pure liquid." };
+      return { kind: m[1], i: +m[2], label: (m[1] === "add" ? "Add " : "Remove ") + f, how: how };
+    }
+    return { kind: id, label: { dil: "Dilute with water", comp: "Decrease volume", exp: "Increase volume", heat: "Heat", cool: "Cool", inert: "Add Ar (constant V)", cat: "Add a catalyst", acid: "Add HCl (acid)", base: "Add NaOH (base)" }[id], how: HOW[sys + ":" + id] || HOW[id] || "" };
+  }
+  var HOW = {
+    "no2:add0": "Inject more N₂O₄ gas at constant volume.", "no2:rem0": "Remove some N₂O₄ at constant volume.", "no2:add1": "Inject more NO₂ gas at constant volume.", "no2:rem1": "Remove some NO₂ at constant volume.",
+    "co:add1": "Add concentrated HCl(aq); the Cl⁻ is the common species (H⁺ is a spectator here).", "co:rem1": "Add AgNO₃(aq): Ag⁺ + Cl⁻ → AgCl(s) removes Cl⁻ as a white precipitate.", "co:add0": "Dissolve more CoCl₂·6H₂O (simplified as adding only the pink complex).", "co:addl3": "Water is the solvent here; adding a little as a liquid product is shown on its own, without the dilution of the ions.",
+    "fe:add0": "Add a few drops of Fe(NO₃)₃(aq).", "fe:add1": "Add a few drops of KSCN(aq).", "fe:rem1": "Add AgNO₃(aq): Ag⁺ + SCN⁻ → AgSCN(s) removes SCN⁻.", "fe:add2": "Add more of the red complex (illustrative).",
+    "nh3:add0": "Pump in more N₂ at constant volume.", "nh3:add1": "Pump in more H₂ at constant volume.", "nh3:rem2": "Cool part of the gas to condense NH₃ out (industry does this).",
+    "caco3:adds0": "Drop in more CaCO₃(s); some solid of each kind is always present.", "caco3:add2": "Inject CO₂ at constant volume.", "caco3:rem2": "Pump out some CO₂.",
+    "cr:add0": "Add more Na₂CrO₄(aq).", "cr:acid": "Add HCl(aq): pH falls. [H⁺] is treated as set by the added acid or base.", "cr:base": "Add NaOH(aq): OH⁻ removes H⁺ and pH rises.",
+    dil: "Add water to increase the total volume of solution.", comp: "Push the piston in (constant temperature).", exp: "Pull the piston out (constant temperature).", heat: "Raise the temperature.", cool: "Lower the temperature (an ice bath).", inert: "Inject argon without changing the volume.", cat: "Add a catalyst."
+  };
+  // classic cases: [system, stress, label]
+  var CASES = [["no2", "cool", "NO₂/N₂O₄ in an ice bath"], ["no2", "comp", "Compress NO₂/N₂O₄"], ["co", "add1", "Add HCl to the cobalt solution"], ["co", "rem1", "Add AgNO₃ to the cobalt solution"],
+    ["fe", "add1", "Add KSCN to FeSCN²⁺"], ["nh3", "cat", "Catalyst in the Haber process"], ["nh3", "inert", "Argon in the Haber process"], ["caco3", "adds0", "Add CaCO₃(s)"], ["cr", "acid", "Acidify chromate"], ["co", "dil", "Dilute the cobalt solution"]];
+  // expected shift for each classic case (hand-typed, for the self-check): 1 right, -1 left, 0 none
+  var EXPECT = [-1, -1, 1, -1, 1, 0, 0, 0, 1, -1];
+
+  var S = { sys: "no2", st: "cool", p: 0.5 };
+
+  // ---------- Helpers ----------
+  function mix(a, pct, b) { pct = Math.max(0, Math.min(100, pct)); return "color-mix(in srgb, var(" + a + ") " + pct.toFixed(0) + "%, var(" + b + "))"; }
+  function cmp(b, a, up, down) { var r = b / a; return Math.abs(r - 1) < 0.005 ? "no change" : r > 1 ? up : down; }
+  function inQ(sp) { return sp[2] === "g" || sp[2] === "aq"; }
+  function uni(f) { return f.replace(/\^(\d*)([+-])$/, function (m, d, s) { return (d ? d.split("").map(function (c) { return "⁰¹²³⁴⁵⁶⁷⁸⁹"[+c]; }).join("") : "") + (s === "+" ? "⁺" : "⁻"); }).replace(/(\D)(\d+)/g, function (m, a, d) { return a + d.split("").map(function (c) { return "₀₁₂₃₄₅₆₇₈₉"[+c]; }).join(""); }); }
+  function Keff(x, K, pH) { return x.pH != null ? K * Math.pow(Math.pow(10, -pH), 2) : K; } // H+ fixed: fold [H+]^2 into K
+  function lnQ(x, c) { var s = 0; x.sp.forEach(function (sp, i) { if (inQ(sp)) s += sp[1] * Math.log(c[i]); }); return s; }
+  function react(x, c, K) { // returns { c, xi } at equilibrium starting from c
+    var lo = -Infinity, hi = Infinity, lk = Math.log(K);
+    x.sp.forEach(function (sp, i) { if (!inQ(sp)) return; if (sp[1] > 0) lo = Math.max(lo, -c[i] / sp[1]); else hi = Math.min(hi, c[i] / -sp[1]); });
+    var at = function (xi) { return c.map(function (v, i) { return inQ(x.sp[i]) ? Math.max(0, v + x.sp[i][1] * xi) : v; }); };
+    if (hi === Infinity) hi = 10; if (lo === -Infinity) lo = -10;
+    var q0 = lnQ(x, c);
+    if (Math.abs(q0 - lk) < 1e-10) return { c: c.slice(), xi: 0 };
+    var a = lo, b = hi;
+    for (var k = 0; k < 220; k++) { var mid = (a + b) / 2; if (lnQ(x, at(mid)) < lk) a = mid; else b = mid; }
+    var xi = (a + b) / 2;
+    return { c: at(xi), xi: xi };
+  }
+  var BASE = {};
+  Object.keys(SYS).forEach(function (k) { var x = SYS[k]; BASE[k] = react(x, x.start, Keff(x, x.K, x.pH)).c; });
+
+  // ---------- Apply a stress to the original equilibrium ----------
+  function apply(sysKey, stId, p) {
+    var x = SYS[sysKey], c0 = BASE[sysKey], info = stressInfo(sysKey, stId), c = c0.slice(), K = x.K, pH = x.pH, K2 = K, pH2 = pH, f = 1 + p;
+    var o = { x: x, info: info, c0: c0, K: K, pH: pH, kChange: 0 };
+    switch (info.kind) {
+      case "add": c[info.i] = c0[info.i] * f; break;
+      case "rem": c[info.i] = c0[info.i] * (1 - 0.8 * p); break;
+      case "comp": x.sp.forEach(function (sp, i) { if (sp[2] === "g") c[i] *= f; }); break;
+      case "exp": x.sp.forEach(function (sp, i) { if (sp[2] === "g") c[i] /= f; }); break;
+      case "dil": x.sp.forEach(function (sp, i) { if (sp[2] === "aq") c[i] /= f; }); break;
+      case "heat": K2 = K * Math.pow(1 + 3 * p, x.dH); o.kChange = x.dH; break;
+      case "cool": K2 = K * Math.pow(1 + 3 * p, -x.dH); o.kChange = -x.dH; break;
+      case "acid": pH2 = pH - 4 * p; break;
+      case "base": pH2 = pH + 2 * p; break;
+      default: break; // inert, cat, adds, addl: nothing in Q changes
+    }
+    o.cs = c; o.K2 = K2; o.pH2 = pH2;
+    var r = react(x, c, Keff(x, K2, pH2));
+    o.c1 = r.c; o.xi = r.xi;
+    var scale = 0; c.forEach(function (v, i) { if (inQ(x.sp[i])) scale = Math.max(scale, v); });
+    o.dir = Math.abs(r.xi) < 1e-9 * Math.max(scale, 1e-12) ? 0 : (r.xi > 0 ? 1 : -1);
+    return o;
+  }
+
+  // ---------- Drawing ----------
+  function flask(g, x0, fill, title, sub, solid) {
+    var y0 = 30, path = "M" + (x0 + 70) + " " + y0 + " L" + (x0 + 70) + " " + (y0 + 70) + " L" + (x0 + 10) + " " + (y0 + 185) + " Q" + (x0 + 5) + " " + (y0 + 200) + " " + (x0 + 22) + " " + (y0 + 200) +
+      " L" + (x0 + 158) + " " + (y0 + 200) + " Q" + (x0 + 175) + " " + (y0 + 200) + " " + (x0 + 170) + " " + (y0 + 185) + " L" + (x0 + 110) + " " + (y0 + 70) + " L" + (x0 + 110) + " " + y0 + " Z";
+    Lab.el("path", { d: path, style: "fill:" + fill + "; stroke: var(--ink); stroke-width: 2" }, g);
+    if (solid) Lab.el("path", { d: "M" + (x0 + 30) + " " + (y0 + 199) + " Q" + (x0 + 90) + " " + (y0 + 172) + " " + (x0 + 150) + " " + (y0 + 199) + " Z", style: "fill: var(--ghost)" }, g);
+    Lab.el("rect", { x: x0 + 64, y: y0 - 8, width: 52, height: 10, rx: 3, style: "fill: var(--muted)" }, g);
+    Lab.el("text", { x: x0 + 90, y: 14, "text-anchor": "middle", "class": "lbl", style: "fill: var(--ink)" }, g, title);
+    Lab.el("text", { x: x0 + 90, y: 254, "text-anchor": "middle" }, g, sub);
+  }
+  function drawFlasks(o) {
+    var svg = document.getElementById("flasks"); while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var x = o.x, solid = x === SYS.caco3;
+    flask(svg, 20, x.color(o.c0), "Original equilibrium", x.pH != null ? "pH " + o.pH.toFixed(1) : "", solid);
+    flask(svg, 240, x.color(o.c1), "New equilibrium", x.pH != null ? "pH " + o.pH2.toFixed(1) : "", solid);
+    var arrow = o.dir === 0 ? "no shift" : o.dir > 0 ? "shift →" : "← shift";
+    Lab.el("text", { x: 220, y: 140, "text-anchor": "middle", "class": "lbl", style: "fill: var(--accent)" }, svg, arrow);
+    document.getElementById("fl-sub").textContent = x.lookNote;
+  }
+  var COLS = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--c4)"];
+  function drawGraph(o) {
+    var svg = document.getElementById("g"), x = o.x, idx = [];
+    x.sp.forEach(function (sp, i) { if (inQ(sp)) idx.push(i); });
+    var ts = 3, tau = o.info.kind === "cat" ? 0.4 : 1.1, ymax = 1.2;
+    var path = function (i) {
+      var pts = [[0, 1], [ts, 1]], a = o.c0[i], d = o.cs[i] / a, e = o.c1[i] / a;
+      if (o.info.kind !== "heat" && o.info.kind !== "cool" && o.info.kind !== "acid" && o.info.kind !== "base") pts.push([ts, d]);
+      for (var k = 0; k <= 60; k++) { var t = ts + 7 * k / 60, v = d + (e - d) * (1 - Math.exp(-(t - ts) / tau)); pts.push([t, v]); }
+      pts.forEach(function (p) { ymax = Math.max(ymax, p[1] * 1.1); });
+      return pts;
+    };
+    var all = idx.map(path);
+    ymax = Math.min(ymax, 4);
+    var yt = []; var step = ymax > 2.5 ? 1 : 0.5; for (var v = 0; v <= ymax + 1e-9; v += step) yt.push(v);
+    var F = Lab.frame(svg, { x: [0, 10], y: [0, ymax], xLabel: "Time (illustrative)", yLabel: "Concentration ÷ value before stress", xTicks: [0, 2, 4, 6, 8, 10], yTicks: yt, fmtX: function () { return ""; }, fmtY: function (v) { return Lab.fmt(v, 1); } });
+    Lab.vline(F, ts, "var(--muted)", 1.5, "4 4");
+    Lab.tag(F, ts + 0.15, ymax * 0.94, "stress", "var(--muted)", "start");
+    Lab.hline(F, 1, "var(--ghost)", 1, "2 4");
+    var ends = [];
+    all.forEach(function (pts, k) {
+      Lab.line(F, pts, COLS[k], 3, k % 2 ? "8 3" : null);
+      var y = pts[pts.length - 1][1];
+      ends.push({ y: y, k: k });
+    });
+    ends.sort(function (a, b) { return a.y - b.y; });
+    var lastY = -1;
+    ends.forEach(function (e) { var y = Math.max(e.y, lastY + ymax * 0.08); lastY = y; Lab.tag(F, 9.9, Math.min(y, ymax * 0.98) + ymax * 0.02, uni(x.sp[idx[e.k]][0]), COLS[e.k], "end"); });
+    document.getElementById("legend").innerHTML = idx.map(function (i, k) { return '<span style="color:' + COLS[k] + '">' + Lab.fmla(x.sp[i][0]) + "</span>"; }).join("") + '<span class="l-ghost">Value before the stress</span>';
+  }
+
+  // ---------- Story ----------
+  function names(list) { return list.length < 2 ? list.join("") : list.slice(0, -1).join(", ") + " and " + list[list.length - 1]; }
+  function sideNames(x, sign) { var o = []; x.sp.forEach(function (sp) { if (sp[1] * sign > 0 && sp[2] !== "fix" && sp[2] !== "l") o.push(Lab.fmla(sp[0]) + (sp[2] === "s" ? "(s)" : "")); }); return names(o); }
+  function gasMoles(x, sign) { var n = 0; x.sp.forEach(function (sp) { if (sp[2] === "g" && sp[1] * sign > 0) n += Math.abs(sp[1]); }); return n; }
+  function aqMoles(x, sign) { var n = 0; x.sp.forEach(function (sp) { if (sp[2] === "aq" && sp[1] * sign > 0) n += Math.abs(sp[1]); }); return n; }
+  function story(o) {
+    var x = o.x, k = o.info.kind, h = "", dirW = o.dir > 0 ? "<b>right</b>, toward " + sideNames(x, 1) : o.dir < 0 ? "<b>left</b>, toward " + sideNames(x, -1) : "<b>neither way</b>";
+    var why = "";
+    if (k === "add" || k === "rem") {
+      var f = Lab.fmla(x.sp[o.info.i][0]), react = x.sp[o.info.i][1] < 0;
+      why = (k === "add" ? "Adding " : "Removing ") + f + " (a " + (react ? "reactant" : "product") + ") disturbs the equilibrium. The system responds by " + (k === "add" ? "using up some of the added " : "replacing some of the removed ") + f + ".";
+      var ratio = o.c1[o.info.i] / o.c0[o.info.i];
+      var nQ = x.sp.filter(inQ).length;
+      why += nQ === 1 ? " Because Q = [" + f + "] alone, [" + f + "] returns all the way to its original value; the amounts of the solids change instead." :
+        " The response is only partial: [" + f + "] ends at " + Lab.sig(ratio, 3) + " times its original value, " + (k === "add" ? "still above" : "still below") + " where it started.";
+    } else if (k === "comp" || k === "exp") {
+      var gl = gasMoles(x, -1), gr = gasMoles(x, 1);
+      why = (k === "comp" ? "Decreasing the volume raises" : "Increasing the volume lowers") + " the concentration (partial pressure) of every gas by the same factor. There " + (gl === 1 ? "is 1 mol" : "are " + gl + " mol") + " of gas on the left and " + gr + " on the right" + (gl === gr ? ", so neither side is favored." : ", so the system shifts toward the side with " + (k === "comp" ? "fewer" : "more") + " moles of gas.");
+      if (x === SYS.no2 && k === "comp") why += " The brown color first darkens (the same NO₂ is squeezed into less space), then fades a little as some NO₂ combines into N₂O₄; it ends darker than the original.";
+      if (x === SYS.caco3) why += " Because Q = [CO₂] only, [CO₂] returns all the way to its old value; the solids absorb the change.";
+    } else if (k === "dil") {
+      var al = aqMoles(x, -1), ar = aqMoles(x, 1);
+      why = "Adding water lowers every dissolved concentration by the same factor. There are " + al + " dissolved particles on the left for every " + ar + " on the right, so the system shifts toward the side with more dissolved particles. Water itself, the solvent, is not in the expression.";
+      if (x === SYS.fe) why += " The red color also fades simply because the solution is more dilute; the shift makes it fade further.";
+    } else if (k === "heat" || k === "cool") {
+      why = "The forward reaction is " + (x.dH > 0 ? "endothermic, so heat acts as a reactant" : "exothermic, so heat acts as a product") + ". " + (k === "heat" ? "Adding heat shifts the system toward the side that absorbs it." : "Removing heat shifts the system toward the side that releases it.") +
+        " This is the one stress that changes K: K " + (o.kChange > 0 ? "increases" : "decreases") + " (here from " + Lab.sci(o.K, 2) + " to " + Lab.sci(o.K2, 2) + ", an illustrative change).";
+    } else if (k === "inert") {
+      why = "Argon added at constant volume raises the total pressure but changes none of the partial pressures (or concentrations) of the reacting gases, so nothing shifts.";
+    } else if (k === "cat") {
+      why = "A catalyst lowers the activation energy of the forward and reverse reactions by the same amount. The system would reach equilibrium faster, but it is already there, so the amounts do not change.";
+    } else if (k === "adds" || k === "addl") {
+      why = "A pure " + (k === "adds" ? "solid" : "liquid") + " does not appear in the equilibrium expression, so adding more of it does not change Q and causes no shift.";
+    } else if (k === "acid" || k === "base") {
+      why = (k === "acid" ? "Adding acid raises [H⁺] (pH falls from " + o.pH.toFixed(1) + " to " + o.pH2.toFixed(1) + "). H⁺ is a reactant, so the system uses some of it up by shifting right." : "OH⁻ from the base removes H⁺ (H⁺ + OH⁻ → H₂O), so pH rises from " + o.pH.toFixed(1) + " to " + o.pH2.toFixed(1) + ". The system replaces some H⁺ by shifting left.") +
+        " In this simplified model [H⁺] is held at the new pH by the added acid or base.";
+    }
+    h += "<p><b>The stress.</b> " + o.info.how + "</p>";
+    h += "<p><b>The response.</b> " + why + " Net result: the equilibrium shifts " + dirW + ".</p>";
+    var look = x.look(o.c0, o.c1);
+    h += "<p><b>What you would see or measure.</b> " + (look === "no change" ? "No change in " + (x === SYS.nh3 ? "the amount of NH₃" : x === SYS.caco3 ? "the CO₂ pressure" : "color") + "." : "The mixture becomes " + look + " (" + x.lookNote + ").");
+    if (x === SYS.cr && o.pH2 !== o.pH) h += " A pH meter reads " + o.pH2.toFixed(1) + " instead of " + o.pH.toFixed(1) + ".";
+    h += "</p>";
+    var resp = o.dir === 0 ? "the equilibrium does not shift" : "the equilibrium shifts to the " + (o.dir > 0 ? "right (toward products)" : "left (toward reactants)");
+    var cause = { add: "this uses up some of the added substance", rem: "this replaces some of the removed substance", comp: "that side has fewer moles of gas", exp: "that side has more moles of gas", dil: "that side has more dissolved particles", heat: "that is the endothermic direction, which absorbs the added heat", cool: "that is the exothermic direction, which releases heat", acid: "this uses up some of the added H⁺", base: "this replaces some of the H⁺ removed by OH⁻" }[k];
+    var nocause = { inert: "the partial pressures of the reacting gases are unchanged", cat: "a catalyst speeds up the forward and reverse reactions equally", adds: "a pure solid is not part of the equilibrium expression", addl: "a pure liquid is not part of the equilibrium expression", comp: "both sides have the same number of moles of gas", exp: "both sides have the same number of moles of gas" }[k];
+    h += "<p><b>AP answer:</b> " + (o.dir === 0 ? "No shift: " + (nocause || "the stress does not change the balance between forward and reverse rates") + "." : "By Le Châtelier’s principle, " + resp + " because " + cause + "." + (look !== "no change" ? " The mixture becomes " + look + "." : "") + (o.kChange ? " K " + (o.kChange > 0 ? "increases" : "decreases") + " because the temperature changed." : " K does not change.")) + "</p>";
+    return h;
+  }
+
+  // ---------- Render ----------
+  var sysBtns = {}, caseBtns = [];
+  function render() {
+    var o = apply(S.sys, S.st, S.p), x = o.x;
+    document.getElementById("eqn").innerHTML = eqnHTML(x) + (x.dHtxt ? "&nbsp;&nbsp;&nbsp;" + x.dHtxt : "");
+    Object.keys(sysBtns).forEach(function (k) { sysBtns[k].setAttribute("aria-pressed", k === S.sys ? "true" : "false"); });
+    caseBtns.forEach(function (b, i) { b.setAttribute("aria-pressed", CASES[i][0] === S.sys && CASES[i][1] === S.st ? "true" : "false"); });
+    var st = document.getElementById("st"); st.innerHTML = "";
+    x.stresses.forEach(function (id) {
+      var b = document.createElement("button"); b.type = "button"; b.innerHTML = stressInfo(S.sys, id).label;
+      b.setAttribute("aria-pressed", id === S.st ? "true" : "false");
+      b.addEventListener("click", function () { S.st = id; render(); });
+      st.appendChild(b);
+    });
+    document.getElementById("s-p").value = S.p;
+    document.getElementById("o-p").textContent = Math.round(S.p * 100) + "%";
+    var k = o.info.kind;
+    document.getElementById("p-hint").textContent = { add: "Amount added, as a % of the equilibrium amount", rem: "Amount removed: " + Math.round(80 * S.p) + "% of the equilibrium amount", comp: "Volume falls to " + Math.round(100 / (1 + S.p)) + "% of the original", exp: "Volume grows to " + Math.round(100 * (1 + S.p)) + "% of the original", dil: "Volume of solution grows to " + Math.round(100 * (1 + S.p)) + "%", heat: "Size of the temperature change", cool: "Size of the temperature change", acid: "pH drops by " + (4 * S.p).toFixed(1), base: "pH rises by " + (2 * S.p).toFixed(1) }[k] || "This stress has no size that matters";
+    document.getElementById("how").textContent = o.info.how;
+    drawFlasks(o); drawGraph(o);
+    document.getElementById("r-s").innerHTML = o.info.label;
+    document.getElementById("r-s2").textContent = x.name;
+    document.getElementById("r-d").textContent = o.dir === 0 ? "none" : o.dir > 0 ? "right →" : "← left";
+    document.getElementById("r-d2").innerHTML = o.dir === 0 ? "amounts unchanged" : "toward " + (o.dir > 0 ? "products" : "reactants");
+    document.getElementById("r-k").textContent = o.kChange ? (o.kChange > 0 ? "increases" : "decreases") : "unchanged";
+    document.getElementById("r-k2").textContent = o.kChange ? "temperature changed" : "only temperature changes K";
+    var look = x.look(o.c0, o.c1);
+    document.getElementById("r-o").textContent = look;
+    document.getElementById("r-o2").textContent = x.pH != null ? "pH " + o.pH.toFixed(1) + " → " + o.pH2.toFixed(1) : x.lookNote;
+    document.getElementById("story").innerHTML = story(o);
+  }
+  function eqnHTML(x) {
+    var L = [], R = [];
+    x.sp.forEach(function (sp) { var c = Math.abs(sp[1]); (sp[1] < 0 ? L : R).push((c > 1 ? c : "") + Lab.fmla(sp[0]) + "(" + (sp[2] === "fix" ? "aq" : sp[2]) + ")"); });
+    return L.join(" + ") + " ⇌ " + R.join(" + ");
+  }
+  Object.keys(SYS).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SYS[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S.sys = k; S.st = SYS[k].stresses[0]; render(); });
+    document.getElementById("sys").appendChild(b); sysBtns[k] = b;
+  });
+  CASES.forEach(function (cs) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = cs[2]; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S.sys = cs[0]; S.st = cs[1]; S.p = 0.5; render(); });
+    document.getElementById("sc").appendChild(b); caseBtns.push(b);
+  });
+  document.getElementById("s-p").addEventListener("input", function (e) { S.p = parseFloat(e.target.value); render(); });
+  render();
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    CASES.forEach(function (cs, i) { var o = apply(cs[0], cs[1], 0.5); if (o.dir !== EXPECT[i]) bad.push(cs[2] + ": shift " + o.dir + ", expected " + EXPECT[i]); });
+    // every stress of every system: the new state satisfies K, and an added species ends between its original and disturbed values
+    Object.keys(SYS).forEach(function (k) {
+      var x = SYS[k];
+      if (Math.abs(lnQ(x, BASE[k]) - Math.log(Keff(x, x.K, x.pH))) > 1e-6) bad.push(k + ": starting mixture not at equilibrium");
+      x.stresses.forEach(function (id) {
+        var o = apply(k, id, 0.6);
+        if (Math.abs(lnQ(x, o.c1) - Math.log(Keff(x, o.K2, o.pH2))) > 1e-6) bad.push(k + "/" + id + ": new state not at equilibrium");
+        if ((o.info.kind === "add" || o.info.kind === "rem") && x.sp.filter(inQ).length > 1 && !((o.c1[o.info.i] - o.c0[o.info.i]) * (o.cs[o.info.i] - o.c1[o.info.i]) > 0)) bad.push(k + "/" + id + ": shift does not partly offset the change");
+        // independent rule-based prediction of the direction
+        var want = null, sgn = o.info.i != null ? x.sp[o.info.i][1] : 0;
+        if (o.info.kind === "add") want = sgn < 0 ? 1 : -1;
+        if (o.info.kind === "rem") want = sgn < 0 ? -1 : 1;
+        if (o.info.kind === "comp" || o.info.kind === "exp") { var dn = gasMoles(x, 1) - gasMoles(x, -1); want = dn === 0 ? 0 : (o.info.kind === "comp" ? -1 : 1) * (dn > 0 ? 1 : -1); }
+        if (o.info.kind === "dil") { var da = aqMoles(x, 1) - aqMoles(x, -1); want = da === 0 ? 0 : (da > 0 ? 1 : -1); }
+        if (o.info.kind === "heat") want = x.dH; if (o.info.kind === "cool") want = -x.dH;
+        if (/inert|cat|adds|addl/.test(o.info.kind)) want = 0;
+        if (o.info.kind === "acid") want = 1; if (o.info.kind === "base") want = -1;
+        if (want !== null && want !== o.dir) bad.push(k + "/" + id + ": shift " + o.dir + ", rules say " + want);
+      });
+    });
+    if (bad.length) console.error("7.9 self-check failed: " + bad.slice(0, 6).join("; "));
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "N₂O₄(g) ⇌ 2NO₂(g), ΔH° = +57 kJ/mol. N₂O₄ is colorless and NO₂ is brown. A sealed tube of the equilibrium mixture is placed in an ice bath. What is observed, and why?",
+      o: ["The color darkens, because cooling slows the reverse reaction more.", "No change, because temperature changes only the rate.", "The color becomes lighter, because cooling favors the exothermic reverse reaction, forming more N₂O₄.", "The color becomes lighter, because cooling lowers K for the reverse reaction."], c: 2,
+      w: "The forward reaction is endothermic, so heat is a reactant. Removing heat shifts the equilibrium left, toward colorless N₂O₄, and K for the forward reaction decreases. Choice D gets the color right but the reasoning wrong: K for the reverse reaction is 1/K, which increases. Choice B ignores that temperature changes K." },
+    { s: "2SO₂(g) + O₂(g) ⇌ 2SO₃(g) is at equilibrium in a cylinder with a piston. The volume is decreased at constant temperature. How does the system respond?",
+      o: ["It shifts right, because there are fewer moles of gas on the product side.", "It shifts left, because the reactant side has more molecules to absorb the pressure.", "It does not shift, because K is unchanged.", "It shifts right, because K increases at higher pressure."], c: 0,
+      w: "There are 3 mol of gas on the left and 2 on the right. Decreasing the volume raises every partial pressure; the system partly offsets this by shifting toward fewer gas particles. K does not change (choices C and D): the shift happens because Q changes, not K." },
+    { s: "Argon is injected into a rigid, sealed container holding N₂(g) + 3H₂(g) ⇌ 2NH₃(g) at equilibrium, at constant temperature. What happens?",
+      o: ["The system shifts right because the total pressure increased.", "The system shifts left because argon collides with NH₃.", "K increases because more gas particles are present.", "Nothing shifts, because the partial pressures of N₂, H₂ and NH₃ are unchanged."], c: 3,
+      w: "In a rigid container the volume does not change, so the partial pressure of each reacting gas stays the same and Q still equals K. Choice A is the classic trap: total pressure went up, but the stress that causes a shift is a change in the concentrations of the reacting gases." },
+    { s: "A catalyst is added to a reaction mixture that is already at equilibrium. Which statement is correct?",
+      o: ["The equilibrium shifts toward products, increasing the yield.", "The forward and reverse rates both increase by the same factor, so the equilibrium amounts do not change.", "Only the forward rate increases, so K increases.", "The equilibrium shifts toward the side with lower activation energy."], c: 1,
+      w: "A catalyst provides a pathway with lower activation energy for both directions, speeding them equally. It shortens the time needed to reach equilibrium but does not change the composition at equilibrium or K. Choices A and C describe effects a catalyst does not have." },
+    { s: "CaCO₃(s) ⇌ CaO(s) + CO₂(g) is at equilibrium in a closed container. More CaCO₃(s) is added at constant temperature. What happens to the pressure of CO₂?",
+      o: ["It stays the same, because CaCO₃(s) does not appear in the equilibrium expression.", "It increases, because more reactant is present.", "It decreases, because the solid takes up some of the volume of the gas.", "It increases until all the added CaCO₃ decomposes."], c: 0,
+      w: "K = P(CO₂) only. Adding a pure solid does not change Q, so the system stays at equilibrium and P(CO₂) is unchanged. Choice B applies the 'add a reactant' rule to a solid, the trap here. (A large amount of solid could slightly reduce the gas volume, but that is not what the question tests.)" },
+    { s: "Co(H₂O)₆²⁺(aq, pink) + 4Cl⁻(aq) ⇌ CoCl₄²⁻(aq, blue) + 6H₂O(l). A few drops of AgNO₃(aq) are added to a purple equilibrium mixture, and a white precipitate forms. What color change occurs?",
+      o: ["The solution turns bluer, because Ag⁺ is a reactant.", "No change, because Ag⁺ does not appear in the equation.", "The solution turns bluer, because the precipitate removes water.", "The solution turns pinker, because AgCl(s) forms and lowers [Cl⁻], shifting the equilibrium left."], c: 3,
+      w: "Ag⁺ removes Cl⁻ as AgCl(s), the white precipitate. With less Cl⁻, the system replaces some of it by shifting left, toward pink Co(H₂O)₆²⁺. Choice B overlooks that Ag⁺ changes [Cl⁻] even though Ag⁺ is not in the equation." },
+    { s: "For an exothermic reaction at equilibrium, the temperature is increased. Which statement is correct?",
+      o: ["K increases and the equilibrium shifts right.", "K is unchanged, but the equilibrium shifts left.", "K decreases and the equilibrium shifts left.", "K decreases but the equilibrium amounts do not change."], c: 2,
+      w: "Heat is a product of an exothermic reaction, so adding heat shifts the system left, and K decreases. Temperature is the only stress that changes K (choice B is wrong for that reason). Choice D is impossible: if K changes, the equilibrium amounts must change to match it." },
+    { s: "Fe³⁺(aq) + SCN⁻(aq) ⇌ FeSCN²⁺(aq) is at equilibrium. Some Fe(NO₃)₃ is added, and a new equilibrium is established. Compared with the original equilibrium, which is correct?",
+      o: ["[Fe³⁺] and [SCN⁻] are both higher, and [FeSCN²⁺] is lower.", "[Fe³⁺] is higher, [SCN⁻] is lower, and [FeSCN²⁺] is higher.", "[Fe³⁺] is back to its original value, [SCN⁻] is lower, and [FeSCN²⁺] is higher.", "All three concentrations are higher."], c: 1,
+      w: "The system shifts right, using up some of the added Fe³⁺ along with some SCN⁻ and forming more FeSCN²⁺ (the solution turns deeper red). The shift only partly uses up the added Fe³⁺, so [Fe³⁺] ends above its original value; choice C says it returns fully, the most common error. SCN⁻ is consumed, so it cannot be higher (choices A and D)." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("7.9");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [7], topic: "7.9", compact: true, storageKey: "topic-7.9" });</script>
+</body>
+</html>

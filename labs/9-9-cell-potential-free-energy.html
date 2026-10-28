@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cell Potential and Free Energy Study Lab</title>
+<meta name="description" content="Pick any two half-reactions from a standard reduction potential ladder and get the balanced cell reaction, E°cell, n, ΔG° = −nFE° and K worked out step by step, with the sign telling you whether the cell is favored.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.pick { display: grid; gap: 4px; font-size: .86rem; font-weight: 500; }
+select { font: inherit; font-size: .9rem; padding: 6px 8px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); width: 100%; }
+select:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.btnrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.half { font-size: .86rem; line-height: 1.6; overflow-wrap: anywhere; }
+.half .k { font-size: .78rem; color: var(--muted); display: block; }
+.half.red .k { color: var(--c2); } .half.ox .k { color: var(--c1); }
+#ladder text { font-size: 12px; }
+#ladder .hl { font-weight: 600; }
+#ladder .row { cursor: pointer; }
+#ladder .row:hover text { fill: var(--accent); }
+.note { font-size: .82rem; color: var(--muted); }
+.eqn { white-space: normal; overflow-wrap: anywhere; }
+.story ol.steps li { overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 9 · Topic 9.9</span>
+  <h1>Cell Potential and Free Energy Study Lab</h1>
+  <p class="lede">Every redox reaction can be split into a reduction and an oxidation, and a table of standard reduction potentials tells you how hard each half "pulls" on electrons. The difference is the standard cell potential, and ΔG° = −nFE° turns it into free energy: positive E° means a thermodynamically favored reaction. Choose half-reactions and follow the calculation.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The reduction-potential ladder</h2>
+    <p>The ladder lists standard reduction potentials at 25 °C. Choose which half-reaction runs as the <b>reduction</b> (cathode) and which runs as the <b>oxidation</b> (anode), or click a rung: the first click sets the reduction, the next sets the oxidation. The arrow runs from the anode's E° to the cathode's E°; pointing up means E°cell &gt; 0. The calculation below shows every step.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Standard reduction potentials <small>E° (V) vs. standard hydrogen electrode</small></h3>
+      <svg class="chart" id="ladder" role="img" aria-label="Vertical scale of standard reduction potentials with the chosen cathode and anode half-reactions highlighted and an arrow showing E°cell"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Classic exam cells</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <label class="pick" for="sel-c">Reduction at the cathode<select id="sel-c"></select></label>
+      <label class="pick" for="sel-a">Oxidation at the anode<select id="sel-a"></select></label>
+      <div class="btnrow">
+        <button type="button" id="b-swap">Swap (reverse the reaction)</button>
+        <button type="button" id="b-fav">Make it favored</button>
+      </div>
+      <div class="half red" id="h-red"></div>
+      <div class="half ox" id="h-ox"></div>
+      <div class="eqn" id="eqn"></div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">E°cell = E°cathode − E°anode</div><div class="v" id="r-e"></div><div class="sub" id="r-e2"></div></div>
+    <div class="stat"><div class="k">n (mol e⁻ per mol rxn)</div><div class="v" id="r-n"></div><div class="sub" id="r-n2"></div></div>
+    <div class="stat"><div class="k">ΔG° = −nFE°</div><div class="v" id="r-g"></div><div class="sub" id="r-g2"></div></div>
+    <div class="stat"><div class="k">K at 298 K (from ΔG° = −RT ln K)</div><div class="v" id="r-k"></div><div class="sub" id="r-k2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Reading the table</span><h3>Every E° is written as a reduction</h3><p>A more positive E° means that species is more easily reduced. In a favored cell, the half-reaction higher on the table runs as written (reduction, cathode), and the lower one runs in reverse (oxidation, anode).</p></div>
+    <div class="card"><span class="tag">The formula</span><h3>E°cell = E°cathode − E°anode</h3><p>Use both values exactly as they appear in the reduction table and subtract. (Equivalently, flip the sign of the anode's E° and add. Do one or the other, never both.)</p></div>
+    <div class="card"><span class="tag">Intensive</span><h3>Never multiply E°</h3><p>Balancing electrons may require multiplying a half-reaction by 2 or 3. That changes n, but not E°: a potential is energy per unit charge, so it does not depend on how much reaction you write.</p></div>
+    <div class="card"><span class="tag">Free energy</span><h3>ΔG° = −nFE°</h3><p>n is the moles of electrons transferred in the balanced equation and F = 96,485 C/mol e⁻. With E° in volts (J/C), ΔG° comes out in J per mole of reaction; divide by 1000 for kJ. Unlike E°, ΔG° does scale with the coefficients, through n.</p></div>
+    <div class="card"><span class="tag">Signs</span><h3>Positive E°, negative ΔG°, K &gt; 1</h3><p>E°cell &gt; 0 ⇔ ΔG° &lt; 0 ⇔ K &gt; 1: the reaction is thermodynamically favored and can run as a galvanic cell. E°cell &lt; 0 means the reaction as written is unfavored and needs an external potential (an electrolytic cell).</p></div>
+    <div class="card"><span class="tag">Reverse it</span><h3>Swapping flips every sign</h3><p>Writing the reaction backward reverses which half is the cathode. E°cell and ΔG° change sign; K becomes 1/K. The magnitude stays the same.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Worked cells</h2>
+    <p>Each line uses E°cell = E°cathode − E°anode and ΔG° = −nFE°, with F = 96,485 C/mol e⁻. ΔG° is in kJ per mole of reaction as written.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table id="worked">
+    <thead><tr><th>Overall reaction</th><th>Cathode / anode E° (V)</th><th>E°cell</th><th>n</th><th>ΔG°</th><th>Favored?</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:8px;">Six steps for any cell</h3>
+    <ol class="steps">
+      <li>Find both half-reactions in the table (written as reductions) and their E° values.</li>
+      <li>Decide which is reduced: for a favored cell, the one with the more positive E°. Reverse the other one: it is the oxidation.</li>
+      <li>Multiply the half-reactions so the electrons lost equal the electrons gained. Do not multiply E°.</li>
+      <li>Add and cancel electrons to get the overall equation; n is the number of electrons that cancelled.</li>
+      <li>E°cell = E°cathode − E°anode.</li>
+      <li>ΔG° = −nFE°cell; convert J to kJ. Negative ΔG° (positive E°) means thermodynamically favored.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Cell potential on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write the setup with values: "E°cell = 0.80 V − (−0.76 V) = 1.56 V."</li>
+        <li>State n with a reason: "2 mol e⁻ are transferred per mole of reaction as written."</li>
+        <li>Show ΔG° = −nFE° with units: −(2 mol e⁻)(96,485 C/mol e⁻)(1.56 J/C) = −3.01 × 10<sup>5</sup> J/mol<sub>rxn</sub> = −301 kJ/mol<sub>rxn</sub>.</li>
+        <li>Justify "favored" with the sign: "E°cell &gt; 0, so ΔG° &lt; 0 and the reaction is thermodynamically favored."</li>
+        <li>When asked which species is reduced, point to the more positive reduction potential.</li>
+        <li>Report E° to the hundredths place to match the table, and ΔG° to three significant figures.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Multiplying E° by the coefficient used to balance electrons (2 × 0.80 V). E° is intensive.</li>
+        <li>Flipping the sign of the anode's E° and also subtracting it, which double-counts the reversal.</li>
+        <li>Using the wrong n: it is the total electrons transferred in the balanced equation (6 for 2Al + 3Ni<sup>2+</sup>), not the charge on one ion.</li>
+        <li>Forgetting that volts are J/C, then leaving ΔG° in J while calling it kJ (off by 1000).</li>
+        <li>Dropping the minus sign in ΔG° = −nFE°, so a favored cell appears to have ΔG° &gt; 0.</li>
+        <li>Thinking a larger E° means a faster reaction. E° tells you about thermodynamics, not rate.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation. Use E° values from the ladder above.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 9.9. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-9.html">Unit 9 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var F = Lab.CONST.F, RJ = Lab.CONST.R_J, T = 298.15, E = Lab.el;
+
+  // ---------- Half-reactions (as reductions: ox + n e⁻ → red), 25 °C ----------
+  var HR = [
+    { k: "F2", ox: [[1, "F2"]], red: [[2, "F^-"]], n: 2, E: 2.87 },
+    { k: "Cl2", ox: [[1, "Cl2"]], red: [[2, "Cl^-"]], n: 2, E: 1.36 },
+    { k: "Br2", ox: [[1, "Br2"]], red: [[2, "Br^-"]], n: 2, E: 1.07 },
+    { k: "Ag", ox: [[1, "Ag^+"]], red: [[1, "Ag"]], n: 1, E: 0.80 },
+    { k: "Fe3", ox: [[1, "Fe^3+"]], red: [[1, "Fe^2+"]], n: 1, E: 0.77 },
+    { k: "I2", ox: [[1, "I2"]], red: [[2, "I^-"]], n: 2, E: 0.53 },
+    { k: "Cu", ox: [[1, "Cu^2+"]], red: [[1, "Cu"]], n: 2, E: 0.34 },
+    { k: "H", ox: [[2, "H^+"]], red: [[1, "H2"]], n: 2, E: 0.00 },
+    { k: "Pb", ox: [[1, "Pb^2+"]], red: [[1, "Pb"]], n: 2, E: -0.13 },
+    { k: "Ni", ox: [[1, "Ni^2+"]], red: [[1, "Ni"]], n: 2, E: -0.25 },
+    { k: "Fe", ox: [[1, "Fe^2+"]], red: [[1, "Fe"]], n: 2, E: -0.44 },
+    { k: "Zn", ox: [[1, "Zn^2+"]], red: [[1, "Zn"]], n: 2, E: -0.76 },
+    { k: "Al", ox: [[1, "Al^3+"]], red: [[1, "Al"]], n: 3, E: -1.66 },
+    { k: "Mg", ox: [[1, "Mg^2+"]], red: [[1, "Mg"]], n: 2, E: -2.37 },
+    { k: "Li", ox: [[1, "Li^+"]], red: [[1, "Li"]], n: 1, E: -3.05 }
+  ];
+  var BY = {}; HR.forEach(function (h) { BY[h.k] = h; });
+  var SC = {
+    daniell: { name: "Zn | Cu (Daniell)", c: "Cu", a: "Zn", expect: { E: 1.10, n: 2, G: -212.3 } },
+    cuag: { name: "Cu + Ag⁺ (balance e⁻)", c: "Ag", a: "Cu", expect: { E: 0.46, n: 2, G: -88.8 } },
+    alni: { name: "Al + Ni²⁺ (n = 6)", c: "Ni", a: "Al", expect: { E: 1.41, n: 6, G: -816.3 } },
+    cli: { name: "Cl₂ + I⁻", c: "Cl2", a: "I2", expect: { E: 0.83, n: 2, G: -160.2 } },
+    fecu: { name: "Fe³⁺ + Cu", c: "Fe3", a: "Cu", expect: { E: 0.43, n: 2, G: -83.0 } },
+    unf: { name: "Cu + Zn²⁺ (unfavored)", c: "Zn", a: "Cu", expect: { E: -1.10, n: 2, G: 212.3 } }
+  };
+  var SCO = ["daniell", "cuag", "alni", "cli", "fecu", "unf"];
+
+  // ---------- Chemistry ----------
+  function charge(sp) { var m = sp.match(/\^(\d*)([+\-])$/); return m ? (m[1] ? +m[1] : 1) * (m[2] === "+" ? 1 : -1) : 0; }
+  function st(sp) { return charge(sp) ? "(aq)" : (sp === "H2" || sp === "F2" || sp === "Cl2") ? "(g)" : sp === "Br2" ? "(l)" : "(s)"; }
+  function f(sp) { return Lab.fmla(sp) + st(sp); }
+  function plain(sp) { return sp.replace("^3+", "³⁺").replace("^2+", "²⁺").replace("^+", "⁺").replace("^-", "⁻").replace(/(\D)2/, "$1₂"); }
+  function co(c) { return c === 1 ? "" : String(c); }
+  function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+  function sideHTML(list) { return list.map(function (t) { return co(t[0]) + f(t[1]); }).join(" + "); }
+  function scale(list, k) { return list.map(function (t) { return [t[0] * k, t[1]]; }); }
+  function combine(cat, an) {
+    var lcm = cat.n * an.n / gcd(cat.n, an.n), kc = lcm / cat.n, ka = lcm / an.n;
+    var map = {}, order = [];
+    function add(list, sgn) { list.forEach(function (t) { if (!(t[1] in map)) { map[t[1]] = 0; order.push(t[1]); } map[t[1]] += sgn * t[0]; }); }
+    add(scale(cat.ox, kc), -1); add(scale(an.red, ka), -1); add(scale(cat.red, kc), 1); add(scale(an.ox, ka), 1);
+    var L = [], R = [];
+    order.forEach(function (sp) { if (map[sp] < 0) L.push([-map[sp], sp]); else if (map[sp] > 0) R.push([map[sp], sp]); });
+    return { L: L, R: R, n: lcm, kc: kc, ka: ka };
+  }
+  function calc(ck, ak) {
+    var c = BY[ck], a = BY[ak], eq = combine(c, a);
+    var Ecell = Math.round((c.E - a.E) * 100) / 100;
+    var G = -eq.n * F * Ecell / 1000;                        // kJ/mol rxn
+    var log10K = eq.n * F * Ecell / (RJ * T) / Math.LN10;
+    return { c: c, a: a, eq: eq, E: Ecell, G: G, log10K: log10K };
+  }
+
+  // ---------- Formatting ----------
+  function V(v) { return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(2) + " V"; }
+  function kJ(v) { var s = Lab.sig(Math.abs(v), 3); return (v > 0 ? "+" : v < 0 ? "−" : "") + s + " kJ"; }
+  function Kfmt(lg) {
+    if (Math.abs(lg) < 3) return Lab.sig(Math.pow(10, lg), 2);
+    var e = Math.floor(lg), mant = Math.pow(10, lg - e);
+    if (+mant.toFixed(1) >= 10) { mant /= 10; e++; }
+    return mant.toFixed(1) + " × 10<sup>" + String(e).replace("-", "−") + "</sup>";
+  }
+  function redHTML(h, k) { return sideHTML(scale(h.ox, k || 1)) + " + " + (h.n * (k || 1)) + "e⁻ → " + sideHTML(scale(h.red, k || 1)); }
+  function oxHTML(h, k) { return sideHTML(scale(h.red, k || 1)) + " → " + sideHTML(scale(h.ox, k || 1)) + " + " + (h.n * (k || 1)) + "e⁻"; }
+  function shortLbl(h) { return plain(h.ox[0][1]) + " / " + plain(h.red[0][1]); }
+
+  // ---------- Ladder ----------
+  var svg = document.getElementById("ladder");
+  var W = 440, H = 500, AX = 64, TOP = 24, BOT = 476, EMAX = 3.0, EMIN = -3.2, LX = 168;
+  function ey(v) { return TOP + (EMAX - v) / (EMAX - EMIN) * (BOT - TOP); }
+  var S = { c: "Cu", a: "Zn", sc: "daniell", nextClick: "c" };
+  function drawLadder(m) {
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    // axis + ticks
+    E("line", { x1: AX, x2: AX, y1: TOP, y2: BOT, stroke: "var(--ink)", "stroke-width": 1.5 }, svg);
+    for (var v = -3; v <= 3; v++) {
+      E("line", { x1: AX - 5, x2: AX, y1: ey(v), y2: ey(v), stroke: "var(--ink)" }, svg);
+      E("text", { x: AX - 9, y: ey(v) + 4, "text-anchor": "end" }, svg, (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v) + " V");
+    }
+    E("text", { x: 12, y: (TOP + BOT) / 2, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)", transform: "rotate(-90 12 " + (TOP + BOT) / 2 + ")" }, svg, "more easily reduced ↑");
+    // label positions with minimum spacing
+    var gap = 28, ys = HR.map(function (h) { return ey(h.E); }), ly = [];
+    ys.forEach(function (y, i) { ly[i] = i ? Math.max(y, ly[i - 1] + gap) : y; });
+    var over = ly[ly.length - 1] - (BOT - 2); if (over > 0) for (var i = ly.length - 1; i >= 0; i--) { ly[i] = Math.min(ly[i], (i === ly.length - 1 ? BOT - 2 : ly[i + 1] - gap)); }
+    HR.forEach(function (h, i) {
+      var isC = h.k === S.c, isA = h.k === S.a, col = isC ? "var(--c2)" : isA ? "var(--c1)" : "var(--muted)";
+      var g = E("g", { "class": "row", "data-k": h.k, tabindex: "0", role: "button", "aria-label": "Half-reaction " + shortLbl(h) + ", E° " + V(h.E) }, svg);
+      E("line", { x1: AX, x2: AX + 14, y1: ys[i], y2: ys[i], stroke: col, "stroke-width": isC || isA ? 3 : 1.5 }, g);
+      E("path", { d: "M" + (AX + 14) + " " + ys[i] + " L" + (LX - 8) + " " + ly[i], stroke: col, "stroke-width": 1, fill: "none", "stroke-dasharray": isC || isA ? null : "2 3" }, g);
+      E("rect", { x: LX - 6, y: ly[i] - 13, width: W - LX, height: 22, fill: isC || isA ? (isC ? "var(--good-soft)" : "var(--bad-soft)") : "transparent", rx: 4 }, g);
+      E("text", { x: LX, y: ly[i] + 3, "class": isC || isA ? "hl" : "", style: "fill:" + (isC || isA ? "var(--ink)" : "var(--muted)") }, g, shortLbl(h));
+      E("text", { x: W - 8, y: ly[i] + 3, "text-anchor": "end", "class": isC || isA ? "hl" : "", style: "fill:" + (isC || isA ? "var(--ink)" : "var(--muted)") }, g, (isC ? "reduced  " : isA ? "oxidized  " : "") + V(h.E));
+      g.addEventListener("click", function () { clickRow(h.k); });
+      g.addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); clickRow(h.k); } });
+    });
+    // E°cell arrow from anode to cathode
+    var y1 = ey(m.a.E), y2 = ey(m.c.E), x = AX + 30, col = m.E > 0 ? "var(--good)" : "var(--bad)";
+    E("path", { d: "M" + x + " " + y1 + " L" + x + " " + y2, stroke: col, "stroke-width": 3, fill: "none" }, svg);
+    var up = y2 < y1 ? 1 : -1;
+    E("path", { d: "M" + x + " " + y2 + " L" + (x - 6) + " " + (y2 + 10 * up) + " L" + (x + 6) + " " + (y2 + 10 * up) + " Z", fill: col }, svg);
+    var my = (y1 + y2) / 2;
+    E("rect", { x: x - 26, y: my - 11, width: 52, height: 20, rx: 4, fill: "var(--surface)", stroke: col }, svg);
+    E("text", { x: x, y: my + 4, "text-anchor": "middle", "class": "lbl", style: "fill:" + col }, svg, (m.E > 0 ? "+" : "−") + Math.abs(m.E).toFixed(2));
+  }
+  function clickRow(k) {
+    if (S.nextClick === "c") { if (k === S.a) S.a = S.c; S.c = k; S.nextClick = "a"; }
+    else { if (k === S.c) S.c = S.a; S.a = k; S.nextClick = "c"; }
+    S.sc = null; render();
+  }
+
+  // ---------- Readouts and story ----------
+  function readouts(m) {
+    document.getElementById("r-e").textContent = V(m.E);
+    document.getElementById("r-e2").textContent = V(m.c.E) + " − (" + V(m.a.E) + ")";
+    document.getElementById("r-n").textContent = String(m.eq.n);
+    document.getElementById("r-n2").textContent = m.eq.kc === 1 && m.eq.ka === 1 ? "half-reactions already match" : "LCM of " + m.c.n + " and " + m.a.n + " electrons";
+    document.getElementById("r-g").textContent = kJ(m.G);
+    document.getElementById("r-g2").innerHTML = m.G < 0 ? "<span style='color:var(--good)'>favored (galvanic)</span>" : "<span style='color:var(--bad)'>unfavored (needs outside potential)</span>";
+    document.getElementById("r-k").innerHTML = Kfmt(m.log10K);
+    document.getElementById("r-k2").textContent = m.log10K > 0 ? "K > 1: products favored" : "K < 1: reactants favored";
+    document.getElementById("h-red").innerHTML = '<span class="k">Reduction (cathode), E° = ' + V(m.c.E) + (m.eq.kc > 1 ? ", × " + m.eq.kc : "") + "</span>" + redHTML(m.c, m.eq.kc);
+    document.getElementById("h-ox").innerHTML = '<span class="k">Oxidation (anode), E°red = ' + V(m.a.E) + (m.eq.ka > 1 ? ", × " + m.eq.ka : "") + "</span>" + oxHTML(m.a, m.eq.ka);
+    document.getElementById("eqn").innerHTML = sideHTML(m.eq.L) + " → " + sideHTML(m.eq.R);
+  }
+  function story(m) {
+    var Jv = -m.eq.n * F * m.E;
+    var h = "<ol class=\"steps\">";
+    h += "<li><b>Reduction:</b> " + redHTML(m.c) + ", E° = " + V(m.c.E) + ". <b>Oxidation:</b> the reverse of " + redHTML(m.a) + " (table value " + V(m.a.E) + ").</li>";
+    h += "<li><b>Balance electrons:</b> " + (m.eq.kc === 1 && m.eq.ka === 1 ? "both half-reactions already transfer " + m.eq.n + " e⁻." : "multiply the reduction by " + m.eq.kc + " and the oxidation by " + m.eq.ka + " so each side transfers " + m.eq.n + " e⁻. The E° values are <b>not</b> multiplied.") + "</li>";
+    h += "<li><b>Overall:</b> " + sideHTML(m.eq.L) + " → " + sideHTML(m.eq.R) + ", so n = " + m.eq.n + " mol e⁻ per mol of reaction.</li>";
+    h += "<li><b>E°cell</b> = E°cathode − E°anode = " + V(m.c.E) + " − (" + V(m.a.E) + ") = <b>" + V(m.E) + "</b>.</li>";
+    h += "<li><b>ΔG°</b> = −nFE° = −(" + m.eq.n + " mol e⁻)(96,485 C/mol e⁻)(" + m.E.toFixed(2).replace("-", "−") + " J/C) = " + (Jv < 0 ? "−" : "+") + Lab.sci(Math.abs(Jv), 3, true) + " J = <b>" + kJ(m.G) + "/mol<sub>rxn</sub></b>.</li>";
+    h += "<li><b>K</b> = e<sup>−ΔG°/RT</sup> ≈ " + Kfmt(m.log10K) + " at 298 K.</li></ol>";
+    var li = [];
+    if (m.E > 0) li.push("The arrow on the ladder points <b>up</b>: electrons move from the species that holds them loosely (" + plain(m.a.red[0][1]) + ") to the one that is more easily reduced (" + plain(m.c.ox[0][1]) + "). This reaction is thermodynamically favored and can run as a galvanic cell.");
+    else li.push("The arrow points <b>down</b>: you have asked " + plain(m.c.ox[0][1]) + " to be reduced by " + plain(m.a.red[0][1]) + ", but " + plain(m.c.ox[0][1]) + " sits lower on the ladder. The reaction as written is unfavored; it needs an externally applied potential greater than " + Math.abs(m.E).toFixed(2) + " V (an electrolytic cell). Swap it to see the favored direction.");
+    if (m.eq.kc > 1 || m.eq.ka > 1) li.push("Notice that n = " + m.eq.n + ", not " + [m.c.n, m.a.n].filter(function (v, i, arr) { return v !== m.eq.n && arr.indexOf(v) === i; }).join(" or ") + ". Multiplying a half-reaction changes how many electrons move per mole of reaction, which is why ΔG° grows, while E° (energy per coulomb) stays " + V(m.E) + ".");
+    h += "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+    h += "<p><b>AP answer:</b> E°cell = " + V(m.c.E) + " − (" + V(m.a.E) + ") = " + V(m.E) + "; ΔG° = −nFE° = " + kJ(m.G) + "/mol<sub>rxn</sub>. Because E°cell is " + (m.E > 0 ? "positive (ΔG° &lt; 0), the reaction is thermodynamically favored." : "negative (ΔG° &gt; 0), the reaction is thermodynamically unfavored as written.") + "</p>";
+    return h;
+  }
+
+  // ---------- Worked table (generated) ----------
+  (function worked() {
+    var tb = document.querySelector("#worked tbody");
+    SCO.forEach(function (k) {
+      var x = SC[k], m = calc(x.c, x.a), tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + sideHTML(m.eq.L) + " → " + sideHTML(m.eq.R) + "</td><td>" + V(m.c.E) + " / " + V(m.a.E) + "</td><td><b>" + V(m.E) + "</b></td><td>" + m.eq.n + "</td><td>" + kJ(m.G) + "</td><td>" + (m.E > 0 ? "Yes" : "No (electrolytic)") + "</td>";
+      tb.appendChild(tr);
+    });
+  })();
+
+  // ---------- Controls ----------
+  var selC = document.getElementById("sel-c"), selA = document.getElementById("sel-a"), scBtns = {};
+  HR.forEach(function (h) {
+    [selC, selA].forEach(function (s) { var o = document.createElement("option"); o.value = h.k; o.textContent = shortLbl(h) + "   " + V(h.E); s.appendChild(o); });
+  });
+  function render() {
+    var m = calc(S.c, S.a);
+    selC.value = S.c; selA.value = S.a;
+    SCO.forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.sc === k ? "true" : "false"); });
+    drawLadder(m); readouts(m);
+    document.getElementById("story").innerHTML = story(m);
+  }
+  function match() { S.sc = null; SCO.forEach(function (k) { if (SC[k].c === S.c && SC[k].a === S.a) S.sc = k; }); }
+  SCO.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name;
+    b.addEventListener("click", function () { S.c = SC[k].c; S.a = SC[k].a; S.sc = k; S.nextClick = "c"; render(); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  selC.addEventListener("change", function () { if (selC.value === S.a) S.a = S.c; S.c = selC.value; match(); render(); });
+  selA.addEventListener("change", function () { if (selA.value === S.c) S.c = S.a; S.a = selA.value; match(); render(); });
+  document.getElementById("b-swap").addEventListener("click", function () { var t = S.c; S.c = S.a; S.a = t; match(); render(); });
+  document.getElementById("b-fav").addEventListener("click", function () { if (BY[S.c].E < BY[S.a].E) { var t = S.c; S.c = S.a; S.a = t; } match(); render(); });
+
+  // ---------- Self-check ----------
+  (function selfCheck() {
+    var errs = [];
+    function tally(list) { var a = { q: 0 }; list.forEach(function (t) { var c = Lab.parseFormula(t[1]); for (var e in c) a[e] = (a[e] || 0) + c[e] * t[0]; a.q += charge(t[1]) * t[0]; }); return a; }
+    HR.forEach(function (h) {   // each half-reaction balanced in atoms and charge
+      var L = tally(h.ox), R = tally(h.red); L.q -= h.n;
+      Object.keys(L).concat(Object.keys(R)).forEach(function (k) { if (Math.abs((L[k] || 0) - (R[k] || 0)) > 1e-9) errs.push(h.k + " half-reaction unbalanced in " + k); });
+    });
+    HR.forEach(function (c) { HR.forEach(function (a) {
+      if (c === a) return;
+      var m = calc(c.k, a.k), L = tally(m.eq.L), R = tally(m.eq.R);
+      Object.keys(L).concat(Object.keys(R)).forEach(function (k) { if (Math.abs((L[k] || 0) - (R[k] || 0)) > 1e-9) errs.push(c.k + "/" + a.k + " unbalanced in " + k); });
+      if (m.E * m.G > 0) errs.push(c.k + "/" + a.k + " sign of ΔG° not opposite E°");
+    }); });
+    SCO.forEach(function (k) {
+      var x = SC[k], m = calc(x.c, x.a);
+      if (Math.abs(m.E - x.expect.E) > 1e-9 || m.eq.n !== x.expect.n || Math.abs(m.G - x.expect.G) > 0.05) errs.push(k + " expected " + JSON.stringify(x.expect) + " got " + m.E + "/" + m.eq.n + "/" + m.G.toFixed(1));
+    });
+    if (errs.length) console.error("9.9 self-check failed: " + errs.slice(0, 6).join("; "));
+  })();
+
+  render();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "A galvanic cell is built from Zn | Zn²⁺ (E° = −0.76 V) and Ag | Ag⁺ (E° = +0.80 V). What is E°cell?",
+      o: ["+0.04 V", "+2.36 V", "+1.56 V", "+0.84 V"], c: 2,
+      w: "Ag⁺ is reduced (cathode) and Zn is oxidized (anode): E°cell = 0.80 V − (−0.76 V) = +1.56 V. The equation 2Ag⁺ + Zn → 2Ag + Zn²⁺ needs two Ag⁺, but E° is not doubled; choices B and D multiply 0.80 V by 2. Choice A adds the anode value instead of subtracting it." },
+    { s: "For Zn(s) + Cu²⁺(aq) → Zn²⁺(aq) + Cu(s), E°cell = +1.10 V. What is ΔG° for the reaction? (F = 96,485 C/mol e⁻)",
+      o: ["−212 kJ/mol rxn", "−106 kJ/mol rxn", "+212 kJ/mol rxn", "−0.212 kJ/mol rxn"], c: 0,
+      w: "n = 2. ΔG° = −nFE° = −(2)(96,485 C/mol)(1.10 J/C) = −2.12 × 10⁵ J = −212 kJ per mole of reaction. Choice B uses n = 1; choice C drops the minus sign; choice D divides by 1000 twice (or mixes J and kJ)." },
+    { s: "To write 2Ag⁺(aq) + Cu(s) → 2Ag(s) + Cu²⁺(aq), the half-reaction Ag⁺ + e⁻ → Ag (E° = +0.80 V) is multiplied by 2. Which statement about this step is correct?",
+      o: ["E° for the silver half-reaction becomes +1.60 V, so E°cell increases.",
+          "E° stays +0.80 V because cell potential is an intensive property; multiplying by 2 changes n, which changes ΔG°.",
+          "E° stays +0.80 V and ΔG° also stays the same, because nothing about the reaction has changed.",
+          "E° becomes +0.40 V, because the potential is shared between two electrons."], c: 1,
+      w: "A potential is energy per unit charge, so it does not depend on how many times the equation is written. n doubles to 2, and ΔG° = −nFE° doubles with it. Choice A is the most common error; choice C forgets that n (and therefore ΔG°) changes." },
+    { s: "Using the reduction potentials on the ladder, which reaction is thermodynamically favored as written?",
+      o: ["Zn²⁺(aq) + Cu(s) → Zn(s) + Cu²⁺(aq)", "Ni²⁺(aq) + Cu(s) → Ni(s) + Cu²⁺(aq)", "Cu²⁺(aq) + 2Ag(s) → Cu(s) + 2Ag⁺(aq)", "Cl₂(g) + 2Br⁻(aq) → 2Cl⁻(aq) + Br₂(l)"], c: 3,
+      w: "For D, Cl₂ is reduced (1.36 V) and Br⁻ is oxidized (1.07 V): E° = 1.36 − 1.07 = +0.29 V > 0. The others have E° < 0: A is −0.76 − 0.34 = −1.10 V, B is −0.25 − 0.34 = −0.59 V, and C is 0.34 − 0.80 = −0.46 V. In each of those, the species asked to be reduced sits lower on the ladder." },
+    { s: "A reaction has E°cell = −0.46 V with n = 2. Which statement is correct?",
+      o: ["It is thermodynamically favored, and ΔG° = −88.8 kJ/mol rxn.", "It is thermodynamically favored, and ΔG° = +88.8 kJ/mol rxn.", "It is thermodynamically unfavored, and ΔG° = −88.8 kJ/mol rxn.", "It is thermodynamically unfavored, and ΔG° = +88.8 kJ/mol rxn; an applied potential greater than 0.46 V can make it occur."], c: 3,
+      w: "ΔG° = −(2)(96,485)(−0.46) = +8.88 × 10⁴ J = +88.8 kJ/mol rxn. Negative E° and positive ΔG° both mean unfavored. An external potential larger than 0.46 V can drive it as an electrolytic cell. Choice C has the right conclusion but the wrong sign for ΔG°; choice B calls a reaction with ΔG° &gt; 0 favored." },
+    { s: "For 2Al(s) + 3Ni²⁺(aq) → 2Al³⁺(aq) + 3Ni(s), E°cell = +1.41 V. What is ΔG°?",
+      o: ["−272 kJ/mol rxn", "−816 kJ/mol rxn", "−136 kJ/mol rxn", "+816 kJ/mol rxn"], c: 1,
+      w: "Each Al loses 3 e⁻ and each Ni²⁺ gains 2 e⁻; balancing needs 6 e⁻ (2 Al, 3 Ni²⁺), so n = 6. ΔG° = −(6)(96,485)(1.41) = −8.16 × 10⁵ J = −816 kJ/mol rxn. Choice A uses n = 2, choice C uses n = 1, and choice D drops the minus sign." },
+    { s: "For 2Fe³⁺(aq) + Cu(s) → 2Fe²⁺(aq) + Cu²⁺(aq), E°cell = +0.43 V. Which describes ΔG° and K for this reaction at 25 °C?",
+      o: ["ΔG° < 0 and K > 1", "ΔG° < 0 and K < 1", "ΔG° > 0 and K > 1", "ΔG° > 0 and K < 1"], c: 0,
+      w: "ΔG° = −nFE°, so a positive E° gives a negative ΔG°. ΔG° = −RT ln K, so a negative ΔG° requires ln K > 0, which means K > 1. Choices B and C pair the signs inconsistently." },
+    { s: "Which metal reacts with 1 M H⁺(aq) to produce H₂(g) in a thermodynamically favored reaction? (E°: Cu²⁺/Cu +0.34 V, Ag⁺/Ag +0.80 V, Ni²⁺/Ni −0.25 V, H⁺/H₂ 0.00 V)",
+      o: ["Cu", "Ag", "Ni", "None of them, because H⁺ cannot be reduced"], c: 2,
+      w: "For metal + H⁺, H⁺ is reduced (0.00 V) and the metal is oxidized. E°cell = 0.00 − E°(metal). For Ni: 0.00 − (−0.25) = +0.25 V, favored. For Cu (E°cell = −0.34 V) and Ag (E°cell = −0.80 V) the result is negative, so they do not dissolve in 1 M H⁺. Choice D is false: H⁺ is reduced whenever it is paired with a half-reaction lower on the table." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("9.9");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [9], topic: "9.9", compact: true, storageKey: "topic-9.9" });</script>
+</body>
+</html>

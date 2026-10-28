@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coupled Reactions Study Lab</title>
+<meta name="description" content="Drive an uphill reaction: couple it to ATP hydrolysis or CO combustion, or supply electrical or light energy, and watch the free-energy ledger decide whether the overall process is thermodynamically favored.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.ctl[hidden] { display: none; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.rxn { display: grid; gap: 4px; }
+.rxn .eqn { font-size: .86rem; line-height: 1.7; overflow-wrap: anywhere; white-space: normal; }
+.rxn .lab-k { display: flex; justify-content: space-between; gap: 8px; font-size: .8rem; color: var(--muted); }
+.rxn .lab-k b { font-family: var(--mono); font-weight: 500; color: var(--ink); }
+.int { color: var(--c3); font-weight: 600; }
+.gone { text-decoration: line-through; text-decoration-thickness: 2px; opacity: .7; }
+.ctlcard .controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.verdict { font-weight: 600; }
+.verdict.ok { color: var(--good); } .verdict.no { color: var(--bad); }
+.legend .l-up { color: var(--bad); } .legend .l-down { color: var(--good); } .legend .l-net { color: var(--accent); }
+.legend .l-up::before, .legend .l-down::before, .legend .l-net::before { height: 10px; width: 12px; border-radius: 2px; }
+.note { font-size: .82rem; color: var(--muted); }
+@media (max-width: 860px) { .ctlcard .controls { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .ctlcard .controls { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 9 · Topic 9.7</span>
+  <h1>Coupled Reactions Study Lab</h1>
+  <p class="lede">A reaction with ΔG° &gt; 0 is not thermodynamically favored, but it can still be made to happen. Either an outside source of energy (electricity, light) pushes it, or it is paired with a strongly favored reaction that shares an intermediate, so the sum of the two has ΔG° &lt; 0. Build those pairings below and read the free-energy ledger.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The free-energy ledger</h2>
+    <p>Pick a process. The chart is a running total of ΔG°: the red bar is the uphill step, the green bar is what pays for it (a coupled reaction or outside energy), and the blue bar is what is left over. Change how many times the helper reaction runs, or how much energy is supplied, and watch whether the overall process becomes favored. Values are standard free energy changes at 298 K, in kJ per mole of reaction as written.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>ΔG° running total <small id="chart-sub">above zero = uphill (unfavored)</small></h3>
+      <svg class="chart" id="chart" role="img" aria-label="Waterfall bar chart of standard free energy changes: the unfavorable step, the coupled step or energy supplied, and the overall total"></svg>
+      <div class="lab-bar"><div class="legend"><span class="l-up">Uphill (ΔG° &gt; 0)</span><span class="l-down">Downhill / energy supplied</span><span class="l-net">Overall</span></div></div>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Process</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="rxn" id="rx1"></div>
+      <div class="rxn" id="rx2"></div>
+      <div class="rxn" id="rx3"></div>
+      <p class="note" id="simp"></p>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="controls">
+      <div class="ctl" id="c-m">
+        <label for="s-m">Times reaction 2 runs (m) <output id="o-m"></output></label>
+        <input type="range" id="s-m" min="0" max="4" step="1">
+        <span class="hint">Multiplying an equation multiplies its ΔG°</span>
+      </div>
+      <div class="ctl" id="c-g1">
+        <label for="s-g1">ΔG° of reaction 1 <output id="o-g1"></output></label>
+        <input type="range" id="s-g1" min="5" max="80" step="1">
+        <span class="hint">The unfavorable step you want</span>
+      </div>
+      <div class="ctl" id="c-g2">
+        <label for="s-g2">ΔG° of reaction 2 <output id="o-g2"></output></label>
+        <input type="range" id="s-g2" min="-80" max="-5" step="1">
+        <span class="hint">The favorable helper step</span>
+      </div>
+      <div class="ctl" id="c-v">
+        <label for="s-v">Applied voltage <output id="o-v"></output></label>
+        <input type="range" id="s-v" min="0" max="2.5" step="0.05">
+        <span class="hint">Electrical work supplied = nFV, with n = 4 mol e⁻</span>
+      </div>
+      <div class="ctl" id="c-p">
+        <label for="s-p">Photons absorbed per glucose <output id="o-p"></output></label>
+        <input type="range" id="s-p" min="0" max="60" step="1">
+        <span class="hint">Red light, 680 nm: 175.9 kJ per mole of photons</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">ΔG° of the step you want</div><div class="v" id="r-1"></div><div class="sub" id="r-1s"></div></div>
+    <div class="stat"><div class="k" id="r-2k">ΔG° from the helper</div><div class="v" id="r-2"></div><div class="sub" id="r-2s"></div></div>
+    <div class="stat"><div class="k">Overall ΔG°</div><div class="v" id="r-3"></div><div class="sub" id="r-3s"></div></div>
+    <div class="stat"><div class="k" id="r-4k">Overall K at 298 K</div><div class="v" id="r-4"></div><div class="sub" id="r-4s"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Starting point</span><h3>Unfavored is not impossible</h3><p>ΔG° &gt; 0 means the reaction is not thermodynamically favored on its own (K &lt; 1, so at equilibrium reactants dominate). It can still be made to go if something supplies the free energy it lacks.</p></div>
+    <div class="card"><span class="tag">Outside energy</span><h3>Electricity and light</h3><p>An external energy source can drive an unfavored process. Electrical energy runs an electrolytic cell or recharges a battery. Light absorbed by chlorophyll drives the overall conversion of CO<sub>2</sub> and H<sub>2</sub>O into glucose and O<sub>2</sub> in photosynthesis.</p></div>
+    <div class="card"><span class="tag">Coupling</span><h3>Add the equations, add the ΔG° values</h3><p>Pair the unfavored reaction with a favored one. Because the overall equation is the sum of the two, the overall ΔG° is the sum of their ΔG° values. If that sum is negative, the overall process is thermodynamically favored and the desired product forms.</p></div>
+    <div class="card"><span class="tag">The link</span><h3>A common intermediate</h3><p>Coupling only works chemically if the reactions share a species: one makes it and the other uses it up. That shared species (P<sub>i</sub> for ATP, O<sub>2</sub> for smelting) cancels when the equations are added. Two reactions that merely happen in the same flask are not coupled.</p></div>
+    <div class="card"><span class="tag">Biology</span><h3>ATP → ADP + P<sub>i</sub></h3><p>Cells use ATP hydrolysis (about −30.5 kJ/mol) to drive uphill reactions such as attaching phosphate to glucose (+13.8 kJ/mol). The phosphate group passes through the shared intermediate, and the sum is about −16.7 kJ/mol.</p></div>
+    <div class="card"><span class="tag">Scaling</span><h3>Multiply to match</h3><p>If one copy of the helper is not enough, or the intermediate does not cancel, multiply the helper equation. ΔG° scales with the coefficients (doubling the equation doubles ΔG°). Cell potential E° does not scale this way; you will see why in topic 9.9.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Coupled-reaction cheat sheet</h2>
+    <p>The classic examples, with ΔG° at 298 K calculated from standard free energies of formation (biochemical values for the ATP case).</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Uphill process (ΔG°)</th><th>What drives it</th><th>Shared species</th><th>Overall ΔG°</th></tr></thead>
+    <tbody>
+      <tr><td>Glucose + P<sub>i</sub> → glucose-6-phosphate + H<sub>2</sub>O (+13.8 kJ)</td><td>ATP + H<sub>2</sub>O → ADP + P<sub>i</sub> (−30.5 kJ)</td><td>P<sub>i</sub>, H<sub>2</sub>O</td><td><b>−16.7 kJ</b></td></tr>
+      <tr><td>2Fe<sub>2</sub>O<sub>3</sub>(s) → 4Fe(s) + 3O<sub>2</sub>(g) (+1484.4 kJ)</td><td>3 × [2CO(g) + O<sub>2</sub>(g) → 2CO<sub>2</sub>(g)] (3 × −514.4 kJ)</td><td>O<sub>2</sub></td><td><b>−58.8 kJ</b></td></tr>
+      <tr><td>2Cu<sub>2</sub>O(s) → 4Cu(s) + O<sub>2</sub>(g) (+292.0 kJ)</td><td>2C(s) + O<sub>2</sub>(g) → 2CO(g) (−274.4 kJ)</td><td>O<sub>2</sub></td><td><b>+17.6 kJ</b> (still unfavored at 298 K when the product is CO)</td></tr>
+      <tr><td>2H<sub>2</sub>O(l) → 2H<sub>2</sub>(g) + O<sub>2</sub>(g) (+474.2 kJ)</td><td>Electrical work from a power supply, at least nF × 1.23 V</td><td>None (outside energy)</td><td>Depends on energy supplied</td></tr>
+      <tr><td>6CO<sub>2</sub>(g) + 6H<sub>2</sub>O(l) → C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>(s) + 6O<sub>2</sub>(g) (+2878.6 kJ)</td><td>Light absorbed by chlorophyll</td><td>None (outside energy)</td><td>Depends on energy supplied</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:8px;">Coupling two reactions, step by step</h3>
+    <ol class="steps">
+      <li>Write the unfavored reaction (ΔG°<sub>1</sub> &gt; 0) and the favored helper (ΔG°<sub>2</sub> &lt; 0).</li>
+      <li>Find the species made in one and used up in the other: the common intermediate.</li>
+      <li>Multiply the helper by whatever factor makes the intermediate cancel; multiply its ΔG° by the same factor.</li>
+      <li>Add the equations, cancel the intermediate, and add the ΔG° values: ΔG°<sub>overall</sub> = ΔG°<sub>1</sub> + m·ΔG°<sub>2</sub>.</li>
+      <li>If ΔG°<sub>overall</sub> &lt; 0, the coupled process is thermodynamically favored (K &gt; 1).</li>
+    </ol>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Coupled reactions on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Show the addition explicitly: "ΔG°<sub>overall</sub> = (+13.8 kJ/mol) + (−30.5 kJ/mol) = −16.7 kJ/mol."</li>
+        <li>Connect the sign to the claim: "Because ΔG°<sub>overall</sub> &lt; 0, the coupled process is thermodynamically favored."</li>
+        <li>Name the common intermediate and say it is produced in one reaction and consumed in the other.</li>
+        <li>When an equation is multiplied, multiply its ΔG° by the same factor and say so.</li>
+        <li>For electrolysis, recharging, or photosynthesis, name the outside energy source (electrical energy, light) that drives the unfavored process.</li>
+        <li>Keep units and signs on every value, in kJ/mol<sub>rxn</sub>.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying the favored reaction "gives off heat that the other one absorbs." Coupling is about adding free energy changes through a shared intermediate, not transferring heat.</li>
+        <li>Saying coupling changes ΔG° of the unfavored reaction. It does not; ΔG°<sub>1</sub> is still positive. The overall reaction is a different reaction with its own ΔG°.</li>
+        <li>Forgetting to multiply ΔG° when the helper equation is multiplied to cancel the intermediate.</li>
+        <li>Calling a reaction with ΔG° &gt; 0 "impossible." It is not favored on its own; outside energy or coupling can make it happen.</li>
+        <li>Confusing thermodynamics with kinetics: a catalyst speeds a reaction up but never makes ΔG° negative.</li>
+        <li>Adding magnitudes instead of signed values (13.8 + 30.5 = 44.3 is not the overall ΔG°).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 9.7. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-9.html">Unit 9 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var F = Lab.CONST.F, RJ = Lab.CONST.R_J, T = 298.15;
+
+  // ---------- Data ----------
+  // Standard free energies of formation at 298 K (kJ/mol), used to compute and check ΔG° of the inorganic reactions.
+  var DGF = { "Fe2O3(s)": -742.2, "Fe(s)": 0, "O2(g)": 0, "CO(g)": -137.2, "CO2(g)": -394.4, "Cu2O(s)": -146.0, "Cu(s)": 0, "C(s)": 0,
+    "H2O(l)": -237.1, "H2(g)": 0, "C6H12O6(s)": -910.4 };
+  // Display names for species that are not plain formulas.
+  var BIO = { glc: "glucose", pi: "P<sub>i</sub>", g6p: "glucose-6-phosphate", atp: "ATP", adp: "ADP", h2o: "H<sub>2</sub>O" };
+  var LIGHT_KJ = Lab.CONST.NA * Lab.CONST.h * Lab.CONST.c / 680e-9 / 1000;   // kJ per mole of 680 nm photons
+
+  // Reaction lists: [coefficient, species]. dG in kJ/mol rxn. Inorganic ΔG° are computed from DGF below.
+  var SC = {
+    glu: { name: "Glucose + ATP", kind: "couple", m: 1, mMatch: 1, expect: -16.7,
+      r1: { L: [[1, "glc"], [1, "pi"]], R: [[1, "g6p"], [1, "h2o"]], dG: 13.8, label: "Phosphorylate glucose" },
+      r2: { L: [[1, "atp"], [1, "h2o"]], R: [[1, "adp"], [1, "pi"]], dG: -30.5, label: "ATP hydrolysis" },
+      simp: "Biochemical values (ΔG°′ at pH 7). P<sub>i</sub> stands for inorganic phosphate; charges are left off the biomolecules." },
+    fe: { name: "Iron smelting (Fe₂O₃ + CO)", kind: "couple", m: 3, mMatch: 3, expect: -58.8,
+      r1: { L: [[2, "Fe2O3(s)"]], R: [[4, "Fe(s)"], [3, "O2(g)"]], label: "Decompose iron(III) oxide" },
+      r2: { L: [[2, "CO(g)"], [1, "O2(g)"]], R: [[2, "CO2(g)"]], label: "Burn carbon monoxide" },
+      simp: "ΔG° values at 298 K from standard free energies of formation. A blast furnace runs far hotter, which changes the numbers but not the bookkeeping." },
+    cu: { name: "Copper from Cu₂O + C", kind: "couple", m: 1, mMatch: 1, expect: 17.6,
+      r1: { L: [[2, "Cu2O(s)"]], R: [[4, "Cu(s)"], [1, "O2(g)"]], label: "Decompose copper(I) oxide" },
+      r2: { L: [[2, "C(s)"], [1, "O2(g)"]], R: [[2, "CO(g)"]], label: "Burn carbon to CO" },
+      simp: "ΔG° values at 298 K. This overall reaction forms a gas (ΔS° > 0), so it becomes favored when heated, but at 298 K coupling to CO formation falls short. (Coupling to C + O₂ → CO₂, ΔG° = −394.4 kJ, would be favored even at 298 K.)" },
+    elec: { name: "Electrolysis of water", kind: "elec", n: 4, expect: 474.2,
+      r1: { L: [[2, "H2O(l)"]], R: [[2, "H2(g)"], [1, "O2(g)"]], label: "Split water" },
+      simp: "Minimum electrical work only. Real electrolyzers need extra voltage (overpotential) to run at a useful rate." },
+    photo: { name: "Photosynthesis", kind: "light", expect: 2878.6,
+      r1: { L: [[6, "CO2(g)"], [6, "H2O(l)"]], R: [[1, "C6H12O6(s)"], [6, "O2(g)"]], label: "Make glucose" },
+      simp: "Energy bookkeeping only. Photosynthesis runs through many coupled steps, and plants actually absorb roughly 48 photons per glucose; the rest of the energy ends up as heat." },
+    custom: { name: "Build your own", kind: "couple", m: 1, mMatch: 1, custom: true,
+      r1: { L: [[1, "A"], [1, "X"]], R: [[1, "B"]], dG: 20, label: "Reaction 1" },
+      r2: { L: [[1, "C"]], R: [[1, "D"], [1, "X"]], dG: -12, label: "Reaction 2" },
+      simp: "Generic species. X is made by reaction 2 and used by reaction 1." }
+  };
+  var ORDER = ["glu", "fe", "cu", "elec", "photo", "custom"];
+
+  function strip(sp) { return sp.replace(/\((s|l|g|aq)\)$/, ""); }
+  function dgFromTable(r) {
+    var t = 0;
+    r.R.forEach(function (x) { t += x[0] * DGF[x[1]]; });
+    r.L.forEach(function (x) { t -= x[0] * DGF[x[1]]; });
+    return Math.round(t * 10) / 10;
+  }
+  ORDER.forEach(function (k) {
+    var s = SC[k];
+    ["r1", "r2"].forEach(function (rk) { var r = s[rk]; if (r && r.dG == null) r.dG = dgFromTable(r); });
+  });
+
+  var S = { key: "glu", m: 1, v: 0, p: 0, g1: 20, g2: -12 };
+  function sc() { return SC[S.key]; }
+
+  // ---------- Model ----------
+  // Sum r1 + m·r2; returns net species map and the common intermediates.
+  function combine(r1, r2, m) {
+    var map = {}, order = [];
+    function add(list, sgn, k) { list.forEach(function (t) { if (!(t[1] in map)) { map[t[1]] = 0; order.push(t[1]); } map[t[1]] += sgn * t[0] * k; }); }
+    add(r1.L, -1, 1); add(r1.R, 1, 1);
+    if (r2 && m) { add(r2.L, -1, m); add(r2.R, 1, m); }
+    var inter = [];
+    if (r2) {
+      var has = function (list, sp) { return list.some(function (t) { return t[1] === sp; }); };
+      order.forEach(function (sp) { if ((has(r1.L, sp) && has(r2.R, sp)) || (has(r1.R, sp) && has(r2.L, sp))) inter.push(sp); });
+    }
+    var L = [], R = [];
+    order.forEach(function (sp) { var v = Math.round(map[sp] * 1000) / 1000; if (v < 0) L.push([-v, sp]); else if (v > 0) R.push([v, sp]); });
+    return { L: L, R: R, map: map, inter: inter, cancels: inter.every(function (sp) { return Math.abs(map[sp]) < 1e-9; }) };
+  }
+  function model() {
+    var x = sc(), r1 = x.r1, r2 = x.r2;
+    var g1 = x.custom ? S.g1 : r1.dG, g2 = x.custom ? S.g2 : (r2 ? r2.dG : 0);
+    var out = { g1: g1, g2: g2 };
+    if (x.kind === "couple") {
+      out.help = S.m * g2; out.net = g1 + out.help;
+      out.sum = combine(r1, r2, S.m);
+    } else if (x.kind === "elec") {
+      out.help = -x.n * F * S.v / 1000; out.net = g1 + out.help;
+      out.Emin = g1 * 1000 / (x.n * F);
+    } else {
+      out.help = -S.p * LIGHT_KJ; out.net = g1 + out.help;
+      out.pmin = Math.ceil(g1 / LIGHT_KJ);
+    }
+    out.net = Math.round(out.net * 10) / 10;
+    out.log10K = -out.net * 1000 / (RJ * T) / Math.LN10;
+    return out;
+  }
+
+  // ---------- Formatting ----------
+  function kJ(v) { return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1) + " kJ"; }
+  function name(sp) { return BIO[sp] || Lab.fmla(sp); }
+  function coef(c) { return c === 1 ? "" : String(c); }
+  function side(list, inter, gone) {
+    return list.map(function (t) {
+      var isI = inter.indexOf(t[1]) >= 0;
+      return '<span class="' + (isI ? "int" : "") + (isI && gone ? " gone" : "") + '">' + coef(t[0]) + name(t[1]) + "</span>";
+    }).join(" + ");
+  }
+  function eqHTML(r, inter, gone, mult) {
+    var L = mult && mult !== 1 ? r.L.map(function (t) { return [t[0] * mult, t[1]]; }) : r.L;
+    var R = mult && mult !== 1 ? r.R.map(function (t) { return [t[0] * mult, t[1]]; }) : r.R;
+    return side(L, inter, gone) + " → " + side(R, inter, gone);
+  }
+  function Kfmt(lg) {
+    if (Math.abs(lg) < 3) return Lab.sig(Math.pow(10, lg), 2);
+    var e = Math.floor(lg), mant = Math.pow(10, lg - e);
+    if (+mant.toFixed(1) >= 10) { mant /= 10; e++; }
+    return mant.toFixed(1) + " × 10<sup>" + String(e).replace("-", "−") + "</sup>";
+  }
+  function txt(h) { return h.replace(/<sup>([^<]*)<\/sup>/g, "^$1").replace(/<[^>]+>/g, ""); }
+
+  // ---------- Chart ----------
+  var svg = document.getElementById("chart");
+  function niceStep(span) { var raw = span / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p; return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * p; }
+  function drawChart(m) {
+    var x = sc();
+    var hi = Math.max(0, m.g1, m.net), lo = Math.min(0, m.net, m.g1 + m.help);
+    var span = Math.max(hi - lo, 10), st = niceStep(span);
+    var y0 = Math.floor((lo - span * 0.12) / st) * st, y1 = Math.ceil((hi + span * 0.14) / st) * st;
+    var ticks = []; for (var t = y0; t <= y1 + 1e-9; t += st) ticks.push(Math.round(t * 1000) / 1000);
+    var Fm = Lab.frame(svg, { x: [0, 3], y: [y0, y1], yTicks: ticks, fmtY: function (v) { return Math.round(v); }, xLabel: "", yLabel: "ΔG° (kJ/mol rxn)", width: 440, height: 330 });
+    Lab.hline(Fm, 0, "var(--ink)", 1.2);
+    var w = 0.28, names = ["Wanted step", x.kind === "couple" ? (S.m === 0 ? "No helper" : (S.m === 1 ? "Reaction 2" : S.m + " × reaction 2")) : (x.kind === "elec" ? "Electrical work" : "Light energy"), "Overall"];
+    var bars = [
+      { c: 0.5, a: 0, b: m.g1, col: "var(--bad)" },
+      { c: 1.5, a: m.g1, b: m.g1 + m.help, col: "var(--good)" },
+      { c: 2.5, a: 0, b: m.net, col: "var(--accent)" }
+    ];
+    bars.forEach(function (b, i) {
+      if (Math.abs(b.b - b.a) > 1e-9) Lab.rect(Fm, b.c - w, b.a, b.c + w, b.b, b.col, 0.85);
+      else Lab.line(Fm, [[b.c - w, b.a], [b.c + w, b.a]], b.col, 3);
+      Lab.el("text", { x: Fm.sx(b.c), y: Fm.H - Fm.M.b + 18, "text-anchor": "middle", style: "fill:var(--ink); font-weight:600" }, svg, names[i]);
+      var v = i === 1 ? m.help : b.b - b.a, top = Math.max(b.a, b.b), bot = Math.min(b.a, b.b);
+      var ly = v >= 0 ? Fm.sy(top) - 6 : Fm.sy(bot) + 14;
+      Lab.el("text", { x: Fm.sx(b.c), y: ly, "text-anchor": "middle", "class": "lbl", style: "fill:" + b.col }, svg, txt(kJ(v)));
+    });
+    // connectors
+    Lab.line(Fm, [[0.5 + w, m.g1], [1.5 - w, m.g1]], "var(--muted)", 1, "3 3");
+    Lab.line(Fm, [[1.5 + w, m.g1 + m.help], [2.5 - w, m.g1 + m.help]], "var(--muted)", 1, "3 3");
+  }
+
+  // ---------- Equations panel ----------
+  function rxBox(id, title, dg, html) {
+    document.getElementById(id).innerHTML = '<div class="lab-k"><span>' + title + "</span><b>ΔG° = " + kJ(dg) + "</b></div><div class=\"eqn\">" + html + "</div>";
+  }
+  function drawEq(m) {
+    var x = sc(), r1 = x.r1;
+    if (x.kind === "couple") {
+      var inter = m.sum.inter, gone = m.sum.cancels && S.m > 0;
+      rxBox("rx1", "1. " + r1.label + " (wanted, uphill)", m.g1, eqHTML(r1, inter, gone));
+      rxBox("rx2", "2. " + x.r2.label + (S.m === 1 ? "" : " × " + S.m), m.help, S.m === 0 ? "<span class=\"note\">not used (m = 0)</span>" : eqHTML(x.r2, inter, gone, S.m));
+      var verdict = m.net < 0 ? '<span class="verdict ok">favored</span>' : '<span class="verdict no">not favored</span>';
+      rxBox("rx3", "Overall: 1 + " + (S.m === 1 ? "" : S.m + " × ") + "2 → " + verdict, m.net, side(m.sum.L, [], false) + " → " + side(m.sum.R, [], false));
+    } else {
+      rxBox("rx1", "1. " + r1.label + " (wanted, uphill)", m.g1, eqHTML(r1, [], false));
+      var src = x.kind === "elec" ? "Power supply at " + S.v.toFixed(2) + " V pushes " + x.n + " mol e⁻ per mole of reaction" : S.p + " mol of 680 nm photons absorbed per mole of glucose";
+      rxBox("rx2", "2. Outside energy: " + (x.kind === "elec" ? "electrical work" : "light"), m.help, '<span class="note">' + src + "</span>");
+      rxBox("rx3", "Net free energy still needed", m.net, m.net <= 0 ? '<span class="verdict ok">enough energy supplied: the process can be driven</span>' : '<span class="verdict no">not enough energy supplied</span>');
+    }
+    document.getElementById("simp").innerHTML = "Simplification: " + x.simp;
+  }
+
+  // ---------- Readouts ----------
+  function readouts(m) {
+    var x = sc();
+    document.getElementById("r-1").innerHTML = kJ(m.g1);
+    document.getElementById("r-1s").textContent = m.g1 > 0 ? "not favored on its own" : "favored on its own";
+    document.getElementById("r-2k").textContent = x.kind === "couple" ? "ΔG° from reaction 2 (× m)" : x.kind === "elec" ? "Electrical work supplied (−nFV)" : "Light energy supplied";
+    document.getElementById("r-2").innerHTML = kJ(m.help);
+    document.getElementById("r-2s").innerHTML = x.kind === "couple" ? S.m + " × (" + kJ(m.g2) + ")" : x.kind === "elec" ? x.n + " × 96,485 C × " + S.v.toFixed(2) + " V" : S.p + " × 175.9 kJ";
+    document.getElementById("r-3").innerHTML = kJ(m.net);
+    document.getElementById("r-3s").innerHTML = m.net < 0 ? "<span style='color:var(--good)'>overall favored</span>" : m.net === 0 ? "exactly balanced" : "<span style='color:var(--bad)'>overall not favored</span>";
+    if (x.kind === "couple") {
+      document.getElementById("r-4k").textContent = "Overall K at 298 K";
+      document.getElementById("r-4").innerHTML = Kfmt(m.log10K);
+      document.getElementById("r-4s").textContent = m.net < 0 ? "K > 1: products favored" : m.net === 0 ? "K = 1" : "K < 1: reactants favored";
+    } else if (x.kind === "elec") {
+      document.getElementById("r-4k").textContent = "Minimum voltage";
+      document.getElementById("r-4").innerHTML = m.Emin.toFixed(2) + " V";
+      document.getElementById("r-4s").textContent = "ΔG° ÷ nF = 474.2 kJ ÷ (4 × 96,485 C)";
+    } else {
+      document.getElementById("r-4k").textContent = "Minimum photons per glucose";
+      document.getElementById("r-4").innerHTML = String(m.pmin);
+      document.getElementById("r-4s").textContent = "2878.6 kJ ÷ 175.9 kJ per mol photons";
+    }
+  }
+
+  // ---------- Story ----------
+  function story(m) {
+    var x = sc(), li = [], h = "";
+    if (x.kind === "couple") {
+      var interNames = m.sum.inter.map(name).join(" and ");
+      li.push("Reaction 1 alone has ΔG° = " + kJ(m.g1) + ". It is <b>not thermodynamically favored</b>: left to itself, very little product forms.");
+      if (S.m === 0) {
+        li.push("With m = 0 nothing helps it. Raise m to couple reaction 2 (ΔG° = " + kJ(m.g2) + ").");
+      } else {
+        li.push("Adding " + (S.m === 1 ? "reaction 2" : S.m + " copies of reaction 2") + " adds " + (S.m === 1 ? "" : S.m + " × (" + kJ(m.g2) + ") = ") + kJ(m.help) + ". Overall ΔG° = " + kJ(m.g1) + " + (" + kJ(m.help) + ") = <b>" + kJ(m.net) + "</b>.");
+        li.push(m.sum.cancels ? "The common intermediate (<span class=\"int\">" + interNames + "</span>) is made in one reaction and used up in the other, so it cancels completely. That shared species is what links the two reactions chemically."
+          : "The common intermediate (<span class=\"int\">" + interNames + "</span>) does <b>not</b> cancel with m = " + S.m + ". " + (S.m > x.mMatch ? "The extra " + (S.m - x.mMatch === 1 ? "copy of reaction 2 just runs on its own" : "copies of reaction 2 just run on their own") + ": ΔG° looks more negative, but no additional product is made. The honest coupling uses m = " + x.mMatch + "." : "Some of it is left over, so this is not yet a clean coupling. The intermediate cancels at m = " + x.mMatch + "."));
+        if (m.net < 0) li.push("The sum is negative, so the overall process is <b>favored</b> (K ≈ " + Kfmt(m.log10K) + " &gt; 1). The product of reaction 1 now forms even though reaction 1 by itself is uphill.");
+        else if (m.net === 0) li.push("The sum is exactly zero, so K = 1: the coupled process is neither favored nor unfavored, and neither reactants nor products dominate at equilibrium.");
+        else li.push("The sum is still positive, so even coupled, the overall process is <b>not favored</b> (K ≈ " + Kfmt(m.log10K) + " &lt; 1)." + (S.key === "cu" ? " Burning more carbon does not help here, because only one O<sub>2</sub> per 2Cu<sub>2</sub>O is there to be used. Industry heats the mixture instead: the overall reaction makes CO gas (ΔS° &gt; 0), so the −TΔS° term turns ΔG negative at high temperature." : " A helper with a more negative ΔG°, or more copies of it per product, is needed."));
+      }
+      if (S.key === "glu") li.push("This is how cells use ATP: the phosphate group is handed from ATP to glucose, so the free energy released by ATP → ADP is spent making glucose-6-phosphate rather than lost as heat.");
+      h += "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+      h += "<p><b>AP answer:</b> " + (m.net < 0 && S.m > 0 ? "coupling the unfavored reaction (ΔG° = " + kJ(m.g1) + ") to a favored reaction that shares " + interNames + " gives an overall reaction with ΔG° = " + kJ(m.g1) + " + (" + kJ(m.help) + ") = " + kJ(m.net) + " &lt; 0, so the coupled process is thermodynamically favored." : "the overall ΔG° is the sum of the coupled reactions' ΔG° values. Here it is " + kJ(m.net) + ", which is not negative, so the process is not thermodynamically favored as written.") + "</p>";
+      return h;
+    }
+    if (x.kind === "elec") {
+      li.push("Splitting water has ΔG° = " + kJ(m.g1) + " for 2 mol H<sub>2</sub>O. It never happens on its own at room temperature.");
+      li.push("A power supply does electrical work on the system: w = nFV = " + x.n + " mol e⁻ × 96,485 C/mol × " + S.v.toFixed(2) + " V = " + Math.abs(m.help).toFixed(1) + " kJ.");
+      li.push(m.net <= 0 ? "That covers the " + m.g1.toFixed(1) + " kJ the reaction needs, so the outside energy source drives the unfavored reaction. This is an <b>electrolytic cell</b> (topic 9.8)." : "That is less than the " + m.g1.toFixed(1) + " kJ needed. Below about " + m.Emin.toFixed(2) + " V, no net electrolysis occurs.");
+      li.push("The same idea recharges a battery: electrical energy runs the battery's favored discharge reaction in reverse.");
+      h += "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+      h += "<p><b>AP answer:</b> electrolysis of water is thermodynamically unfavored (ΔG° &gt; 0); an external source of electrical energy, at least nF × " + m.Emin.toFixed(2) + " V per mole of reaction, makes it occur.</p>";
+      return h;
+    }
+    li.push("Making one mole of glucose from CO<sub>2</sub> and H<sub>2</sub>O has ΔG° = " + kJ(m.g1) + ". It is strongly unfavored; the reverse (respiration, combustion) is what happens on its own.");
+    li.push("Each mole of 680 nm photons carries N<sub>A</sub>hc/λ = 175.9 kJ. Absorbing " + S.p + " mol of photons supplies " + Math.abs(m.help).toFixed(1) + " kJ.");
+    li.push(m.net <= 0 ? "That is at least the free energy needed, so light can drive the overall conversion." : "That is not enough; at least " + m.pmin + " mol of photons per mole of glucose is needed even with perfect efficiency.");
+    li.push("Plants are not perfectly efficient: they absorb roughly 48 photons per glucose, and the extra energy ends up as heat.");
+    h += "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+    h += "<p><b>AP answer:</b> photosynthesis is thermodynamically unfavored (ΔG° &gt; 0); light energy absorbed by chlorophyll is the external energy source that drives the overall conversion of CO<sub>2</sub> and H<sub>2</sub>O into glucose.</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  var elM = document.getElementById("s-m"), elG1 = document.getElementById("s-g1"), elG2 = document.getElementById("s-g2"), elV = document.getElementById("s-v"), elP = document.getElementById("s-p");
+  var scBtns = {};
+  function render() {
+    var x = sc(), m = model();
+    document.getElementById("c-m").hidden = x.kind !== "couple";
+    document.getElementById("c-g1").hidden = !x.custom;
+    document.getElementById("c-g2").hidden = !x.custom;
+    document.getElementById("c-v").hidden = x.kind !== "elec";
+    document.getElementById("c-p").hidden = x.kind !== "light";
+    elM.value = S.m; elG1.value = S.g1; elG2.value = S.g2; elV.value = S.v; elP.value = S.p;
+    document.getElementById("o-m").textContent = S.m;
+    document.getElementById("o-g1").textContent = txt(kJ(S.g1));
+    document.getElementById("o-g2").textContent = txt(kJ(S.g2));
+    document.getElementById("o-v").textContent = S.v.toFixed(2) + " V";
+    document.getElementById("o-p").textContent = S.p + " mol";
+    ORDER.forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    drawChart(m); drawEq(m); readouts(m);
+    document.getElementById("story").innerHTML = story(m);
+  }
+  function pick(k) {
+    S.key = k; var x = sc();
+    S.m = x.m || 1; S.v = 0.8; S.p = 10;
+    if (x.custom) { S.g1 = 20; S.g2 = -12; S.m = 1; }
+    render();
+  }
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name;
+    b.addEventListener("click", function () { pick(k); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  elM.addEventListener("input", function () { S.m = parseInt(elM.value, 10); render(); });
+  elG1.addEventListener("input", function () { S.g1 = parseFloat(elG1.value); render(); });
+  elG2.addEventListener("input", function () { S.g2 = parseFloat(elG2.value); render(); });
+  elV.addEventListener("input", function () { S.v = parseFloat(elV.value); render(); });
+  elP.addEventListener("input", function () { S.p = parseInt(elP.value, 10); render(); });
+
+  // ---------- Self-check ----------
+  (function selfCheck() {
+    var errs = [];
+    function balanced(L, R) {
+      var a = {}, b = {};
+      L.forEach(function (t) { var c = Lab.parseFormula(strip(t[1])); for (var e in c) a[e] = (a[e] || 0) + c[e] * t[0]; });
+      R.forEach(function (t) { var c = Lab.parseFormula(strip(t[1])); for (var e in c) b[e] = (b[e] || 0) + c[e] * t[0]; });
+      return Object.keys(a).concat(Object.keys(b)).every(function (e) { return Math.abs((a[e] || 0) - (b[e] || 0)) < 1e-9; });
+    }
+    ["fe", "cu", "elec", "photo"].forEach(function (k) {
+      var x = SC[k];
+      if (!balanced(x.r1.L, x.r1.R)) errs.push(k + " r1 unbalanced");
+      if (x.r2) {
+        if (!balanced(x.r2.L, x.r2.R)) errs.push(k + " r2 unbalanced");
+        var s = combine(x.r1, x.r2, x.mMatch);
+        if (!balanced(s.L, s.R)) errs.push(k + " sum unbalanced");
+      }
+      var tot = Math.round((x.r1.dG + (x.r2 ? x.mMatch * x.r2.dG : 0)) * 10) / 10;
+      if (Math.abs(tot - x.expect) > 0.05) errs.push(k + " overall ΔG° " + tot + " ≠ " + x.expect);
+    });
+    ["glu", "fe", "cu", "custom"].forEach(function (k) { var x = SC[k]; if (!combine(x.r1, x.r2, x.mMatch).cancels) errs.push(k + " intermediate does not cancel at mMatch"); });
+    if (Math.abs(SC.glu.r1.dG + SC.glu.r2.dG - SC.glu.expect) > 0.05) errs.push("glucose sum");
+    if (Math.abs(SC.elec.r1.dG * 1000 / (4 * F) - 1.229) > 0.002) errs.push("water E°");
+    if (Math.abs(LIGHT_KJ - 175.9) > 0.1) errs.push("photon energy " + LIGHT_KJ);
+    if (Math.ceil(2878.6 / LIGHT_KJ) !== 17) errs.push("min photons");
+    if (errs.length) console.error("9.7 self-check failed: " + errs.join("; "));
+  })();
+
+  pick("glu");
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "In cells, glutamate + NH₄⁺ → glutamine + H₂O has ΔG° = +14.2 kJ/mol. It is coupled to ATP + H₂O → ADP + Pᵢ, ΔG° = −30.5 kJ/mol. What is ΔG° for the coupled process glutamate + NH₄⁺ + ATP → glutamine + ADP + Pᵢ?",
+      o: ["+44.7 kJ/mol", "+16.3 kJ/mol", "−16.3 kJ/mol", "−44.7 kJ/mol"], c: 2,
+      w: "The overall equation is the sum of the two, so ΔG° adds with signs: (+14.2) + (−30.5) = −16.3 kJ/mol. Choice D adds the magnitudes and gives the result a negative sign; choice B has the right size but the wrong sign." },
+    { s: "Cu₂S(s) → 2Cu(s) + S(s), ΔG° = +86.2 kJ/mol rxn, can be driven by coupling it with S(s) + O₂(g) → SO₂(g), ΔG° = −300.1 kJ/mol rxn. Which species is the common intermediate that links the two reactions?",
+      o: ["S(s)", "Cu(s)", "O₂(g)", "SO₂(g)"], c: 0,
+      w: "Sulfur is produced by the first reaction and consumed by the second, so it cancels when the equations are added: Cu₂S + O₂ → 2Cu + SO₂, ΔG° = −213.9 kJ/mol rxn. Cu (choice B) is the desired product, and O₂ and SO₂ appear in only one of the two reactions." },
+    { s: "Reaction 1: 2Fe₂O₃(s) → 4Fe(s) + 3O₂(g), ΔG° = +1484 kJ/mol rxn. Reaction 2: 2CO(g) + O₂(g) → 2CO₂(g), ΔG° = −514 kJ/mol rxn. To write an overall equation in which O₂ cancels, reaction 2 is multiplied by a factor. What is the factor, and what is ΔG° for the overall reaction?",
+      o: ["1; +970 kJ/mol rxn", "3; +3026 kJ/mol rxn", "3; −1542 kJ/mol rxn", "3; −58 kJ/mol rxn"], c: 3,
+      w: "Reaction 1 makes 3 O₂, and each copy of reaction 2 uses 1 O₂, so reaction 2 is tripled. Its ΔG° triples too: 3(−514) = −1542 kJ. Overall: +1484 + (−1542) = −58 kJ/mol rxn, favored. Choice C forgets to add reaction 1; choice A never cancels the O₂." },
+    { s: "A rechargeable battery produces electricity by a thermodynamically favored redox reaction. Which statement best explains how the battery is recharged?",
+      o: ["The recharging reaction has ΔG° < 0, so it occurs on its own once the battery is connected to the charger.",
+          "Electrical energy from an external source drives the thermodynamically unfavored reverse reaction, so the cell operates as an electrolytic cell.",
+          "The charger acts as a catalyst, which makes the reverse reaction thermodynamically favored.",
+          "The reverse reaction has the same ΔG° as the discharge reaction, so no energy is required."], c: 1,
+      w: "Reversing a reaction reverses the sign of ΔG°, so recharging is unfavored (ΔG° > 0). Electrical energy supplied from outside makes it occur. Choice C confuses kinetics with thermodynamics: a catalyst never changes the sign of ΔG°." },
+    { s: "For photosynthesis, 6CO₂(g) + 6H₂O(l) → C₆H₁₂O₆(s) + 6O₂(g), ΔG° = +2880 kJ/mol rxn. Which statement is correct?",
+      o: ["The reaction is thermodynamically unfavored; light absorbed by the plant supplies the energy that drives the overall conversion.",
+          "Because ΔG° > 0, the reaction cannot occur under any conditions.",
+          "Light acts as a catalyst, lowering the activation energy so that ΔG° becomes negative.",
+          "The reaction is thermodynamically favored because it releases O₂ gas, which increases entropy."], c: 0,
+      w: "A positive ΔG° means the process is not favored on its own, but an external energy source (light) can drive it. Choice B treats ΔG° > 0 as impossible. Choice D is wrong on two counts: ΔG° is given as positive, and the reaction turns 6 mol of gas into 6 mol of gas, so gas formation does not drive it." },
+    { s: "Reaction X has ΔG° = +45 kJ/mol rxn. It can be coupled to ATP hydrolysis (ΔG° = −30.5 kJ/mol) through a shared intermediate. Which statement is correct?",
+      o: ["Coupling one ATP per X gives ΔG° = −14.5 kJ/mol, so the coupled process is favored.",
+          "Coupling one ATP per X gives ΔG° = +75.5 kJ/mol, so coupling makes X less favored.",
+          "Coupling one ATP per X gives ΔG° = +14.5 kJ/mol, still unfavored; coupling two ATP per X gives −16 kJ/mol, which is favored.",
+          "Reaction X can never be driven, because its ΔG° is larger in magnitude than ΔG° for ATP hydrolysis."], c: 2,
+      w: "45 + (−30.5) = +14.5 kJ/mol, still positive. With two ATP: 45 + 2(−30.5) = 45 − 61 = −16 kJ/mol, favored. Choice A has the sign of the sum wrong; choice D ignores that the helper can be used more than once." },
+    { s: "After coupling, the overall reaction in a process has ΔG° = −16.7 kJ/mol rxn at 298 K. Which statement about the equilibrium constant K for the overall reaction is correct?",
+      o: ["K < 1, because the uphill reaction is part of the overall process", "K = 0, because the reactions cancel", "K = 1, because the two ΔG° values offset each other", "K > 1, because ΔG° = −RT ln K is negative only when ln K > 0"], c: 3,
+      w: "ΔG° = −RT ln K. A negative ΔG° requires ln K > 0, so K > 1 (here about 8 × 10²). Choice A judges by one step instead of the overall reaction; only the overall ΔG° sets the overall K." },
+    { s: "Which statement about coupled reactions is correct?",
+      o: ["Coupling changes ΔG° of the unfavored reaction itself to a negative value.",
+          "The ΔG° values add because the overall equation is the sum of the individual equations, and the reactions share a common intermediate.",
+          "Only reactions with ΔG° values of equal magnitude and opposite sign can be coupled.",
+          "Coupling works because heat released by the favored reaction is absorbed by the unfavored reaction."], c: 1,
+      w: "Coupling creates a new overall reaction whose ΔG° is the sum of the parts; the shared intermediate is what links them. ΔG° of the uphill step itself is unchanged (choice A). Choice D is a common misconception: the link is chemical (a shared species), not a transfer of heat." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("9.7");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [9], topic: "9.7", compact: true, storageKey: "topic-9.7" });</script>
+</body>
+</html>

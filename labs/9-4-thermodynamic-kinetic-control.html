@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thermodynamic and Kinetic Control Study Lab</title>
+<meta name="description" content="Set ΔG°, the activation barrier, temperature, a catalyst, and how long you wait, then watch whether a thermodynamically favored reaction actually happens or sits under kinetic control.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 18px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 14px; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.side .controls { grid-template-columns: 1fr 1fr; }
+.btnrow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.lab-bar > * { min-width: 0; max-width: 100%; }
+.note { font-size: .84rem; color: var(--muted); }
+.legend .l-dash { color: var(--c2); }
+.legend .l-dash::before { background: none; border-top: 2px dashed currentColor; height: 0; }
+.legend.dots span::before { width: 10px; height: 10px; border-radius: 50%; }
+.status { font-weight: 600; }
+.v.fav { color: var(--good); } .v.unf { color: var(--bad); }
+#mix { max-width: 420px; }
+@media (max-width: 520px) {
+  .side .controls { grid-template-columns: 1fr; }
+  .lab-bar .eqn { white-space: normal; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 9 · Topic 9.4</span>
+  <h1>Thermodynamic and Kinetic Control Study Lab</h1>
+  <p class="lede">ΔG° tells you which direction a reaction is favored. It says nothing about how fast it goes. Many favored reactions, like diamond turning into graphite or a sugar cube burning in air, have activation barriers so high that they do not happen at any measurable rate. Those reactions are under kinetic control. Explore both questions, "favored?" and "fast?", below.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. Favored versus fast</h2>
+    <p>The energy profile shows the free energy of reactants, products, and the barrier between them. The box of particles shows how far the reaction has gone after the waiting time you choose. ΔG° values are real; barrier heights are illustrative.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Free-energy profile <small id="p-sub"></small></h3>
+      <svg class="chart" id="prof" role="img" aria-label="Energy profile with reactants, a barrier, and products"></svg>
+      <svg class="chart" id="mix" role="img" aria-label="Particles: reactant and product molecules after the waiting time"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Reactions</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-g">ΔG° <output id="o-g"></output></label>
+          <input type="range" id="s-g" min="-300" max="200" step="1">
+          <span class="hint">Products below reactants = favored</span>
+        </div>
+        <div class="ctl">
+          <label for="s-b">Barrier <output id="o-b"></output></label>
+          <input type="range" id="s-b" min="10" max="350" step="1">
+          <span class="hint">Height above the reactants</span>
+        </div>
+        <div class="ctl">
+          <label for="s-t">Temperature <output id="o-t"></output></label>
+          <input type="range" id="s-t" min="250" max="1200" step="5">
+          <span class="hint" id="h-t"></span>
+        </div>
+        <div class="ctl">
+          <label for="s-w">Waiting time <output id="o-w"></output></label>
+          <input type="range" id="s-w" min="0" max="18" step="0.25">
+          <span class="hint">1 second to 30 billion years</span>
+        </div>
+      </div>
+      <div class="group">
+        <div class="tag">Catalyst</div>
+        <div class="seg" role="group" aria-label="Catalyst">
+          <button type="button" id="c-off" aria-pressed="true">None</button>
+          <button type="button" id="c-on" aria-pressed="false">Add catalyst (barrier − 60 kJ/mol)</button>
+        </div>
+      </div>
+      <div class="btnrow">
+        <button type="button" class="primary" id="b-run">Run the clock</button>
+        <span class="note">Animates the waiting time from 1 s up to the value set.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend dots"><span class="l-ad">Reactant</span><span class="l-c1">Product</span><span class="l-dash">Catalyzed path</span></div>
+    <div class="eqn" id="eqn"></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Thermodynamically favored?</div><div class="v" id="r-f"></div><div class="sub" id="r-f2"></div></div>
+    <div class="stat"><div class="k">Time to go halfway to equilibrium</div><div class="v" id="r-h"></div><div class="sub" id="r-h2"></div></div>
+    <div class="stat"><div class="k">Products after waiting</div><div class="v" id="r-x"></div><div class="sub" id="r-x2"></div></div>
+    <div class="stat"><div class="k">Verdict</div><div class="v status" id="r-v"></div><div class="sub" id="r-v2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">How the model works: each reactant particle turns into one product particle, and the reverse also happens. The rate constant is (k<sub>B</sub>T/h)·e<sup>−barrier/RT</sup> and K = e<sup>−ΔG°/RT</sup>. These equations are beyond the AP course and are used only to set the time scale. ΔG° is held at the value shown even when you change the temperature. The age of the universe is about 4 × 10<sup>17</sup> s.</p>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Two questions</span><h3>Favored is not the same as fast</h3><p>Thermodynamics (ΔG°, K) compares the starting and ending states: which side is favored. Kinetics (rate, activation energy) describes the path between them: how fast you get there. A reaction can be favored and slow, unfavored and fast, or any other combination.</p></div>
+    <div class="card"><span class="tag">Definition</span><h3>Kinetic control</h3><p>A process that is thermodynamically favored but does not proceed at a measurable rate is under kinetic control. The usual reason is a high activation energy: at ordinary temperatures almost no collisions have enough energy to get over the barrier.</p></div>
+    <div class="card"><span class="tag">Not equilibrium</span><h3>No change does not mean equilibrium</h3><p>A mixture of H₂ and O₂ can sit unchanged for years. It is not at equilibrium; it is just reacting too slowly to notice. If a catalyst or a spark makes the reaction go and the composition changes a lot, the system was not at equilibrium before.</p></div>
+    <div class="card"><span class="tag">Catalysts</span><h3>Catalysts change the path, not ΔG°</h3><p>A catalyst provides a mechanism with a lower activation energy, so a kinetically controlled reaction can become fast. It lowers the barrier for the forward and reverse reactions equally, so ΔG°, K, and the equilibrium composition do not change.</p></div>
+    <div class="card"><span class="tag">Temperature</span><h3>Heat or a spark gets it started</h3><p>At higher temperature a larger fraction of collisions have enough energy to cross the barrier, so the rate increases sharply. A spark heats a small region; if the reaction is exothermic, the heat released keeps the reaction going through the rest of the mixture.</p></div>
+    <div class="card"><span class="tag">Unfavored and fast</span><h3>Speed cannot beat ΔG° &gt; 0</h3><p>If ΔG° &gt; 0, a low barrier only means the reaction reaches equilibrium quickly. At equilibrium, reactants still dominate because K &lt; 1. A catalyst never makes an unfavored reaction produce more product.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. The four combinations</h2>
+    <p>Classify any process by asking the two questions separately. The examples match the lab presets.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>ΔG°</th><th>Activation energy</th><th>What you observe</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><b>&lt; 0</b> (favored)</td><td>Low</td><td>Reaction goes quickly; mostly products at equilibrium.</td><td>H₃O⁺ + OH⁻ → 2H₂O, essentially instant</td></tr>
+      <tr><td><b>&lt; 0</b> (favored)</td><td>High</td><td><span class="shift">Kinetic control:</span> no measurable change; the system is not at equilibrium.</td><td>Diamond → graphite; H₂ + O₂ at room temperature; sugar in air</td></tr>
+      <tr><td><b>&gt; 0</b> (not favored)</td><td>Low</td><td>Reaches equilibrium quickly, but mostly reactants remain (K &lt; 1).</td><td>Any fast equilibrium with K &lt; 1, such as acetic acid ionizing in water</td></tr>
+      <tr><td><b>&gt; 0</b> (not favored)</td><td>High</td><td>Little product, and it would take a long time even to reach that little.</td><td>N₂ + O₂ → 2NO at room temperature</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Kinetic control on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points</h3>
+      <ul>
+        <li>When a favored reaction (ΔG° &lt; 0 or K &gt; 1) is not observed, say it is under kinetic control because its activation energy is high.</li>
+        <li>Explain the rate at the particle level: few collisions have energy greater than or equal to the activation energy.</li>
+        <li>Keep the two ideas separate in your wording: "thermodynamically favored" for ΔG°, "rate" or "slow" for kinetics.</li>
+        <li>State that a catalyst lowers the activation energy without changing ΔG° or K.</li>
+        <li>If no change is observed, do not claim equilibrium unless you have evidence that the forward and reverse rates are equal.</li>
+        <li>For a spark or heating, explain that it supplies the energy needed to overcome the activation barrier.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying "ΔG° &lt; 0, so the reaction happens quickly." ΔG° contains no information about rate.</li>
+        <li>Saying a reaction that shows no change must be at equilibrium.</li>
+        <li>Claiming a catalyst makes ΔG° more negative or shifts the equilibrium toward products.</li>
+        <li>Claiming a spark changes ΔG° or K. It only gets enough molecules over the barrier.</li>
+        <li>Calling a slow reaction "not spontaneous." The correct statement is "favored but kinetically slow."</li>
+        <li>Thinking a fast reaction must be favored. Speed and favorability are independent.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 9.4. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-9.html">Unit 9 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var R = 8.314, KB = 1.380649e-23, H = 6.626e-34, CAT = 60, AGE = 4.4e17;
+
+  // ΔG°f (kJ/mol) used to compute each preset's ΔG°
+  var GF = { "C(graphite)": 0, "C(diamond)": 2.9, "H2(g)": 0, "O2(g)": 0, "N2(g)": 0, "H2O(l)": -237.1, "H2O2(l)": -120.4, "NO(g)": 86.6, "NO2(g)": 51.3, "N2O4(g)": 97.9, "H3O+(aq)": -237.1, "OH-(aq)": -157.2 };
+  function dG(r, p) { var s = 0; p.forEach(function (t) { s += t[0] * GF[t[1]]; }); r.forEach(function (t) { s -= t[0] * GF[t[1]]; }); return s; }
+  var PR = [
+    { key: "dia", label: "Diamond → graphite", eq: "C(s, diamond) → C(s, graphite)", r: [[1, "C(diamond)"]], p: [[1, "C(graphite)"]], b: 350, T: 298, w: 9.5,
+      note: "Diamonds are thermodynamically unstable at 1 atm, but turning one into graphite means breaking and remaking strong C–C bonds throughout a covalent network. Diamond is kinetically stable: it will outlast you, the Earth, and the Sun." },
+    { key: "h2", label: "H₂ + O₂ (room T)", eq: "H<sub>2</sub>(g) + ½O<sub>2</sub>(g) → H<sub>2</sub>O(l)", r: [[1, "H2(g)"], [0.5, "O2(g)"]], p: [[1, "H2O(l)"]], b: 180, T: 298, w: 8,
+      note: "A balloon of hydrogen and oxygen can sit for years. Raise the temperature to around 800 K, the way a spark heats a small region, and the reaction becomes explosively fast." },
+    { key: "h2o2", label: "H₂O₂ with/without catalyst", eq: "2H<sub>2</sub>O<sub>2</sub>(l) → 2H<sub>2</sub>O(l) + O<sub>2</sub>(g)", r: [[2, "H2O2(l)"]], p: [[2, "H2O(l)"], [1, "O2(g)"]], b: 110, T: 298, w: 4,
+      note: "Hydrogen peroxide decomposes slowly on the shelf. A catalyst such as MnO₂, KI, or the enzyme catalase makes it fizz within seconds. Toggle the catalyst to compare." },
+    { key: "neut", label: "H₃O⁺ + OH⁻", eq: "H<sub>3</sub>O<sup>+</sup>(aq) + OH<sup>−</sup>(aq) → 2H<sub>2</sub>O(l)", r: [[1, "H3O+(aq)"], [1, "OH-(aq)"]], p: [[2, "H2O(l)"]], b: 15, T: 298, w: 0,
+      note: "Neutralization is both highly favored (K = 1/K<sub>w</sub> = 1.0 × 10<sup>14</sup>) and essentially instantaneous. Thermodynamics and kinetics agree here." },
+    { key: "no2", label: "2NO₂ ⇌ N₂O₄", eq: "2NO<sub>2</sub>(g) ⇌ N<sub>2</sub>O<sub>4</sub>(g)", r: [[2, "NO2(g)"]], p: [[1, "N2O4(g)"]], b: 25, T: 298, w: 0,
+      note: "A fast reaction with ΔG° close to zero: it reaches equilibrium almost instantly, with substantial amounts of both sides present." },
+    { key: "no", label: "N₂ + O₂ → 2NO", eq: "N<sub>2</sub>(g) + O<sub>2</sub>(g) → 2NO(g)", r: [[1, "N2(g)"], [1, "O2(g)"]], p: [[2, "NO(g)"]], b: 350, T: 298, w: 9.5,
+      note: "Air is mostly N₂ and O₂, and they do not form NO at room temperature: the reaction is not favored, and it is also extremely slow. A catalyst would not help, because ΔG° > 0." },
+    { key: "custom", label: "Your own values", custom: true }
+  ];
+  PR.forEach(function (p) { if (p.r) p.g = dG(p.r, p.p); });
+
+  var S = { key: "dia", g: 0, b: 0, T: 298, w: 0, cat: false };
+  function pr() { return PR.filter(function (p) { return p.key === S.key; })[0]; }
+  function pick(k) { var p = PR.filter(function (x) { return x.key === k; })[0]; S.key = k; if (!p.custom) { S.g = p.g; S.b = p.b; S.T = p.T; S.w = p.w; S.cat = false; } stopRun(); render(); }
+
+  // ---------- Model ----------
+  function model(wOverride) {
+    var w = wOverride == null ? S.w : wOverride, t = Math.pow(10, w);
+    var b = Math.max(5, S.b - (S.cat ? CAT : 0), S.g + 5), rt = R * S.T / 1000;
+    var lnkf = Math.log(KB * S.T / H) - b / rt;          // ln of forward rate constant, s^-1
+    var gr = S.g / rt;                                     // ΔG°/RT, so K = e^(−gr)
+    var xeq = 1 / (1 + Math.exp(gr));                      // equilibrium fraction of products
+    // kf + kr = kf(1 + 1/K) = kf(1 + e^gr); work in logs to avoid overflow
+    var lnsum = lnkf + (gr > 30 ? gr : Math.log(1 + Math.exp(gr)));
+    var kt = Math.exp(lnsum) * t;
+    var x = xeq * (kt > 50 ? 1 : -Math.expm1(-kt));
+    var thalf = Math.exp(Math.log(Math.LN2) - lnsum);
+    return { b: b, b0: Math.max(5, S.b, S.g + 5), lnK: -gr, xeq: xeq, x: x, thalf: thalf, t: t };
+  }
+  function timeTxt(s) {
+    if (!isFinite(s) || s > AGE) return s > 1e300 || !isFinite(s) ? "forever" : Lab.sci(s, 2, true) + " s";
+    if (s < 1e-3) return Lab.sci(s, 2, true) + " s";
+    if (s < 60) return Lab.sig(s, 2) + " s";
+    if (s < 3600) return Lab.sig(s / 60, 2) + " min";
+    if (s < 86400) return Lab.sig(s / 3600, 2) + " h";
+    if (s < 3.156e7) return Lab.sig(s / 86400, 2) + " days";
+    var y = s / 3.156e7;
+    return y < 1e4 ? Lab.sig(y, 2) + " years" : Lab.sci(y, 2, true) + " years";
+  }
+  function plainTime(s) { return timeTxt(s).replace(/<sup>(.*?)<\/sup>/g, "^$1").replace(" × 10^", "e"); }
+  function kTxt(lnK) {
+    var l10 = lnK / Math.LN10;
+    if (Math.abs(l10) < 3) return Lab.sig(Math.exp(lnK), 2);
+    var e = Math.floor(l10), m = Math.pow(10, l10 - e);
+    if (m >= 9.95) { m = 1; e += 1; }
+    return m.toFixed(1) + " × 10<sup>" + String(e).replace("-", "−") + "</sup>";
+  }
+
+  // ---------- Profile ----------
+  function prof(x, g, b) {
+    if (x <= 0.12) return 0;
+    if (x <= 0.5) return b * (1 - Math.cos(Math.PI * (x - 0.12) / 0.38)) / 2;
+    if (x <= 0.88) return b + (g - b) * (1 - Math.cos(Math.PI * (x - 0.5) / 0.38)) / 2;
+    return g;
+  }
+  function drawProf(m) {
+    var lo = Math.min(0, S.g) - 40, hi = Math.max(m.b0, 0, S.g) + 40;
+    var step = hi - lo > 400 ? 100 : 50, yt = [];
+    for (var v = Math.ceil(lo / step) * step; v <= hi; v += step) yt.push(v);
+    var F = Lab.frame(document.getElementById("prof"), { x: [0, 1], y: [lo, hi], yTicks: yt, fmtY: function (v) { return (v < 0 ? "−" : "") + Math.abs(v); },
+      xLabel: "Reaction progress", yLabel: "Free energy (kJ/mol)", width: 440, height: 300 });
+    Lab.hline(F, 0, "var(--ghost)", 1, "2 3");
+    if (S.cat) Lab.fn(F, function (x) { return prof(x, S.g, m.b); }, "var(--c2)", 2.5, "6 4", 160);
+    Lab.fn(F, function (x) { return prof(x, S.g, m.b0); }, S.cat ? "var(--ghost)" : "var(--accent)", 3, null, 160);
+    Lab.tag(F, 0.02, 0 + (hi - lo) * 0.03, "Reactants", "var(--accent)");
+    Lab.tag(F, 0.98, S.g + (hi - lo) * 0.03, "Products", "var(--c1)", "end");
+    // barrier arrow under the peak, ΔG° arrow at the right
+    var bShow = S.cat ? m.b : m.b0, span = hi - lo, bc = S.cat ? "var(--c2)" : "var(--muted)";
+    Lab.line(F, [[0.12, 0], [0.95, 0]], "var(--ghost)", 1, "2 3");
+    Lab.arrow(F, 0.5, 0, 0.5, bShow, bc);
+    Lab.el("text", { x: F.sx(0.52), y: F.sy(bShow * 0.45) + 4, style: "fill:" + bc + "; font-weight:600" }, F.svg, "barrier " + Math.round(bShow));
+    if (Math.abs(S.g) > span * 0.04) Lab.arrow(F, 0.93, 0, 0.93, S.g, S.g < 0 ? "var(--good)" : "var(--bad)");
+    Lab.el("text", { x: F.sx(0.98), y: F.sy(Math.min(0, S.g) - span * 0.08), "text-anchor": "end", "class": "lbl", style: "fill:" + (S.g < 0 ? "var(--good)" : S.g > 0 ? "var(--bad)" : "var(--muted)") }, F.svg, "ΔG° = " + (S.g < 0 ? "−" : S.g > 0 ? "+" : "") + Math.abs(S.g).toFixed(1));
+  }
+  // ---------- Particles ----------
+  var mix = document.getElementById("mix"), dots = [], order = [];
+  (function () {
+    mix.setAttribute("viewBox", "0 0 420 96");
+    Lab.el("rect", { x: 1, y: 1, width: 418, height: 94, rx: 8, fill: "none", stroke: "var(--rule)" }, mix);
+    var n = 40, seed = 3;
+    for (var i = 0; i < n; i++) order.push(i);
+    for (var j = n - 1; j > 0; j--) { seed = (seed * 16807) % 2147483647; var k = seed % (j + 1), tmp = order[j]; order[j] = order[k]; order[k] = tmp; }
+    for (var r = 0; r < 4; r++) for (var c = 0; c < 10; c++) {
+      seed = (seed * 16807) % 2147483647; var jx = (seed % 9) - 4; seed = (seed * 16807) % 2147483647; var jy = (seed % 7) - 3;
+      dots.push(Lab.el("circle", { cx: 26 + c * 41 + jx, cy: 15 + r * 22 + jy, r: 7.5, stroke: "var(--surface)", "stroke-width": 1.5 }, mix));
+    }
+  })();
+  function drawMix(x) {
+    var np = Math.round(x * 40);
+    dots.forEach(function (d, i) { d.setAttribute("fill", order[i] < np ? "var(--c1)" : "var(--accent)"); });
+  }
+
+  // ---------- Render ----------
+  var elG = document.getElementById("s-g"), elB = document.getElementById("s-b"), elT = document.getElementById("s-t"), elW = document.getElementById("s-w");
+  var stopAnim = null;
+  function stopRun() { if (stopAnim) { stopAnim(); stopAnim = null; } }
+  function verdict(m) {
+    var fav = S.g < 0, done = m.x >= 0.98 * m.xeq, none = m.x < 0.01 * m.xeq;
+    if (fav && none) return ["kinetic", "Kinetic control", "favored but too slow to see"];
+    if (done) return [fav ? "eqfav" : "equnf", "At equilibrium", fav ? "mostly products" : S.g === 0 ? "K = 1: neither side favored" : (m.xeq < 0.02 ? "almost all reactants" : "reactants favored")];
+    if (none) return ["nothing", "No reaction seen", S.g === 0 ? "K = 1, and slow" : "not favored, and slow"];
+    return ["going", "Still reacting", "not at equilibrium yet"];
+  }
+  function render(wAnim) {
+    var p = pr(), m = model(wAnim), v = verdict(m);
+    Object.keys(btns).forEach(function (k) { btns[k].setAttribute("aria-pressed", k === S.key ? "true" : "false"); });
+    document.getElementById("c-off").setAttribute("aria-pressed", S.cat ? "false" : "true");
+    document.getElementById("c-on").setAttribute("aria-pressed", S.cat ? "true" : "false");
+    elG.value = Math.round(S.g); elB.value = S.b; elT.value = S.T; if (wAnim == null) elW.value = S.w;
+    document.getElementById("o-g").textContent = (S.g < 0 ? "−" : S.g > 0 ? "+" : "") + Math.abs(S.g).toFixed(1) + " kJ/mol";
+    document.getElementById("o-b").textContent = S.b + " kJ/mol";
+    document.getElementById("o-t").textContent = S.T + " K";
+    document.getElementById("h-t").textContent = (S.T - 273) + " °C";
+    document.getElementById("o-w").textContent = plainTime(m.t);
+    document.getElementById("p-sub").textContent = p.custom ? "your values" : p.label;
+    document.getElementById("eqn").innerHTML = p.custom ? "reactants → products" : p.eq;
+    drawProf(m); drawMix(m.x);
+    var rf = document.getElementById("r-f"); rf.textContent = S.g < 0 ? "Yes" : S.g > 0 ? "No" : "Neither"; rf.className = "v " + (S.g < 0 ? "fav" : S.g > 0 ? "unf" : "");
+    document.getElementById("r-f2").innerHTML = "K = " + kTxt(m.lnK) + " at " + S.T + " K";
+    document.getElementById("r-h").innerHTML = timeTxt(m.thalf);
+    document.getElementById("r-h2").textContent = m.thalf > AGE ? "longer than the age of the universe" : "barrier " + Math.round(m.b) + " kJ/mol" + (S.cat ? " (catalyzed)" : "");
+    document.getElementById("r-x").textContent = (m.x * 100 < 0.1 && m.x > 0 ? "< 0.1" : Lab.fmt(m.x * 100, 1)) + "%";
+    document.getElementById("r-x2").textContent = "equilibrium: " + (m.xeq * 100 < 0.1 ? "< 0.1" : m.xeq * 100 > 99.9 ? "> 99.9" : Lab.fmt(m.xeq * 100, 1)) + "% products";
+    document.getElementById("r-v").textContent = v[1];
+    document.getElementById("r-v2").textContent = v[2];
+    if (wAnim == null) document.getElementById("story").innerHTML = story(p, m, v);
+  }
+  function story(p, m, v) {
+    var li = [];
+    if (!p.custom) li.push(p.note);
+    li.push("<b>Favored?</b> ΔG° = " + (S.g < 0 ? "−" : S.g > 0 ? "+" : "") + Math.abs(S.g).toFixed(1) + " kJ/mol, so K = " + kTxt(m.lnK) + ". " +
+      (S.g < 0 ? "Products are favored at equilibrium." : S.g > 0 ? "Reactants are favored at equilibrium." : "Neither side is favored."));
+    li.push("<b>Fast?</b> With a barrier of " + Math.round(m.b) + " kJ/mol at " + S.T + " K, the time to get halfway to equilibrium is " + timeTxt(m.thalf) + ". " +
+      (m.thalf > AGE ? "That is longer than the age of the universe: almost no collisions have enough energy to get over the barrier." : m.thalf < 1 ? "Collisions with enough energy are common, so the reaction is fast." : ""));
+    if (m.b0 > S.b) li.push("The top of the barrier can never be lower than the products, so the lab raised it to " + Math.round(m.b0) + " kJ/mol.");
+    if (S.cat) li.push("The catalyst lowered the barrier by " + Math.round(m.b0 - m.b) + " kJ/mol. ΔG°, K, and the equilibrium percentage of products are exactly the same as without it; only the time scale changed.");
+    if (v[0] === "kinetic") li.push("After " + timeTxt(m.t) + ", essentially no products have formed even though the reaction is favored. The system is <b>not at equilibrium</b>; it is stuck behind the barrier. Try raising the temperature" + (S.cat ? "." : " or adding the catalyst."));
+    if (v[0] === "equnf" && S.g > 0) li.push("The reaction reaches equilibrium within the waiting time, but speed cannot overcome ΔG° &gt; 0: at equilibrium only " + (m.xeq * 100 < 0.1 ? "a trace" : Lab.fmt(m.xeq * 100, 1) + "%") + " of the particles are products. A catalyst would not change that.");
+    if (v[0] === "going") li.push("After " + timeTxt(m.t) + ", the reaction is partway to equilibrium. Wait longer to see it finish.");
+    var h = "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+    var ap = v[0] === "kinetic" ? "The reaction is thermodynamically favored (ΔG° &lt; 0, K &gt; 1) but does not occur at a measurable rate, so it is under kinetic control: the activation energy is so high that very few collisions have enough energy to react. The lack of change does not mean the system is at equilibrium." :
+      v[0] === "eqfav" ? "The reaction is thermodynamically favored (ΔG° &lt; 0) and its activation energy is low enough that it reaches equilibrium quickly, where products are favored (K &gt; 1)." :
+      v[0] === "equnf" ? "The reaction reaches equilibrium within the waiting time, but ΔG° " + (S.g > 0 ? "&gt;" : "=") + " 0 means K " + (S.g > 0 ? "&lt;" : "=") + " 1, so " + (S.g > 0 ? "reactants are favored at equilibrium. Speed does not change which side is favored." : "neither side is favored.") :
+      v[0] === "nothing" ? (S.g > 0 ? "The reaction is not thermodynamically favored (ΔG° &gt; 0) and is also slow. Even given unlimited time it would make little product." : "ΔG° = 0, so K = 1 and neither side is favored; the reaction is also too slow to show any change yet.") :
+      "Thermodynamics says where the reaction ends up (" + (m.xeq > 0.5 ? "mostly products" : m.xeq < 0.5 ? "mostly reactants" : "equal amounts of each") + "); kinetics says how long it takes. Here it is still on the way.";
+    h += "<p><b>AP answer:</b> " + ap + "</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  var btns = {}, box = document.getElementById("sc");
+  PR.forEach(function (p) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = p.label;
+    b.addEventListener("click", function () { pick(p.key); });
+    box.appendChild(b); btns[p.key] = b;
+  });
+  elG.addEventListener("input", function () { stopRun(); S.g = +elG.value; S.key = "custom"; render(); });
+  elB.addEventListener("input", function () { stopRun(); S.b = +elB.value; S.key = "custom"; render(); });
+  elT.addEventListener("input", function () { stopRun(); S.T = +elT.value; render(); });
+  elW.addEventListener("input", function () { stopRun(); S.w = +elW.value; render(); });
+  document.getElementById("c-off").addEventListener("click", function () { stopRun(); S.cat = false; render(); });
+  document.getElementById("c-on").addEventListener("click", function () { stopRun(); S.cat = true; render(); });
+  document.getElementById("b-run").addEventListener("click", function () {
+    stopRun(); var target = S.w;
+    stopAnim = Lab.animate(2200, function (t) { var w = target * t; elW.value = w; render(w); }, function () { stopAnim = null; render(); });
+  });
+
+  pick("dia");
+
+  // ---------- Self-check ----------
+  (function () {
+    function bad(m) { console.error("9.4 self-check: " + m); }
+    var expect = { dia: -2.9, h2: -237.1, h2o2: -233.4, neut: -79.9, no2: -4.7, no: 173.2 };
+    PR.forEach(function (p) { if (p.r && Math.abs(p.g - expect[p.key]) > 0.051) bad(p.key + " ΔG° = " + p.g); });
+    // K for neutralization should be 1/Kw = 1.0e14 at 298 K
+    var lnK = 79.9 * 1000 / (R * 298.15);
+    if (Math.abs(lnK / Math.LN10 - 14.0) > 0.02) bad("neutralization K");
+    // model limits: favored fast reaction reaches xeq; catalyst leaves xeq unchanged
+    var save = JSON.stringify(S);
+    S.g = -20; S.b = 20; S.T = 298; S.w = 2; S.cat = false;
+    var a = model(); if (Math.abs(a.x - a.xeq) > 1e-6 || Math.abs(a.xeq - 1 / (1 + Math.exp(-20000 / (R * 298)))) > 1e-9) bad("fast limit");
+    S.b = 150; var b1 = model(); S.cat = true; var b2 = model();
+    if (b1.xeq !== b2.xeq || !(b2.thalf < b1.thalf)) bad("catalyst should change only the rate");
+    if (Math.abs(model().thalf * Math.exp(Math.log(KB * 298 / H) - 90000 / (R * 298)) * (1 + Math.exp(-20000 / (R * 298))) - Math.LN2) > 1e-6) bad("half-time");
+    var o = JSON.parse(save); for (var k in o) S[k] = o[k];
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "For C(s, diamond) → C(s, graphite), ΔG° = −2.9 kJ/mol at 298 K. Which statement best explains why diamonds do not turn into graphite at a measurable rate?",
+      o: ["The conversion has a very large activation energy, so it is under kinetic control.", "ΔG° is negative, so the reverse reaction is favored.", "Diamond and graphite are at equilibrium at 298 K.", "The entropy change is negative, so the reaction cannot occur."], c: 0,
+      w: "The reaction is thermodynamically favored (ΔG° &lt; 0), but converting diamond requires breaking strong covalent bonds throughout the network, so the activation energy is enormous and almost no particles have enough energy to react. Choice B has the meaning of the sign backward. Choice C is the classic trap: no observable change does not mean equilibrium." },
+    { s: "A mixture of H₂(g) and O₂(g) can be stored at room temperature for years with no detectable reaction, but a small spark causes an explosion. Which statement is correct?",
+      o: ["The spark makes ΔG° for the reaction negative.", "The mixture was at equilibrium before the spark.", "The reaction is thermodynamically favored at room temperature, but the spark is needed to supply energy to overcome the activation energy.", "The spark acts as a catalyst that lowers ΔG° for the reaction."], c: 2,
+      w: "ΔG°f(H₂O) = −237.1 kJ/mol, so the reaction is favored even at room temperature; it is slow because of a high activation energy. The spark heats a small region so molecules there can get over the barrier, and the heat released keeps the reaction going. A spark changes neither ΔG° (A, D) nor makes the earlier state an equilibrium (B)." },
+    { s: "A student observes no change in a sealed reaction mixture over several weeks. Thermodynamic data show the reaction has K = 10²⁰ at the temperature of the experiment. Which conclusion is best supported?",
+      o: ["The system is at equilibrium.", "The reaction is under kinetic control; the system is not necessarily at equilibrium.", "The value of K must be incorrect, because a reaction with large K always proceeds quickly.", "The reaction is not thermodynamically favored."], c: 1,
+      w: "K = 10²⁰ means products are strongly favored, yet nothing happens, so the reaction must be very slow: kinetic control. A lack of observable change is not evidence of equilibrium. Choice C assumes K says something about rate, which it does not. Choice D contradicts K &gt; 1." },
+    { s: "A catalyst is added to a thermodynamically favored reaction that is under kinetic control. Which of the following is changed by the catalyst?",
+      o: ["ΔG° for the reaction becomes more negative.", "The value of K increases.", "The equilibrium mixture contains a larger fraction of products.", "The activation energy of the pathway, so the rate increases."], c: 3,
+      w: "A catalyst provides a different mechanism with a lower activation energy, which speeds up both the forward and reverse reactions. ΔG°, K, and the equilibrium composition depend only on the initial and final states, so they are unchanged (A, B, and C are all traps)." },
+    { s: "A reaction has ΔG° = +40 kJ/mol and an activation energy of only 10 kJ/mol at 298 K. Starting with pure reactants, which statement best describes what is observed?",
+      o: ["Mostly products form, because the activation energy is low.", "No reaction occurs, because the reaction is under kinetic control.", "The reaction reaches equilibrium quickly, but very little product is present because K < 1.", "The reaction proceeds to completion, but slowly."], c: 2,
+      w: "A low barrier makes the reaction fast, so equilibrium is reached quickly. But ΔG° &gt; 0 means K &lt; 1 (here K ≈ 1 × 10⁻⁷), so reactants dominate at equilibrium. Choice A confuses speed with favorability. Choice B misuses \"kinetic control,\" which applies to favored reactions that are slow." },
+    { s: "Which observation provides the strongest evidence that a reaction mixture showing no change was under kinetic control rather than at equilibrium?",
+      o: ["When a catalyst is added, the reaction proceeds and the composition changes substantially.", "When a catalyst is added, nothing changes.", "The temperature of the mixture stays constant over time.", "The mixture contains both reactants and products."], c: 0,
+      w: "A catalyst cannot shift an equilibrium. If adding one makes the composition change, the system was not at equilibrium before; it was stuck behind a high barrier. Choice B would be consistent with equilibrium (or with an unfavored reaction). Choices C and D do not distinguish the two cases." },
+    { s: "Which statement best explains why heating a kinetically controlled reaction mixture can make the reaction proceed at a measurable rate?",
+      o: ["Heating makes ΔG° more negative for every reaction.", "Heating lowers the activation energy of the reaction.", "Heating increases the value of K for every reaction.", "At a higher temperature, a larger fraction of collisions have energy equal to or greater than the activation energy."], c: 3,
+      w: "Raising T shifts the distribution of kinetic energies so that many more collisions meet the activation-energy requirement, which raises the rate. The activation energy itself (B) is unchanged by temperature. Choices A and C are false in general: how ΔG° and K change with T depends on the signs of ΔH° and ΔS°." },
+    { s: "At 298 K, reaction X has ΔG° = −30 kJ/mol and activation energy 200 kJ/mol; reaction Y has ΔG° = +10 kJ/mol and activation energy 40 kJ/mol. Which statement is correct?",
+      o: ["X proceeds quickly to mostly products; Y does not occur at all.", "X is thermodynamically favored but very slow; Y reaches equilibrium quickly with reactants favored.", "Both reactions are under kinetic control.", "Y is thermodynamically favored because its activation energy is lower."], c: 1,
+      w: "X: ΔG° &lt; 0 (favored) but a 200 kJ/mol barrier makes it extremely slow, so X is under kinetic control. Y: a low barrier makes it fast, but ΔG° &gt; 0 means K &lt; 1, so reactants are favored at equilibrium. Choice D links favorability to activation energy, which is the central mistake this topic warns about." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("9.4");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [9], topic: "9.4", compact: true, storageKey: "topic-9.4" });</script>
+</body>
+</html>

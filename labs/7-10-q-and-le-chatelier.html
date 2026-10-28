@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reaction Quotient and Le Châtelier’s Principle Study Lab</title>
+<meta name="description" content="Disturb an equilibrium, calculate Q the instant after the change, compare it with K on a log number line, and solve for the new equilibrium; see why concentration and volume changes move Q while temperature moves K.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.ctlcard { display: grid; gap: 16px; }
+.ctlcard .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.graph-card { align-content: start; }
+.note { font-size: .82rem; color: var(--muted); }
+.story .formula { display: inline-block; margin: 2px 0; }
+.story ol.steps { margin-top: 4px; }
+svg.line { width: 100%; height: auto; display: block; }
+svg.line text { font-size: 12px; }
+@media (max-width: 620px) { svg.line text, svg.line text.lbl { font-size: 17px; } }
+.legend .l-k { color: var(--c4); }
+.legend .l-q { color: var(--c1); }
+.legend .l-n { color: var(--accent); }
+@media (max-width: 520px) { .ctlcard .controls { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 7 · Topic 7.10</span>
+  <h1>Reaction Quotient and Le Châtelier’s Principle Study Lab</h1>
+  <p class="lede">Le Châtelier’s principle predicts the direction of a shift; Q and K explain it. A disturbance makes Q differ from K, and the system reacts until Q equals K again. Changing a concentration, the volume, or diluting a solution changes Q only. Changing the temperature changes K itself. Here you apply a stress, calculate Q at the instant after it, and follow the system to its new equilibrium.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The Q-and-K meter</h2>
+    <p>Pick a classic case, or choose a system, a stress and its size. The number line compares Q right after the stress with K; the bars compare each amount before the stress, the instant after, and at the new equilibrium. Values of K and the effect of temperature on K are illustrative.</p>
+  </div>
+
+  <div class="card graph-card">
+    <h3>Q and K on a log scale <small id="nl-sub"></small></h3>
+    <svg class="line" id="nl" viewBox="0 0 520 160" role="img" aria-label="Log number line showing K, Q immediately after the stress, and the arrow showing how Q returns to K"></svg>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Amounts: before, just after, new equilibrium</h3>
+      <svg class="chart" id="gb" role="img" aria-label="Grouped bars of each concentration before the stress, immediately after, and at the new equilibrium"></svg>
+    </div>
+    <div class="card ctlcard" style="align-content:start;">
+      <div class="group">
+        <div class="tag">Classic cases</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="group">
+        <div class="tag">System</div>
+        <div class="scenarios" id="sys"></div>
+        <div class="eqn" id="eqn"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Stress</div>
+        <div class="scenarios" id="st"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl" style="grid-column: 1 / -1;">
+          <label for="s-f"><span id="f-lab">Size</span> <output id="o-f"></output></label>
+          <input type="range" id="s-f" min="0" max="1" step="0.01">
+          <span class="hint" id="f-hint"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-ghost">Before the stress</span><span class="l-q">Just after (Q ≠ K)</span><span class="l-n">New equilibrium</span><span class="l-k">K</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Q just after the stress</div><div class="v" id="r-q"></div><div class="sub" id="r-q2"></div></div>
+    <div class="stat"><div class="k">K at the new conditions</div><div class="v" id="r-k"></div><div class="sub" id="r-k2"></div></div>
+    <div class="stat"><div class="k">Direction</div><div class="v" id="r-d"></div><div class="sub" id="r-d2"></div></div>
+    <div class="stat"><div class="k">Q at the new equilibrium</div><div class="v" id="r-e"></div><div class="sub" id="r-e2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">The mechanism</span><h3>Stress → Q ≠ K → shift</h3><p>Before the stress, Q = K. The stress changes Q (or K), so they no longer match. If Q &lt; K the net reaction runs forward; if Q &gt; K it runs in reverse. It stops shifting when Q = K again.</p></div>
+    <div class="card"><span class="tag">Concentration</span><h3>Q moves, K stays</h3><p>Adding a product or removing a reactant makes the numerator bigger or the denominator smaller, so Q &gt; K and the reaction shifts left. Adding a reactant or removing a product makes Q &lt; K: shift right.</p></div>
+    <div class="card"><span class="tag">Volume</span><h3>Every gas changes by the same factor</h3><p>Halving the volume doubles every gas concentration. Q is multiplied by 2<sup>Δn</sup>, where Δn = moles of gas on the right − moles on the left. If Δn = 0, Q does not change and there is no shift.</p></div>
+    <div class="card"><span class="tag">Dilution</span><h3>The same idea in solution</h3><p>Doubling the volume of a solution halves every dissolved concentration, so Q is multiplied by (½)<sup>Δn</sup> with Δn counted over dissolved species. For Fe<sup>3+</sup> + SCN<sup>−</sup> ⇌ FeSCN<sup>2+</sup>, Δn = −1, so Q doubles and the system shifts left.</p></div>
+    <div class="card"><span class="tag">Temperature</span><h3>K moves, Q stays</h3><p>At the instant the temperature changes, no concentration has changed, so Q is still the old K. The new K is larger for an endothermic reaction that is heated and smaller for an exothermic one, and the system shifts to reach it.</p></div>
+    <div class="card"><span class="tag">After the shift</span><h3>Q equals K again</h3><p>At the new equilibrium Q equals K: the same K as before if the temperature did not change. The individual concentrations are different, but they combine in the expression to the same value.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. What each stress does to Q and K</h2>
+    <p>Example: N<sub>2</sub>(g) + 3H<sub>2</sub>(g) ⇌ 2NH<sub>3</sub>(g), Q = [NH<sub>3</sub>]<sup>2</sup>/([N<sub>2</sub>][H<sub>2</sub>]<sup>3</sup>), Δn<sub>gas</sub> = 2 − 4 = −2, ΔH° &lt; 0.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Stress</th><th>Q just after</th><th>K</th><th>Comparison</th><th>Shift</th></tr></thead>
+    <tbody>
+      <tr><td>Double [N<sub>2</sub>]</td><td>Q × ½</td><td>Unchanged</td><td>Q &lt; K</td><td><span class="shift">Right</span></td></tr>
+      <tr><td>Halve [NH<sub>3</sub>]</td><td>Q × ¼</td><td>Unchanged</td><td>Q &lt; K</td><td><span class="shift">Right</span></td></tr>
+      <tr><td>Halve the volume</td><td>Q × 2<sup>−2</sup> = Q × ¼</td><td>Unchanged</td><td>Q &lt; K</td><td><span class="shift">Right</span></td></tr>
+      <tr><td>Double the volume</td><td>Q × 2<sup>2</sup> = Q × 4</td><td>Unchanged</td><td>Q &gt; K</td><td><span class="lshift">Left</span></td></tr>
+      <tr><td>Raise the temperature</td><td>Unchanged (equals the old K)</td><td>Decreases (exothermic)</td><td>Q &gt; K</td><td><span class="lshift">Left</span></td></tr>
+      <tr><td>Lower the temperature</td><td>Unchanged</td><td>Increases</td><td>Q &lt; K</td><td><span class="shift">Right</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Q, K and shifts on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write Q with the concentrations right after the change, and compare it with K in words: "Q is now less than K."</li>
+        <li>Connect the comparison to the direction: "so the forward reaction rate exceeds the reverse rate until Q = K."</li>
+        <li>For volume changes, multiply every gas concentration by the same factor before calculating Q; don't just count moles.</li>
+        <li>For temperature changes, say explicitly that K changes and which way, using the sign of ΔH.</li>
+        <li>When asked for the new equilibrium amounts, set up an ICE table that starts from the disturbed amounts, not the original ones.</li>
+        <li>Note that a new equilibrium at the same temperature has the same value of K.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying a concentration change "changes K." It changes Q.</li>
+        <li>Saying a temperature change "changes Q." At that instant only K changes.</li>
+        <li>Forgetting the exponents: halving [NH<sub>3</sub>] divides Q by 4, not 2.</li>
+        <li>Starting the ICE table for the new equilibrium from the old equilibrium amounts instead of the amounts right after the stress.</li>
+        <li>Thinking a reaction with equal moles of gas on both sides shifts when compressed.</li>
+        <li>Expecting the added species to return all the way to its old concentration.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 7.10. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-7.html">Unit 7 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Systems (M; K values illustrative) ----------
+  var SYS = {
+    nh3:  { name: "N₂ + 3H₂ ⇌ 2NH₃", sp: [["N2", -1], ["H2", -3], ["NH3", 2]], ph: "g", K: 0.50, start: [1.0, 3.0, 0], dH: -1, dHtxt: "exothermic (ΔH° = −92 kJ/mol<sub>rxn</sub>)" },
+    hi:   { name: "H₂ + I₂ ⇌ 2HI", sp: [["H2", -1], ["I2", -1], ["HI", 2]], ph: "g", K: 49, start: [0.20, 0.20, 0], dH: 0 },
+    pcl5: { name: "PCl₅ ⇌ PCl₃ + Cl₂", sp: [["PCl5", -1], ["PCl3", 1], ["Cl2", 1]], ph: "g", K: 0.040, start: [0.20, 0, 0], dH: 1, dHtxt: "endothermic (ΔH° = +88 kJ/mol<sub>rxn</sub>)" },
+    fe:   { name: "Fe³⁺ + SCN⁻ ⇌ FeSCN²⁺", sp: [["Fe^3+", -1], ["SCN^-", -1], ["FeSCN^2+", 1]], ph: "aq", K: 200, start: [2.0e-3, 2.0e-3, 0], dH: -1, dHtxt: "exothermic" }
+  };
+  // classic cases: system, stress {t: conc|vol|temp, i, f (new ÷ old), dT}, label, expected Q_after/K_new, expected shift
+  var CASES = [
+    ["nh3", { t: "conc", i: 0, f: 2 }, "Double [N₂]", 0.5, 1],
+    ["nh3", { t: "vol", f: 0.5 }, "Halve the volume (Haber)", 0.25, 1],
+    ["hi", { t: "vol", f: 0.5 }, "Halve the volume (H₂ + I₂)", 1, 0],
+    ["pcl5", { t: "vol", f: 2 }, "Double the volume (PCl₅)", 0.5, 1],
+    ["nh3", { t: "temp", dT: 25 }, "Heat the Haber mixture", 2, -1],
+    ["pcl5", { t: "temp", dT: 25 }, "Heat PCl₅", 0.5, 1],
+    ["fe", { t: "vol", f: 2 }, "Dilute FeSCN²⁺ to twice the volume", 2, -1],
+    ["hi", { t: "conc", i: 2, f: 0.5 }, "Remove half the HI", 0.25, 1]
+  ];
+  var S = { sys: "nh3", st: { t: "conc", i: 0, f: 2 } };
+
+  // ---------- Helpers ----------
+  var SUPS = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+  function supText(n) { return String(n).split("").map(function (c) { return SUPS[c] || c; }).join(""); }
+  function uni(f) { return f.replace(/\^(\d*)([+-])$/, function (m, d, s) { return (d ? supText(d) : "") + (s === "+" ? "⁺" : "⁻"); }).replace(/(\D)(\d+)/g, function (m, a, d) { return a + d.split("").map(function (c) { return "₀₁₂₃₄₅₆₇₈₉"[+c]; }).join(""); }); }
+  function N3(v) { return v === 0 ? "0" : Lab.sci(v, 3).replace(/^-/, "−"); }
+  function plain(v, n) { if (v === 0) return "0"; var e = Math.floor(Math.log10(Math.abs(v))); if (e >= -2 && e <= 3) return Lab.sig(v, n); var m = v / Math.pow(10, e); if (+m.toFixed(n - 1) >= 10) { m /= 10; e++; } return m.toFixed(n - 1) + "×10" + supText(e); }
+  function lnQ(x, c) { var s = 0; x.sp.forEach(function (sp, i) { s += sp[1] * Math.log(c[i]); }); return s; }
+  function dn(x) { var n = 0; x.sp.forEach(function (sp) { n += sp[1]; }); return n; }
+  function react(x, c, K) {
+    var lo = -Infinity, hi = Infinity, lk = Math.log(K);
+    x.sp.forEach(function (sp, i) { if (sp[1] > 0) lo = Math.max(lo, -c[i] / sp[1]); else hi = Math.min(hi, c[i] / -sp[1]); });
+    var at = function (xi) { return c.map(function (v, i) { return Math.max(0, v + x.sp[i][1] * xi); }); };
+    if (Math.abs(lnQ(x, c) - lk) < 1e-10) return { c: c.slice(), xi: 0 };
+    var a = lo, b = hi;
+    for (var k = 0; k < 220; k++) { var mid = (a + b) / 2; if (lnQ(x, at(mid)) < lk) a = mid; else b = mid; }
+    var xi = (a + b) / 2; return { c: at(xi), xi: xi };
+  }
+  var BASE = {};
+  Object.keys(SYS).forEach(function (k) { BASE[k] = react(SYS[k], SYS[k].start, SYS[k].K).c; });
+  function kAt(x, dT) { return x.K * Math.pow(2, x.dH * dT / 25); } // illustrative: K doubles (endothermic) or halves (exothermic) for every 25 °C
+
+  function apply(sysKey, st) {
+    var x = SYS[sysKey], c0 = BASE[sysKey], c = c0.slice(), K2 = x.K;
+    if (st.t === "conc") c[st.i] = c0[st.i] * st.f;
+    if (st.t === "vol") c = c0.map(function (v) { return v / st.f; });
+    if (st.t === "temp") K2 = kAt(x, st.dT);
+    var r = react(x, c, K2), qa = Math.exp(lnQ(x, c));
+    var o = { x: x, st: st, c0: c0, ca: c, c1: r.c, xi: r.xi, K: x.K, K2: K2, Qa: qa };
+    o.dir = Math.abs(qa / K2 - 1) < 1e-9 ? 0 : (qa < K2 ? 1 : -1);
+    return o;
+  }
+
+  // ---------- Text ----------
+  function br(f) { return "[" + Lab.fmla(f) + "]"; }
+  function exprHTML(x) {
+    var top = [], bot = [];
+    x.sp.forEach(function (sp) { var t = br(sp[0]) + (Math.abs(sp[1]) > 1 ? "<sup>" + Math.abs(sp[1]) + "</sup>" : ""); (sp[1] < 0 ? bot : top).push(t); });
+    return top.join("") + " / " + (bot.length > 1 ? "(" + bot.join("") + ")" : bot.join(""));
+  }
+  function numHTML(x, c) {
+    var top = [], bot = [];
+    x.sp.forEach(function (sp, i) { var t = "(" + N3(c[i]) + ")" + (Math.abs(sp[1]) > 1 ? "<sup>" + Math.abs(sp[1]) + "</sup>" : ""); (sp[1] < 0 ? bot : top).push(t); });
+    return top.join("") + " / " + (bot.length > 1 ? "[" + bot.join("") + "]" : bot.join(""));
+  }
+  function stLabel(x, st) {
+    if (st.t === "conc" && st.f === 1) return "No change to " + br(x.sp[st.i][0]);
+    if (st.t === "conc") return (st.f > 1 ? "Raise " : "Lower ") + br(x.sp[st.i][0]) + " to " + Lab.sig(st.f, 2) + "×";
+    if (st.t === "vol") return (x.ph === "aq" ? (st.f > 1 ? "Dilute: volume " : "Concentrate: volume ") : (st.f > 1 ? "Increase volume " : "Decrease volume ")) + Lab.sig(st.f, 2) + "×";
+    return st.dT === 0 ? "No temperature change" : (st.dT > 0 ? "Heat by " : "Cool by ") + Math.abs(st.dT) + " °C";
+  }
+  function story(o) {
+    var x = o.x, st = o.st, h = "", d = dn(x), cf;
+    h += "<p><b>Before the stress</b> the system is at equilibrium: Q = K = " + Lab.sci(o.K, 2) + ".</p>";
+    if (st.t === "conc") {
+      var sp = x.sp[st.i], e = sp[1];
+      cf = Math.pow(st.f, e);
+      h += "<p><b>The instant after.</b> " + br(sp[0]) + " goes from " + N3(o.c0[st.i]) + " to " + N3(o.ca[st.i]) + " M. It is in the " + (e > 0 ? "numerator" : "denominator") + (Math.abs(e) > 1 ? " with exponent " + Math.abs(e) : "") + ", so Q is multiplied by (" + Lab.sig(st.f, 2) + ")<sup>" + String(e).replace("-", "−") + "</sup> = " + N3(cf) + ". K is unchanged because the temperature is unchanged.</p>";
+    } else if (st.t === "vol") {
+      var cfac = 1 / st.f; cf = Math.pow(cfac, d);
+      h += "<p><b>The instant after.</b> " + (x.ph === "aq" ? "Diluting" : "Changing the volume") + " to " + Lab.sig(st.f, 2) + " times the original multiplies every " + (x.ph === "aq" ? "dissolved" : "gas") + " concentration by " + Lab.sig(cfac, 2) + ". With Δn = " + String(d).replace("-", "−") + " (" + (x.ph === "aq" ? "dissolved particles" : "moles of gas") + ", right minus left), Q is multiplied by (" + Lab.sig(cfac, 2) + ")<sup>" + String(d).replace("-", "−") + "</sup> = " + N3(cf) + "." + (d === 0 ? " Q does not change at all, so there is no shift." : "") + " K is unchanged.</p>";
+    } else if (st.dT === 0) {
+      h += "<p><b>The instant after.</b> With no temperature change, K stays " + Lab.sci(o.K, 2) + " and no concentration changes, so Q still equals K.</p>";
+    } else {
+      h += "<p><b>The instant after.</b> No concentration has changed yet, so Q still equals the old K = " + Lab.sci(o.K, 2) + ". But the forward reaction is " + x.dHtxt + ", so " + (st.dT > 0 ? "heating" : "cooling") + " makes K " + (o.K2 > o.K ? "larger" : "smaller") + ": K = " + Lab.sci(o.K2, 2) + " at the new temperature (illustrative value).</p>";
+    }
+    h += "<p><b>Compare.</b> Q = " + numHTML(x, o.ca) + " = <b>" + N3(o.Qa) + "</b>, and K = <b>" + Lab.sci(o.K2, 2) + "</b>. ";
+    h += o.dir === 0 ? "Q = K, so the system is still at equilibrium.</p>" : (o.dir > 0 ? "Q &lt; K, so the net reaction runs <b>forward</b> (right) until Q rises to K.</p>" : "Q &gt; K, so the net reaction runs in <b>reverse</b> (left) until Q falls to K.</p>");
+    if (o.dir !== 0) {
+      var dirN = o.dir;
+      h += "<p><b>New equilibrium.</b> Starting the ICE table from the amounts just after the stress and solving for x gives x = " + N3(Math.abs(o.xi)) + " M in the " + (dirN > 0 ? "forward" : "reverse") + " direction: " +
+        x.sp.map(function (sp, i) { return br(sp[0]) + " = " + N3(o.c1[i]) + " M"; }).join(", ") + ". Check: Q = " + numHTML(x, o.c1) + " = " + N3(Math.exp(lnQ(x, o.c1))) + " = K.</p>";
+      if (st.t === "conc") {
+        var r = o.c1[st.i] / o.c0[st.i];
+        h += "<p>The changed species ends at " + Lab.sig(r, 3) + " times its original value: the shift " + (st.f > 1 ? "uses up part of the addition but not all of it." : "replaces part of what was removed but not all of it.") + "</p>";
+      }
+    }
+    var cause = st.t === "temp" ? (st.dT === 0 ? "the temperature and every concentration are unchanged" : "the temperature change made K " + (o.K2 > o.K ? "larger" : "smaller") + " while Q stayed the same") : st.t === "vol" ? (d === 0 ? "the volume change multiplied the numerator and denominator by the same factor" : "the volume change multiplied Q by " + N3(cf)) : "changing " + br(x.sp[st.i][0]) + " multiplied Q by " + N3(cf);
+    h += "<p><b>AP answer:</b> " + (o.dir === 0 ? "Q still equals K because " + cause + ", so there is no shift." :
+      "Immediately after the stress, Q = " + N3(o.Qa) + (o.dir > 0 ? " &lt; " : " &gt; ") + "K = " + Lab.sci(o.K2, 2) + ", because " + cause + ". The net reaction proceeds " + (o.dir > 0 ? "forward (toward products)" : "in reverse (toward reactants)") + " until Q = K again" + (st.t === "temp" ? " at the new value of K." : "; K itself is unchanged.")) + "</p>";
+    return h;
+  }
+
+  // ---------- Drawing ----------
+  function drawLine(o) {
+    var svg = document.getElementById("nl"); while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var vals = [o.K, o.K2, o.Qa].map(Math.log10), lo = Math.floor(Math.min.apply(null, vals)) - 1, hi = Math.ceil(Math.max.apply(null, vals)) + 1;
+    if (hi - lo < 3) { hi += 1; lo -= 1; }
+    var X = function (v) { return 30 + (v - lo) / (hi - lo) * 460; }, y = 96;
+    Lab.el("line", { x1: 30, x2: 490, y1: y, y2: y, style: "stroke: var(--ink); stroke-width: 2" }, svg);
+    for (var e = lo; e <= hi; e++) {
+      Lab.el("line", { x1: X(e), x2: X(e), y1: y - 6, y2: y + 6, style: "stroke: var(--ink)" }, svg);
+      Lab.el("text", { x: X(e), y: y + 24, "text-anchor": "middle" }, svg, "10" + supText(e));
+    }
+    var lk2 = Math.log10(o.K2), lk = Math.log10(o.K), lq = Math.log10(o.Qa);
+    Lab.el("text", { x: X(lk2) - 8, y: 150, "text-anchor": "end" }, svg, "Q < K: shifts right");
+    Lab.el("text", { x: X(lk2) + 8, y: 150, "text-anchor": "start" }, svg, "Q > K: shifts left");
+    if (Math.abs(lk2 - lk) > 1e-9) {
+      Lab.el("line", { x1: X(lk), x2: X(lk), y1: y - 40, y2: y, style: "stroke: var(--ghost); stroke-width: 2; stroke-dasharray: 5 4" }, svg);
+      Lab.el("text", { x: X(lk), y: y - 46, "text-anchor": "middle", style: "fill: var(--muted)" }, svg, "old K");
+    }
+    Lab.el("line", { x1: X(lk2), x2: X(lk2), y1: y - 40, y2: y + 6, style: "stroke: var(--c4); stroke-width: 3; stroke-dasharray: 6 4" }, svg);
+    Lab.el("text", { x: X(lk2), y: y - 46, "text-anchor": "middle", "class": "lbl", style: "fill: var(--c4)" }, svg, "K = " + plain(o.K2, 2));
+    var qy = y - 14;
+    if (o.dir !== 0) {
+      var x1 = X(lq), x2 = X(lk2), dirx = x2 > x1 ? 1 : -1;
+      Lab.el("path", { d: "M" + (x1 + dirx * 10) + " " + qy + " L" + (x2 - dirx * 6) + " " + qy, style: "stroke: var(--accent); stroke-width: 2.5; fill: none" }, svg);
+      Lab.el("path", { d: "M" + (x2 - dirx * 4) + " " + qy + " l" + (-dirx * 10) + " -6 l0 12 Z", style: "fill: var(--accent)" }, svg);
+    }
+    Lab.el("circle", { cx: X(lq), cy: qy, r: 8, style: "fill: var(--c1); stroke: var(--surface); stroke-width: 2" }, svg);
+    var lbl = "Q = " + plain(o.Qa, 3), anchor = o.dir > 0 ? "end" : o.dir < 0 ? "start" : "middle", off = o.dir > 0 ? -12 : o.dir < 0 ? 12 : 0;
+    Lab.el("text", { x: X(lq) + off, y: o.dir === 0 ? y - 70 : qy - 12, "text-anchor": anchor, "class": "lbl", style: "fill: var(--c1)" }, svg, o.dir === 0 ? "Q = K" : lbl);
+    document.getElementById("nl-sub").textContent = o.dir === 0 ? "Q still equals K: no shift" : o.dir > 0 ? "Q < K: the arrow shows Q rising to K" : "Q > K: the arrow shows Q falling to K";
+  }
+  function niceStep(max) { var raw = max / 4, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3 ? 2 : m < 7 ? 5 : 10) * p; }
+  function drawBars(o) {
+    var svg = document.getElementById("gb"), x = o.x, n = x.sp.length, mx = 0;
+    [o.c0, o.ca, o.c1].forEach(function (c) { c.forEach(function (v) { mx = Math.max(mx, v); }); });
+    var st = niceStep(mx * 1.1), yt = []; for (var t = 0; t <= mx * 1.15 + 1e-12; t += st) yt.push(t);
+    var ymax = Math.max(mx * 1.15, yt[yt.length - 1]);
+    var F = Lab.frame(svg, { x: [0, n], y: [0, ymax], xLabel: "Species", yLabel: "Concentration (M)", xTicks: x.sp.map(function (s, i) { return i + 0.5; }), yTicks: yt,
+      fmtX: function (v) { return uni(x.sp[Math.floor(v)][0]); }, fmtY: function (v) { return plain(v, 2); } });
+    x.sp.forEach(function (s, i) {
+      Lab.rect(F, i + 0.12, 0, i + 0.36, o.c0[i], "var(--ghost)", 0.8);
+      Lab.rect(F, i + 0.38, 0, i + 0.62, o.ca[i], "var(--c1)", 0.9);
+      Lab.rect(F, i + 0.64, 0, i + 0.88, o.c1[i], "var(--accent)", 1);
+    });
+  }
+
+  // ---------- Controls ----------
+  var sysBtns = {}, caseBtns = [];
+  function stressDefs(x) {
+    var d = [];
+    x.sp.forEach(function (sp, i) { d.push({ key: "c" + i, label: "Change " + Lab.fmla(sp[0]), def: { t: "conc", i: i, f: 2 } }); });
+    d.push({ key: "v", label: x.ph === "aq" ? "Dilute / concentrate" : "Change volume", def: { t: "vol", f: x.ph === "aq" ? 2 : 0.5 } });
+    if (x.dH) d.push({ key: "t", label: "Change temperature", def: { t: "temp", dT: 25 } });
+    return d;
+  }
+  function keyOf(st) { return st.t === "conc" ? "c" + st.i : st.t === "vol" ? "v" : "t"; }
+  var sl = document.getElementById("s-f");
+  function syncSlider() {
+    var st = S.st, x = SYS[S.sys];
+    if (st.t === "temp") { sl.min = -50; sl.max = 50; sl.step = 5; sl.value = st.dT; document.getElementById("f-lab").textContent = "Temperature change"; document.getElementById("o-f").textContent = (st.dT > 0 ? "+" : "") + st.dT + " °C"; document.getElementById("f-hint").textContent = "Illustrative: K doubles (endothermic) or halves (exothermic) for every 25 °C."; }
+    else {
+      sl.min = -2; sl.max = 2; sl.step = 0.01; sl.value = Math.log2(st.f);
+      document.getElementById("f-lab").textContent = st.t === "conc" ? "New " + "[" + uni(x.sp[st.i][0]) + "] ÷ old" : (x.ph === "aq" ? "New volume of solution ÷ old" : "New volume ÷ old");
+      document.getElementById("o-f").textContent = Lab.sig(st.f, 2) + "×";
+      document.getElementById("f-hint").textContent = st.t === "conc" ? "Above 1: add; below 1: remove (constant volume)" : (x.ph === "aq" ? "Above 1: dilute with water; below 1: evaporate water" : "Above 1: expand; below 1: compress");
+    }
+  }
+  function render() {
+    var x = SYS[S.sys], o = apply(S.sys, S.st);
+    Object.keys(sysBtns).forEach(function (k) { sysBtns[k].setAttribute("aria-pressed", k === S.sys ? "true" : "false"); });
+    caseBtns.forEach(function (b, i) { var cs = CASES[i]; b.setAttribute("aria-pressed", cs[0] === S.sys && JSON.stringify(cs[1]) === JSON.stringify(S.st) ? "true" : "false"); });
+    var L = [], R = [];
+    x.sp.forEach(function (sp) { var c = Math.abs(sp[1]); (sp[1] < 0 ? L : R).push((c > 1 ? c : "") + Lab.fmla(sp[0]) + "(" + x.ph + ")"); });
+    document.getElementById("eqn").innerHTML = L.join(" + ") + " ⇌ " + R.join(" + ") + "<br>K = " + exprHTML(x) + " = " + Lab.sci(x.K, 2) + (x.dHtxt ? "<br>Forward reaction " + x.dHtxt : "");
+    var box = document.getElementById("st"); box.innerHTML = "";
+    stressDefs(x).forEach(function (d) {
+      var b = document.createElement("button"); b.type = "button"; b.innerHTML = d.label; b.setAttribute("aria-pressed", d.key === keyOf(S.st) ? "true" : "false");
+      b.addEventListener("click", function () { S.st = JSON.parse(JSON.stringify(d.def)); render(); });
+      box.appendChild(b);
+    });
+    syncSlider();
+    drawLine(o); drawBars(o);
+    document.getElementById("r-q").innerHTML = N3(o.Qa);
+    document.getElementById("r-q2").innerHTML = stLabel(x, S.st);
+    document.getElementById("r-k").innerHTML = Lab.sci(o.K2, 2);
+    document.getElementById("r-k2").textContent = o.K2 === o.K ? "unchanged (same temperature)" : (o.K2 > o.K ? "larger" : "smaller") + " than before";
+    document.getElementById("r-d").textContent = o.dir === 0 ? "no shift" : o.dir > 0 ? "Q < K: right →" : "Q > K: ← left";
+    document.getElementById("r-d2").textContent = o.dir === 0 ? "Q = K" : "x = " + plain(Math.abs(o.xi), 3) + " M";
+    document.getElementById("r-e").innerHTML = N3(Math.exp(lnQ(x, o.c1)));
+    document.getElementById("r-e2").textContent = "equals K again";
+    document.getElementById("story").innerHTML = story(o);
+  }
+  Object.keys(SYS).forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SYS[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S.sys = k; S.st = { t: "conc", i: 0, f: 2 }; render(); });
+    document.getElementById("sys").appendChild(b); sysBtns[k] = b;
+  });
+  CASES.forEach(function (cs) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = cs[2]; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S.sys = cs[0]; S.st = JSON.parse(JSON.stringify(cs[1])); render(); });
+    document.getElementById("sc").appendChild(b); caseBtns.push(b);
+  });
+  sl.addEventListener("input", function () {
+    if (S.st.t === "temp") S.st.dT = parseInt(sl.value, 10);
+    else { var f = Math.pow(2, parseFloat(sl.value)); S.st.f = +Lab.sig(f, 2); }
+    render();
+  });
+  render();
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    CASES.forEach(function (cs) {
+      var o = apply(cs[0], cs[1]), x = SYS[cs[0]];
+      if (Math.abs(o.Qa / o.K2 - cs[3]) > 1e-6) bad.push(cs[2] + ": Q/K = " + o.Qa / o.K2 + ", expected " + cs[3]);
+      if (o.dir !== cs[4]) bad.push(cs[2] + ": shift " + o.dir + ", expected " + cs[4]);
+      if (Math.abs(lnQ(x, o.c1) - Math.log(o.K2)) > 1e-6) bad.push(cs[2] + ": new state not at equilibrium");
+      if (o.dir !== 0 && (o.xi > 0 ? 1 : -1) !== o.dir) bad.push(cs[2] + ": solver moved the wrong way");
+    });
+    Object.keys(SYS).forEach(function (k) { if (Math.abs(lnQ(SYS[k], BASE[k]) - Math.log(SYS[k].K)) > 1e-6) bad.push(k + ": base not at equilibrium"); });
+    if (bad.length) console.error("7.10 self-check failed: " + bad.join("; "));
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "N₂(g) + 3H₂(g) ⇌ 2NH₃(g) is at equilibrium. At constant temperature and volume, [N₂] is suddenly doubled. Immediately afterward, how does Q compare with K, and which way does the reaction proceed?",
+      o: ["Q = 2K; the reaction proceeds to the left.", "Q = K, because K is unchanged.", "Q = K/2; the reaction proceeds to the left.", "Q = K/2; the reaction proceeds to the right."], c: 3,
+      w: "[N₂] is in the denominator to the first power, so doubling it halves Q: Q = K/2 &lt; K, and the net reaction runs forward until Q = K again. Choice B confuses Q with K: K is unchanged, but Q is not. Choice C gets Q right but the direction backward." },
+    { s: "2NO₂(g) ⇌ N₂O₄(g) is at equilibrium. The volume of the container is halved at constant temperature. Which statement is correct immediately after the change?",
+      o: ["Q = 2K, so the reaction shifts left.", "Q = K/2, so the reaction shifts right.", "Q = K/4, so the reaction shifts right.", "Q = K, so there is no shift."], c: 1,
+      w: "Every concentration doubles. Q = [N₂O₄]/[NO₂]² becomes (2)/(2)² = ½ of its old value, so Q = K/2 &lt; K and the system shifts right, toward fewer moles of gas. The shortcut agrees: Q is multiplied by 2^Δn = 2^(1 − 2) = ½. Choice C squares the factor for both species; choice A inverts it." },
+    { s: "For an exothermic reaction at equilibrium, the temperature is raised. Which statement best explains the shift?",
+      o: ["K decreases while Q is initially unchanged, so Q > K and the reaction proceeds to the left.", "Q increases while K is unchanged, so the reaction proceeds to the left.", "K increases, so Q < K and the reaction proceeds to the right.", "Both Q and K increase by the same factor, so there is no shift."], c: 0,
+      w: "A temperature change changes K, not the concentrations at that instant. For an exothermic reaction, K decreases on heating, so the unchanged Q is now greater than K and the reaction shifts left. Choice B is the common error of saying temperature changes Q. Choice C gets the direction of K wrong for an exothermic reaction." },
+    { s: "Ag⁺(aq) + 2NH₃(aq) ⇌ Ag(NH₃)₂⁺(aq) is at equilibrium. The solution is diluted with water to twice its volume. Which is true immediately after dilution?",
+      o: ["Q = K/4 and the reaction proceeds to the right.", "Q = K, because water is not in the expression.", "Q = 4K and the reaction proceeds to the left.", "Q = 2K and the reaction proceeds to the left."], c: 2,
+      w: "Each concentration is halved. Q = [Ag(NH₃)₂⁺]/([Ag⁺][NH₃]²) becomes (½)/[(½)(½)²] = 4 times its old value, so Q = 4K &gt; K and the reaction shifts left, toward more dissolved particles. Choice B is the trap: water is not in the expression, but the dilution changes every concentration that is. Choice D forgets the exponent on [NH₃]." },
+    { s: "For H₂(g) + I₂(g) ⇌ 2HI(g), K = 49. An equilibrium mixture contains [H₂] = [I₂] = 0.10 M and [HI] = 0.70 M. HI is added so that [HI] is 0.90 M at the instant after the addition. Which is correct?",
+      o: ["Q = 49, so there is no shift.", "Q = 81, so the reaction proceeds to the left.", "Q = 81, so the reaction proceeds to the right.", "Q = 9.0, so the reaction proceeds to the right."], c: 1,
+      w: "Q = (0.90)²/[(0.10)(0.10)] = 0.81/0.010 = 81, which is greater than 49, so the net reaction runs in reverse, using up some HI and forming H₂ and I₂. Choice D leaves out the exponent on [HI] and the product in the denominator. Choice C pairs the right Q with the wrong direction." },
+    { s: "For N₂(g) + 3H₂(g) ⇌ 2NH₃(g) at equilibrium, at time t₁ all three concentrations suddenly double. Afterward, [NH₃] gradually rises while [N₂] and [H₂] gradually fall. What change was made at t₁?",
+      o: ["N₂ and H₂ were added.", "The temperature was raised.", "A catalyst was added.", "The volume of the container was halved."], c: 3,
+      w: "Only a volume change (at constant amounts) changes every concentration by the same factor at once. Halving the volume multiplies Q by 2^Δn = 2^(−2) = ¼, so Q &lt; K and the reaction shifts right, which matches the gradual changes. A temperature change (choice B) causes no sudden jump, and adding N₂ and H₂ (choice A) would not double [NH₃]." },
+    { s: "N₂O₄(g) ⇌ 2NO₂(g) has ΔH° > 0. A concentration–time graph shows no sudden change at time t₁, but afterward [NO₂] gradually increases and [N₂O₄] gradually decreases to new constant values. What happened at t₁?",
+      o: ["The temperature was increased, which increased K.", "NO₂ was added.", "The volume was decreased.", "An inert gas was added at constant volume."], c: 0,
+      w: "With no jump at t₁, no concentration was changed directly, so Q stayed the same and K must have changed. Heating an endothermic reaction increases K, so Q &lt; K and the reaction shifts right, forming NO₂. Adding NO₂ (choice B) or compressing (choice C) would show a sudden jump. An inert gas at constant volume (choice D) causes no change at all." },
+    { s: "PCl₅(g) ⇌ PCl₃(g) + Cl₂(g) is at equilibrium at 250 °C. Some Cl₂ is added at constant temperature and volume, and a new equilibrium is established. How does Q at the new equilibrium compare with Q at the original equilibrium?",
+      o: ["It is larger, because more Cl₂ is present.", "It is smaller, because the system shifted left.", "It is the same, because both equal K at 250 °C.", "It cannot be determined without the new concentrations."], c: 2,
+      w: "At any equilibrium, Q = K, and K depends only on temperature. Since the temperature is still 250 °C, the new equilibrium mixture has the same value of Q as before, even though the individual concentrations are different. Choice A describes Q at the instant after the addition, before the shift." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("7.10");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [7], topic: "7.10", compact: true, storageKey: "topic-7.10" });</script>
+</body>
+</html>

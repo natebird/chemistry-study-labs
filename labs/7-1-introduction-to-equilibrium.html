@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Introduction to Equilibrium Study Lab</title>
+<meta name="description" content="Seal N₂O₄ and NO₂ in a flask, run the clock, and watch the particles, the concentration graph, and the forward and reverse rates settle into a dynamic equilibrium.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.ctlcard { display: grid; gap: 16px; }
+.ctlcard .controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.plegend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted); }
+.plegend span { display: inline-flex; align-items: center; gap: 6px; }
+.note { font-size: .82rem; color: var(--muted); }
+.legend .l-ra { color: var(--c2); } .legend .l-rr { color: var(--c4); }
+.legend .l-rr::before { background: none; border-top: 3px dashed currentColor; height: 0; }
+.graph-card { align-content: start; }
+@media (max-width: 860px) { .ctlcard .controls { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .ctlcard .controls { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 7 · Topic 7.1</span>
+  <h1>Introduction to Equilibrium Study Lab</h1>
+  <p class="lede">Many reactions can run both ways. When a reversible reaction happens in a closed container, it does not stop: it reaches a state where the forward and reverse reactions run at the same rate, so nothing observable changes any more. Seal colorless N<sub>2</sub>O<sub>4</sub> and brown NO<sub>2</sub> in a flask, run the clock, and watch that dynamic equilibrium form at the particle level, on a concentration graph, and on a rate graph.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The sealed flask</h2>
+    <p>Pick a starting mixture, then press <b>Run</b> or drag the time slider. The particle view is a scaled-down sample of the flask: each N<sub>2</sub>O<sub>4</sub> molecule can split into two NO<sub>2</sub> (forward), and two NO<sub>2</sub> can join into one N<sub>2</sub>O<sub>4</sub> (reverse). A ring marks each molecule that just reacted. The rate constants and K are illustrative teaching values, chosen so the change is easy to watch.</p>
+  </div>
+
+  <div class="eqn" id="eqn">N<sub>2</sub>O<sub>4</sub>(g, colorless) ⇌ 2NO<sub>2</sub>(g, brown)</div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Particle view <small id="part-sub"></small></h3>
+      <svg class="chart particles" id="part" role="img" aria-label="Particle diagram of N2O4 and NO2 molecules in a sealed flask"></svg>
+      <div class="plegend">
+        <span><svg width="26" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5.5" fill="var(--accent)"/><circle cx="18" cy="7" r="5.5" fill="var(--accent)"/></svg>N₂O₄</span>
+        <span><svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5.5" fill="var(--c1)"/></svg>NO₂</span>
+        <span><svg width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="var(--c2)" stroke-width="2"/></svg>just formed by the forward reaction</span>
+        <span><svg width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="var(--c4)" stroke-width="2"/></svg>just formed by the reverse reaction</span>
+      </div>
+    </div>
+    <div class="card graph-card">
+      <h3>Concentration vs. time <small>mol/L</small></h3>
+      <svg class="chart" id="gc" role="img" aria-label="Graph of N2O4 and NO2 concentrations versus time"></svg>
+      <div class="legend"><span style="color:var(--accent)">[N₂O₄]</span><span class="l-c1">[NO₂]</span><span class="l-ghost">equilibrium values</span></div>
+    </div>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Rate vs. time <small>reaction events, mol/(L·s)</small></h3>
+      <svg class="chart" id="gr" role="img" aria-label="Graph of forward and reverse reaction rates versus time"></svg>
+      <div class="legend"><span class="l-ra">Forward rate (N₂O₄ → 2NO₂)</span><span class="l-rr">Reverse rate (2NO₂ → N₂O₄)</span></div>
+    </div>
+    <div class="card ctlcard">
+      <div class="group">
+        <div class="tag">Starting mixture</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Clock</div>
+        <div class="btnrow">
+          <button type="button" class="primary" id="b-run">Run</button>
+          <button type="button" id="b-reset">Back to time 0</button>
+        </div>
+      </div>
+      <div class="controls" style="grid-template-columns:1fr;">
+        <div class="ctl">
+          <label for="s-t">Time <output id="o-t"></output></label>
+          <input type="range" id="s-t" min="0" max="14" step="0.05">
+        </div>
+        <div class="ctl">
+          <label for="s-a">Initial [N₂O₄] <output id="o-a"></output></label>
+          <input type="range" id="s-a" min="0" max="1" step="0.05">
+        </div>
+        <div class="ctl">
+          <label for="s-b">Initial [NO₂] <output id="o-b"></output></label>
+          <input type="range" id="s-b" min="0" max="1" step="0.05">
+          <span class="hint">Changing a starting amount restarts the clock.</span>
+        </div>
+      </div>
+      <p class="note">Simplification: the rates here are written as rate<sub>f</sub> = k<sub>f</sub>[N<sub>2</sub>O<sub>4</sub>] and rate<sub>r</sub> = k<sub>r</sub>[NO<sub>2</sub>]<sup>2</sup> with K = 0.20 at the lab's (fixed) temperature. The real K for this reaction depends strongly on temperature.</p>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">[N₂O₄]</div><div class="v" id="r-a"></div><div class="sub" id="r-a2"></div></div>
+    <div class="stat"><div class="k">[NO₂]</div><div class="v" id="r-b"></div><div class="sub" id="r-b2"></div></div>
+    <div class="stat"><div class="k">Forward rate vs. reverse rate</div><div class="v" id="r-r"></div><div class="sub" id="r-r2"></div></div>
+    <div class="stat"><div class="k">Reaction events in the sample</div><div class="v" id="r-e"></div><div class="sub" id="r-e2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Two directions</span><h3>Reversible processes</h3><p>A reversible process can go forward (reactants → products) and in reverse (products → reactants). The double arrow ⇌ says both happen. Physical changes such as evaporation and condensation are reversible too, as are proton transfers in acid–base reactions and electron transfers in redox reactions.</p></div>
+    <div class="card"><span class="tag">What you see</span><h3>No observable change</h3><p>At equilibrium the color, pressure, and every concentration stay constant. Reactants and products are both present. "Constant" does not mean "equal": in this flask, equilibrium can have much more N<sub>2</sub>O<sub>4</sub> than NO<sub>2</sub>, or the other way round.</p></div>
+    <div class="card"><span class="tag">What is happening</span><h3>Equilibrium is dynamic</h3><p>Molecules keep reacting at equilibrium. Every second, some N<sub>2</sub>O<sub>4</sub> splits and the same number of NO<sub>2</sub> pairs join. Because the forward and reverse rates are equal, the two processes cancel and there is no net change.</p></div>
+    <div class="card"><span class="tag">Getting there</span><h3>Rates converge</h3><p>The forward rate depends on how much reactant is present, and the reverse rate on how much product is present. Starting with only N<sub>2</sub>O<sub>4</sub>, the forward rate starts high and falls while the reverse rate starts at zero and rises, until the two meet.</p></div>
+    <div class="card"><span class="tag">Reading graphs</span><h3>Where the curves go flat</h3><p>On a concentration–time graph, equilibrium begins where every curve becomes horizontal, not where the curves cross. On a rate–time graph, it begins where the forward and reverse rate curves meet and stay together.</p></div>
+    <div class="card"><span class="tag">Closed system</span><h3>Both ways, same destination</h3><p>Starting from pure N<sub>2</sub>O<sub>4</sub>, from pure NO<sub>2</sub> with the same number of atoms, or from a mix of the two, the flask ends up at the same equilibrium mixture at a given temperature. Equilibrium can be approached from either direction.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Reversible processes to recognize</h2>
+    <p>The same pattern applies to physical and chemical processes: two opposing processes, equal rates at equilibrium, constant amounts of everything.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Process</th><th>Forward</th><th>Reverse</th><th>Evidence that equilibrium has been reached</th></tr></thead>
+    <tbody>
+      <tr><td>Water in a sealed bottle</td><td>Evaporation: H<sub>2</sub>O(l) → H<sub>2</sub>O(g)</td><td>Condensation: H<sub>2</sub>O(g) → H<sub>2</sub>O(l)</td><td>Liquid level and vapor pressure stay <b>constant</b></td></tr>
+      <tr><td>Saturated salt solution with excess solid</td><td>Dissolution: NaCl(s) → Na<sup>+</sup>(aq) + Cl<sup>−</sup>(aq)</td><td>Precipitation: Na<sup>+</sup>(aq) + Cl<sup>−</sup>(aq) → NaCl(s)</td><td>Mass of undissolved solid and ion concentrations stay <b>constant</b></td></tr>
+      <tr><td>Gas over a liquid or solid surface</td><td>Absorption (or adsorption) of the gas</td><td>Desorption of the gas</td><td>Gas pressure stays <b>constant</b></td></tr>
+      <tr><td>N<sub>2</sub>O<sub>4</sub> in a sealed flask</td><td>N<sub>2</sub>O<sub>4</sub> → 2NO<sub>2</sub></td><td>2NO<sub>2</sub> → N<sub>2</sub>O<sub>4</sub></td><td>Brown color stays <b>constant</b></td></tr>
+      <tr><td>Weak acid in water (proton transfer)</td><td>CH<sub>3</sub>COOH + H<sub>2</sub>O → CH<sub>3</sub>COO<sup>−</sup> + H<sub>3</sub>O<sup>+</sup></td><td>CH<sub>3</sub>COO<sup>−</sup> + H<sub>3</sub>O<sup>+</sup> → CH<sub>3</sub>COOH + H<sub>2</sub>O</td><td>pH stays <b>constant</b></td></tr>
+      <tr><td>Redox (electron transfer)</td><td>Fe<sup>3+</sup> + Ag → Fe<sup>2+</sup> + Ag<sup>+</sup></td><td>Fe<sup>2+</sup> + Ag<sup>+</sup> → Fe<sup>3+</sup> + Ag</td><td>Ion concentrations stay <b>constant</b></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:8px;">Reading a graph for equilibrium</h3>
+    <ol class="steps">
+      <li>Concentration (or partial pressure) vs. time: equilibrium starts where <b>all</b> the curves level off. Crossing curves only mean the two amounts happen to be equal at that instant.</li>
+      <li>Rate vs. time: equilibrium starts where the forward and reverse rate curves meet. After that they stay equal, and neither is zero.</li>
+      <li>Changes before equilibrium follow the coefficients. Here [NO<sub>2</sub>] always changes twice as fast as [N<sub>2</sub>O<sub>4</sub>] (in the opposite direction), because each N<sub>2</sub>O<sub>4</sub> corresponds to 2 NO<sub>2</sub>.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Equilibrium on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Define equilibrium with rates: "the rate of the forward reaction equals the rate of the reverse reaction."</li>
+        <li>Connect that to the observation: "so the concentrations (or partial pressures, or the color) remain constant."</li>
+        <li>Say that it is dynamic: both reactions continue at the particle level even though no net change is observed.</li>
+        <li>On a graph, point to the time where all concentrations become constant (or where the rate curves meet) as the start of equilibrium.</li>
+        <li>Use the coefficients to explain the shapes: a species with coefficient 2 changes twice as fast as one with coefficient 1.</li>
+        <li>When drawing a concentration–time sketch, keep products starting at zero if none were added, and end every curve flat.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying the reaction "stops" at equilibrium. Both reactions continue at equal rates.</li>
+        <li>Saying reactant and product concentrations are <i>equal</i> at equilibrium. They are <i>constant</i>, and usually not equal.</li>
+        <li>Marking equilibrium where two concentration curves cross.</li>
+        <li>Saying the forward and reverse rate constants are equal at equilibrium. The <i>rates</i> are equal; the rate constants generally are not.</li>
+        <li>Thinking a reaction that starts with only products cannot reach the same equilibrium. It can approach from either side.</li>
+        <li>Forgetting that equilibrium requires a closed system: if NO<sub>2</sub> could escape, the flask would never settle.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 7.1. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-7.html">Unit 7 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Model: N2O4 <=> 2NO2, rate_f = kf[A], rate_r = kr[B]^2, K = kf/kr ----------
+  var K = 0.20, KF = 0.10, KR = KF / K, T = 14, DT = 0.005, STORE = 0.05;
+  var SCALE = 0.025;            // mol/L represented by one NO2 "unit" in the particle view
+  var SC = {
+    a: { name: "Start with N₂O₄ only", a0: 0.50, b0: 0 },
+    b: { name: "Start with NO₂ only", a0: 0, b0: 1.00 },
+    m: { name: "Start with a mixture", a0: 0.40, b0: 0.20 },
+    e: { name: "Already at equilibrium", a0: null, b0: null },
+    c: { name: "More concentrated", a0: 1.00, b0: 0 }
+  };
+  var ORDER = ["a", "b", "m", "e", "c"];
+  var S = { key: "a", a0: 0.5, b0: 0, t: 0, playing: false, fwd: 0, rev: 0, log: [] };
+  var curve = [];
+
+  function rates(a, b) { return { f: KF * a, r: KR * b * b }; }
+  function deriv(a, b) { var r = rates(a, b), n = r.f - r.r; return [-n, 2 * n]; }
+  // Equilibrium from conservation: U = 2[A] + [B] stays constant. K[A] = (U - 2[A])^2.
+  function eqSolve(a0, b0) {
+    var U = 2 * a0 + b0, p = 4 * U + K, a = (p - Math.sqrt(p * p - 16 * U * U)) / 8;
+    return { a: a, b: U - 2 * a };
+  }
+  function simulate() {
+    curve = [];
+    var a = S.a0, b = S.b0, n = Math.round(T / DT), every = Math.round(STORE / DT);
+    for (var i = 0; i <= n; i++) {
+      if (i % every === 0) curve.push([i * DT, a, b]);
+      var k1 = deriv(a, b), k2 = deriv(a + k1[0] * DT / 2, b + k1[1] * DT / 2),
+          k3 = deriv(a + k2[0] * DT / 2, b + k2[1] * DT / 2), k4 = deriv(a + k3[0] * DT, b + k3[1] * DT);
+      a += DT * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]) / 6;
+      b += DT * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]) / 6;
+    }
+  }
+  function at(t) {
+    t = Math.max(0, Math.min(T, t));
+    var i = Math.min(curve.length - 2, Math.floor(t / STORE)), p = curve[i], q = curve[i + 1], f = (t - p[0]) / STORE;
+    return { a: p[1] + (q[1] - p[1]) * f, b: p[2] + (q[2] - p[2]) * f };
+  }
+  // Time at which every concentration is within 1% of its final value (to the nearest 0.05 s)
+  function eqTime() {
+    var e = eqSolve(S.a0, S.b0), tol = 0.01 * Math.max(e.a, e.b);
+    for (var i = curve.length - 1; i >= 0; i--) {
+      if (Math.abs(curve[i][1] - e.a) > tol || Math.abs(curve[i][2] - e.b) > tol) return i + 1 < curve.length ? curve[i + 1][0] : T;
+    }
+    return 0;
+  }
+
+  // ---------- Particle sample ----------
+  var W = 440, H = 300, PAD = 14, parts = [];
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+  function addP(kind, x, y, ring) {
+    parts.push({ k: kind, x: Math.max(PAD + 12, Math.min(W - PAD - 12, x)), y: Math.max(PAD + 8, Math.min(H - PAD - 8, y)),
+      vx: rnd(-1, 1), vy: rnd(-1, 1), ang: rnd(0, Math.PI), ring: ring || null, rt: ring ? 1 : 0 });
+  }
+  function counts() { var a = 0, b = 0; parts.forEach(function (p) { if (p.k === "A") a++; else b++; }); return { a: a, b: b }; }
+  function targetCounts(m) {
+    var U = Math.round((2 * S.a0 + S.b0) / SCALE), na = Math.max(0, Math.min(Math.floor(U / 2), Math.round(m.a / SCALE)));
+    return { a: na, b: U - 2 * na };
+  }
+  function forwardEvent(ring) {
+    var A = parts.filter(function (p) { return p.k === "A"; }); if (!A.length) return false;
+    var p = A[Math.floor(Math.random() * A.length)];
+    parts.splice(parts.indexOf(p), 1);
+    addP("B", p.x - 8, p.y, ring ? "f" : null); addP("B", p.x + 8, p.y, ring ? "f" : null);
+    return true;
+  }
+  function reverseEvent(ring) {
+    var B = parts.filter(function (p) { return p.k === "B"; }); if (B.length < 2) return false;
+    var p = B[Math.floor(Math.random() * B.length)], best = null, bd = 1e9;
+    B.forEach(function (q) { if (q !== p) { var d = Math.hypot(q.x - p.x, q.y - p.y); if (d < bd) { bd = d; best = q; } } });
+    parts.splice(parts.indexOf(p), 1); parts.splice(parts.indexOf(best), 1);
+    addP("A", (p.x + best.x) / 2, (p.y + best.y) / 2, ring ? "r" : null);
+    return true;
+  }
+  function syncParticles(m, ring) {
+    var tc = targetCounts(m), c = counts(), guard = 0;
+    while (c.a < tc.a && guard++ < 200) { if (!reverseEvent(ring)) break; if (ring) { S.rev++; S.log.push(["r", S.clock]); } c = counts(); }
+    while (c.a > tc.a && guard++ < 400) { if (!forwardEvent(ring)) break; if (ring) { S.fwd++; S.log.push(["f", S.clock]); } c = counts(); }
+  }
+  function seedParticles() {
+    parts = [];
+    var tc = targetCounts(at(S.t));
+    for (var i = 0; i < tc.a; i++) addP("A", rnd(PAD + 14, W - PAD - 14), rnd(PAD + 10, H - PAD - 10));
+    for (var j = 0; j < tc.b; j++) addP("B", rnd(PAD + 14, W - PAD - 14), rnd(PAD + 10, H - PAD - 10));
+  }
+  function moveParticles(dt) {
+    parts.forEach(function (p) {
+      p.vx += rnd(-.6, .6); p.vy += rnd(-.6, .6);
+      var v = Math.hypot(p.vx, p.vy), vmax = 2.2; if (v > vmax) { p.vx *= vmax / v; p.vy *= vmax / v; }
+      p.x += p.vx * dt * 30; p.y += p.vy * dt * 30; p.ang += (p.vx * .02);
+      if (p.x < PAD + 12 || p.x > W - PAD - 12) { p.vx *= -1; p.x = Math.max(PAD + 12, Math.min(W - PAD - 12, p.x)); }
+      if (p.y < PAD + 8 || p.y > H - PAD - 8) { p.vy *= -1; p.y = Math.max(PAD + 8, Math.min(H - PAD - 8, p.y)); }
+      if (p.rt > 0) { p.rt -= dt / 1.6; if (p.rt <= 0) { p.rt = 0; p.ring = null; } }
+    });
+  }
+  var svgP = document.getElementById("part");
+  function drawParticles(m) {
+    var E = Lab.el;
+    svgP.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svgP.firstChild) svgP.removeChild(svgP.firstChild);
+    E("rect", { x: 4, y: 4, width: W - 8, height: H - 8, rx: 16, fill: "var(--surface)", stroke: "var(--ink)", "stroke-width": 2 }, svgP);
+    E("rect", { x: 5, y: 5, width: W - 10, height: H - 10, rx: 15, fill: "var(--c1)", opacity: Math.min(.42, .03 + .38 * m.b / 1.3) }, svgP);
+    parts.forEach(function (p) {
+      if (p.k === "A") {
+        var dx = 5.5 * Math.cos(p.ang), dy = 5.5 * Math.sin(p.ang);
+        E("circle", { cx: p.x - dx, cy: p.y - dy, r: 6, fill: "var(--accent)" }, svgP);
+        E("circle", { cx: p.x + dx, cy: p.y + dy, r: 6, fill: "var(--accent)" }, svgP);
+        if (p.ring) E("circle", { cx: p.x, cy: p.y, r: 15, fill: "none", stroke: p.ring === "f" ? "var(--c2)" : "var(--c4)", "stroke-width": 2.5, opacity: p.rt.toFixed(2) }, svgP);
+      } else {
+        E("circle", { cx: p.x, cy: p.y, r: 6, fill: "var(--c1)" }, svgP);
+        if (p.ring) E("circle", { cx: p.x, cy: p.y, r: 10, fill: "none", stroke: p.ring === "f" ? "var(--c2)" : "var(--c4)", "stroke-width": 2.5, opacity: p.rt.toFixed(2) }, svgP);
+      }
+    });
+    var c = counts();
+    document.getElementById("part-sub").textContent = c.a + " N₂O₄, " + c.b + " NO₂ (1 particle ≈ " + SCALE + " M)";
+  }
+
+  // ---------- Graphs ----------
+  function niceMax(v, step) { return Math.max(step, Math.ceil((v * 1.08) / step) * step); }
+  function ticks(max, step) { var o = []; for (var v = 0; v <= max + 1e-9; v += step) o.push(+v.toFixed(4)); return o; }
+  function drawConc(m) {
+    var top = 0; curve.forEach(function (p) { top = Math.max(top, p[1], p[2]); });
+    var ym = niceMax(top, 0.2), e = eqSolve(S.a0, S.b0);
+    var F = Lab.frame(document.getElementById("gc"), { x: [0, T], y: [0, ym], xLabel: "Time (s)", yLabel: "Concentration (M)",
+      xTicks: [0, 2, 4, 6, 8, 10, 12, 14], yTicks: ticks(ym, ym > 1 ? 0.4 : 0.2), fmtX: function (v) { return v; }, fmtY: function (v) { return v.toFixed(1); } });
+    Lab.hline(F, e.a, "var(--ghost)", 1.5, "5 4"); Lab.hline(F, e.b, "var(--ghost)", 1.5, "5 4");
+    var te = eqTime(); if (te > 0 && te < T) { Lab.rect(F, te, 0, T, ym, "var(--good)", .07); Lab.tag(F, te + .2, ym * .96, "equilibrium", "var(--good)"); }
+    var past = curve.filter(function (p) { return p[0] <= S.t + 1e-9; });
+    Lab.line(F, curve.map(function (p) { return [p[0], p[1]]; }), "var(--accent)", 1.5, "2 4");
+    Lab.line(F, curve.map(function (p) { return [p[0], p[2]]; }), "var(--c1)", 1.5, "2 4");
+    if (past.length > 1) {
+      Lab.line(F, past.map(function (p) { return [p[0], p[1]]; }), "var(--accent)", 3);
+      Lab.line(F, past.map(function (p) { return [p[0], p[2]]; }), "var(--c1)", 3);
+    }
+    Lab.vline(F, S.t, "var(--ink)", 1, "3 3");
+    Lab.dot(F, S.t, m.a, "var(--accent)"); Lab.dot(F, S.t, m.b, "var(--c1)");
+  }
+  function drawRates(m) {
+    var top = 0; curve.forEach(function (p) { var r = rates(p[1], p[2]); top = Math.max(top, r.f, r.r); });
+    var step = top > 0.4 ? 0.1 : top > 0.2 ? 0.05 : 0.02, ym = niceMax(top, step);
+    var F = Lab.frame(document.getElementById("gr"), { x: [0, T], y: [0, ym], xLabel: "Time (s)", yLabel: "Rate (M/s)",
+      xTicks: [0, 2, 4, 6, 8, 10, 12, 14], yTicks: ticks(ym, step), fmtX: function (v) { return v; }, fmtY: function (v) { return v.toFixed(2); } });
+    var te = eqTime(); if (te > 0 && te < T) Lab.rect(F, te, 0, T, ym, "var(--good)", .07);
+    var pf = curve.map(function (p) { return [p[0], rates(p[1], p[2]).f]; }), pr = curve.map(function (p) { return [p[0], rates(p[1], p[2]).r]; });
+    Lab.line(F, pf, "var(--c2)", 1.5, "2 4"); Lab.line(F, pr, "var(--c4)", 1.5, "2 4");
+    var n = pf.filter(function (p) { return p[0] <= S.t + 1e-9; }).length;
+    if (n > 1) { Lab.line(F, pf.slice(0, n), "var(--c2)", 3); Lab.line(F, pr.slice(0, n), "var(--c4)", 3, "7 4"); }
+    var r = rates(m.a, m.b);
+    Lab.vline(F, S.t, "var(--ink)", 1, "3 3");
+    Lab.dot(F, S.t, r.f, "var(--c2)"); Lab.dot(F, S.t, r.r, "var(--c4)");
+  }
+
+  // ---------- Readouts and story ----------
+  function f3(v) { return Lab.sig(Math.max(0, v), 3).replace(/^0\.000$/, "0"); }
+  function M(v) { return (Math.abs(v) < 5e-4 ? "0.000" : Lab.fmt(v, 3)) + " M"; }
+  function phase(m) {
+    var r = rates(m.a, m.b), e = eqSolve(S.a0, S.b0), tol = 0.01 * Math.max(e.a, e.b);
+    if (Math.abs(m.a - e.a) <= tol && Math.abs(m.b - e.b) <= tol) return "eq";
+    return r.f > r.r ? "fwd" : "rev";
+  }
+  function recentEvents() {
+    var now = S.clock, f = 0, r = 0;
+    S.log = S.log.filter(function (x) { return now - x[1] <= 4; });
+    S.log.forEach(function (x) { if (x[0] === "f") f++; else r++; });
+    return { f: f, r: r };
+  }
+  function readouts(m, ph) {
+    var r = rates(m.a, m.b), e = eqSolve(S.a0, S.b0);
+    document.getElementById("r-a").textContent = M(m.a);
+    document.getElementById("r-a2").textContent = "equilibrium value " + M(e.a);
+    document.getElementById("r-b").textContent = M(m.b);
+    document.getElementById("r-b2").textContent = "equilibrium value " + M(e.b);
+    var cmp = ph === "eq" ? "=" : r.f > r.r ? ">" : "<";
+    document.getElementById("r-r").textContent = f3(r.f) + " " + cmp + " " + f3(r.r);
+    document.getElementById("r-r2").textContent = ph === "eq" ? "equal: no net change" : (r.f > r.r ? "net forward: N₂O₄ → NO₂" : "net reverse: NO₂ → N₂O₄");
+    var ev = recentEvents();
+    document.getElementById("r-e").textContent = ev.f + " fwd, " + ev.r + " rev";
+    document.getElementById("r-e2").textContent = S.playing ? "in the last 4 s of running" : "press Run to count events";
+  }
+  function story(m, ph) {
+    var r = rates(m.a, m.b), e = eqSolve(S.a0, S.b0), ev = recentEvents(), h = "";
+    var start = S.a0 > 0 && S.b0 > 0 ? "a mixture of N<sub>2</sub>O<sub>4</sub> and NO<sub>2</sub>" : S.a0 > 0 ? "only N<sub>2</sub>O<sub>4</sub>" : S.b0 > 0 ? "only NO<sub>2</sub>" : "an empty flask";
+    if (S.a0 === 0 && S.b0 === 0) return "<p>The flask is empty, so nothing can react. Raise one of the starting concentrations.</p><p><b>AP answer:</b> equilibrium needs reactants or products in a closed container; the forward and reverse reactions then run until their rates are equal.</p>";
+    h += "<p><b>t = " + Lab.fmt(S.t, 2) + " s.</b> The flask started with " + start + ". Right now [N<sub>2</sub>O<sub>4</sub>] = " + M(m.a) + " and [NO<sub>2</sub>] = " + M(m.b) + ".</p>";
+    if (ph === "fwd") {
+      h += "<p>The forward rate (" + f3(r.f) + " M/s) is greater than the reverse rate (" + f3(r.r) + " M/s), so N<sub>2</sub>O<sub>4</sub> splits faster than NO<sub>2</sub> pairs join. The net change is N<sub>2</sub>O<sub>4</sub> → 2NO<sub>2</sub>: the brown color deepens, and [NO<sub>2</sub>] rises twice as fast as [N<sub>2</sub>O<sub>4</sub>] falls." +
+        (S.t < 0.01 && S.b0 === 0 ? " At this instant there is no NO<sub>2</sub>, so the reverse rate is zero." : "") +
+        " As N<sub>2</sub>O<sub>4</sub> is used up, the forward rate drops; as NO<sub>2</sub> builds up, the reverse rate climbs.</p>";
+    } else if (ph === "rev") {
+      h += "<p>The reverse rate (" + f3(r.r) + " M/s) is greater than the forward rate (" + f3(r.f) + " M/s), so NO<sub>2</sub> pairs join faster than N<sub>2</sub>O<sub>4</sub> splits. The net change is 2NO<sub>2</sub> → N<sub>2</sub>O<sub>4</sub>: the brown color fades." +
+        (S.t < 0.01 && S.a0 === 0 ? " At this instant there is no N<sub>2</sub>O<sub>4</sub>, so the forward rate is zero." : "") +
+        " As NO<sub>2</sub> is used up, the reverse rate drops and the forward rate climbs.</p>";
+    } else {
+      h += "<p><b>The flask is at equilibrium.</b> The forward and reverse rates are equal (" + f3(r.f) + " M/s each), so the color and both concentrations stay constant. They are not equal to each other: [N<sub>2</sub>O<sub>4</sub>] is " + M(e.a) + " and [NO<sub>2</sub>] is " + M(e.b) + ".</p>";
+      h += "<p>The reactions have not stopped. " + (S.playing && (ev.f + ev.r) > 0 ? "In the last 4 seconds of the sample, " + ev.f + " N<sub>2</sub>O<sub>4</sub> molecule" + (ev.f === 1 ? "" : "s") + " split and " + ev.r + " pair" + (ev.r === 1 ? "" : "s") + " of NO<sub>2</sub> joined (watch the rings). Over time the two counts match on average, which is why nothing changes overall." : "Press Run and watch the rings: molecules keep splitting and joining, in equal numbers on average.") + "</p>";
+      if (Math.abs(2 * S.a0 + S.b0 - 1) < 1e-9 && !(S.a0 === 0.5 && S.b0 === 0)) h += "<p>This start contains the same total number of N and O atoms as 0.50 M of pure N<sub>2</sub>O<sub>4</sub>, so it reaches the same equilibrium mixture no matter which side it started from.</p>";
+    }
+    h += "<p><b>AP answer:</b> " + (ph === "eq" ?
+      "equilibrium is reached when the rate of the forward reaction equals the rate of the reverse reaction, so the concentrations of N<sub>2</sub>O<sub>4</sub> and NO<sub>2</sub> remain constant (not equal). The equilibrium is dynamic: both reactions continue." :
+      "the system is not yet at equilibrium because the " + (ph === "fwd" ? "forward rate is greater than the reverse rate, so there is a net conversion of reactant to product" : "reverse rate is greater than the forward rate, so there is a net conversion of product to reactant") + ". The concentrations will keep changing until the two rates become equal.") + "</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  var elT = document.getElementById("s-t"), elA = document.getElementById("s-a"), elB = document.getElementById("s-b"), btnRun = document.getElementById("b-run");
+  var scBtns = {};
+  S.clock = 0;
+  function render() {
+    var m = at(S.t), ph = phase(m);
+    elT.value = S.t; elA.value = S.a0; elB.value = S.b0;
+    document.getElementById("o-t").textContent = Lab.fmt(S.t, 2) + " s";
+    document.getElementById("o-a").textContent = Lab.fmt(S.a0, 3) + " M";
+    document.getElementById("o-b").textContent = Lab.fmt(S.b0, 3) + " M";
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    btnRun.textContent = S.playing ? "Pause" : (S.t >= T - 1e-9 ? "Keep running at equilibrium" : "Run");
+    drawParticles(m); drawConc(m); drawRates(m); readouts(m, ph);
+    document.getElementById("story").innerHTML = story(m, ph);
+  }
+  var stopAnim = null, last = null, carryF = 0, carryR = 0, frameN = 0;
+  function tick(ts) {
+    if (!S.playing) return;
+    var dt = last == null ? 0.016 : Math.min(0.05, (ts - last) / 1000); last = ts;
+    var simDt = dt * 1.5;
+    S.clock += simDt;
+    var m0 = at(S.t);
+    if (S.t < T) S.t = Math.min(T, S.t + simDt);
+    var m = at(S.t), r = rates(m0.a, m0.b);
+    // Expected forward and reverse events in the sample during this step
+    carryF += r.f * simDt / SCALE; carryR += r.r * simDt / SCALE;
+    while (carryF >= 1) { carryF -= 1; if (forwardEvent(true)) { S.fwd++; S.log.push(["f", S.clock]); } }
+    while (carryR >= 1) { carryR -= 1; if (reverseEvent(true)) { S.rev++; S.log.push(["r", S.clock]); } }
+    syncParticles(m, true);
+    moveParticles(dt);
+    if (S.clock > T + 10 && S.t >= T) { S.playing = false; }
+    if ((frameN++ % 3) === 0 || !S.playing) render(); else drawParticles(m);
+    if (S.playing) requestAnimationFrame(tick);
+  }
+  function play() {
+    if (S.playing) { S.playing = false; render(); return; }
+    if (S.t >= T - 1e-9) S.clock = Math.min(S.clock, T);
+    S.playing = true; last = null; carryF = Math.random(); carryR = Math.random();
+    if (reduce) { S.playing = false; S.t = T; syncParticles(at(T), false); render(); return; }
+    requestAnimationFrame(tick);
+  }
+  var reduce = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  function restart() {
+    S.playing = false; S.t = 0; S.clock = 0; S.log = []; S.fwd = 0; S.rev = 0;
+    simulate(); seedParticles(); render();
+  }
+  function pick(k) {
+    var x = SC[k]; S.key = k;
+    if (k === "e") { var e = eqSolve(0.5, 0); S.a0 = e.a; S.b0 = e.b; } else { S.a0 = x.a0; S.b0 = x.b0; }
+    restart();
+  }
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pick(k); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  btnRun.addEventListener("click", play);
+  document.getElementById("b-reset").addEventListener("click", function () { S.playing = false; S.t = 0; S.clock = 0; S.log = []; seedParticles(); render(); });
+  elT.addEventListener("input", function () { S.playing = false; S.t = parseFloat(elT.value); S.log = []; syncParticles(at(S.t), false); render(); });
+  elA.addEventListener("input", function () { S.key = null; S.a0 = parseFloat(elA.value); restart(); });
+  elB.addEventListener("input", function () { S.key = null; S.b0 = parseFloat(elB.value); restart(); });
+  pick("a");
+
+  // ---------- Self-check ----------
+  (function () {
+    function bad(msg) { console.error("7.1 self-check: " + msg); }
+    var e1 = eqSolve(1.00, 0); // hand-solved: 4x^2 + 0.2x - 0.2 = 0 gives x = 0.200, so [N2O4] = 0.800, [NO2] = 0.400
+    if (Math.abs(e1.a - 0.800) > 1e-9 || Math.abs(e1.b - 0.400) > 1e-9) bad("equilibrium for 1.00 M N2O4 should be 0.800 / 0.400");
+    var e2 = eqSolve(0.50, 0); // 4x^2 + 0.2x - 0.1 = 0 gives x = 0.13508
+    if (Math.abs(e2.a - 0.36492) > 1e-4) bad("equilibrium for 0.50 M N2O4 should be about 0.365 M");
+    ORDER.forEach(function (k) {
+      if (k === "e") return;
+      var a0 = SC[k].a0, b0 = SC[k].b0, e = eqSolve(a0, b0);
+      if (Math.abs(e.b * e.b / e.a - K) > 1e-9) bad(k + ": solver result does not satisfy K");
+      var save = [S.a0, S.b0]; S.a0 = a0; S.b0 = b0; simulate();
+      var end = curve[curve.length - 1];
+      if (Math.abs(end[1] - e.a) > 2e-3 || Math.abs(end[2] - e.b) > 2e-3) bad(k + ": simulation does not settle at the solved equilibrium");
+      curve.forEach(function (p) { if (Math.abs(2 * p[1] + p[2] - (2 * a0 + b0)) > 1e-6) bad(k + ": atoms not conserved"); });
+      S.a0 = save[0]; S.b0 = save[1];
+    });
+    // Starts a, b, m contain the same atoms, so they share one equilibrium
+    ["b", "m"].forEach(function (k) { var e = eqSolve(SC[k].a0, SC[k].b0); if (Math.abs(e.a - e2.a) > 1e-9) bad(k + " should match the N2O4-only equilibrium"); });
+    simulate();
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "A sealed flask contains a reversible reaction at equilibrium. Which statement is correct?",
+      o: ["The forward and reverse reactions have stopped.", "The concentrations of reactants and products are equal.", "The rate of the forward reaction equals the rate of the reverse reaction, and the concentrations remain constant.", "The rate constants of the forward and reverse reactions are equal."], c: 2,
+      w: "Equilibrium is dynamic: both reactions continue at equal rates, so no net change occurs and every concentration stays constant. Choice B confuses constant with equal; choice D confuses rates with rate constants, which are generally different." },
+    { s: "Pure N₂O₄(g), which is colorless, is sealed in a flask at constant temperature. It reacts by N₂O₄(g) ⇌ 2NO₂(g), and NO₂ is brown. Which observation shows that the system has reached equilibrium?",
+      o: ["The brown color stops changing in intensity.", "The flask contains equal numbers of N₂O₄ and NO₂ molecules.", "The flask becomes completely brown.", "The brown color first appears."], c: 0,
+      w: "At equilibrium the concentrations are constant, so the intensity of the brown NO₂ color stops changing. Equal numbers of molecules (choice B) is not required, and a completely converted, fully brown flask (choice C) would mean no N₂O₄ remains, which is not equilibrium for a reversible reaction." },
+    { s: "For the reaction in the previous question, starting with only N₂O₄, how do the forward and reverse rates change before equilibrium is reached?",
+      o: ["Both rates increase until they are equal.", "The forward rate decreases and the reverse rate increases until they are equal.", "The forward rate increases and the reverse rate decreases until they are equal.", "Both rates decrease to zero."], c: 1,
+      w: "The forward rate depends on [N₂O₄], which falls as it reacts; the reverse rate depends on [NO₂], which starts at zero and rises. The rates meet at equilibrium and stay nonzero. Choice D describes a reaction that stops, which is not equilibrium." },
+    { s: "On a graph of concentration versus time for A(g) ⇌ B(g), the curves for [A] and [B] cross at t = 20 s and both become horizontal at t = 45 s. When is equilibrium first established?",
+      o: ["At t = 0 s, because the reaction is reversible", "At t = 20 s, because [A] = [B]", "Between 20 s and 45 s, when the curves have the largest slope", "At t = 45 s, because the concentrations stop changing"], c: 3,
+      w: "Equilibrium is the point where concentrations become constant, which is where every curve levels off. The crossing point at 20 s (choice B) only means the two concentrations happen to be equal at that instant; they are still changing." },
+    { s: "A small amount of water is sealed in a bottle at constant temperature. After a while, the liquid level stops changing. Which statement best describes the system?",
+      o: ["Evaporation has stopped because the air is full of water vapor.", "Water molecules continue to evaporate and condense at equal rates.", "Condensation is faster than evaporation, so the liquid level stays constant.", "Only evaporation continues, but too slowly to notice."], c: 1,
+      w: "This is a physical equilibrium. Molecules still leave the liquid and return to it, but at equal rates, so the amounts of liquid and vapor stay constant. Choice A treats equilibrium as a stopped process, the most common error." },
+    { s: "For N₂O₄(g) ⇌ 2NO₂(g), a student starts one flask with pure N₂O₄ and a second identical flask with pure NO₂ containing the same total number of N and O atoms, at the same temperature. Which prediction is correct?",
+      o: ["Both flasks reach the same equilibrium mixture.", "Only the flask that starts with N₂O₄ reaches equilibrium.", "The second flask ends with only NO₂, because the reverse reaction cannot occur without N₂O₄.", "The second flask ends with more N₂O₄ than the first, because it started from the product side."], c: 0,
+      w: "Equilibrium can be approached from either direction. In the second flask the reverse reaction runs faster at first, forming N₂O₄, until the rates are equal. With the same atoms and temperature, both flasks reach the same composition. Choice C forgets that 2NO₂ → N₂O₄ is itself the reverse reaction." },
+    { s: "For N₂O₄(g) ⇌ 2NO₂(g), starting with pure N₂O₄, the concentration of N₂O₄ decreases by 0.10 M by the time equilibrium is reached. By how much does [NO₂] change over the same time?",
+      o: ["It increases by 0.05 M.", "It decreases by 0.10 M.", "It increases by 0.10 M.", "It increases by 0.20 M."], c: 3,
+      w: "Each N₂O₄ that reacts produces 2 NO₂, so [NO₂] rises by 2 × 0.10 M = 0.20 M. Choice C ignores the coefficient of 2; on a concentration–time graph the NO₂ curve must rise twice as far as the N₂O₄ curve falls." },
+    { s: "A student claims: \"At equilibrium, no N₂O₄ molecules are breaking apart, because the color is not changing.\" Which response correctly evaluates the claim?",
+      o: ["The claim is correct; a constant color means no reaction is occurring.", "The claim is incorrect; N₂O₄ molecules continue to break apart, and NO₂ molecules combine to form N₂O₄ at the same rate.", "The claim is incorrect; N₂O₄ continues to break apart, but the reverse reaction has stopped.", "The claim is correct; at equilibrium only the reverse reaction occurs."], c: 1,
+      w: "A constant color means no net change, not no reaction. The forward and reverse reactions continue at equal rates. If only one direction were occurring (choices C and D), the color would keep changing." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("7.1");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [7], topic: "7.1", compact: true, storageKey: "topic-7.1" });</script>
+</body>
+</html>

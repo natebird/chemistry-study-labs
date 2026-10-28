@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galvanic (Voltaic) and Electrolytic Cells Study Lab</title>
+<meta name="description" content="Build an electrochemical cell from two half-cells, run it as a galvanic or an electrolytic cell, and watch electrons in the wire, ions in the salt bridge, electrode masses and gas bubbles respond.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 18px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 14px; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.btnrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.pickrow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pickrow label { display: grid; gap: 4px; font-size: .86rem; font-weight: 500; }
+select { font: inherit; font-size: .9rem; padding: 6px 8px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); width: 100%; }
+select:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.stat .v.small { font-size: .92rem; line-height: 1.4; }
+#cell text { font-size: 13px; }
+#cell .big { font-size: 14px; font-weight: 600; fill: var(--ink); }
+#cell .hot { cursor: pointer; }
+#cell .hot:hover rect { stroke: var(--accent); stroke-width: 3; }
+.fb { font-size: .9rem; } .fb.ok { color: var(--good); } .fb.no { color: var(--bad); }
+.note { font-size: .82rem; color: var(--muted); }
+@media (max-width: 520px) { .pickrow { grid-template-columns: 1fr; } }
+.legend .l-e { color: var(--c1); } .legend .l-k { color: var(--c3); } .legend .l-n { color: var(--c2); }
+.legend .l-e::before, .legend .l-k::before, .legend .l-n::before { width: 10px; height: 10px; border-radius: 50%; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 9 · Topic 9.8</span>
+  <h1>Galvanic (Voltaic) and Electrolytic Cells Study Lab</h1>
+  <p class="lede">An electrochemical cell splits a redox reaction into two half-cells, so the electrons have to travel through a wire. In a galvanic cell the reaction is thermodynamically favored and produces a current; in an electrolytic cell a power supply forces an unfavored reaction to run. Build cells from two half-cells, run them, and track every moving part.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The cell bench</h2>
+    <p>Choose a metal (or the hydrogen electrode) for each beaker, then run the cell. Orange dots are electrons in the wire; purple K<sup>+</sup> and green NO<sub>3</sub><sup>−</sup> move through the KNO<sub>3</sub> salt bridge. Switch to <b>Electrolytic</b> to replace the voltmeter with a power supply and push the reaction backward. Turn on <b>Predict first</b> to hide the labels and identify the anode yourself.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Electrochemical cell <small id="cell-sub"></small></h3>
+      <svg class="chart" id="cell" role="img" aria-label="Two beakers joined by a wire through a meter or power supply and by a salt bridge. Electrons and ions move to show the direction of the reaction."></svg>
+      <div class="lab-bar"><div class="legend"><span class="l-e">e⁻ in wire</span><span class="l-k">K⁺ (salt bridge)</span><span class="l-n">NO₃⁻ (salt bridge)</span></div></div>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Classic cells</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="pickrow">
+        <label for="sel-l">Left beaker<select id="sel-l"></select></label>
+        <label for="sel-r">Right beaker<select id="sel-r"></select></label>
+      </div>
+      <div class="group">
+        <div class="tag">Cell type</div>
+        <div class="seg" role="group" aria-label="Cell type"><button type="button" id="m-g" aria-pressed="true">Galvanic</button><button type="button" id="m-e" aria-pressed="false">Electrolytic</button></div>
+      </div>
+      <div class="btnrow">
+        <button type="button" id="b-run" class="primary">Run</button>
+        <button type="button" id="b-reset">Reset</button>
+        <button type="button" id="b-swap">Swap beakers</button>
+        <button type="button" id="b-pred" aria-pressed="false">Predict first: off</button>
+      </div>
+      <div class="ctl">
+        <label for="s-q">Electrons transferred so far <output id="o-q"></output></label>
+        <input type="range" id="s-q" min="0" max="0.08" step="0.002">
+        <span class="hint">Each beaker starts with 0.100 L of 1.00 M solution</span>
+      </div>
+      <div class="fb" id="fb" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Anode (oxidation)</div><div class="v small" id="r-an"></div><div class="sub" id="r-an2"></div></div>
+    <div class="stat"><div class="k">Cathode (reduction)</div><div class="v small" id="r-ca"></div><div class="sub" id="r-ca2"></div></div>
+    <div class="stat"><div class="k">E°cell for the reaction that runs</div><div class="v" id="r-e"></div><div class="sub" id="r-e2"></div></div>
+    <div class="stat"><div class="k">Electron flow in the wire</div><div class="v small" id="r-f"></div><div class="sub" id="r-f2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">Simplifications: standard 1 M solutions and 1 atm H<sub>2</sub>; in electrolytic mode the metal ion (not water) is assumed to be reduced; the particle counts in the beakers are a scaled-down picture of the concentrations, and nitrate counter-ions in the beakers are not drawn. Labeling an electrode as positive or negative is not assessed on the AP exam, so this lab leaves those signs off.</p>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Always true</span><h3>Oxidation at the anode, reduction at the cathode</h3><p>This holds for every electrochemical cell, galvanic or electrolytic. What changes between the two types is which half-cell gets to be the anode. Memory aid: <b>An Ox</b> and a <b>Red Cat</b>.</p></div>
+    <div class="card"><span class="tag">Thermodynamics</span><h3>Galvanic vs. electrolytic</h3><p>A galvanic (voltaic) cell runs a thermodynamically favored reaction (E°cell &gt; 0, ΔG° &lt; 0) and pushes current through a load. An electrolytic cell uses an external power supply to drive a thermodynamically unfavored reaction (the reverse direction).</p></div>
+    <div class="card"><span class="tag">Two paths</span><h3>Electrons in the wire, ions in the bridge</h3><p>Electrons travel only through the external wire, from anode to cathode. They never cross the salt bridge or the solutions. Inside the cell, charge is carried by ions moving through the solutions and the salt bridge.</p></div>
+    <div class="card"><span class="tag">Salt bridge</span><h3>Keeps each beaker neutral</h3><p>The anode beaker gains cations as metal dissolves; the cathode beaker loses them as they plate out. Anions from the bridge flow toward the anode and cations toward the cathode, so neither beaker builds up charge. Without it, the current stops almost at once.</p></div>
+    <div class="card"><span class="tag">Macroscopic clues</span><h3>What you can see</h3><p>The anode metal dissolves and loses mass; metal plates onto the cathode and it gains mass. A colored ion (blue Cu<sup>2+</sup>) fades where it is reduced. A gas such as H<sub>2</sub> bubbles off where H<sup>+</sup> is reduced. Each clue tells you which half-reaction happens where.</p></div>
+    <div class="card"><span class="tag">The meter</span><h3>Voltmeter or power supply</h3><p>In a galvanic cell the external device measures the voltage (or uses the current). In an electrolytic cell it is a power source that must supply more than the magnitude of E°cell to push electrons the "wrong" way.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Cell components cheat sheet</h2>
+    <p>What each part does, and what an FRQ might ask you to predict if it changes.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Component</th><th>Role</th><th>If you change or remove it</th></tr></thead>
+    <tbody>
+      <tr><td>Anode</td><td><b>Oxidation</b> happens here; electrons leave the cell through it. A metal anode dissolves and loses mass.</td><td>Smaller anode: the cell stops sooner when it is used up.</td></tr>
+      <tr><td>Cathode</td><td><b>Reduction</b> happens here; electrons enter the cell through it. Metal plates out (mass increases) or a gas such as H<sub>2</sub> forms.</td><td>An inert electrode (Pt, graphite) works when the reduced form is a gas or an ion in solution.</td></tr>
+      <tr><td>Half-cell solutions</td><td>Supply the ions that are reduced or receive the ions that form.</td><td>Changing concentrations changes the voltage (topic 9.10).</td></tr>
+      <tr><td>Salt bridge (e.g., KNO<sub>3</sub>)</td><td>Lets ions migrate to keep both beakers electrically neutral: anions toward the anode, cations toward the cathode.</td><td>Removed: charge builds up, the circuit is incomplete, and the current and measured voltage drop to zero.</td></tr>
+      <tr><td>External wire</td><td>Carries electrons from anode to cathode.</td><td>Disconnected: no current; the reaction stops.</td></tr>
+      <tr><td>Voltmeter / load (galvanic)</td><td>Measures the cell potential or uses the electrical energy.</td><td>The voltage depends on which half-cells are paired, not on electrode size.</td></tr>
+      <tr><td>Power supply (electrolytic)</td><td>Pushes electrons to drive the unfavored reaction.</td><td>Below the minimum voltage, the unfavored reaction does not occur.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Cells on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Identify the anode by the half-reaction that is an oxidation, and the cathode by the reduction. Write each half-reaction with electrons shown.</li>
+        <li>Give the direction of electron flow in the wire as "from the X electrode to the Y electrode."</li>
+        <li>For the salt bridge, say which ions move toward which half-cell and why (to balance the charge being produced or consumed).</li>
+        <li>Connect observations to half-reactions: "the Cu electrode gains mass because Cu<sup>2+</sup> is reduced to Cu(s) there."</li>
+        <li>Classify the cell with thermodynamics: favored reaction, E°cell &gt; 0 → galvanic; external source drives an unfavored reaction → electrolytic.</li>
+        <li>For experimental-design questions, trace the change through the cell (removing the bridge stops the current; a bigger electrode does not change the voltage).</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying electrons flow through the salt bridge or the solution. Only ions move there.</li>
+        <li>Thinking the anode is always the same metal. In an electrolytic cell the roles reverse compared with the galvanic cell made from the same half-cells.</li>
+        <li>Sending K<sup>+</sup> toward the anode. Cations go to the cathode beaker, which is losing cations.</li>
+        <li>Saying the cathode loses mass. Reduction deposits metal, so the cathode gains mass (or produces a gas).</li>
+        <li>Spending exam time on which electrode is "+" or "−". Those labels are not assessed; anode/cathode and oxidation/reduction are.</li>
+        <li>Forgetting to balance electrons when combining half-reactions into the overall equation.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 9.8. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-9.html">Unit 9 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var E = Lab.el;
+  var reduce = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  // ---------- Half-cells (reduction written: ox + n e⁻ → red), E° in V at 25 °C ----------
+  // ionPerUnit: ions consumed per unit reduction; M: molar mass of the solid (null for gas).
+  var HC = {
+    Mg: { label: "Mg | Mg²⁺", ox: [1, "Mg^2+"], red: [1, "Mg"], n: 2, E: -2.37, el: "Mg", M: Lab.BY_SYMBOL.Mg.m, tint: null },
+    Al: { label: "Al | Al³⁺", ox: [1, "Al^3+"], red: [1, "Al"], n: 3, E: -1.66, el: "Al", M: Lab.BY_SYMBOL.Al.m, tint: null },
+    Zn: { label: "Zn | Zn²⁺", ox: [1, "Zn^2+"], red: [1, "Zn"], n: 2, E: -0.76, el: "Zn", M: Lab.BY_SYMBOL.Zn.m, tint: null },
+    Fe: { label: "Fe | Fe²⁺", ox: [1, "Fe^2+"], red: [1, "Fe"], n: 2, E: -0.44, el: "Fe", M: Lab.BY_SYMBOL.Fe.m, tint: null },
+    Ni: { label: "Ni | Ni²⁺", ox: [1, "Ni^2+"], red: [1, "Ni"], n: 2, E: -0.25, el: "Ni", M: Lab.BY_SYMBOL.Ni.m, tint: "var(--c2)" },
+    Pb: { label: "Pb | Pb²⁺", ox: [1, "Pb^2+"], red: [1, "Pb"], n: 2, E: -0.13, el: "Pb", M: Lab.BY_SYMBOL.Pb.m, tint: null },
+    H: { label: "Pt | H₂, H⁺", ox: [2, "H^+"], red: [1, "H2"], n: 2, E: 0.00, el: "Pt", M: null, tint: null, gas: true },
+    Cu: { label: "Cu | Cu²⁺", ox: [1, "Cu^2+"], red: [1, "Cu"], n: 2, E: 0.34, el: "Cu", M: Lab.BY_SYMBOL.Cu.m, tint: "var(--accent)" },
+    Ag: { label: "Ag | Ag⁺", ox: [1, "Ag^+"], red: [1, "Ag"], n: 1, E: 0.80, el: "Ag", M: Lab.BY_SYMBOL.Ag.m, tint: null }
+  };
+  var KEYS = ["Mg", "Al", "Zn", "Fe", "Ni", "Pb", "H", "Cu", "Ag"];
+  var SC = {
+    daniell: { name: "Zn | Cu (Daniell)", l: "Zn", r: "Cu", mode: "g" },
+    cuag: { name: "Cu | Ag", l: "Cu", r: "Ag", mode: "g" },
+    znh: { name: "Zn | H⁺ (gas forms)", l: "Zn", r: "H", mode: "g" },
+    nipb: { name: "Ni | Pb (small E°)", l: "Ni", r: "Pb", mode: "g" },
+    recharge: { name: "Zn | Cu, electrolytic", l: "Zn", r: "Cu", mode: "e" }
+  };
+  var SCO = ["daniell", "cuag", "znh", "nipb", "recharge"];
+  var V0 = 0.100, C0 = 1.00, QMAX = 0.08;
+
+  var S = { l: "Zn", r: "Cu", mode: "g", q: 0, running: false, pred: false, guessed: null, sc: "daniell" };
+
+  // ---------- Chemistry ----------
+  function charge(sp) { var m = sp.match(/\^(\d*)([+\-])$/); return m ? (m[1] ? +m[1] : 1) * (m[2] === "+" ? 1 : -1) : 0; }
+  function state(sp) { return charge(sp) ? "(aq)" : sp === "H2" ? "(g)" : "(s)"; }
+  function f(sp) { return Lab.fmla(sp) + state(sp); }
+  function co(c) { return c === 1 ? "" : c; }
+  function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+  function model() {
+    var L = HC[S.l], R = HC[S.r];
+    var favCat = L.E > R.E ? "l" : "r";               // side with the higher E° is the galvanic cathode
+    var cat = S.mode === "g" ? favCat : (favCat === "l" ? "r" : "l");
+    var an = cat === "l" ? "r" : "l";
+    var C = HC[S[cat]], A = HC[S[an]];
+    var Ecell = C.E - A.E;                              // E° for the reaction that actually runs (negative if forced)
+    var lcm = C.n * A.n / gcd(C.n, A.n), kc = lcm / C.n, ka = lcm / A.n;
+    var eq = { L: [[kc * C.ox[0], C.ox[1]], [ka * A.red[0], A.red[1]]], R: [[kc * C.red[0], C.red[1]], [ka * A.ox[0], A.ox[1]]], n: lcm };
+    // amounts after S.q mol e⁻
+    var ionC = C0 * V0 - S.q * C.ox[0] / C.n;           // cathode-beaker ions left
+    var ionA = C0 * V0 + S.q * A.ox[0] / A.n;           // anode-beaker ions formed
+    var dmC = C.M ? S.q / C.n * C.M : 0, dmA = A.M ? -S.q / A.n * A.M : 0;
+    var gasC = C.gas ? S.q / C.n : 0, gasA = A.gas ? S.q / A.n : 0;
+    return { cat: cat, an: an, C: C, A: A, Ecell: Ecell, eq: eq, ionC: ionC, ionA: ionA, dmC: dmC, dmA: dmA, gasC: gasC, gasA: gasA };
+  }
+  function halfOx(h) { return co(h.red[0]) + f(h.red[1]) + " → " + co(h.ox[0]) + f(h.ox[1]) + " + " + h.n + "e⁻"; }
+  function halfRed(h) { return co(h.ox[0]) + f(h.ox[1]) + " + " + h.n + "e⁻ → " + co(h.red[0]) + f(h.red[1]); }
+  function eqHTML(eq) {
+    function side(a) { return a.map(function (t) { return co(t[0]) + f(t[1]); }).join(" + "); }
+    return side(eq.L) + " → " + side(eq.R);
+  }
+  function V(v) { return (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(2) + " V"; }
+  function name(side) { return HC[S[side]].el + " electrode (" + (side === "l" ? "left" : "right") + ")"; }
+
+  // ---------- Drawing ----------
+  var svg = document.getElementById("cell");
+  var W = 460, H = 372;
+  var GEO = { l: { x0: 24, x1: 204, ex: 78, bx: 180 }, r: { x0: 256, x1: 436, ex: 382, bx: 280 } };
+  var TOPW = 44, BRY = 118, SOLY = 196, BOT = 338;
+  var wirePts = [];             // path from left electrode to right electrode
+  var bridgePts = [];
+  var dynG = null;
+  function poly(pts, t) {       // point at fraction t along a polyline
+    var len = 0, seg = [];
+    for (var i = 1; i < pts.length; i++) { var d = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); seg.push(d); len += d; }
+    var s = t * len;
+    for (var j = 0; j < seg.length; j++) { if (s <= seg[j]) { var k = s / seg[j]; return [pts[j][0] + (pts[j + 1][0] - pts[j][0]) * k, pts[j][1] + (pts[j + 1][1] - pts[j][1]) * k]; } s -= seg[j]; }
+    return pts[pts.length - 1];
+  }
+  function jit(i, s) { var v = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453; return v - Math.floor(v); }
+  function draw(m) {
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var hide = S.pred && !S.guessed;
+    ["l", "r"].forEach(function (sd) {
+      var g = GEO[sd], h = HC[S[sd]], isCat = m.cat === sd;
+      var conc = (isCat ? m.ionC : m.ionA) / V0;
+      // solution
+      E("rect", { x: g.x0 + 2, y: SOLY, width: g.x1 - g.x0 - 4, height: BOT - SOLY - 2, fill: h.tint || "var(--ghost)", opacity: h.tint ? Math.max(0.05, 0.3 * conc) : 0.14 }, svg);
+      // beaker
+      E("path", { d: "M" + g.x0 + " 150 L" + g.x0 + " " + BOT + " L" + g.x1 + " " + BOT + " L" + g.x1 + " 150", fill: "none", stroke: "var(--ink)", "stroke-width": 2 }, svg);
+      // ions (scaled count)
+      var N = Math.max(0, Math.round(8 * conc));
+      for (var i = 0; i < N; i++) {
+        var px = g.x0 + 16 + jit(i, sd === "l" ? 1 : 2) * (g.x1 - g.x0 - 32), py = SOLY + 16 + jit(i, sd === "l" ? 3 : 4) * (BOT - SOLY - 50);
+        if (Math.abs(px - g.ex) < 20) px += px < g.ex ? -20 : 20;
+        if (Math.abs(px - g.bx) < 16) px += px < g.bx ? -14 : 14;
+        E("circle", { cx: px, cy: py, r: h.ox[0] === 2 ? 4 : 6, fill: h.tint || "var(--muted)", opacity: 0.85 }, svg);
+      }
+      E("text", { x: (g.x0 + g.x1) / 2, y: BOT - 8, "text-anchor": "middle", style: "fill:var(--ink)" }, svg, h.ox[1].replace("^2+", "²⁺").replace("^3+", "³⁺").replace("^+", "⁺") + "  " + conc.toFixed(2) + " M" + (h.gas ? " · H₂ 1 atm" : ""));
+      // electrode
+      var dm = isCat ? m.dmC : m.dmA;
+      var w = h.gas ? 10 : Math.max(6, 20 + dm * 1.6);
+      var hot = E("g", { "class": S.pred && !S.guessed ? "hot" : "", "data-side": sd }, svg);
+      E("rect", { x: g.ex - w / 2, y: TOPW + 58, width: w, height: BOT - 34 - (TOPW + 58), rx: 2, fill: h.gas ? "var(--ghost)" : "var(--muted)", stroke: "var(--ink)", "stroke-width": 1 }, hot);
+      if (S.pred && !S.guessed) E("rect", { x: g.ex - 26, y: TOPW + 50, width: 52, height: BOT - 70 - TOPW, fill: "transparent" }, hot);
+      E("text", { x: g.ex + (sd === "l" ? -16 : 16), y: TOPW + 74, "text-anchor": sd === "l" ? "end" : "start", "class": "big" }, svg, h.el);
+      if (h.gas) {
+        E("path", { d: "M" + (g.ex + 22) + " " + (TOPW + 96) + " L" + (g.ex + 22) + " " + (BOT - 40) + " L" + (g.ex + 8) + " " + (BOT - 40), fill: "none", stroke: "var(--ghost)", "stroke-width": 3 }, svg);
+      }
+      // labels under beaker
+      if (!hide) {
+        E("text", { x: (g.x0 + g.x1) / 2, y: H - 14, "text-anchor": "middle", "class": "big", style: "fill:" + (isCat ? "var(--c2)" : "var(--c1)") }, svg, isCat ? "CATHODE · reduction" : "ANODE · oxidation");
+      } else {
+        E("text", { x: (g.x0 + g.x1) / 2, y: H - 14, "text-anchor": "middle", "class": "big" }, svg, "anode or cathode?");
+      }
+      if (!hide && dm) E("text", { x: g.ex + (sd === "l" ? -16 : 16), y: TOPW + 92, "text-anchor": sd === "l" ? "end" : "start", style: "fill:" + (dm > 0 ? "var(--good)" : "var(--bad)") }, svg, (dm > 0 ? "+" : "−") + Math.abs(dm).toFixed(2) + " g");
+    });
+    // wire + device
+    var lx = GEO.l.ex, rx = GEO.r.ex;
+    wirePts = [[lx, TOPW + 58], [lx, TOPW], [rx, TOPW], [rx, TOPW + 58]];
+    E("path", { d: "M" + wirePts.map(function (p) { return p.join(" "); }).join(" L"), fill: "none", stroke: "var(--ink)", "stroke-width": 2 }, svg);
+    var cx = W / 2;
+    if (S.mode === "g") {
+      E("circle", { cx: cx, cy: TOPW, r: 20, fill: "var(--surface)", stroke: "var(--ink)", "stroke-width": 2 }, svg);
+      E("text", { x: cx, y: TOPW + 5, "text-anchor": "middle", "class": "big" }, svg, "V");
+      E("text", { x: cx, y: TOPW - 26, "text-anchor": "middle", style: "fill:var(--ink)" }, svg, hide ? "voltmeter" : "voltmeter: " + Math.abs(m.Ecell).toFixed(2) + " V");
+    } else {
+      E("rect", { x: cx - 34, y: TOPW - 18, width: 68, height: 36, rx: 4, fill: "var(--surface)", stroke: "var(--ink)", "stroke-width": 2 }, svg);
+      E("text", { x: cx, y: TOPW + 5, "text-anchor": "middle", "class": "big" }, svg, "power");
+      E("text", { x: cx, y: TOPW - 26, "text-anchor": "middle", style: "fill:var(--ink)" }, svg, "supply > " + Math.abs(m.Ecell).toFixed(2) + " V");
+    }
+    // salt bridge
+    var bl = GEO.l.bx, br = GEO.r.bx;
+    bridgePts = [[bl, 290], [bl, BRY], [br, BRY], [br, 290]];
+    E("path", { d: "M" + bridgePts.map(function (p) { return p.join(" "); }).join(" L"), fill: "none", stroke: "var(--ghost)", "stroke-width": 22, "stroke-linejoin": "round", opacity: 0.55 }, svg);
+    E("text", { x: cx, y: BRY - 16, "text-anchor": "middle", style: "fill:var(--muted)" }, svg, "salt bridge (KNO₃)");
+    // direction arrows (static, shown unless predicting)
+    if (!hide) {
+      var dir = m.an === "l" ? 1 : -1;
+      var ay = TOPW + 16, a0 = cx - dir * 70, a1 = cx - dir * 30;
+      arrowPx(a0, ay, a1, ay, "var(--c1)"); arrowPx(cx + dir * 30, ay, cx + dir * 70, ay, "var(--c1)");
+      E("text", { x: cx, y: ay + 18, "text-anchor": "middle", style: "fill:var(--c1); font-weight:600" }, svg, "e⁻ flow");
+    }
+    dynG = E("g", {}, svg);
+    if (S.pred && !S.guessed) {
+      Array.prototype.forEach.call(svg.querySelectorAll(".hot"), function (g) {
+        g.addEventListener("click", function () { guess(g.getAttribute("data-side")); });
+      });
+    }
+    drawDyn(0);
+  }
+  function arrowPx(x1, y1, x2, y2, col) {
+    var ux = x2 > x1 ? 1 : -1;
+    E("path", { d: "M" + x1 + " " + y1 + " L" + x2 + " " + y2, stroke: col, "stroke-width": 2.5, fill: "none" }, svg);
+    E("path", { d: "M" + x2 + " " + y2 + " L" + (x2 - 8 * ux) + " " + (y2 - 5) + " L" + (x2 - 8 * ux) + " " + (y2 + 5) + " Z", fill: col }, svg);
+  }
+  var phase = 0;
+  function drawDyn(ph) {
+    if (!dynG) return;
+    while (dynG.firstChild) dynG.removeChild(dynG.firstChild);
+    if (S.pred && !S.guessed) return;
+    var m = cur;
+    var fwd = m.an === "l";       // electrons leave the anode
+    for (var i = 0; i < 9; i++) {
+      var t = ((i / 9) + ph) % 1; if (!fwd) t = 1 - t;
+      var p = poly(wirePts, t);
+      E("circle", { cx: p[0], cy: p[1], r: 4, fill: "var(--c1)" }, dynG);
+    }
+    // ions in bridge: K+ toward cathode, NO3- toward anode
+    for (var j = 0; j < 4; j++) {
+      var tk = ((j / 4) + ph * 0.5) % 1, tn = ((j / 4) + 0.12 + ph * 0.5) % 1;
+      var pk = poly(bridgePts, m.cat === "r" ? tk : 1 - tk), pn = poly(bridgePts, m.an === "r" ? tn : 1 - tn);
+      E("circle", { cx: pk[0], cy: pk[1] - 4, r: 4, fill: "var(--c3)" }, dynG);
+      E("circle", { cx: pn[0], cy: pn[1] + 4, r: 4, fill: "var(--c2)" }, dynG);
+    }
+    // gas bubbles
+    [["l", m.an === "l" ? m.gasA : m.gasC], ["r", m.an === "r" ? m.gasA : m.gasC]].forEach(function (x) {
+      var h = HC[S[x[0]]]; if (!h.gas) return;
+      var g = GEO[x[0]], isCat = m.cat === x[0];
+      for (var b = 0; b < 6; b++) {
+        var tb = ((b / 6) + ph * 0.7) % 1, y = isCat ? BOT - 50 - tb * (BOT - 50 - SOLY) : BOT - 40 - tb * 40;
+        var bx = isCat ? g.ex + (b % 2 ? 8 : -9) : g.ex + 14 - tb * 4;
+        E("circle", { cx: bx, cy: y, r: 3 + (b % 3), fill: "none", stroke: "var(--ink)", "stroke-width": 1, opacity: S.running || reduce ? 0.8 : 0.5 }, dynG);
+      }
+    });
+  }
+  var raf = null, last = null;
+  function loop(ts) {
+    if (!S.running) { raf = null; last = null; return; }
+    if (last == null) last = ts;
+    var dt = Math.min(0.05, (ts - last) / 1000); last = ts;
+    phase = (phase + dt * 0.25) % 1;
+    S.q = Math.min(QMAX, S.q + dt * QMAX / 12);
+    if (S.q >= QMAX) S.running = false;
+    if (Math.round(S.q / 0.002) !== Math.round((S.q - dt * QMAX / 12) / 0.002) || !S.running) render(true); else drawDyn(phase);
+    raf = requestAnimationFrame(loop);
+  }
+
+  // ---------- Readouts & story ----------
+  var cur = null;
+  function readouts(m) {
+    var hide = S.pred && !S.guessed;
+    document.getElementById("r-an").innerHTML = hide ? "?" : halfOx(m.A);
+    document.getElementById("r-an2").textContent = hide ? "" : name(m.an);
+    document.getElementById("r-ca").innerHTML = hide ? "?" : halfRed(m.C);
+    document.getElementById("r-ca2").textContent = hide ? "" : name(m.cat);
+    document.getElementById("r-e").textContent = hide ? "?" : V(m.Ecell);
+    document.getElementById("r-e2").textContent = hide ? "" : (m.Ecell > 0 ? "thermodynamically favored: galvanic" : "unfavored: needs a power supply");
+    document.getElementById("r-f").textContent = hide ? "?" : HC[S[m.an]].el + " → " + HC[S[m.cat]].el;
+    document.getElementById("r-f2").textContent = hide ? "" : "anode to cathode, through the wire only";
+    document.getElementById("o-q").textContent = S.q.toFixed(3) + " mol e⁻";
+    document.getElementById("cell-sub").textContent = S.mode === "g" ? "galvanic: reaction runs on its own" : "electrolytic: power supply drives it";
+  }
+  function story(m) {
+    if (S.pred && !S.guessed) {
+      return "<p><b>Predict first.</b> The labels are hidden. The half-cells are " + HC[S.l].label + " (left) and " + HC[S.r].label + " (right), set up as " + (S.mode === "g" ? "a galvanic cell" : "an electrolytic cell") + ". Standard reduction potentials: " + HC[S.l].el + " side " + V(HC[S.l].E) + ", " + HC[S.r].el + " side " + V(HC[S.r].E) + ". Click the electrode where <b>oxidation</b> happens.</p><p><b>AP answer:</b> in every cell, the anode is where oxidation occurs. " + (S.mode === "g" ? "In a galvanic cell the half-reaction with the more positive E° is the reduction, so the other one is the oxidation." : "In an electrolytic cell the power supply reverses the galvanic direction.") + "</p>";
+    }
+    var li = [], A = m.A, C = m.C;
+    var gal = S.mode === "g";
+    li.push(gal ? "Comparing reduction potentials, " + f(C.ox[1]) + " (" + V(C.E) + ") is reduced more readily than " + f(A.ox[1]) + " (" + V(A.E) + "). So on its own the cell runs with <b>" + C.el + " as the cathode</b> and <b>" + A.el + " as the anode</b>: E°cell = " + V(C.E) + " − (" + V(A.E) + ") = " + V(m.Ecell) + " &gt; 0, a thermodynamically favored reaction."
+      : "Left alone, this pair would run the other way. The power supply forces the <b>unfavored</b> direction: " + f(C.ox[1]) + " is reduced at the " + C.el + " electrode (now the <b>cathode</b>) and " + f(A.red[1]) + " is oxidized at the " + A.el + " electrode (now the <b>anode</b>). E°cell for this direction = " + V(C.E) + " − (" + V(A.E) + ") = " + V(m.Ecell) + ", so the supply must push with more than " + Math.abs(m.Ecell).toFixed(2) + " V.");
+    li.push("Overall (electrons balanced, " + m.eq.n + " e⁻): " + eqHTML(m.eq) + ".");
+    li.push("Electrons leave the " + A.el + " anode, travel through the wire" + (gal ? " and the voltmeter" : " and the power supply") + ", and enter the " + C.el + " cathode. They never pass through the salt bridge.");
+    li.push("Salt bridge: the anode beaker is gaining " + Lab.fmla(A.ox[1]) + " ions, so NO<sub>3</sub><sup>−</sup> flows toward it; the cathode beaker is losing " + Lab.fmla(C.ox[1]) + ", so K<sup>+</sup> flows toward it. Both beakers stay neutral.");
+    var obs = [];
+    if (S.q > 0) {
+      if (A.M) obs.push("the " + A.el + " anode has lost " + Math.abs(m.dmA).toFixed(2) + " g (" + S.q.toFixed(3) + " mol e⁻ ÷ " + A.n + " × " + A.M.toFixed(2) + " g/mol)");
+      else obs.push("H<sub>2</sub> gas has been consumed at the Pt anode (" + m.gasA.toFixed(3) + " mol)");
+      if (C.M) obs.push("the " + C.el + " cathode has gained " + m.dmC.toFixed(2) + " g as metal plates out");
+      else obs.push("bubbles of H<sub>2</sub> gas form at the Pt cathode (" + m.gasC.toFixed(3) + " mol so far)");
+      if (C.tint) obs.push("the " + C.el + " solution is paler because its colored ions are being reduced");
+      if (A.tint) obs.push("the " + A.el + " solution is getting more intensely colored as its ions form");
+      li.push("After " + S.q.toFixed(3) + " mol e⁻: " + obs.join("; ") + ".");
+    } else li.push("Press <b>Run</b> (or drag the slider) to transfer electrons and watch the electrodes and solutions change.");
+    var h = "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+    h += "<p><b>AP answer:</b> oxidation occurs at the anode (" + A.el + ") and reduction at the cathode (" + C.el + "); electrons flow through the wire from " + A.el + " to " + C.el + ", and ions in the salt bridge migrate to keep each half-cell neutral. " +
+      (gal ? "The reaction is thermodynamically favored (E°cell &gt; 0), so this is a galvanic cell." : "The reaction is thermodynamically unfavored (E°cell &lt; 0), so it needs an external power source: this is an electrolytic cell.") + "</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  var selL = document.getElementById("sel-l"), selR = document.getElementById("sel-r"), elQ = document.getElementById("s-q");
+  var btnRun = document.getElementById("b-run"), btnPred = document.getElementById("b-pred"), fb = document.getElementById("fb");
+  KEYS.forEach(function (k) {
+    [selL, selR].forEach(function (s) { var o = document.createElement("option"); o.value = k; o.textContent = HC[k].label + "  (E° " + V(HC[k].E) + ")"; s.appendChild(o); });
+  });
+  var scBtns = {};
+  function render(fromLoop) {
+    var m = model(); cur = m;
+    selL.value = S.l; selR.value = S.r; elQ.value = S.q;
+    document.getElementById("m-g").setAttribute("aria-pressed", S.mode === "g" ? "true" : "false");
+    document.getElementById("m-e").setAttribute("aria-pressed", S.mode === "e" ? "true" : "false");
+    btnRun.textContent = S.running ? "Pause" : (S.q >= QMAX ? "Run (done)" : "Run");
+    btnPred.textContent = "Predict first: " + (S.pred ? "on" : "off");
+    btnPred.setAttribute("aria-pressed", S.pred ? "true" : "false");
+    SCO.forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.sc === k ? "true" : "false"); });
+    draw(m); drawDyn(phase); readouts(m);
+    document.getElementById("story").innerHTML = story(m);
+    if (!fromLoop && !S.pred) fb.textContent = "";
+  }
+  function stop() { S.running = false; }
+  function change(fn) { stop(); fn(); S.sc = null; SCO.forEach(function (k) { var x = SC[k]; if (x.l === S.l && x.r === S.r && x.mode === S.mode) S.sc = k; }); S.guessed = null; render(); }
+  function guess(side) {
+    var m = cur; S.guessed = side;
+    if (side === m.an) { fb.className = "fb ok"; fb.textContent = "Correct: oxidation happens at the " + HC[S[side]].el + " electrode, so it is the anode."; }
+    else { fb.className = "fb no"; fb.textContent = "Not quite. The " + HC[S[side]].el + " electrode is the cathode (reduction). " + (S.mode === "g" ? "In a galvanic cell the half-cell with the more positive E° is reduced." : "In an electrolytic cell the supply reverses the galvanic roles."); }
+    render(true);
+  }
+  SCO.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name;
+    b.addEventListener("click", function () { change(function () { S.l = SC[k].l; S.r = SC[k].r; S.mode = SC[k].mode; S.q = 0; }); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  selL.addEventListener("change", function () { change(function () { S.l = selL.value; if (S.l === S.r) S.r = S.l === "Cu" ? "Zn" : "Cu"; S.q = 0; }); });
+  selR.addEventListener("change", function () { change(function () { S.r = selR.value; if (S.l === S.r) S.l = S.r === "Zn" ? "Cu" : "Zn"; S.q = 0; }); });
+  document.getElementById("m-g").addEventListener("click", function () { change(function () { S.mode = "g"; S.q = 0; }); });
+  document.getElementById("m-e").addEventListener("click", function () { change(function () { S.mode = "e"; S.q = 0; }); });
+  document.getElementById("b-swap").addEventListener("click", function () { change(function () { var t = S.l; S.l = S.r; S.r = t; S.q = 0; }); });
+  document.getElementById("b-reset").addEventListener("click", function () { stop(); S.q = 0; S.guessed = null; render(); });
+  btnPred.addEventListener("click", function () { stop(); S.pred = !S.pred; S.guessed = null; fb.textContent = S.pred ? "Click the electrode where oxidation happens." : ""; fb.className = "fb"; render(true); });
+  elQ.addEventListener("input", function () { stop(); S.q = parseFloat(elQ.value); render(true); });
+  btnRun.addEventListener("click", function () {
+    if (S.pred && !S.guessed) { fb.className = "fb no"; fb.textContent = "Make your prediction first: click the electrode where oxidation happens."; return; }
+    if (S.running) { stop(); render(true); return; }
+    if (S.q >= QMAX) S.q = 0;
+    S.running = true; render(true);
+    if (reduce) { S.q = QMAX; S.running = false; render(true); return; }
+    if (!raf) raf = requestAnimationFrame(loop);
+  });
+
+  // ---------- Self-check ----------
+  (function selfCheck() {
+    var errs = [], save = { l: S.l, r: S.r, mode: S.mode, q: S.q };
+    function tally(list) { var a = { q: 0 }; list.forEach(function (t) { var c = Lab.parseFormula(t[1]); for (var e in c) a[e] = (a[e] || 0) + c[e] * t[0]; a.q += charge(t[1]) * t[0]; }); return a; }
+    KEYS.forEach(function (a) { KEYS.forEach(function (b) {
+      if (a === b) return;
+      ["g", "e"].forEach(function (mode) {
+        S.l = a; S.r = b; S.mode = mode; S.q = 0.04;
+        var m = model(), L = tally(m.eq.L), R = tally(m.eq.R);
+        Object.keys(L).concat(Object.keys(R)).forEach(function (k) { if (Math.abs((L[k] || 0) - (R[k] || 0)) > 1e-9) errs.push(a + "/" + b + " " + mode + " unbalanced in " + k); });
+        if (mode === "g" && !(m.Ecell > 0)) errs.push(a + "/" + b + " galvanic E° not positive");
+        if (mode === "e" && !(m.Ecell < 0)) errs.push(a + "/" + b + " electrolytic E° not negative");
+        if (m.C.M && m.dmC <= 0) errs.push(a + "/" + b + " cathode should gain mass");
+        if (m.A.M && m.dmA >= 0) errs.push(a + "/" + b + " anode should lose mass");
+      });
+    }); });
+    S.l = "Zn"; S.r = "Cu"; S.mode = "g"; S.q = 0.02;
+    var d = model();
+    if (Math.abs(d.Ecell - 1.10) > 1e-9) errs.push("Daniell E°");
+    if (Math.abs(d.dmA + 0.6538) > 1e-4 || Math.abs(d.dmC - 0.6355) > 1e-4) errs.push("Daniell masses");
+    if (d.an !== "l") errs.push("Daniell anode should be Zn");
+    S.l = save.l; S.r = save.r; S.mode = save.mode; S.q = save.q;
+    if (errs.length) console.error("9.8 self-check failed: " + errs.slice(0, 6).join("; "));
+  })();
+
+  render();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "A galvanic cell is built from a Zn electrode in 1.0 M Zn(NO₃)₂ and a Cu electrode in 1.0 M Cu(NO₃)₂. Which half-reaction occurs at the anode?",
+      o: ["Cu²⁺(aq) + 2e⁻ → Cu(s)", "Zn(s) → Zn²⁺(aq) + 2e⁻", "Zn²⁺(aq) + 2e⁻ → Zn(s)", "Cu(s) → Cu²⁺(aq) + 2e⁻"], c: 1,
+      w: "Oxidation always occurs at the anode. Cu²⁺ (E° = +0.34 V) is more easily reduced than Zn²⁺ (E° = −0.76 V), so in the galvanic cell Cu²⁺ is reduced and Zn is oxidized. Choice A is the cathode reaction; choice D would be the anode only if the cell were run as an electrolytic cell." },
+    { s: "A galvanic cell is made from Cu | Cu²⁺ (E° = +0.34 V) and Ag | Ag⁺ (E° = +0.80 V) half-cells. Which describes the flow of electrons?",
+      o: ["From the Ag electrode to the Cu electrode through the salt bridge", "From the Ag electrode to the Cu electrode through the wire", "From the Cu electrode to the Ag electrode through the salt bridge", "From the Cu electrode to the Ag electrode through the wire"], c: 3,
+      w: "Ag⁺ has the more positive reduction potential, so Ag⁺ is reduced (Ag is the cathode) and Cu is oxidized (Cu is the anode). Electrons flow from anode to cathode through the external wire. Choices A and C send electrons through the salt bridge, which only carries ions." },
+    { s: "In the Zn/Cu galvanic cell, the salt bridge contains KNO₃(aq). As the cell operates, which describes the movement of ions in the salt bridge?",
+      o: ["NO₃⁻ ions move toward the Zn half-cell, and K⁺ ions move toward the Cu half-cell.", "NO₃⁻ ions move toward the Cu half-cell, and K⁺ ions move toward the Zn half-cell.", "Both K⁺ and NO₃⁻ move toward the Cu half-cell.", "No ions move; the salt bridge only conducts electrons."], c: 0,
+      w: "Zn²⁺ ions are produced in the Zn (anode) beaker, so anions (NO₃⁻) move there to balance the extra positive charge. Cu²⁺ is removed from the Cu (cathode) beaker, so cations (K⁺) move in to replace it. Choice B has both directions reversed; choice D is wrong because the bridge never carries electrons." },
+    { s: "A Zn/Cu galvanic cell is allowed to operate for several hours. Which change in the electrode masses is observed?",
+      o: ["Both electrodes gain mass.", "The Zn electrode gains mass and the Cu electrode loses mass.", "The Zn electrode loses mass and the Cu electrode gains mass.", "Neither electrode changes mass, because only ions move."], c: 2,
+      w: "At the anode, Zn(s) is oxidized to Zn²⁺(aq), so the Zn electrode loses mass. At the cathode, Cu²⁺(aq) is reduced to Cu(s), which plates onto the Cu electrode, so it gains mass. Choice B describes the electrolytic (recharging) direction." },
+    { s: "Which statement correctly compares galvanic and electrolytic cells?",
+      o: ["A galvanic cell uses a thermodynamically favored reaction to produce electrical energy; an electrolytic cell uses an external power source to drive a thermodynamically unfavored reaction.",
+          "In an electrolytic cell, oxidation occurs at the cathode.",
+          "A galvanic cell requires an external power source, while an electrolytic cell does not.",
+          "In both types of cell, reduction occurs at the anode."], c: 0,
+      w: "Galvanic: favored reaction (E°cell > 0) that produces current. Electrolytic: unfavored reaction forced by a power supply. In both, oxidation occurs at the anode and reduction at the cathode, so choices B and D are false. Choice C has the roles reversed." },
+    { s: "A student sets up a Zn/Cu galvanic cell but forgets to add the salt bridge. The two beakers are connected only by a wire through a voltmeter. Which observation is expected?",
+      o: ["The voltmeter reads about twice the normal cell potential.", "Electrons flow through the solutions instead, and the cell works normally.", "The reaction runs faster because nothing slows the electrons.", "The voltmeter reads essentially zero and no current flows, because charge cannot be balanced between the half-cells."], c: 3,
+      w: "Without a salt bridge the circuit is incomplete: as soon as a few electrons move, the anode beaker becomes positively charged and the cathode beaker negatively charged, which stops further flow. Choice B is wrong because electrons do not travel through the solutions." },
+    { s: "A galvanic cell is made from Zn | Zn²⁺ (E° = −0.76 V) and a Pt electrode in 1 M H⁺ with H₂(g) at 1 atm (E° = 0.00 V). What is observed at the Pt electrode?",
+      o: ["The Pt electrode loses mass as it is oxidized.", "Bubbles of H₂ gas form, because H⁺ is reduced at the Pt electrode.", "Zinc metal plates onto the Pt electrode.", "Bubbles of O₂ gas form, because water is oxidized."], c: 1,
+      w: "H⁺ (0.00 V) is reduced more readily than Zn²⁺ (−0.76 V), so the Pt electrode is the cathode: 2H⁺ + 2e⁻ → H₂(g). Pt is inert and only provides a surface. Zinc is oxidized at the other electrode, so it cannot plate out (choice C)." },
+    { s: "A power supply is connected to a Zn/Cu cell so that Zn²⁺(aq) is reduced to Zn(s), as when a battery is recharged. In this electrolytic cell, which electrode is the anode, and what happens there?",
+      o: ["The Zn electrode; Zn²⁺ is reduced.", "The Zn electrode; Zn is oxidized.", "The Cu electrode; Cu is oxidized to Cu²⁺.", "The Cu electrode; Cu²⁺ is reduced."], c: 2,
+      w: "Zn²⁺ is reduced at the Zn electrode, so the Zn electrode is the cathode. The other half-reaction must be an oxidation: Cu(s) → Cu²⁺(aq) + 2e⁻ at the Cu electrode, the anode. Choice A has the right reaction but the wrong label: reduction is always at the cathode." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("9.8");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [9], topic: "9.8", compact: true, storageKey: "topic-9.8" });</script>
+</body>
+</html>

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Henderson–Hasselbalch Equation Study Lab</title>
+<meta name="description" content="Build a buffer from a conjugate pair or by partial neutralization, watch pH = pKa + log([A⁻]/[HA]) worked step by step, and check it against the exact equilibrium answer.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.ctlcard { display: grid; gap: 16px; }
+.ctlcard .controls { grid-template-columns: 1fr 1fr; }
+@media (max-width: 520px) { .ctlcard .controls { grid-template-columns: 1fr; } }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; width: fit-content; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.note { font-size: .82rem; color: var(--muted); }
+.mtab { border-collapse: collapse; min-width: 0; width: auto; font-size: .9rem; }
+.mtab th, .mtab td { padding: 4px 10px; font-size: .86rem; }
+.story .tbl-wrap { margin: 2px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 8 · Topic 8.9</span>
+  <h1>Henderson–Hasselbalch Equation Study Lab</h1>
+  <p class="lede">The pH of a buffer is set by two things: the pK<sub>a</sub> of the weak acid and the ratio of conjugate base to acid. The equation pH = pK<sub>a</sub> + log([A<sup>−</sup>]/[HA]) is on the AP equations sheet. Mix a buffer, or make one by partially neutralizing a weak acid, and watch the calculation build itself step by step.</p>
+</header>
+
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The buffer calculator</h2>
+    <p>Choose a conjugate pair and a way of making the buffer, then set the amounts. The graph shows where the ratio puts the pH relative to the pK<sub>a</sub>; the shaded band is the useful buffer range, ratio 1 : 10 to 10 : 1. Each result is also checked against the exact equilibrium pH.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3><span>pH vs. the base : acid ratio</span> <small id="g-sub"></small></h3>
+      <svg class="chart" id="graph" role="img" aria-label="pH plotted against the ratio of conjugate base to acid on a logarithmic axis, with the current buffer marked"></svg>
+    </div>
+    <div class="card graph-card">
+      <h3><span>The two members</span> <small id="b-sub"></small></h3>
+      <svg class="chart" id="bars" role="img" aria-label="Bar chart comparing the amounts of the weak acid and its conjugate base"></svg>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <div class="tag">Exam scenarios</div>
+      <div class="scenarios" id="sc"></div>
+    </div>
+    <div class="group">
+      <div class="tag">Conjugate pair</div>
+      <div class="chips" id="pairs"></div>
+    </div>
+    <div class="group">
+      <div class="tag">How the buffer is made</div>
+      <div class="seg" id="mode">
+        <button type="button" data-m="mix">Mix the acid and its salt</button>
+        <button type="button" data-m="neut" id="m-neut">Partially neutralize</button>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="ctl">
+        <label for="s-a" id="l-a"></label>
+        <input type="range" id="s-a">
+        <span class="hint" id="h-a"></span>
+      </div>
+      <div class="ctl">
+        <label for="s-b" id="l-b"></label>
+        <input type="range" id="s-b">
+        <span class="hint" id="h-b"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">pK<sub>a</sub></div><div class="v" id="r-pka"></div><div class="sub" id="r-pka2"></div></div>
+    <div class="stat"><div class="k" id="r-rat-k">[A<sup>−</sup>]/[HA]</div><div class="v" id="r-rat"></div><div class="sub" id="r-rat2"></div></div>
+    <div class="stat"><div class="k">pH (Henderson–Hasselbalch)</div><div class="v" id="r-ph"></div><div class="sub" id="r-ph2"></div></div>
+    <div class="stat"><div class="k">pH (exact equilibrium)</div><div class="v" id="r-ex"></div><div class="sub" id="r-ex2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">K<sub>a</sub> values at 25 °C: CH<sub>3</sub>COOH 1.8 × 10<sup>−5</sup>, HF 6.8 × 10<sup>−4</sup>, H<sub>2</sub>PO<sub>4</sub><sup>−</sup> 6.2 × 10<sup>−8</sup>, NH<sub>4</sub><sup>+</sup> from K<sub>b</sub>(NH<sub>3</sub>) = 1.8 × 10<sup>−5</sup>. The phosphate pair is treated on its own, ignoring the other two ionizations of H<sub>3</sub>PO<sub>4</sub>. The "exact" pH solves the full equilibrium (charge balance) for that pair. Deriving the equation and computing the pH change after acid or base is added to an existing buffer are not assessed on the AP exam.</p>
+</section>
+
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">The equation</span><h3>pH = pK<sub>a</sub> + log([A<sup>−</sup>]/[HA])</h3><p>It is the K<sub>a</sub> expression rearranged and written in logs. It is given on the equations sheet. You need to use it, not derive it.</p></div>
+    <div class="card"><span class="tag">Ratio of 1</span><h3>Equimolar buffer: pH = pK<sub>a</sub></h3><p>When [A<sup>−</sup>] = [HA], log 1 = 0 and the pH equals the pK<sub>a</sub>. This is also the half-equivalence point of a weak acid titration, a common way to measure pK<sub>a</sub>.</p></div>
+    <div class="card"><span class="tag">Direction</span><h3>More base, higher pH</h3><p>[A<sup>−</sup>] &gt; [HA] gives a positive log and pH &gt; pK<sub>a</sub>. [HA] &gt; [A<sup>−</sup>] gives pH &lt; pK<sub>a</sub>. Each factor of 10 in the ratio moves the pH by 1 unit.</p></div>
+    <div class="card"><span class="tag">Moles are fine</span><h3>The volume cancels</h3><p>Both members are in the same solution, so [A<sup>−</sup>]/[HA] = n<sub>A<sup>−</sup></sub>/n<sub>HA</sub>. When a buffer is made by mixing or partial neutralization, work in moles and skip the concentrations.</p></div>
+    <div class="card"><span class="tag">Choosing a pair</span><h3>Pick pK<sub>a</sub> near the target pH</h3><p>A buffer works best within about one pH unit of its pK<sub>a</sub> (ratio between 1 : 10 and 10 : 1). For pH 7.4, H<sub>2</sub>PO<sub>4</sub><sup>−</sup>/HPO<sub>4</sub><sup>2−</sup> (pK<sub>a</sub> 7.21) is a good choice; acetate (4.74) is not.</p></div>
+    <div class="card"><span class="tag">Weak bases</span><h3>Use the conjugate acid's pK<sub>a</sub></h3><p>For NH<sub>3</sub>/NH<sub>4</sub><sup>+</sup>, the acid is NH<sub>4</sub><sup>+</sup>: pH = pK<sub>a</sub>(NH<sub>4</sub><sup>+</sup>) + log([NH<sub>3</sub>]/[NH<sub>4</sub><sup>+</sup>]), with pK<sub>a</sub> = 14.00 − pK<sub>b</sub> = 9.26.</p></div>
+  </div>
+</section>
+
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Henderson–Hasselbalch cheat sheet</h2>
+    <p>Each row is generated from the equation, so the numbers are exact for the stated ratio.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>[A<sup>−</sup>] : [HA]</th><th>log ratio</th><th>pH relative to pK<sub>a</sub></th><th>Acetate buffer (pK<sub>a</sub> 4.74)</th><th>Ammonia buffer (pK<sub>a</sub> 9.26)</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:8px;">Buffer made by partial neutralization</h3>
+    <ol class="steps">
+      <li>Write the reaction: HA + OH<sup>−</sup> → A<sup>−</sup> + H<sub>2</sub>O. It goes to completion.</li>
+      <li>Moles of A<sup>−</sup> formed = moles of OH<sup>−</sup> added. Moles of HA left = initial moles of HA − moles of OH<sup>−</sup>.</li>
+      <li>If HA is left over and some A<sup>−</sup> formed, it is a buffer: pH = pK<sub>a</sub> + log(n<sub>A<sup>−</sup></sub>/n<sub>HA</sub>).</li>
+      <li>If exactly half the HA was neutralized, n<sub>A<sup>−</sup></sub> = n<sub>HA</sub> and pH = pK<sub>a</sub>.</li>
+    </ol>
+  </div>
+</section>
+
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Henderson–Hasselbalch on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write the equation with the numbers substituted: "pH = 4.74 + log(0.10/0.20) = 4.44."</li>
+        <li>Put the conjugate base on top. For an ammonia buffer, NH<sub>3</sub> is the base and goes in the numerator.</li>
+        <li>Show the pK<sub>a</sub> calculation when given K<sub>a</sub> or K<sub>b</sub>: pK<sub>a</sub> = −log(1.8 × 10<sup>−5</sup>) = 4.74.</li>
+        <li>Check the direction: if base exceeds acid, your pH must be above the pK<sub>a</sub>.</li>
+        <li>For a half-equivalence point, say [HA] = [A<sup>−</sup>] so pH = pK<sub>a</sub>, then K<sub>a</sub> = 10<sup>−pH</sup>.</li>
+        <li>Report pH to two decimal places when the data have two significant figures (the digits after the decimal point in pH are the significant ones).</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Flipping the ratio: log([HA]/[A<sup>−</sup>]) gives a pH on the wrong side of the pK<sub>a</sub>.</li>
+        <li>Using pK<sub>b</sub> in place of pK<sub>a</sub> for an ammonia buffer, which gives a pH near 5 instead of 9.</li>
+        <li>Using the initial moles of acid instead of the moles left after NaOH reacts.</li>
+        <li>Applying the equation when only one member is present (a weak acid alone, or the equivalence point). It is a buffer equation.</li>
+        <li>Thinking that diluting a buffer changes its pH. The ratio, and therefore the pH, stays the same.</li>
+        <li>Using ln instead of log.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 8.9. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-8.html">Unit 8 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var Kw = Lab.CONST.Kw;
+
+  // ---------- Conjugate pairs ----------
+  // z: charge of the acid member (base member has z - 1). saltA / saltB: compounds supplying each member.
+  // titr: the strong reagent used for partial neutralization (base for acid starts; HCl for NH3).
+  var PR = {
+    ac:   { name: "Acetate", HA: "CH3COOH", A: "CH3COO^-", Ka: 1.8e-5, z: 0, saltA: "CH3COOH", saltB: "NaCH3COO", start: "acid", titr: "NaOH" },
+    hf:   { name: "Fluoride", HA: "HF", A: "F^-", Ka: 6.8e-4, z: 0, saltA: "HF", saltB: "NaF", start: "acid", titr: "NaOH" },
+    ph:   { name: "Phosphate", HA: "H2PO4^-", A: "HPO4^2-", Ka: 6.2e-8, z: -1, saltA: "NaH2PO4", saltB: "Na2HPO4", start: "acid", titr: "NaOH" },
+    nh:   { name: "Ammonia", HA: "NH4^+", A: "NH3", Ka: Kw / 1.8e-5, z: 1, saltA: "NH4Cl", saltB: "NH3", start: "base", titr: "HCl", kb: 1.8e-5 }
+  };
+  var PORDER = ["ac", "hf", "ph", "nh"];
+  function pKa(p) { return -Math.log10(p.Ka); }
+  function F(x) { return Lab.fmla(x); }
+  function f2(x) { return (Math.round(x * 100) / 100).toFixed(2); }
+  function sgn(x) { return (x < 0 ? "−" : "+") + " " + Math.abs(x).toFixed(2); }
+
+  var SCN = [
+    { id: "eq",   name: "Equimolar acetate: pH = pKa", pr: "ac", mode: "mix", a: 0.10, b: 0.10 },
+    { id: "q1",   name: "0.20 M CH₃COOH + 0.10 M NaCH₃COO", pr: "ac", mode: "mix", a: 0.20, b: 0.10 },
+    { id: "ten",  name: "Ratio 10 : 1 (pKa + 1)", pr: "ac", mode: "mix", a: 0.05, b: 0.50 },
+    { id: "nh",   name: "0.30 M NH₃ + 0.15 M NH₄Cl", pr: "nh", mode: "mix", a: 0.15, b: 0.30 },
+    { id: "blood", name: "Phosphate near pH 7.4", pr: "ph", mode: "mix", a: 0.10, b: 0.16 },
+    { id: "half", name: "Half-neutralized acetic acid", pr: "ac", mode: "neut", a: 0.050, b: 0.025 },
+    { id: "hfn",  name: "0.050 mol HF + 0.020 mol NaOH", pr: "hf", mode: "neut", a: 0.050, b: 0.020 }
+  ];
+
+  // a, b: in mix mode, concentrations (M) of the acid member and base member;
+  //       in neut mode, moles of the starting member and moles of strong reagent added (total volume 1.00 L).
+  var st = { pr: "ac", mode: "mix", a: 0.10, b: 0.10, scn: "eq" };
+
+  // amounts of each member after any reaction (mol in 1.00 L, so also mol/L)
+  function amounts() {
+    var p = PR[st.pr];
+    if (st.mode === "mix") return { ha: st.a, a: st.b, x: 0 };
+    if (p.start === "acid") { var r = Math.min(st.b, st.a); return { ha: st.a - r, a: r, x: st.b - r }; }
+    var r2 = Math.min(st.b, st.a); return { ha: r2, a: st.a - r2, x: st.b - r2 };
+  }
+  // Exact pH by charge balance: H - Kw/H + S + T(z - alpha) = 0, where S is the spectator charge.
+  function exactPH(p, ha, a) {
+    var T = ha + a, S = -(p.z * ha + (p.z - 1) * a);
+    function f(H) { var al = p.Ka / (p.Ka + H); return H - Kw / H + S + T * (p.z - al); }
+    var lo = -15, hi = 1;
+    for (var i = 0; i < 90; i++) { var m = (lo + hi) / 2; if (f(Math.pow(10, m)) > 0) hi = m; else lo = m; }
+    return -(lo + hi) / 2;
+  }
+
+  // ---------- Graph: pH vs log ratio ----------
+  var svgG = document.getElementById("graph");
+  function drawGraph(m) {
+    var p = PR[st.pr], pk = pKa(p);
+    var y0 = Math.floor(pk) - 3, y1 = y0 + 6;
+    var Fr = Lab.frame(svgG, { x: [-2, 2], y: [y0, y1], width: 440, height: 300, xTicks: [-2, -1, 0, 1, 2], yTicks: [y0, y0 + 1, y0 + 2, y0 + 3, y0 + 4, y0 + 5, y0 + 6],
+      fmtX: function (v) { return ["1 : 100", "1 : 10", "1 : 1", "10 : 1", "100 : 1"][v + 2]; }, fmtY: function (v) { return v; },
+      xLabel: "[" + uni(p.A) + "] : [" + uni(p.HA) + "]  (log scale)", yLabel: "pH" });
+    Lab.rect(Fr, -1, y0, 1, y1, "var(--c2)", 0.08);
+    Lab.tag(Fr, 0, y1 - 0.3, "buffer range: pKa ± 1", "var(--c2)", "middle");
+    Lab.hline(Fr, pk, "var(--ghost)", 1.5, "6 4");
+    Lab.tag(Fr, -1.95, pk + 0.15, "pKa = " + f2(pk), "var(--muted)");
+    Lab.fn(Fr, function (x) { return pk + x; }, "var(--accent)", 3);
+    if (m.ok) {
+      var lr = Math.log10(m.a / m.ha), xc = Math.max(-2, Math.min(2, lr));
+      Lab.dot(Fr, xc, pk + xc, "var(--c1)", true);
+      if (Math.abs(lr) > 0.08) Lab.arrow(Fr, 0, pk, xc, pk, "var(--c1)");
+      var ex = exactPH(p, m.ha, m.a);
+      if (Math.abs(ex - (pk + lr)) > 0.02 && Math.abs(lr) <= 2) Lab.el("circle", { cx: Fr.sx(xc), cy: Fr.sy(Math.max(y0, Math.min(y1, ex))), r: 6, fill: "none", stroke: "var(--c4)", "stroke-width": 2 }, Fr.g);
+      if (Math.abs(lr) > 2) Lab.tag(Fr, xc > 0 ? 1.95 : -1.95, pk + xc - 0.4, "ratio off the scale", "var(--bad)", xc > 0 ? "end" : "start");
+    } else {
+      Lab.tag(Fr, 0, y0 + 0.6, "Only one member present: not a buffer", "var(--bad)", "middle");
+    }
+    document.getElementById("g-sub").textContent = p.name + " pair";
+  }
+  function uni(f) {
+    var SUB = "₀₁₂₃₄₅₆₇₈₉", mm = String(f).match(/\^([0-9]*)([+\-])$/), ch = "";
+    if (mm) { ch = (mm[1] === "2" ? "²" : "") + (mm[2] === "+" ? "⁺" : "⁻"); f = f.slice(0, mm.index); }
+    return f.replace(/([A-Za-z\)])(\d+)/g, function (a, b, d) { return b + d.split("").map(function (x) { return SUB[+x]; }).join(""); }) + ch;
+  }
+
+  // ---------- Bars ----------
+  var svgB = document.getElementById("bars");
+  function drawBars(m) {
+    var p = PR[st.pr], top = Math.max(0.1, m.ha, m.a) * 1.15;
+    var unit = st.mode === "mix" ? "M" : "mol";
+    var step = [0.01, 0.02, 0.025, 0.05, 0.1, 0.2, 0.25, 0.5].filter(function (x) { return top / x <= 5; })[0] || 0.5, ticks = [];
+    for (var t = 0; t <= top + 1e-9; t += step) ticks.push(+t.toFixed(3));
+    Lab.bars(svgB, { x: [0, 3], y: [0, top], width: 440, height: 300, yLabel: st.mode === "mix" ? "concentration (M)" : "amount (mol in 1.00 L)",
+      yTicks: ticks, fmtY: function (v) { return +v.toFixed(3); },
+      bars: [{ x: 1, y: m.ha, color: "var(--c2)", label: uni(p.HA) + "  " + Lab.sig(m.ha, 2) + " " + unit, width: 0.6 }, { x: 2, y: m.a, color: "var(--c4)", label: uni(p.A) + "  " + Lab.sig(m.a, 2) + " " + unit, width: 0.6 }] });
+    document.getElementById("b-sub").textContent = st.mode === "mix" ? "as mixed" : "after the " + p.titr + " reacts";
+  }
+
+  // ---------- Readouts and story ----------
+  function model() {
+    var m = amounts();
+    m.ok = m.ha > 1e-9 && m.a > 1e-9;
+    return m;
+  }
+  function readouts(m) {
+    var p = PR[st.pr], pk = pKa(p);
+    document.getElementById("r-pka").textContent = f2(pk);
+    document.getElementById("r-pka2").innerHTML = p.kb ? "14.00 − pK<sub>b</sub>(NH<sub>3</sub>) = 14.00 − " + f2(-Math.log10(p.kb)) : "−log(" + Lab.sci(p.Ka, 2, true) + ")";
+    document.getElementById("r-rat-k").innerHTML = "[" + F(p.A) + "] / [" + F(p.HA) + "]";
+    if (m.ok) {
+      var r = m.a / m.ha, lr = Math.log10(r), ph = pk + lr, ex = exactPH(p, m.ha, m.a);
+      document.getElementById("r-rat").textContent = Lab.sig(r, 3);
+      document.getElementById("r-rat2").textContent = "log = " + (lr < 0 ? "−" : "+") + Math.abs(lr).toFixed(2);
+      document.getElementById("r-ph").textContent = f2(ph);
+      document.getElementById("r-ph2").textContent = Math.abs(lr) <= 1 ? "inside the buffer range" : "outside pKa ± 1: weak buffer";
+      document.getElementById("r-ex").textContent = f2(ex);
+      var d = Math.abs(ex - ph);
+      document.getElementById("r-ex2").textContent = d < 0.01 ? "matches" : "differs by " + d.toFixed(2);
+    } else {
+      document.getElementById("r-rat").textContent = m.ha <= 1e-9 && m.a <= 1e-9 ? "—" : m.ha <= 1e-9 ? "∞" : "0";
+      document.getElementById("r-rat2").textContent = "one member missing";
+      document.getElementById("r-ph").textContent = "n/a";
+      document.getElementById("r-ph2").textContent = "equation does not apply";
+      var ex2 = m.x > 1e-9 ? exactExcess(p, m) : exactPH(p, m.ha, m.a);
+      document.getElementById("r-ex").textContent = f2(ex2);
+      document.getElementById("r-ex2").textContent = m.x > 1e-9 ? "set by excess " + p.titr : "weak " + (m.a > 0 ? "base" : "acid") + " alone";
+    }
+  }
+  // pH when excess strong reagent remains after all of the starting member is converted
+  function exactExcess(p, m) {
+    var T = m.ha + m.a, S = -(p.z * m.ha + (p.z - 1) * m.a) + (p.titr === "NaOH" ? m.x : -m.x);
+    function f(H) { var al = p.Ka / (p.Ka + H); return H - Kw / H + S + T * (p.z - al); }
+    var lo = -15, hi = 1;
+    for (var i = 0; i < 90; i++) { var mm = (lo + hi) / 2; if (f(Math.pow(10, mm)) > 0) hi = mm; else lo = mm; }
+    return -(lo + hi) / 2;
+  }
+  function story(m) {
+    var p = PR[st.pr], pk = pKa(p), HA = F(p.HA), A = F(p.A), h = "", steps = [];
+    var u = st.mode === "mix" ? " M" : " mol";
+    if (st.mode === "neut" && st.b > 0) {
+      var startF = p.start === "acid" ? HA : A, reagent = p.titr === "NaOH" ? "OH<sup>−</sup>" : "H<sub>3</sub>O<sup>+</sup>";
+      var eq = p.start === "acid" ? HA + " + OH<sup>−</sup> → " + A + " + H<sub>2</sub>O" : A + " + H<sub>3</sub>O<sup>+</sup> → " + HA + " + H<sub>2</sub>O";
+      var used = Math.min(st.a, st.b);
+      h += "<p><b>Reaction first:</b> " + Lab.sig(st.b, 2) + " mol " + p.titr + " is added to " + Lab.sig(st.a, 2) + " mol " + startF + ". The reaction <span class=\"chem\">" + eq + "</span> goes to completion.</p>";
+      var cols = p.start === "acid" ? [HA, reagent, A] : [A, reagent, HA];
+      var bef = [st.a, st.b, 0], ch = [-used, -used, used], aft = [st.a - used, st.b - used, used];
+      function c(v) { return (v > 0 ? "+" : v < 0 ? "−" : "") + Lab.sig(Math.abs(v), 2); }
+      h += '<div class="tbl-wrap"><table class="mtab"><thead><tr><th>mol</th><th>' + cols.join("</th><th>") + '</th></tr></thead><tbody>' +
+        '<tr><td>Before</td><td>' + bef.map(function (v) { return v ? Lab.sig(v, 2) : "0"; }).join("</td><td>") + '</td></tr>' +
+        '<tr><td>Change</td><td>' + ch.map(c).join("</td><td>") + '</td></tr>' +
+        '<tr><td>After</td><td>' + aft.map(function (v) { return v > 1e-12 ? Lab.sig(v, 2) : "0"; }).join("</td><td>") + '</td></tr></tbody></table></div>';
+    }
+    if (!m.ok) {
+      var which = m.ha > 1e-9 ? HA : A;
+      if (st.mode === "neut" && m.x > 1e-9) h += "<p><b>Past equivalence:</b> all of the " + (p.start === "acid" ? HA : A) + " was used up and " + Lab.sig(m.x, 2) + " mol " + p.titr + " is left over. Only " + which + " remains from the pair, so this is not a buffer; the excess strong " + (p.titr === "NaOH" ? "base" : "acid") + " sets the pH.</p>";
+      else if (st.mode === "neut" && st.b > 0) h += "<p><b>Equivalence point:</b> exactly enough " + p.titr + " was added to convert all of it. Only " + which + " remains, so this is not a buffer.</p>";
+      else h += "<p><b>Only " + which + " is present.</b> With one member of the pair, the solution is not a buffer and log(0) or log(∞) makes the equation useless here.</p>";
+      h += "<p><b>AP answer:</b> The Henderson–Hasselbalch equation applies only when both members of the conjugate pair are present in significant amounts. Here only " + which + " is present, so treat it as a weak " + (which === HA ? "acid" : "base") + (m.x > 1e-9 ? " with excess strong " + (p.titr === "NaOH" ? "base" : "acid") : "") + " instead.</p>";
+      document.getElementById("story").innerHTML = h;
+      return;
+    }
+    var r = m.a / m.ha, lr = Math.log10(r), ph = pk + lr, ex = exactPH(p, m.ha, m.a);
+    steps.push("Identify the pair: acid " + HA + ", conjugate base " + A + ". pK<sub>a</sub> = " + (p.kb ? "14.00 − " + f2(-Math.log10(p.kb)) : "−log(" + Lab.sci(p.Ka, 2, true) + ")") + " = " + f2(pk) + ".");
+    steps.push((st.mode === "neut" ? "Same volume for both, so use moles: " : "") + "[" + A + "]/[" + HA + "] = " + Lab.sig(m.a, 2) + u + " / " + Lab.sig(m.ha, 2) + u + " = " + Lab.sig(r, 3) + ".");
+    steps.push("log(" + Lab.sig(r, 3) + ") = " + (lr < 0 ? "−" : "") + Math.abs(lr).toFixed(2) + ".");
+    steps.push("pH = " + f2(pk) + " " + sgn(lr) + " = <b>" + f2(ph) + "</b>.");
+    h += "<p><b>Worked solution:</b></p><ol class=\"steps\"><li>" + steps.join("</li><li>") + "</li></ol>";
+    var dir = Math.abs(lr) < 0.005 ? "The ratio is 1, so pH = pK<sub>a</sub>." : lr > 0 ? "There is more " + A + " than " + HA + ", so the pH is above the pK<sub>a</sub>." : "There is more " + HA + " than " + A + ", so the pH is below the pK<sub>a</sub>.";
+    h += "<p><b>Sense check:</b> " + dir + (Math.abs(lr) > 1 ? " The ratio is outside 1 : 10 to 10 : 1, so this mixture is a poor buffer: one member is too scarce to absorb much." : "") + "</p>";
+    var d = Math.abs(ex - ph);
+    h += "<p><b>Exact check:</b> solving the full equilibrium gives pH " + f2(ex) + (d < 0.01 ? ", the same to two decimals. When both members are present at reasonable concentrations, the small amount that ionizes or hydrolyzes barely changes them." :
+      ". The equation is off by " + d.toFixed(2) + " because a concentration is low or K<sub>a</sub> is large, so ionization noticeably changes [" + HA + "] and [" + A + "]. AP problems use the equation as given.") + "</p>";
+    h += "<p><b>AP answer:</b> pH = pK<sub>a</sub> + log([" + A + "]/[" + HA + "]) = " + f2(pk) + " + log(" + Lab.sig(m.a, 2) + "/" + Lab.sig(m.ha, 2) + ") = " + f2(ph) + ". " + dir + "</p>";
+    document.getElementById("story").innerHTML = h;
+  }
+
+  // ---------- Controls ----------
+  var sA = document.getElementById("s-a"), sB = document.getElementById("s-b");
+  function setRanges() {
+    var p = PR[st.pr];
+    if (st.mode === "mix") {
+      sA.min = 0.01; sA.max = 1.00; sA.step = 0.01; sB.min = 0.00; sB.max = 1.00; sB.step = 0.01;
+    } else {
+      sA.min = 0.010; sA.max = 0.100; sA.step = 0.005; sB.min = 0; sB.max = 0.120; sB.step = 0.005;
+    }
+  }
+  function labels() {
+    var p = PR[st.pr];
+    if (st.mode === "mix") {
+      document.getElementById("l-a").innerHTML = "[" + F(p.HA) + "] from " + F(p.saltA) + " <output>" + st.a.toFixed(2) + " M</output>";
+      document.getElementById("l-b").innerHTML = "[" + F(p.A) + "] from " + F(p.saltB) + " <output>" + st.b.toFixed(2) + " M</output>";
+      document.getElementById("h-a").textContent = "Acid member of the pair";
+      document.getElementById("h-b").textContent = "Conjugate base member (0 = not a buffer)";
+    } else {
+      var startF = p.start === "acid" ? p.saltA : p.saltB;
+      document.getElementById("l-a").innerHTML = "Starting " + F(startF) + " <output>" + st.a.toFixed(3) + " mol</output>";
+      document.getElementById("l-b").innerHTML = p.titr + " added <output>" + st.b.toFixed(3) + " mol</output>";
+      document.getElementById("h-a").textContent = "Total volume 1.00 L";
+      document.getElementById("h-b").textContent = p.start === "acid" ? "Strong base converts some acid into its conjugate base" : "Strong acid converts some NH₃ into NH₄⁺";
+    }
+    document.getElementById("m-neut").textContent = p.start === "acid" ? "Partially neutralize with NaOH" : "Partially neutralize NH₃ with HCl";
+  }
+  var prB = {}, scB = {};
+  function render() {
+    var m = model();
+    setRanges(); sA.value = st.a; sB.value = st.b;
+    Object.keys(prB).forEach(function (k) { prB[k].setAttribute("aria-pressed", k === st.pr ? "true" : "false"); });
+    Object.keys(scB).forEach(function (k) { scB[k].setAttribute("aria-pressed", k === st.scn ? "true" : "false"); });
+    Array.prototype.forEach.call(document.querySelectorAll("#mode button"), function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-m") === st.mode ? "true" : "false"); });
+    labels(); drawGraph(m); drawBars(m); readouts(m); story(m);
+  }
+  PORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.innerHTML = PR[k].name + " (" + F(PR[k].HA) + "/" + F(PR[k].A) + ")";
+    b.addEventListener("click", function () { st.pr = k; st.scn = null; render(); });
+    document.getElementById("pairs").appendChild(b); prB[k] = b;
+  });
+  SCN.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.name;
+    b.addEventListener("click", function () { st.pr = x.pr; st.mode = x.mode; st.a = x.a; st.b = x.b; st.scn = x.id; render(); });
+    document.getElementById("sc").appendChild(b); scB[x.id] = b;
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("#mode button"), function (b) {
+    b.addEventListener("click", function () {
+      var m = b.getAttribute("data-m"); if (m === st.mode) return;
+      st.mode = m; st.scn = null;
+      if (m === "mix") { st.a = 0.10; st.b = 0.10; } else { st.a = 0.050; st.b = 0.025; }
+      render();
+    });
+  });
+  sA.addEventListener("input", function () { st.a = parseFloat(sA.value); st.scn = null; render(); });
+  sB.addEventListener("input", function () { st.b = parseFloat(sB.value); st.scn = null; render(); });
+
+  // ---------- Generated table ----------
+  (function () {
+    var tb = document.getElementById("tbody");
+    [[1, 10], [1, 2], [1, 1], [2, 1], [10, 1]].forEach(function (r) {
+      var lr = Math.log10(r[0] / r[1]);
+      var tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + r[0] + " : " + r[1] + "</td><td>" + (lr < 0 ? "−" : lr > 0 ? "+" : "") + Math.abs(lr).toFixed(2) + "</td><td>" +
+        (lr === 0 ? "<b>pH = pK<sub>a</sub></b>" : "pK<sub>a</sub> " + sgn(lr)) + "</td><td>" + f2(pKa(PR.ac) + lr) + "</td><td>" + f2(pKa(PR.nh) + lr) + "</td>";
+      tb.appendChild(tr);
+    });
+  })();
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    function near(a, b, tol, what) { if (!(Math.abs(a - b) <= tol)) bad.push(what + ": got " + a + ", expected " + b); }
+    near(pKa(PR.ac), 4.74, 0.005, "acetic pKa");
+    near(pKa(PR.nh), 9.26, 0.005, "NH4+ pKa");
+    near(pKa(PR.hf), 3.17, 0.005, "HF pKa");
+    near(pKa(PR.ph), 7.21, 0.005, "H2PO4- pKa");
+    near(pKa(PR.ac) + Math.log10(0.10 / 0.20), 4.44, 0.005, "quiz 1");
+    near(pKa(PR.hf) + Math.log10(0.020 / 0.030), 2.99, 0.005, "quiz 4");
+    near(pKa(PR.nh) + Math.log10(0.30 / 0.15), 9.56, 0.005, "quiz 6");
+    near(Math.pow(10, -3.85), 1.4e-4, 0.05e-4, "quiz 8");
+    near(pKa(PR.ph) + Math.log10(0.16 / 0.10), 7.41, 0.01, "phosphate scenario");
+    // exact solver agrees with HH for a concentrated equimolar buffer, and gives known single-species pHs
+    near(exactPH(PR.ac, 0.10, 0.10), 4.74, 0.01, "exact equimolar acetate");
+    near(exactPH(PR.nh, 0.15, 0.30), 9.56, 0.01, "exact ammonia buffer");
+    near(exactPH(PR.ac, 0.10, 0), 2.88, 0.01, "exact 0.10 M acetic acid");
+    near(exactPH(PR.nh, 0, 0.10), 11.13, 0.01, "exact 0.10 M NH3");
+    // pair formulas: acid has one more H and one more unit of charge
+    PORDER.forEach(function (k) {
+      var p = PR[k], a = Lab.parseFormula(p.HA), b = Lab.parseFormula(p.A);
+      for (var e in a) if (a[e] - (b[e] || 0) !== (e === "H" ? 1 : 0)) bad.push(k + " pair mismatch " + e);
+      var ch = function (s) { var mm = s.match(/\^([0-9]*)([+\-])$/); return mm ? (mm[1] ? +mm[1] : 1) * (mm[2] === "+" ? 1 : -1) : 0; };
+      if (ch(p.HA) !== p.z || ch(p.A) !== p.z - 1) bad.push(k + " charges");
+    });
+    // the scenario answers in the story: half-neutralized gives pH = pKa
+    st.pr = "ac"; st.mode = "neut"; st.a = 0.050; st.b = 0.025;
+    var m = amounts(); near(Math.log10(m.a / m.ha), 0, 1e-12, "half-neutralized ratio");
+    st.mode = "mix"; st.a = 0.10; st.b = 0.10;
+    if (bad.length) console.error("8.9 self-check failed: " + bad.join("; "));
+  })();
+
+  render();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "A buffer is 0.20 M CH₃COOH and 0.10 M NaCH₃COO. The pKa of CH₃COOH is 4.74. What is the pH of the buffer?",
+      o: ["4.44", "5.04", "4.74", "4.14"], c: 0,
+      w: "pH = pKa + log([CH₃COO⁻]/[CH₃COOH]) = 4.74 + log(0.10/0.20) = 4.74 − 0.30 = 4.44. There is more acid than base, so the pH must be below the pKa. Choice B comes from flipping the ratio. Choice C would be right only for an equimolar buffer." },
+    { s: "A chemist wants an acetate buffer (pKa 4.74) with a pH of 5.74. What ratio [CH₃COO⁻]/[CH₃COOH] is needed?",
+      o: ["0.10", "1.0", "10", "100"], c: 2,
+      w: "5.74 = 4.74 + log(ratio), so log(ratio) = 1.00 and the ratio is 10. One pH unit above the pKa means ten times as much base as acid. Choice A (0.10) would give pH 3.74, one unit below the pKa." },
+    { s: "Which of the following conjugate pairs is the best choice for preparing a buffer with pH 7.4?",
+      o: ["HF / F⁻ (pKa 3.17)", "CH₃COOH / CH₃COO⁻ (pKa 4.74)", "NH₄⁺ / NH₃ (pKa 9.26)", "H₂PO₄⁻ / HPO₄²⁻ (pKa 7.21)"], c: 3,
+      w: "A buffer works best when the target pH is within about one unit of the pKa, so the ratio stays between 1 : 10 and 10 : 1. Only H₂PO₄⁻/HPO₄²⁻ (7.21) is that close to 7.4. Making acetate reach 7.4 would need a ratio of about 460 : 1, leaving almost no acid to absorb added base." },
+    { s: "0.050 mol HF (pKa 3.17) and 0.020 mol NaOH are dissolved in water to make 1.0 L of solution. What is the pH?",
+      o: ["3.35", "2.99", "3.17", "2.77"], c: 1,
+      w: "First the reaction: HF + OH⁻ → F⁻ + H₂O uses all 0.020 mol OH⁻, leaving 0.030 mol HF and forming 0.020 mol F⁻. Then pH = 3.17 + log(0.020/0.030) = 3.17 − 0.18 = 2.99. Choice A flips the ratio. Choice D uses the initial 0.050 mol HF instead of the 0.030 mol left after reaction (3.17 + log(0.020/0.050) = 2.77)." },
+    { s: "A buffer contains a weak acid HA (pKa 5.0) and its conjugate base A⁻. The pH of the buffer is 4.6. Which statement is correct?",
+      o: ["[A⁻] > [HA]", "[A⁻] = [HA]", "[HA] > [A⁻]", "It cannot be determined without the concentrations."], c: 2,
+      w: "pH − pKa = 4.6 − 5.0 = −0.4 = log([A⁻]/[HA]), so the ratio is 10^−0.4 ≈ 0.40 and the acid member is larger. Whenever a buffer's pH is below its pKa, [HA] > [A⁻]. Choice D is wrong because the ratio, not the individual concentrations, is all that is needed." },
+    { s: "A buffer is 0.30 M NH₃ and 0.15 M NH₄Cl. Kb for NH₃ is 1.8 × 10⁻⁵ (pKb = 4.74). What is the pH?",
+      o: ["5.04", "8.96", "9.26", "9.56"], c: 3,
+      w: "Use the acid member, NH₄⁺: pKa = 14.00 − 4.74 = 9.26. Then pH = 9.26 + log([NH₃]/[NH₄⁺]) = 9.26 + log(0.30/0.15) = 9.26 + 0.30 = 9.56. Choice A plugs pKb into the equation as if it were pKa. Choice B flips the ratio, putting the acid on top." },
+    { s: "A buffer with pH 4.74 is made from 0.10 M CH₃COOH and 0.10 M NaCH₃COO. It is diluted with water to ten times its volume. What is the pH of the diluted buffer?",
+      o: ["5.74", "About 4.74", "3.74", "7.00"], c: 1,
+      w: "Dilution divides [CH₃COO⁻] and [CH₃COOH] by the same factor, so their ratio, and therefore the pH, stays about 4.74. (At very low concentrations the equation slowly becomes less accurate, but tenfold dilution of this buffer barely matters.) Choices A and C treat the pH as if it shifted by log 10. Dilution reduces the buffer's capacity, not its pH." },
+    { s: "A weak acid HA is titrated with NaOH. At the half-equivalence point, the pH is 3.85. What is Ka for HA?",
+      o: ["1.4 × 10⁻⁴", "3.85", "7.1 × 10³", "1.4 × 10⁻⁸"], c: 0,
+      w: "At the half-equivalence point, half the HA has become A⁻, so [HA] = [A⁻] and pH = pKa = 3.85. Then Ka = 10^−3.85 = 1.4 × 10⁻⁴. Choice B is the pKa, not Ka. Choice C is 10^+3.85, a sign error." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("8.9");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [8], topic: "8.9", compact: true, storageKey: "topic-8.9" });</script>
+</body>
+</html>

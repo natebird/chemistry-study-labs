@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Electrolysis and Faraday’s Law Study Lab</title>
+<meta name="description" content="Run an electroplating bench: set the current and time, follow charge to moles of electrons to moles and grams of metal (or liters of gas), work backward to the time or the ion's charge, and solve randomized Faraday challenges.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 18px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 14px; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.ctl[hidden] { display: none; }
+.side .controls { grid-template-columns: 1fr; }
+.pick { display: grid; gap: 4px; font-size: .86rem; font-weight: 500; }
+select { font: inherit; font-size: .9rem; padding: 6px 8px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); width: 100%; }
+select:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.eqn { white-space: normal; overflow-wrap: anywhere; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
+.stat .k b { color: var(--accent); font-family: var(--mono); font-weight: 500; }
+.stat.goal { border-color: var(--accent); background: var(--accent-soft); }
+.chal { display: grid; gap: 8px; border-top: 1px solid var(--rule); padding-top: 12px; }
+.chal p { font-size: .92rem; }
+.answer { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.answer input { font: inherit; font-size: .95rem; width: 8em; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.answer input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.fb { font-size: .9rem; } .fb.ok { color: var(--good); } .fb.no { color: var(--bad); }
+.legend .l-main { color: var(--accent); }
+.note { font-size: .82rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 9 · Topic 9.11</span>
+  <h1>Electrolysis and Faraday’s Law Study Lab</h1>
+  <p class="lede">Every electron that the power supply pushes through an electrolytic cell reduces something at the cathode. Count the charge (current × time), convert it to moles of electrons with the Faraday constant, and the half-reaction tells you how much metal plates out or how much gas forms. Drive the plating bench, then run the calculation backward.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The plating bench</h2>
+    <p>Choose what is reduced at the cathode, then set the current and the time. The graph shows the product made over time at that current, with the other products in gray for comparison. The four boxes below the graph are the calculation chain, in the order you would write it on the exam. Switch modes to solve for the time or for the charge on the ion, or try a <b>Challenge</b>.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Product at the cathode vs. time <small id="g-sub"></small></h3>
+      <svg class="chart" id="chart" role="img" aria-label="Line graph of mass of product formed against time at the chosen current, with comparison lines for other products"></svg>
+      <div class="lab-bar"><div class="legend"><span class="l-main" id="lg-main">chosen product</span><span class="l-ghost">other products, same current</span></div></div>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Classic problems</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Solve for</div>
+        <div class="seg" role="group" aria-label="Solve for"><button type="button" data-mode="mass">Amount made</button><button type="button" data-mode="time">Time needed</button><button type="button" data-mode="n">Charge on the ion</button></div>
+      </div>
+      <label class="pick" for="sel">Reduced at the cathode<select id="sel"></select></label>
+      <div class="eqn" id="half"></div>
+      <div class="controls">
+        <div class="ctl">
+          <label for="s-i">Current, I <output id="o-i"></output></label>
+          <input type="range" id="s-i" min="0.1" max="10" step="0.1">
+        </div>
+        <div class="ctl" id="c-t">
+          <label for="s-t">Time, t <output id="o-t"></output></label>
+          <input type="range" id="s-t" min="1" max="120" step="1">
+        </div>
+        <div class="ctl" id="c-m">
+          <label for="s-m"><span id="l-m">Target amount</span> <output id="o-m"></output></label>
+          <input type="range" id="s-m" min="0.1" max="10" step="0.1">
+        </div>
+      </div>
+      <div class="chal">
+        <div class="answer"><button type="button" id="b-chal">New challenge</button><button type="button" id="b-exit" hidden>Back to the bench</button></div>
+        <div id="chal-box" hidden>
+          <p id="chal-q"></p>
+          <div class="answer">
+            <label for="ans" id="ans-l">Answer:</label>
+            <input id="ans" type="text" inputmode="decimal" autocomplete="off">
+            <button type="button" id="b-check">Check</button>
+          </div>
+          <div class="fb" id="fb" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout" id="chain">
+    <div class="stat" id="st1"><div class="k" id="k1"></div><div class="v" id="v1"></div><div class="sub" id="u1"></div></div>
+    <div class="stat" id="st2"><div class="k" id="k2"></div><div class="v" id="v2"></div><div class="sub" id="u2"></div></div>
+    <div class="stat" id="st3"><div class="k" id="k3"></div><div class="v" id="v3"></div><div class="sub" id="u3"></div></div>
+    <div class="stat" id="st4"><div class="k" id="k4"></div><div class="v" id="v4"></div><div class="sub" id="u4"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">Assumes 100% current efficiency (every electron goes into the chosen half-reaction) and, for gases, 22.4 L/mol at STP. Molar masses are from the AP periodic table; F = 96,485 C/mol e⁻.</p>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Charge</span><h3>I = q/t</h3><p>Current is charge per time: 1 A = 1 C/s. The total charge passed is q = I × t, with t in <b>seconds</b>. This equation is on the AP equation sheet.</p></div>
+    <div class="card"><span class="tag">Faraday constant</span><h3>96,485 C per mole of electrons</h3><p>F converts charge into moles of electrons: mol e⁻ = q / F. From here on, it is ordinary stoichiometry.</p></div>
+    <div class="card"><span class="tag">The bridge</span><h3>The half-reaction gives the ratio</h3><p>Cu<sup>2+</sup> + 2e⁻ → Cu means 2 mol e⁻ per mol Cu. Ag<sup>+</sup> + e⁻ → Ag needs 1, Al<sup>3+</sup> + 3e⁻ → Al needs 3. The charge on the ion sets how much metal each coulomb buys.</p></div>
+    <div class="card"><span class="tag">Electroplating</span><h3>Mass on the cathode</h3><p>The object to be plated is the cathode, where metal ions are reduced and deposited. The mass gained is moles of metal × molar mass. A metal anode of the same element dissolves, replacing the ions.</p></div>
+    <div class="card"><span class="tag">Run it backward</span><h3>Time, current, or ion charge</h3><p>The same chain works in reverse: grams → moles → mol e⁻ → coulombs → seconds (or amps). With I, t and the mass, you can find mol e⁻ per mol metal, which is the charge on the ion.</p></div>
+    <div class="card"><span class="tag">Series cells</span><h3>Same electrons, different products</h3><p>Cells wired in series carry the same current, so the same moles of electrons pass through each. The moles of product differ by the electrons each needs: 1 Ag, ½ Cu, ⅓ Al per mol e⁻.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Faraday cheat sheet</h2>
+    <p>How much product one faraday (1 mol e⁻, 96,485 C) makes, computed from the same data as the bench.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table id="ftab">
+    <thead><tr><th>Half-reaction at the cathode (or anode for O<sub>2</sub>)</th><th>mol e⁻ per mol product</th><th>Product per 96,485 C</th><th>Product per 1.00 A for 1.00 h</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:8px;">The chain, forward and backward</h3>
+    <ol class="steps">
+      <li>Convert time to seconds. q = I × t (C).</li>
+      <li>mol e⁻ = q ÷ 96,485 C/mol e⁻.</li>
+      <li>mol product = mol e⁻ ÷ (electrons in the half-reaction per product).</li>
+      <li>mass = mol × molar mass; for a gas at STP, volume = mol × 22.4 L/mol.</li>
+      <li>Backward: mass → mol → mol e⁻ (× electrons per product) → q (× F) → t = q ÷ I.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Faraday problems on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write the half-reaction first and point to the electron coefficient you use.</li>
+        <li>Show the units at each step: (2.00 C/s)(1800 s) = 3600 C; 3600 C × (1 mol e⁻ / 96,485 C) = 0.0373 mol e⁻.</li>
+        <li>Carry the mole ratio as a factor: 0.0373 mol e⁻ × (1 mol Cu / 2 mol e⁻).</li>
+        <li>Finish with the quantity asked for (grams, liters, seconds, amps) and three significant figures when the data have three.</li>
+        <li>For "identify the ion" questions, compute mol e⁻ ÷ mol metal and round to a whole number, then state the charge.</li>
+        <li>In series circuits, say explicitly that the same charge passes through every cell.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Using minutes or hours in q = It. The coulomb is an ampere-<b>second</b>.</li>
+        <li>Forgetting the electron ratio: treating Cu<sup>2+</sup> as if one electron deposits one Cu atom doubles the answer.</li>
+        <li>Multiplying by the ion charge instead of dividing (or the reverse) when going from mol e⁻ to mol metal.</li>
+        <li>Thinking a higher concentration of metal ion deposits more metal. At a fixed current and time the electrons, not the ions, limit the amount.</li>
+        <li>Thinking a bigger cathode plates more mass. It spreads the same mass over more area.</li>
+        <li>Using 22.4 L/mol when the gas is not at STP. Use PV = nRT for other conditions.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation. F = 96,485 C/mol e⁻.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 9.11. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-9.html">Unit 9 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var F = Lab.CONST.F, VSTP = 22.4;
+
+  // ---------- Products: n = mol e⁻ per mol product ----------
+  var P = {
+    Ag: { name: "Ag (from Ag⁺)", prod: "Ag", n: 1, M: Lab.molarMass("Ag"), half: "Ag<sup>+</sup>(aq) + e⁻ → Ag(s)" },
+    Cu: { name: "Cu (from Cu²⁺)", prod: "Cu", n: 2, M: Lab.molarMass("Cu"), half: "Cu<sup>2+</sup>(aq) + 2e⁻ → Cu(s)" },
+    Ni: { name: "Ni (from Ni²⁺)", prod: "Ni", n: 2, M: Lab.molarMass("Ni"), half: "Ni<sup>2+</sup>(aq) + 2e⁻ → Ni(s)" },
+    Zn: { name: "Zn (from Zn²⁺)", prod: "Zn", n: 2, M: Lab.molarMass("Zn"), half: "Zn<sup>2+</sup>(aq) + 2e⁻ → Zn(s)" },
+    Cr: { name: "Cr (from Cr³⁺)", prod: "Cr", n: 3, M: Lab.molarMass("Cr"), half: "Cr<sup>3+</sup>(aq) + 3e⁻ → Cr(s)" },
+    Au: { name: "Au (from Au³⁺)", prod: "Au", n: 3, M: Lab.molarMass("Au"), half: "Au<sup>3+</sup>(aq) + 3e⁻ → Au(s)" },
+    Al: { name: "Al (from molten Al₂O₃)", prod: "Al", n: 3, M: Lab.molarMass("Al"), half: "Al<sup>3+</sup> + 3e⁻ → Al(l), in molten Al<sub>2</sub>O<sub>3</sub>" },
+    H2: { name: "H₂ gas (water, cathode)", prod: "H₂", n: 2, M: Lab.molarMass("H2"), gas: true, half: "2H<sub>2</sub>O(l) + 2e⁻ → H<sub>2</sub>(g) + 2OH<sup>−</sup>(aq)" },
+    O2: { name: "O₂ gas (water, anode)", prod: "O₂", n: 4, M: Lab.molarMass("O2"), gas: true, anode: true, half: "2H<sub>2</sub>O(l) → O<sub>2</sub>(g) + 4H<sup>+</sup>(aq) + 4e⁻" }
+  };
+  var PK = ["Ag", "Cu", "Ni", "Zn", "Cr", "Au", "Al", "H2", "O2"];
+  var SC = {
+    cu: { name: "Cu: 2.00 A, 30.0 min", p: "Cu", I: 2.0, t: 30, mode: "mass", expect: 1.186 },
+    ag: { name: "Ag: 0.500 A, 1.00 h", p: "Ag", I: 0.5, t: 60, mode: "mass", expect: 2.012 },
+    al: { name: "Al (3 e⁻): 10.0 A, 1.00 h", p: "Al", I: 10, t: 60, mode: "mass", expect: 3.356 },
+    au: { name: "Au: 1.50 A, 15.0 min", p: "Au", I: 1.5, t: 15, mode: "mass", expect: 0.919 },
+    h2: { name: "H₂ gas: 1.00 A, 1.00 h", p: "H2", I: 1.0, t: 60, mode: "mass", expect: 0.418 },
+    ni: { name: "Time to plate 1.00 g Ni at 2.50 A", p: "Ni", I: 2.5, m: 1.0, mode: "time", expect: 21.92 }
+  };
+  var SCO = ["cu", "ag", "al", "au", "h2", "ni"];
+
+  var S = { p: "Cu", I: 2.0, t: 30, m: 1.0, mode: "mass", sc: "cu", chal: null };
+  function pr() { return P[S.p]; }
+
+  // ---------- Model ----------
+  // amount: grams for solids, liters at STP for gases
+  function fwd(p, I, tmin) {
+    var q = I * tmin * 60, ne = q / F, np = ne / p.n;
+    return { q: q, ne: ne, np: np, mass: np * p.M, amt: p.gas ? np * VSTP : np * p.M };
+  }
+  function back(p, I, amt) {
+    var np = p.gas ? amt / VSTP : amt / p.M, ne = np * p.n, q = ne * F, ts = q / I;
+    return { np: np, ne: ne, q: q, ts: ts, tmin: ts / 60 };
+  }
+  function unit(p) { return p.gas ? "L" : "g"; }
+
+  // ---------- Formatting ----------
+  function s3(v) { return Lab.sig(v, 3); }
+  function sci3(v) { return Lab.sci(v, 3); }
+  function C(v) { return v >= 1e4 ? Lab.sci(v, 3, true) : Lab.sig(v, 3); }
+  function tFmt(min) { return min >= 60 ? s3(min) + " min (" + s3(min / 60) + " h)" : s3(min) + " min"; }
+
+  // ---------- Chart ----------
+  var svg = document.getElementById("chart");
+  function drawChart() {
+    var p = pr(), tShow = S.mode === "time" ? back(p, S.I, S.m).tmin : S.t;
+    var tMax = Math.max(120, Math.ceil(tShow * 1.1 / 30) * 30);
+    var yMax = Math.max(fwd(p, S.I, tMax).amt, p.gas ? 0.1 : 0.5) * 1.08;
+    var st = Math.pow(10, Math.floor(Math.log10(yMax / 5))); if (yMax / st > 12) st *= 2; if (yMax / st > 12) st *= 2.5;
+    var yt = []; for (var v = 0; v <= yMax + 1e-9; v += st) yt.push(+v.toFixed(6));
+    var xs = [30, 60, 120, 300, 600, 1200, 3000].filter(function (d) { return tMax / d <= 8; })[0] || 6000;
+    var xt = []; for (var x = 0; x <= tMax; x += xs) xt.push(x);
+    var Fm = Lab.frame(svg, { x: [0, tMax], y: [0, yMax], xTicks: xt, yTicks: yt, fmtX: function (v) { return v; }, fmtY: function (v) { return +v.toPrecision(3); },
+      xLabel: "time (min) at " + s3(S.I) + " A", yLabel: p.gas ? "volume at STP (L)" : "mass deposited (g)", width: 440, height: 330 });
+    PK.forEach(function (k) {
+      var o = P[k]; if (k === S.p || !!o.gas !== !!p.gas) return;
+      var end = fwd(o, S.I, tMax).amt;
+      Lab.line(Fm, [[0, 0], [tMax, end]], "var(--ghost)", 1.5, "5 4");
+      if (end < yMax * 0.98) Lab.tag(Fm, tMax * 0.985, end + yMax * 0.012, o.prod, "var(--muted)", "end");
+      else Lab.tag(Fm, tMax * yMax / end * 0.97 - tMax * 0.01, yMax * 0.95, o.prod, "var(--muted)", "end");
+    });
+    var e1 = fwd(p, S.I, tMax).amt;
+    Lab.line(Fm, [[0, 0], [tMax, e1]], "var(--accent)", 3);
+    var a = S.mode === "time" ? S.m : fwd(p, S.I, S.t).amt;
+    Lab.dot(Fm, tShow, a, "var(--c1)", true, xt.some(function (v) { return Math.abs(v - tShow) < tMax * 0.07; }) ? null : s3(tShow));
+    var right = tShow <= tMax * 0.6;
+    Lab.tag(Fm, right ? tShow + tMax * 0.03 : tShow - tMax * 0.03, right ? Math.max(a - yMax * 0.07, yMax * 0.03) : Math.min(a + yMax * 0.05, yMax * 0.95), p.prod + ": " + s3(a) + " " + unit(p), "var(--c1)", right ? "start" : "end");
+    document.getElementById("g-sub").textContent = p.gas ? "gas volume at STP" : "grams on the cathode";
+    document.getElementById("lg-main").textContent = p.prod + " (" + p.n + " e⁻ each)";
+  }
+
+  // ---------- Chain readouts ----------
+  function box(i, k, v, u, goal) {
+    document.getElementById("k" + i).innerHTML = k; document.getElementById("v" + i).innerHTML = v; document.getElementById("u" + i).innerHTML = u;
+    document.getElementById("st" + i).className = "stat" + (goal ? " goal" : "");
+  }
+  function chain() {
+    var p = pr();
+    if (S.mode === "time") {
+      var b = back(p, S.I, S.m);
+      box(1, "<b>1</b> mol " + p.prod, sci3(b.np) + " mol", s3(S.m) + " " + unit(p) + " ÷ " + (p.gas ? "22.4 L/mol" : p.M.toFixed(2) + " g/mol"));
+      box(2, "<b>2</b> mol e⁻ needed", sci3(b.ne) + " mol", sci3(b.np) + " mol × " + p.n + " mol e⁻/mol");
+      box(3, "<b>3</b> charge, q", C(b.q) + " C", sci3(b.ne) + " mol e⁻ × 96,485 C/mol e⁻");
+      box(4, "<b>4</b> time, t = q / I", s3(b.ts) + " s", C(b.q) + " C ÷ " + s3(S.I) + " A = " + tFmt(b.tmin), true);
+      return b;
+    }
+    var r = fwd(p, S.I, S.t);
+    box(1, "<b>1</b> charge, q = I × t", C(r.q) + " C", s3(S.I) + " A × " + (S.t * 60) + " s (" + S.t + " min)");
+    box(2, "<b>2</b> mol e⁻ = q / F", sci3(r.ne) + " mol", C(r.q) + " C ÷ 96,485 C/mol e⁻");
+    if (S.mode === "n") {
+      box(3, "<b>3</b> mol " + p.prod + " deposited", sci3(r.np) + " mol", s3(r.mass) + " g measured ÷ " + p.M.toFixed(2) + " g/mol");
+      box(4, "<b>4</b> mol e⁻ per mol " + p.prod, s3(r.ne / r.np), "= " + Math.round(r.ne / r.np) + ", so the ion is " + p.prod.replace(/₂/, "") + (p.gas ? "" : "<sup>" + (p.n === 1 ? "" : p.n) + "+</sup>"), true);
+      return r;
+    }
+    box(3, "<b>3</b> mol " + p.prod, sci3(r.np) + " mol", sci3(r.ne) + " mol e⁻ ÷ " + p.n + " mol e⁻/mol " + p.prod);
+    box(4, "<b>4</b> " + (p.gas ? "volume at STP" : "mass deposited"), s3(r.amt) + " " + unit(p), sci3(r.np) + " mol × " + (p.gas ? "22.4 L/mol" : p.M.toFixed(2) + " g/mol"), true);
+    return r;
+  }
+
+  // ---------- Story ----------
+  function story(r) {
+    var p = pr(), li = [], h = "";
+    li.push("The half-reaction " + p.half + " uses <b>" + p.n + " mol e⁻ per mol " + p.prod + "</b>. That ratio is the bridge between electricity and chemistry.");
+    if (S.mode === "time") {
+      li.push("To make " + s3(S.m) + " " + unit(p) + " of " + p.prod + " you need " + sci3(r.ne) + " mol e⁻, which is " + C(r.q) + " C. At " + s3(S.I) + " A (C/s) that takes " + s3(r.ts) + " s = " + tFmt(r.tmin) + ".");
+      li.push("Doubling the current would halve the time; the charge needed is fixed by the amount of product.");
+    } else if (S.mode === "n") {
+      li.push(s3(S.I) + " A for " + S.t + " min delivers " + sci3(r.ne) + " mol e⁻, and " + s3(r.mass) + " g of " + p.prod + " is " + sci3(r.np) + " mol. The ratio " + sci3(r.ne) + " ÷ " + sci3(r.np) + " = " + Math.round(r.ne / r.np) + " electrons per " + (p.gas ? "molecule" : "atom") + ".");
+      li.push(p.gas ? "For a gas this ratio counts the electrons per molecule formed, not an ion charge." : "Each " + p.prod + " ion must have picked up " + p.n + " electron" + (p.n > 1 ? "s" : "") + " to become a neutral atom, so its charge was " + p.n + "+.");
+    } else {
+      li.push(s3(S.I) + " A for " + S.t + " min is " + C(r.q) + " C, or " + sci3(r.ne) + " mol e⁻. Dividing by " + p.n + " gives " + sci3(r.np) + " mol " + p.prod + ", which is " + s3(r.amt) + " " + unit(p) + (p.gas ? " at STP" : "") + ".");
+      if (!p.gas) li.push("The gray lines use the same electrons. " + (p.n === 1 ? "Ag needs only one electron per atom, so it gives the most moles per coulomb." : "Ag⁺ needs one electron per atom, so the same charge would deposit " + p.n + " times as many moles of Ag as of " + p.prod + ".") + " Mass also depends on molar mass, which is why Au (3 e⁻ but 196.97 g/mol) still plates heavily.");
+      else li.push(p.prod === "H₂" ? "At the same time, the anode makes O₂ with 4 e⁻ per molecule, so the volume of O₂ is half the volume of H₂." : "At the same time, the cathode makes H₂ with 2 e⁻ per molecule, so twice as much H₂ forms by volume.");
+      if (S.p === "Al") li.push("Aluminum is made this way industrially (Hall–Héroult process). Three electrons per atom plus a low molar mass make it very costly in electricity.");
+    }
+    li.push("Mass deposited is proportional to I × t. Concentration of the ion, electrode size, and solution volume do not appear in the calculation.");
+    h += "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+    h += "<p><b>AP answer:</b> q = It; mol e⁻ = q/F; then use the half-reaction ratio (" + p.n + " mol e⁻ per mol " + p.prod + ") to convert to moles and " + (p.gas ? "liters" : "grams") + (S.mode === "time" ? ", and run the chain backward to get t = q/I." : S.mode === "n" ? "; the ratio of mol e⁻ to mol metal gives the charge on the ion." : ".") + "</p>";
+    return h;
+  }
+
+  // ---------- Challenge ----------
+  function rnd(a, b, step) { return Math.round((a + Math.random() * (b - a)) / step) * step; }
+  function newChallenge() {
+    var types = ["mass", "time", "n"], type = types[Math.floor(Math.random() * 3)];
+    var metals = ["Ag", "Cu", "Ni", "Zn", "Cr", "Au"], k = metals[Math.floor(Math.random() * metals.length)], p = P[k];
+    var I = rnd(0.5, 5, 0.25), t = rnd(10, 90, 5), c = { type: type, k: k, I: I, t: t };
+    var r = fwd(p, I, t);
+    if (type === "mass") { c.q = "A current of " + Lab.sig(I, 3) + " A passes through a solution of " + p.half.split(" ")[0].replace(/\(aq\)/, "") + " for " + t + ".0 min. What mass of " + p.prod + " (" + p.M.toFixed(2) + " g/mol) is deposited, in grams?"; c.ans = r.mass; c.lbl = "Mass (g):"; }
+    else if (type === "time") { c.m = +s3(r.mass); c.q = "How many minutes does it take to deposit " + s3(r.mass) + " g of " + p.prod + " (" + p.M.toFixed(2) + " g/mol) from " + p.half.split(" ")[0].replace(/\(aq\)/, "") + " with a current of " + Lab.sig(I, 3) + " A?"; c.ans = back(p, I, c.m).tmin; c.lbl = "Time (min):"; }
+    else { c.q = "A current of " + Lab.sig(I, 3) + " A for " + t + ".0 min deposits " + s3(r.mass) + " g of metal X (molar mass " + p.M.toFixed(2) + " g/mol) from a solution of X<sup>n+</sup>. What is n, the charge on the ion?"; c.ans = p.n; c.lbl = "n:"; }
+    S.chal = c;
+  }
+  var fb = document.getElementById("fb");
+  function showChal() {
+    var on = !!S.chal;
+    document.getElementById("chal-box").hidden = !on; document.getElementById("b-exit").hidden = !on;
+    if (on) { document.getElementById("chal-q").innerHTML = S.chal.q; document.getElementById("ans-l").textContent = S.chal.lbl; }
+  }
+  function checkChal() {
+    var c = S.chal, val = parseFloat(String(document.getElementById("ans").value).replace(/[^0-9.eE\-]/g, ""));
+    if (!isFinite(val)) { fb.className = "fb no"; fb.textContent = "Type a number."; return; }
+    var ok = c.type === "n" ? Math.round(val) === c.ans && Math.abs(val - c.ans) < 0.1 : Math.abs(val - c.ans) / c.ans <= 0.015;
+    var p = P[c.k];
+    fb.className = "fb " + (ok ? "ok" : "no");
+    fb.innerHTML = (ok ? "Correct. " : "Not quite. ") + "The answer is " + (c.type === "n" ? c.ans + " (X is " + c.k + ")" : s3(c.ans) + (c.type === "mass" ? " g" : " min")) + ". The bench now shows the worked chain.";
+    if (!ok) {
+      var hint = c.type === "mass" && Math.abs(val - c.ans * p.n) / (c.ans * p.n) < 0.02 ? " It looks like the electron ratio was left out." :
+        c.type === "mass" && Math.abs(val - c.ans / 60) / (c.ans / 60) < 0.02 ? " Check that the time was converted to seconds." :
+        c.type === "time" && Math.abs(val - c.ans * 60) / (c.ans * 60) < 0.02 ? " That is the time in seconds; the question asks for minutes." : "";
+      fb.innerHTML += hint;
+    }
+    S.p = c.k; S.I = c.I; S.sc = null;
+    if (c.type === "time") { S.mode = "time"; S.m = c.m; } else { S.mode = c.type; S.t = c.t; }
+    render(true);
+  }
+
+  // ---------- Controls ----------
+  var sel = document.getElementById("sel"), elI = document.getElementById("s-i"), elT = document.getElementById("s-t"), elM = document.getElementById("s-m");
+  var modeBtns = document.querySelectorAll("[data-mode]"), scBtns = {};
+  PK.forEach(function (k) { var o = document.createElement("option"); o.value = k; o.textContent = P[k].name + ", " + P[k].n + " e⁻"; sel.appendChild(o); });
+  function render(keepFb) {
+    var p = pr();
+    sel.value = S.p; elI.value = S.I; elT.value = S.t;
+    elM.max = p.gas ? 5 : 10; elM.value = S.m;
+    document.getElementById("o-i").textContent = s3(S.I) + " A";
+    document.getElementById("o-t").textContent = S.t + " min";
+    document.getElementById("l-m").textContent = "Target " + (p.gas ? "volume at STP" : "mass");
+    document.getElementById("o-m").textContent = s3(S.m) + " " + unit(p);
+    document.getElementById("c-t").hidden = S.mode === "time";
+    document.getElementById("c-m").hidden = S.mode !== "time";
+    document.getElementById("half").innerHTML = (p.anode ? "Anode: " : "Cathode: ") + p.half;
+    Array.prototype.forEach.call(modeBtns, function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-mode") === S.mode ? "true" : "false"); });
+    SCO.forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.sc === k ? "true" : "false"); });
+    drawChart();
+    var r = chain();
+    document.getElementById("story").innerHTML = story(r);
+    showChal();
+    if (!keepFb && !S.chal) fb.textContent = "";
+  }
+  function edit(fn) { fn(); S.sc = null; render(); }
+  SCO.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name;
+    b.addEventListener("click", function () { var x = SC[k]; S.chal = null; S.p = x.p; S.I = x.I; S.mode = x.mode; if (x.t) S.t = x.t; if (x.m) S.m = x.m; S.sc = k; render(); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  Array.prototype.forEach.call(modeBtns, function (b) { b.addEventListener("click", function () { edit(function () { S.mode = b.getAttribute("data-mode"); if (S.mode === "n" && pr().gas) S.p = "Cu"; }); }); });
+  sel.addEventListener("change", function () { edit(function () { S.p = sel.value; if (S.mode === "n" && pr().gas) S.mode = "mass"; if (pr().gas && S.m > 5) S.m = 1; }); });
+  elI.addEventListener("input", function () { edit(function () { S.I = parseFloat(elI.value); }); });
+  elT.addEventListener("input", function () { edit(function () { S.t = parseInt(elT.value, 10); }); });
+  elM.addEventListener("input", function () { edit(function () { S.m = parseFloat(elM.value); }); });
+  document.getElementById("b-chal").addEventListener("click", function () { newChallenge(); document.getElementById("ans").value = ""; fb.textContent = ""; fb.className = "fb"; render(true); });
+  document.getElementById("b-exit").addEventListener("click", function () { S.chal = null; render(); });
+  document.getElementById("b-check").addEventListener("click", function () { if (S.chal) checkChal(); });
+  document.getElementById("ans").addEventListener("keydown", function (e) { if (e.key === "Enter" && S.chal) checkChal(); });
+
+  // ---------- Cheat-sheet table (generated) ----------
+  (function table() {
+    var tb = document.querySelector("#ftab tbody");
+    PK.forEach(function (k) {
+      var p = P[k], one = 1 / p.n, hr = fwd(p, 1, 60), tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + p.half + "</td><td><b>" + p.n + "</b></td><td>" + Lab.sig(one, 3) + " mol = " + s3(p.gas ? one * VSTP : one * p.M) + " " + unit(p) + "</td><td>" + s3(hr.amt) + " " + unit(p) + "</td>";
+      tb.appendChild(tr);
+    });
+  })();
+
+  // ---------- Self-check ----------
+  (function selfCheck() {
+    var errs = [];
+    SCO.forEach(function (k) {
+      var x = SC[k], p = P[x.p];
+      var got = x.mode === "time" ? back(p, x.I, x.m).tmin : fwd(p, x.I, x.t).amt;
+      if (Math.abs(got - x.expect) / x.expect > 0.0006) errs.push(k + " expected " + x.expect + " got " + got.toFixed(4));
+    });
+    PK.forEach(function (k) {   // round trips: forward then backward returns the same time; n recovered
+      var p = P[k], r = fwd(p, 1.7, 37), b = back(p, 1.7, r.amt);
+      if (Math.abs(b.tmin - 37) > 1e-9) errs.push(k + " round trip");
+      if (Math.round(r.ne / r.np) !== p.n) errs.push(k + " n");
+    });
+    if (Math.abs(fwd(P.H2, 1, 60).amt / fwd(P.O2, 1, 60).amt - 2) > 1e-9) errs.push("H2:O2 volume ratio");
+    if (Math.abs(P.Cu.M - 63.55) > 0.005 || Math.abs(P.Ag.M - 107.87) > 0.005) errs.push("molar masses");
+    if (errs.length) console.error("9.11 self-check failed: " + errs.join("; "));
+  })();
+
+  render();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "A current of 2.00 A is passed through a CuSO₄(aq) solution for 30.0 minutes. What mass of copper is deposited on the cathode? (Cu: 63.55 g/mol)",
+      o: ["1.19 g", "2.37 g", "0.593 g", "0.0198 g"], c: 0,
+      w: "q = (2.00 C/s)(1800 s) = 3600 C. mol e⁻ = 3600 / 96,485 = 0.0373 mol. Cu²⁺ + 2e⁻ → Cu, so mol Cu = 0.0187 mol, and 0.0187 × 63.55 = 1.19 g. Choice B ignores the 2 : 1 electron ratio; choice D uses 30.0 instead of 1800 s." },
+    { s: "How long, in minutes, must a current of 1.00 A flow to deposit 2.16 g of silver from Ag⁺(aq)? (Ag: 107.87 g/mol)",
+      o: ["64.4 min", "1930 min", "32.2 min", "3.22 min"], c: 2,
+      w: "mol Ag = 2.16 / 107.87 = 0.0200 mol; Ag⁺ + e⁻ → Ag, so mol e⁻ = 0.0200 mol. q = 0.0200 × 96,485 = 1932 C. t = q / I = 1932 s = 32.2 min. Choice A treats Ag⁺ as needing 2 electrons; choice B forgets to convert seconds to minutes." },
+    { s: "Three electrolytic cells containing AgNO₃(aq), Cu(NO₃)₂(aq), and a molten aluminum salt are connected in series, and current flows for 1 hour. Which cell produces the greatest number of moles of metal?",
+      o: ["The Al cell, because Al³⁺ has the largest charge", "The Cu cell, because copper has the largest molar mass of the three", "All three produce the same number of moles, because the same current flows through each", "The Ag cell, because each Ag⁺ needs only one electron"], c: 3,
+      w: "In series, the same moles of electrons pass through every cell. Ag⁺ + e⁻ → Ag gives 1 mol Ag per mol e⁻, Cu gives ½, and Al gives ⅓. Choice C forgets that the electron ratio differs; choice A reverses the effect of the charge; and Ag (107.87 g/mol), not Cu, has the largest molar mass." },
+    { s: "A current of 0.500 A for 1930 s deposits 0.327 g of a metal with molar mass 65.4 g/mol from a solution of its ions. What is the charge on the metal ion?",
+      o: ["+1", "+2", "+3", "+4"], c: 1,
+      w: "q = 0.500 × 1930 = 965 C; mol e⁻ = 965 / 96,485 = 0.0100 mol. mol metal = 0.327 / 65.4 = 0.00500 mol. Ratio = 0.0100 / 0.00500 = 2 electrons per atom, so the ion is M²⁺. Choice A (+1) would need 0.0100 mol of metal, twice the 0.00500 mol actually deposited." },
+    { s: "How much charge is needed to produce 1.00 mol of aluminum metal by electrolysis of molten Al₂O₃?",
+      o: ["96,485 C", "32,162 C", "289,455 C", "193,000 C"], c: 2,
+      w: "Al³⁺ + 3e⁻ → Al, so 1.00 mol Al needs 3.00 mol e⁻: 3.00 × 96,485 = 2.89 × 10⁵ C. Choice A is one faraday (correct only for a +1 ion); choice B divides by 3 instead of multiplying." },
+    { s: "What constant current is needed to plate 1.00 g of nickel from Ni²⁺(aq) in 20.0 minutes? (Ni: 58.69 g/mol)",
+      o: ["2.74 A", "1.37 A", "164 A", "0.0457 A"], c: 0,
+      w: "mol Ni = 1.00 / 58.69 = 0.01704 mol; mol e⁻ = 2 × 0.01704 = 0.03408 mol; q = 0.03408 × 96,485 = 3288 C. I = q / t = 3288 C / 1200 s = 2.74 A. Choice B leaves out the factor of 2; choice C divides by 20.0 (minutes) instead of 1200 s." },
+    { s: "Water is electrolyzed with a current of 1.93 A for 2000. s. What volume of H₂(g), measured at STP, forms at the cathode? (2H₂O + 2e⁻ → H₂ + 2OH⁻)",
+      o: ["0.896 L", "0.224 L", "4.48 L", "0.448 L"], c: 3,
+      w: "q = 1.93 × 2000. = 3860 C; mol e⁻ = 3860 / 96,485 = 0.0400 mol. Two electrons per H₂ gives 0.0200 mol H₂ × 22.4 L/mol = 0.448 L. Choice A uses 1 e⁻ per H₂; choice B (0.224 L) is the O₂ formed at the anode, which needs 4 e⁻ per molecule." },
+    { s: "In an electroplating experiment, which change would double the mass of copper deposited on the cathode?",
+      o: ["Doubling the concentration of Cu²⁺ in the solution", "Doubling the time while keeping the current the same", "Using a cathode with twice the surface area", "Doubling the volume of the solution"], c: 1,
+      w: "Mass deposited is proportional to the charge passed, q = It. Doubling t at the same I doubles q, the moles of electrons, and the mass of Cu. Concentration, electrode area, and volume (choices A, C, D) do not change the number of electrons supplied." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("9.11");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [9], topic: "9.11", compact: true, storageKey: "topic-9.11" });</script>
+</body>
+</html>

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Introduction to Solubility Equilibria Study Lab</title>
+<meta name="description" content="Convert between Ksp and molar solubility for thirteen salts with every step shown, see on a log plot why Ksp only ranks salts of the same ion ratio, and predict whether mixing two solutions makes a precipitate.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.ctlcard { display: grid; gap: 16px; }
+.ctlcard .controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.graph-card { align-content: start; }
+.note { font-size: .82rem; color: var(--muted); }
+.pick-salt { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: .9rem; }
+.pick-salt select { font: inherit; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.pick-salt select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.story .formula { display: inline-block; margin: 2px 0; }
+.story ol.steps { margin-top: 4px; }
+svg.beaker { width: 100%; height: auto; display: block; }
+.legend .l-sel { color: var(--c4); }
+@media (max-width: 860px) { .ctlcard .controls { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .ctlcard .controls { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 7 · Topic 7.11</span>
+  <h1>Introduction to Solubility Equilibria Study Lab</h1>
+  <p class="lede">An “insoluble” salt still dissolves a little, and in a saturated solution the dissolving and the precipitating happen at the same rate. The equilibrium constant for that process is K<sub>sp</sub>, the solubility product. From K<sub>sp</sub> you can calculate how many moles of the salt dissolve per liter, and the reverse. Here you do both for thirteen salts, compare them fairly, and test whether mixing two solutions forms a precipitate.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The K<sub>sp</sub> workbench</h2>
+    <p>Choose a mode and a salt. The log plot puts every salt in the table on its own curve: salts that make the same number of ions share a curve, and only along one curve does a smaller K<sub>sp</sub> always mean a smaller solubility. K<sub>sp</sub> values are typical 25 °C table values; different tables differ slightly.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3><span>K<sub>sp</sub> against molar solubility</span> <small>both on log scales</small></h3>
+      <svg class="chart" id="gk" role="img" aria-label="Log-log plot of Ksp against molar solubility, with one curve for each ion ratio and a dot for each salt"></svg>
+    </div>
+    <div class="card graph-card">
+      <h3>Inside the saturated solution <small id="bk-sub"></small></h3>
+      <svg class="beaker particles" id="bk" viewBox="0 0 360 300" role="img" aria-label="Beaker with undissolved solid at the bottom and dissolved ions in the ratio set by the formula"></svg>
+      <p class="note" id="bk-note"></p>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <div class="tag">Classic problems</div>
+      <div class="scenarios" id="sc"></div>
+    </div>
+    <div class="group">
+      <div class="tag">Mode and salt</div>
+      <div class="seg" role="group" aria-label="Mode" id="modes"></div>
+      <div class="pick-salt"><label for="salt">Salt:</label><select id="salt"></select><span class="note" id="salt-note"></span></div>
+      <div class="eqn" id="eqn"></div>
+    </div>
+    <div class="controls" id="ctls"></div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-c1">AB (1 : 1)</span><span class="l-c2">AB₂ or A₂B (1 : 2)</span><span class="l-c3">AB₃ (1 : 3)</span><span class="l-ad">A₃B₂ (3 : 2)</span><span class="l-sel">Selected salt</span></div>
+  </div>
+
+  <div class="readout" id="readout"></div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">The equilibrium</span><h3>Dissolving is reversible</h3><p>For a saturated solution of PbI<sub>2</sub>, PbI<sub>2</sub>(s) ⇌ Pb<sup>2+</sup>(aq) + 2I<sup>−</sup>(aq). The solid stays in contact with the solution, ions leave and rejoin the crystal at equal rates, and the ion concentrations stay constant.</p></div>
+    <div class="card"><span class="tag">The expression</span><h3>K<sub>sp</sub> has no denominator</h3><p>The solid is a pure solid, so it is left out: K<sub>sp</sub> = [Pb<sup>2+</sup>][I<sup>−</sup>]<sup>2</sup>. Each ion concentration is raised to its coefficient in the dissolution equation.</p></div>
+    <div class="card"><span class="tag">Molar solubility</span><h3>Let s be moles dissolved per liter</h3><p>If s mol/L of PbI<sub>2</sub> dissolves, [Pb<sup>2+</sup>] = s and [I<sup>−</sup>] = 2s. Then K<sub>sp</sub> = (s)(2s)<sup>2</sup> = 4s<sup>3</sup>. The multiplier and the power both come from the formula.</p></div>
+    <div class="card"><span class="tag">Going backward</span><h3>From a measured solubility to K<sub>sp</sub></h3><p>Convert grams per liter to mol/L with the molar mass, multiply by the subscripts to get each ion concentration, and substitute into the K<sub>sp</sub> expression. A measured ion concentration works too: [F<sup>−</sup>] = 2s for CaF<sub>2</sub>.</p></div>
+    <div class="card"><span class="tag">Comparing</span><h3>Compare K<sub>sp</sub> only for the same ion ratio</h3><p>AgCl (K<sub>sp</sub> = 1.8 × 10<sup>−10</sup>) is less soluble than Ag<sub>2</sub>CrO<sub>4</sub> (K<sub>sp</sub> = 1.1 × 10<sup>−12</sup>), even though its K<sub>sp</sub> is larger, because the expressions have different forms. To compare salts with different ratios, calculate s for each.</p></div>
+    <div class="card"><span class="tag">Solubility rules</span><h3>K<sub>sp</sub> &gt; 1 means soluble</h3><p>The solubility rules connect to K<sub>sp</sub>: salts that are soluble, such as all sodium, potassium, ammonium and nitrate salts, have K<sub>sp</sub> values greater than 1. The “insoluble” salts of this lab have K<sub>sp</sub> values far below 1.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. K<sub>sp</sub> and molar solubility by formula type</h2>
+    <p>For a salt A<sub>a</sub>B<sub>b</sub> that dissolves to aA + bB: K<sub>sp</sub> = (as)<sup>a</sup>(bs)<sup>b</sup> = a<sup>a</sup>b<sup>b</sup>s<sup>a+b</sup>.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Formula type</th><th>Examples</th><th>Ion concentrations</th><th>K<sub>sp</sub> in terms of s</th><th>s in terms of K<sub>sp</sub></th></tr></thead>
+    <tbody>
+      <tr><td>AB</td><td>AgCl, BaSO<sub>4</sub>, CaCO<sub>3</sub></td><td>s and s</td><td><b>s<sup>2</sup></b></td><td>√K<sub>sp</sub></td></tr>
+      <tr><td>AB<sub>2</sub> or A<sub>2</sub>B</td><td>PbI<sub>2</sub>, CaF<sub>2</sub>, Mg(OH)<sub>2</sub>, Ag<sub>2</sub>CrO<sub>4</sub></td><td>s and 2s</td><td><b>4s<sup>3</sup></b></td><td>(K<sub>sp</sub>/4)<sup>1/3</sup></td></tr>
+      <tr><td>AB<sub>3</sub></td><td>Fe(OH)<sub>3</sub></td><td>s and 3s</td><td><b>27s<sup>4</sup></b></td><td>(K<sub>sp</sub>/27)<sup>1/4</sup></td></tr>
+      <tr><td>A<sub>3</sub>B<sub>2</sub></td><td>Ca<sub>3</sub>(PO<sub>4</sub>)<sub>2</sub></td><td>3s and 2s</td><td><b>108s<sup>5</sup></b></td><td>(K<sub>sp</sub>/108)<sup>1/5</sup></td></tr>
+      <tr><td>Any, mixing two solutions</td><td>AgNO<sub>3</sub> + NaCl</td><td>Diluted concentrations after mixing</td><td>Q = same form as K<sub>sp</sub></td><td>Q &gt; K<sub>sp</sub>: precipitate forms</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Solubility equilibria on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write the dissolution equation with (s) and (aq) labels before the K<sub>sp</sub> expression.</li>
+        <li>Write the expression without the solid: K<sub>sp</sub> = [Ca<sup>2+</sup>][F<sup>−</sup>]<sup>2</sup>.</li>
+        <li>Define s and write each ion concentration in terms of it, then substitute: K<sub>sp</sub> = (s)(2s)<sup>2</sup> = 4s<sup>3</sup>.</li>
+        <li>Give units for molar solubility (mol/L, or M) and convert to g/L with the molar mass if asked.</li>
+        <li>When ranking salts of different formula types, calculate s for each; say why comparing K<sub>sp</sub> directly fails.</li>
+        <li>For mixing problems, find each ion’s concentration after dilution before calculating Q.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Forgetting the coefficient inside the parentheses: writing s · s<sup>2</sup> instead of s · (2s)<sup>2</sup>.</li>
+        <li>Reporting [I<sup>−</sup>] = 2s as the molar solubility, or s as [I<sup>−</sup>].</li>
+        <li>Putting the solid in the denominator of K<sub>sp</sub>.</li>
+        <li>Ranking solubility by K<sub>sp</sub> alone across different ion ratios.</li>
+        <li>Using grams per liter in the K<sub>sp</sub> expression instead of mol/L.</li>
+        <li>Using the concentrations before mixing to calculate Q when two solutions are combined.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 7.11. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-7.html">Unit 7 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Salts (Ksp at 25 °C, typical table values) ----------
+  // f: formula; cat/an: ions; a/b: ions per formula unit; Ksp; cs/as: soluble sources for mixing; expect: hand-typed s (3 s.f.) for the self-check.
+  var SALTS = [
+    { f: "AgCl", cat: "Ag^+", a: 1, an: "Cl^-", b: 1, Ksp: 1.8e-10, cs: "AgNO3", as: "NaCl", expect: 1.34e-5 },
+    { f: "AgBr", cat: "Ag^+", a: 1, an: "Br^-", b: 1, Ksp: 5.0e-13, cs: "AgNO3", as: "NaBr", expect: 7.07e-7 },
+    { f: "AgI", cat: "Ag^+", a: 1, an: "I^-", b: 1, Ksp: 8.3e-17, cs: "AgNO3", as: "NaI", expect: 9.11e-9 },
+    { f: "BaSO4", cat: "Ba^2+", a: 1, an: "SO4^2-", b: 1, Ksp: 1.1e-10, cs: "Ba(NO3)2", as: "Na2SO4", expect: 1.05e-5 },
+    { f: "CaCO3", cat: "Ca^2+", a: 1, an: "CO3^2-", b: 1, Ksp: 3.4e-9, cs: "Ca(NO3)2", as: "Na2CO3", expect: 5.83e-5 },
+    { f: "PbI2", cat: "Pb^2+", a: 1, an: "I^-", b: 2, Ksp: 9.8e-9, cs: "Pb(NO3)2", as: "NaI", expect: 1.35e-3 },
+    { f: "PbCl2", cat: "Pb^2+", a: 1, an: "Cl^-", b: 2, Ksp: 1.7e-5, cs: "Pb(NO3)2", as: "NaCl", expect: 1.62e-2 },
+    { f: "CaF2", cat: "Ca^2+", a: 1, an: "F^-", b: 2, Ksp: 3.9e-11, cs: "Ca(NO3)2", as: "NaF", expect: 2.14e-4 },
+    { f: "Mg(OH)2", cat: "Mg^2+", a: 1, an: "OH^-", b: 2, Ksp: 5.6e-12, cs: "Mg(NO3)2", as: "NaOH", expect: 1.12e-4 },
+    { f: "Ca(OH)2", cat: "Ca^2+", a: 1, an: "OH^-", b: 2, Ksp: 5.5e-6, cs: "Ca(NO3)2", as: "NaOH", expect: 1.11e-2 },
+    { f: "Ag2CrO4", cat: "Ag^+", a: 2, an: "CrO4^2-", b: 1, Ksp: 1.1e-12, cs: "AgNO3", as: "Na2CrO4", expect: 6.50e-5 },
+    { f: "Fe(OH)3", cat: "Fe^3+", a: 1, an: "OH^-", b: 3, Ksp: 2.8e-39, cs: "Fe(NO3)3", as: "NaOH", expect: 1.01e-10 },
+    { f: "Ca3(PO4)2", cat: "Ca^2+", a: 3, an: "PO4^3-", b: 2, Ksp: 2.1e-33, cs: "Ca(NO3)2", as: "Na3PO4", expect: 1.14e-7 }
+  ];
+  var BY = {}; SALTS.forEach(function (x, i) { BY[x.f] = i; });
+  var CASES = [
+    { name: "AgCl: K<sub>sp</sub> → s", mode: "k2s", salt: "AgCl" },
+    { name: "PbI<sub>2</sub>: K<sub>sp</sub> → s", mode: "k2s", salt: "PbI2" },
+    { name: "Ag<sub>2</sub>CrO<sub>4</sub> vs AgCl (the ranking trap)", mode: "k2s", salt: "Ag2CrO4" },
+    { name: "CaF<sub>2</sub>: measured s → K<sub>sp</sub>", mode: "s2k", salt: "CaF2", s: 2.1e-4 },
+    { name: "Mg(OH)<sub>2</sub>: g/L → K<sub>sp</sub>", mode: "s2k", salt: "Mg(OH)2", s: 1.1e-4 },
+    { name: "Mix AgNO<sub>3</sub> + NaCl: precipitate?", mode: "mix", salt: "AgCl", c1: 1.0e-3, c2: 1.0e-3 },
+    { name: "Mix Pb(NO<sub>3</sub>)<sub>2</sub> + NaI: precipitate?", mode: "mix", salt: "PbI2", c1: 1.0e-4, c2: 1.0e-3 }
+  ];
+  var MODES = [["k2s", "K<sub>sp</sub> → solubility"], ["s2k", "Solubility → K<sub>sp</sub>"], ["mix", "Mix two solutions"]];
+  var S = { mode: "k2s", salt: 0, Ksp: 1.8e-10, s: 1e-5, c1: 1e-3, c2: 1e-3, V1: 50, V2: 50 };
+
+  // ---------- Helpers ----------
+  var SUPS = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+  function supText(n) { return String(n).split("").map(function (c) { return SUPS[c] || c; }).join(""); }
+  function uni(f) { return f.replace(/\^(\d*)([+-])$/, function (m, d, s) { return (d ? supText(d) : "") + (s === "+" ? "⁺" : "⁻"); }).replace(/(\D)(\d+)/g, function (m, a, d) { return a + d.split("").map(function (c) { return "₀₁₂₃₄₅₆₇₈₉"[+c]; }).join(""); }); }
+  function F(f) { return Lab.fmla(f); }
+  function N(v, n) { return Lab.sci(v, n || 2).replace(/^-/, "−"); }
+  function plain(v, n) { if (v === 0) return "0"; var e = Math.floor(Math.log10(Math.abs(v))); if (e >= -2 && e <= 3) return Lab.sig(v, n); var m = v / Math.pow(10, e); if (+m.toFixed(n - 1) >= 10) { m /= 10; e++; } return m.toFixed(n - 1) + "×10" + supText(e); }
+  function charge(ion) { var m = ion.match(/\^(\d*)([+-])$/); return (m[2] === "+" ? 1 : -1) * (m[1] ? +m[1] : 1); }
+  function sal() { return SALTS[S.salt]; }
+  function coef(a) { return a === 1 ? "" : String(a); }
+  function sOf(x, K) { return Math.pow(K / (Math.pow(x.a, x.a) * Math.pow(x.b, x.b)), 1 / (x.a + x.b)); }
+  function kOf(x, s) { return Math.pow(x.a * s, x.a) * Math.pow(x.b * s, x.b); }
+  function typeOf(x) { var k = [Math.min(x.a, x.b), Math.max(x.a, x.b)].join(":"); return { "1:1": 0, "1:2": 1, "1:3": 2, "2:3": 3 }[k]; }
+  var TCOL = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--accent)"];
+  function kspExpr(x) { return "K<sub>sp</sub> = [" + F(x.cat) + "]" + (x.a > 1 ? "<sup>" + x.a + "</sup>" : "") + "[" + F(x.an) + "]" + (x.b > 1 ? "<sup>" + x.b + "</sup>" : ""); }
+  function dissEq(x) { return F(x.f) + "(s) ⇌ " + coef(x.a) + F(x.cat) + "(aq) + " + coef(x.b) + F(x.an) + "(aq)"; }
+  function sTerm(n) { return n === 1 ? "s" : n + "s"; }
+  function sForm(x) { var k = Math.pow(x.a, x.a) * Math.pow(x.b, x.b); return (k === 1 ? "" : k) + "s<sup>" + (x.a + x.b) + "</sup>"; }
+
+  // ---------- Drawing ----------
+  function drawK(x, sNow, kNow) {
+    var svg = document.getElementById("gk");
+    var Fr = Lab.frame(svg, { x: [-12, 0], y: [-42, 0], xLabel: "Molar solubility s (mol/L)", yLabel: "Ksp",
+      xTicks: [-12, -10, -8, -6, -4, -2, 0], yTicks: [-40, -30, -20, -10, 0], fmtX: function (v) { return "10" + supText(v); }, fmtY: function (v) { return "10" + supText(v); } });
+    [[1, 1], [1, 2], [1, 3], [3, 2]].forEach(function (t, i) {
+      var k = Math.pow(t[0], t[0]) * Math.pow(t[1], t[1]), n = t[0] + t[1];
+      Lab.fn(Fr, function (ls) { return Math.log10(k) + n * ls; }, TCOL[i], 2, i === 3 ? "6 4" : null, 40);
+    });
+    SALTS.forEach(function (y) {
+      if (y === x) return;
+      var s = sOf(y, y.Ksp);
+      Lab.el("circle", { cx: Fr.sx(Math.log10(s)), cy: Fr.sy(Math.log10(y.Ksp)), r: 3.5, style: "fill:" + TCOL[typeOf(y)] + "; opacity: .75" }, Fr.g);
+    });
+    var cmp = (S.mode === "k2s" && x.f === "Ag2CrO4") ? SALTS[BY.AgCl] : null;
+    if (cmp) {
+      var sc = sOf(cmp, cmp.Ksp);
+      Lab.dot(Fr, Math.log10(sc), Math.log10(cmp.Ksp), "var(--c1)");
+      Lab.tag(Fr, Math.log10(sc) - 0.3, Math.log10(cmp.Ksp) + 2, "AgCl", "var(--c1)", "end");
+    }
+    Lab.dot(Fr, Math.log10(sNow), Math.log10(kNow), "var(--c4)", true);
+    Lab.tag(Fr, Math.log10(sNow) + 0.3, Math.log10(kNow) - 2.5, uni(x.f), "var(--c4)", "start");
+  }
+  function ion(g, cx, cy, name, col) {
+    Lab.el("circle", { cx: cx, cy: cy, r: 14, style: "fill:" + col }, g);
+    Lab.el("text", { x: cx, y: cy + 4, "text-anchor": "middle", style: "fill: var(--surface); font-size: 9.5px; font-weight: 600" }, g, uni(name));
+  }
+  function drawBeaker(x, nCat, nAn, solidH, label) {
+    var svg = document.getElementById("bk"); while (svg.firstChild) svg.removeChild(svg.firstChild);
+    Lab.el("path", { d: "M40 30 L40 270 Q40 285 55 285 L305 285 Q320 285 320 270 L320 30", style: "fill: none; stroke: var(--ink); stroke-width: 2.5" }, svg);
+    Lab.el("rect", { x: 42, y: 70, width: 276, height: 213, style: "fill: var(--accent-soft); opacity: .6" }, svg);
+    if (solidH > 0) {
+      var y0 = 283 - solidH;
+      Lab.el("path", { d: "M44 283 L44 " + (y0 + 8) + " Q180 " + (y0 - 8) + " 316 " + (y0 + 8) + " L316 283 Z", style: "fill: var(--ghost)" }, svg);
+      Lab.el("text", { x: 180, y: 283 - solidH / 2 + 8, "text-anchor": "middle", style: "fill: var(--ink); font-weight: 600" }, svg, label);
+    }
+    var pts = [], cols = 6, rows = 3, k = 0, seed = 7;
+    var rnd = function () { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) pts.push([70 + c * 44 + (rnd() - 0.5) * 16, 98 + r * 46 + (rnd() - 0.5) * 14]);
+    var order = []; for (var i = 0; i < nCat; i++) order.push("c"); for (i = 0; i < nAn; i++) order.push("a");
+    // interleave so the ions look mixed
+    var mixed = []; var ci = 0, ai = 0;
+    while (ci < nCat || ai < nAn) { if (ci < nCat) { mixed.push("c"); ci++; } for (var q = 0; q < Math.max(1, Math.round(nAn / Math.max(nCat, 1))) && ai < nAn; q++) { mixed.push("a"); ai++; } }
+    var perm = [3, 10, 0, 15, 7, 12, 5, 1, 16, 9, 2, 13, 6, 11, 17, 4, 14, 8];
+    mixed.forEach(function (t) { var p = pts[perm[k++ % pts.length]]; ion(svg, p[0], p[1], t === "c" ? x.cat : x.an, t === "c" ? "var(--c1)" : "var(--c2)"); });
+  }
+
+  // ---------- Story ----------
+  function readout(cells) {
+    document.getElementById("readout").innerHTML = cells.map(function (c) { return '<div class="stat"><div class="k">' + c[0] + '</div><div class="v">' + c[1] + '</div><div class="sub">' + c[2] + "</div></div>"; }).join("");
+  }
+  function render() {
+    S.V2 = 100 - S.V1; // V2 follows V1 so the total stays 100 mL
+    var x = sal(), M = Lab.molarMass(x.f), h = "";
+    document.getElementById("salt").value = S.salt;
+    document.getElementById("salt-note").innerHTML = "molar mass " + M.toFixed(2) + " g/mol; table K<sub>sp</sub> = " + N(x.Ksp);
+    document.querySelectorAll("#modes button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.m === S.mode ? "true" : "false"); });
+    document.querySelectorAll("#sc button").forEach(function (b, i) { var cs = CASES[i]; b.setAttribute("aria-pressed", cs.mode === S.mode && BY[cs.salt] === S.salt && (cs.mode === "k2s" ? S.Ksp === x.Ksp : cs.mode === "s2k" ? S.s === cs.s : S.c1 === cs.c1 && S.c2 === cs.c2) ? "true" : "false"); });
+    buildControls();
+    if (S.mode === "k2s") {
+      var s = sOf(x, S.Ksp);
+      document.getElementById("eqn").innerHTML = dissEq(x) + "&nbsp;&nbsp;&nbsp;" + kspExpr(x);
+      h += "<p><b>Find the molar solubility from K<sub>sp</sub> = " + N(S.Ksp) + ".</b></p><ol class=\"steps\">";
+      h += "<li>Dissolution: " + dissEq(x) + ". If s mol/L dissolves, [" + F(x.cat) + "] = " + sTerm(x.a) + " and [" + F(x.an) + "] = " + sTerm(x.b) + ".</li>";
+      h += "<li>Substitute: " + N(S.Ksp) + " = (" + sTerm(x.a) + ")" + (x.a > 1 ? "<sup>" + x.a + "</sup>" : "") + "(" + sTerm(x.b) + ")" + (x.b > 1 ? "<sup>" + x.b + "</sup>" : "") + " = " + sForm(x) + ".</li>";
+      h += "<li>Solve: s = (" + N(S.Ksp) + (sForm(x).charAt(0) === "s" ? "" : " / " + Math.pow(x.a, x.a) * Math.pow(x.b, x.b)) + ")<sup>1/" + (x.a + x.b) + "</sup> = <b>" + N(s, 3) + " mol/L</b>.</li>";
+      h += "<li>Ion concentrations: [" + F(x.cat) + "] = " + N(x.a * s, 3) + " M, [" + F(x.an) + "] = " + N(x.b * s, 3) + " M. In grams: " + N(s, 3) + " mol/L × " + M.toFixed(2) + " g/mol = " + N(s * M, 3) + " g/L.</li></ol>";
+      if (x.f === "Ag2CrO4" || x.f === "AgCl") {
+        var o = SALTS[BY[x.f === "AgCl" ? "Ag2CrO4" : "AgCl"]], so = sOf(o, o.Ksp);
+        h += "<p><b>Compare with " + F(o.f) + ":</b> K<sub>sp</sub> = " + N(o.Ksp) + " gives s = " + N(so, 3) + " mol/L. " +
+          (x.f === "Ag2CrO4" ? "Ag<sub>2</sub>CrO<sub>4</sub> has the smaller K<sub>sp</sub> but the larger molar solubility" : "AgCl has the larger K<sub>sp</sub> but the smaller molar solubility") + ", because K<sub>sp</sub> = 4s<sup>3</sup> for one and s<sup>2</sup> for the other. On the plot the two salts sit on different curves.</p>";
+      }
+      h += "<p><b>AP answer:</b> K<sub>sp</sub> = " + kspExpr(x).replace("K<sub>sp</sub> = ", "") + " = " + sForm(x) + ", so s = " + N(s, 2) + " mol/L" + (x.a + x.b > 2 ? "; note that [" + F(x.a > 1 ? x.cat : x.an) + "] = " + (x.a > 1 ? x.a : x.b) + "s, not s" : "") + ".</p>";
+      drawK(x, s, S.Ksp);
+      drawBeaker(x, Math.min(18, 3 * x.a > 9 ? 2 * x.a : 3 * x.a), Math.min(18, 3 * x.a > 9 ? 2 * x.b : 3 * x.b), 40, uni(x.f) + "(s)");
+      document.getElementById("bk-sub").textContent = "saturated";
+      document.getElementById("bk-note").innerHTML = "Not to scale. Every formula unit that dissolves releases " + x.a + " " + F(x.cat) + " and " + x.b + " " + F(x.an) + ", so the ion ratio is " + x.a + " : " + x.b + ". Water molecules are not shown.";
+      readout([["K<sub>sp</sub>", N(S.Ksp), S.Ksp === x.Ksp ? "table value" : "your value"], ["Molar solubility s", N(s, 3) + " M", "mol of " + F(x.f) + " per liter"], ["[" + F(x.cat) + "] and [" + F(x.an) + "]", N(x.a * s, 2) + ", " + N(x.b * s, 2), "= " + sTerm(x.a) + " and " + sTerm(x.b) + " (M)"], ["Solubility in g/L", N(s * M, 3), "s × " + M.toFixed(2) + " g/mol"]]);
+    } else if (S.mode === "s2k") {
+      var s2 = S.s, k = kOf(x, s2);
+      document.getElementById("eqn").innerHTML = dissEq(x) + "&nbsp;&nbsp;&nbsp;" + kspExpr(x);
+      h += "<p><b>A saturated solution of " + F(x.f) + " contains " + N(s2 * M, 3) + " g of dissolved salt per liter. Find K<sub>sp</sub>.</b></p><ol class=\"steps\">";
+      h += "<li>Molar solubility: s = " + N(s2 * M, 3) + " g/L ÷ " + M.toFixed(2) + " g/mol = " + N(s2, 3) + " mol/L.</li>";
+      h += "<li>Ion concentrations: [" + F(x.cat) + "] = " + sTerm(x.a) + " = " + N(x.a * s2, 3) + " M; [" + F(x.an) + "] = " + sTerm(x.b) + " = " + N(x.b * s2, 3) + " M.</li>";
+      h += "<li>Substitute: K<sub>sp</sub> = (" + N(x.a * s2, 3) + ")" + (x.a > 1 ? "<sup>" + x.a + "</sup>" : "") + "(" + N(x.b * s2, 3) + ")" + (x.b > 1 ? "<sup>" + x.b + "</sup>" : "") + " = <b>" + N(k, 2) + "</b>.</li></ol>";
+      var r = k / x.Ksp;
+      h += "<p>The table value is " + N(x.Ksp) + (Math.abs(Math.log10(r)) < 0.1 ? ", so this measurement agrees with it." : "; this solubility gives a K<sub>sp</sub> " + Lab.sig(r > 1 ? r : 1 / r, 2) + " times " + (r > 1 ? "larger" : "smaller") + ".") + "</p>";
+      h += "<p><b>AP answer:</b> s = " + N(s2, 2) + " M, so [" + F(x.cat) + "] = " + N(x.a * s2, 2) + " M and [" + F(x.an) + "] = " + N(x.b * s2, 2) + " M, and K<sub>sp</sub> = " + kspExpr(x).replace("K<sub>sp</sub> = ", "") + " = " + N(k, 2) + ".</p>";
+      drawK(x, s2, k);
+      drawBeaker(x, Math.min(18, 3 * x.a), Math.min(18, 3 * x.b), 40, uni(x.f) + "(s)");
+      document.getElementById("bk-sub").textContent = "saturated";
+      document.getElementById("bk-note").innerHTML = "Not to scale. The ion concentrations are fixed multiples of s: " + x.a + " " + F(x.cat) + " and " + x.b + " " + F(x.an) + " per formula unit dissolved.";
+      readout([["Measured solubility", N(s2 * M, 3) + " g/L", "= " + N(s2, 3) + " mol/L"], ["[" + F(x.cat) + "]", N(x.a * s2, 3) + " M", "= " + sTerm(x.a)], ["[" + F(x.an) + "]", N(x.b * s2, 3) + " M", "= " + sTerm(x.b)], ["K<sub>sp</sub>", N(k, 2), "table: " + N(x.Ksp)]]);
+    } else {
+      var Vt = S.V1 + S.V2, cc = S.c1 * S.V1 / Vt, ca = S.c2 * S.V2 / Vt, nc = x.a, Qv = Math.pow(cc, x.a) * Math.pow(ca, x.b), ppt = Qv > x.Ksp;
+      // cation source supplies 1 cation per formula unit; anion source supplies (anions per formula unit) from its formula
+      document.getElementById("eqn").innerHTML = coef(x.a) + F(x.cat) + "(aq) + " + coef(x.b) + F(x.an) + "(aq) → " + F(x.f) + "(s)?&nbsp;&nbsp;&nbsp;" + kspExpr(x) + " = " + N(x.Ksp);
+      h += "<p><b>Mix " + S.V1 + " mL of " + N(S.c1) + " M " + F(x.cs) + " with " + S.V2 + " mL of " + N(S.c2) + " M " + F(x.as) + ".</b> Both are soluble (all nitrates and all sodium salts are), so the ions are free until they meet.</p><ol class=\"steps\">";
+      h += "<li>Dilute: the total volume is " + Vt + " mL, so [" + F(x.cat) + "] = " + N(S.c1) + " × " + S.V1 + "/" + Vt + " = " + N(cc, 2) + " M and [" + F(x.an) + "] = " + N(S.c2) + " × " + S.V2 + "/" + Vt + " = " + N(ca, 2) + " M.</li>";
+      h += "<li>Ion product: Q = (" + N(cc, 2) + ")" + (x.a > 1 ? "<sup>" + x.a + "</sup>" : "") + "(" + N(ca, 2) + ")" + (x.b > 1 ? "<sup>" + x.b + "</sup>" : "") + " = <b>" + N(Qv, 2) + "</b>.</li>";
+      h += "<li>Compare: Q " + (ppt ? "&gt;" : Qv < x.Ksp ? "&lt;" : "=") + " K<sub>sp</sub> = " + N(x.Ksp) + ". " + (ppt ? "The solution would be supersaturated, so " + F(x.f) + " <b>precipitates</b> until the ion product falls to K<sub>sp</sub>." : "The solution is unsaturated: <b>no precipitate</b> forms.") + "</li></ol>";
+      var undil = Math.pow(S.c1, x.a) * Math.pow(S.c2, x.b);
+      if ((undil > x.Ksp) !== ppt) h += "<p>Trap: using the concentrations before mixing gives Q = " + N(undil, 2) + ", which would wrongly predict " + (undil > x.Ksp ? "a precipitate" : "no precipitate") + ".</p>";
+      h += "<p><b>AP answer:</b> after mixing, Q = [" + F(x.cat) + "]" + (x.a > 1 ? "<sup>" + x.a + "</sup>" : "") + "[" + F(x.an) + "]" + (x.b > 1 ? "<sup>" + x.b + "</sup>" : "") + " = " + N(Qv, 2) + ", which is " + (ppt ? "greater than" : "less than") + " K<sub>sp</sub> (" + N(x.Ksp) + "), so " + (ppt ? "a precipitate of " + F(x.f) + " forms." : "no precipitate forms.") + "</p>";
+      var sEq = sOf(x, x.Ksp);
+      drawK(x, Math.pow(Qv / (Math.pow(x.a, x.a) * Math.pow(x.b, x.b)), 1 / (x.a + x.b)), Qv);
+      drawBeaker(x, ppt ? 3 : 6, ppt ? 3 : 6, ppt ? 26 : 0, ppt ? uni(x.f) + "(s) forms" : "");
+      document.getElementById("bk-sub").textContent = ppt ? "precipitate forms" : "no precipitate";
+      document.getElementById("bk-note").innerHTML = "Not to scale. The dot on the plot marks Q (as if it were a K<sub>sp</sub>); it lies " + (ppt ? "above" : "below") + " the selected salt’s K<sub>sp</sub>. Spectator ions (" + F("Na^+") + ", " + F("NO3^-") + ") are not shown.";
+      readout([["[" + F(x.cat) + "] after mixing", N(cc, 2) + " M", F(x.cs) + " diluted"], ["[" + F(x.an) + "] after mixing", N(ca, 2) + " M", F(x.as) + " diluted"], ["Q", N(Qv, 2), "K<sub>sp</sub> = " + N(x.Ksp)], ["Result", ppt ? "precipitate" : "no precipitate", ppt ? "Q > Ksp" : "Q < Ksp"]]);
+      void sEq; void nc;
+    }
+    document.getElementById("story").innerHTML = h;
+  }
+
+  // ---------- Controls ----------
+  var built = "";
+  function slider(id, label, min, max, step, val, hint, fmt, set) {
+    var d = document.createElement("div"); d.className = "ctl";
+    d.innerHTML = '<label for="' + id + '"><span>' + label + '</span> <output id="o-' + id + '"></output></label><input type="range" id="' + id + '" min="' + min + '" max="' + max + '" step="' + step + '"><span class="hint">' + hint + "</span>";
+    var inp = d.querySelector("input"); inp.value = val; d.querySelector("output").innerHTML = fmt(val);
+    inp.addEventListener("input", function () { set(parseFloat(inp.value)); render(); });
+    return d;
+  }
+  function buildControls() {
+    var box = document.getElementById("ctls"), x = sal(), key = S.mode + S.salt;
+    var want = S.mode === "k2s" ? [["s-k", "K<sub>sp</sub>", -40, -1, 0.05, Math.log10(S.Ksp), "Log scale; starts at the table value", function (v) { return N(Math.pow(10, v)); }, function (v) { S.Ksp = +Lab.sig(Math.pow(10, v), 2); }]] :
+      S.mode === "s2k" ? [["s-s", "Molar solubility", -11, -1, 0.02, Math.log10(S.s), "Log scale, mol/L", function (v) { return N(Math.pow(10, v)) + " M"; }, function (v) { S.s = +Lab.sig(Math.pow(10, v), 2); }]] :
+      [["s-c1", F(x.cs) + " concentration", -6, -1, 0.05, Math.log10(S.c1), "Before mixing (log scale)", function (v) { return N(Math.pow(10, v)) + " M"; }, function (v) { S.c1 = +Lab.sig(Math.pow(10, v), 2); }],
+       ["s-c2", F(x.as) + " concentration", -6, -1, 0.05, Math.log10(S.c2), "Before mixing (log scale)", function (v) { return N(Math.pow(10, v)) + " M"; }, function (v) { S.c2 = +Lab.sig(Math.pow(10, v), 2); }],
+       ["s-v1", "Volume of " + F(x.cs), 10, 90, 5, S.V1, "Mixed with the other solution", function (v) { return v + " mL"; }, function (v) { S.V1 = v; }]];
+    if (built === key) { // just refresh outputs
+      want.forEach(function (w) { var o = document.getElementById("o-" + w[0]); if (o) o.innerHTML = w[7](w[0] === "s-v1" ? S.V1 : w[5]); });
+      return;
+    }
+    built = key; box.innerHTML = "";
+    want.forEach(function (w) { box.appendChild(slider.apply(null, w)); });
+  }
+  MODES.forEach(function (m) {
+    var b = document.createElement("button"); b.type = "button"; b.innerHTML = m[1]; b.dataset.m = m[0]; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S.mode = m[0]; built = ""; render(); });
+    document.getElementById("modes").appendChild(b);
+  });
+  var sel = document.getElementById("salt");
+  SALTS.forEach(function (x, i) { var o = document.createElement("option"); o.value = i; o.textContent = uni(x.f) + "  (Ksp " + plain(x.Ksp, 2) + ")"; sel.appendChild(o); });
+  sel.addEventListener("change", function () { setSalt(+sel.value); built = ""; render(); });
+  function setSalt(i) { var x = SALTS[i]; S.salt = i; S.Ksp = x.Ksp; S.s = +Lab.sig(sOf(x, x.Ksp), 2); }
+  CASES.forEach(function (cs) {
+    var b = document.createElement("button"); b.type = "button"; b.innerHTML = cs.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { S.mode = cs.mode; setSalt(BY[cs.salt]); if (cs.s) S.s = cs.s; if (cs.c1) { S.c1 = cs.c1; S.c2 = cs.c2; S.V1 = 50; S.V2 = 50; } built = ""; render(); });
+    document.getElementById("sc").appendChild(b);
+  });
+  setSalt(0);
+  render();
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    SALTS.forEach(function (x) {
+      var s = sOf(x, x.Ksp);
+      if (Lab.sig(s, 3) !== Lab.sig(x.expect, 3)) bad.push(x.f + ": s = " + Lab.sig(s, 3) + ", expected " + x.expect);
+      if (Math.abs(kOf(x, s) / x.Ksp - 1) > 1e-9) bad.push(x.f + ": s → Ksp round trip fails");
+      if (x.a * charge(x.cat) + x.b * charge(x.an) !== 0) bad.push(x.f + ": ion charges do not balance");
+      var A = Lab.parseFormula(x.f), I = {}, add = function (f, n) { var p = Lab.parseFormula(f); for (var e in p) I[e] = (I[e] || 0) + p[e] * n; };
+      add(x.cat, x.a); add(x.an, x.b);
+      Object.keys(A).concat(Object.keys(I)).forEach(function (e) { if (A[e] !== I[e]) bad.push(x.f + ": ions do not add up to the formula (" + e + ")"); });
+      // the mixing sources must contain the ions
+      if (!(Lab.parseFormula(x.cs)[Object.keys(Lab.parseFormula(x.cat))[0]])) bad.push(x.f + ": cation source wrong");
+    });
+    // Ag2CrO4 is more soluble than AgCl despite its smaller Ksp
+    if (!(sOf(SALTS[BY.Ag2CrO4], 1.1e-12) > sOf(SALTS[BY.AgCl], 1.8e-10))) bad.push("ranking trap does not hold");
+    if (bad.length) console.error("7.11 self-check failed: " + bad.join("; "));
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "The molar solubility of AgBr in water at 25 °C is 7.1 × 10⁻⁷ mol/L. What is Ksp for AgBr?",
+      o: ["7.1 × 10⁻⁷", "1.4 × 10⁻⁶", "5.0 × 10⁻¹³", "2.0 × 10⁻¹²"], c: 2,
+      w: "AgBr(s) ⇌ Ag⁺(aq) + Br⁻(aq), so [Ag⁺] = [Br⁻] = s and Ksp = s² = (7.1 × 10⁻⁷)² = 5.0 × 10⁻¹³. Choice A is s itself; choice D uses 4s², a formula that does not fit a 1 : 1 salt." },
+    { s: "Ksp for PbI₂ is 9.8 × 10⁻⁹ at 25 °C. What is the molar solubility of PbI₂ in water?",
+      o: ["1.3 × 10⁻³ M", "2.1 × 10⁻³ M", "9.9 × 10⁻⁵ M", "2.7 × 10⁻³ M"], c: 0,
+      w: "PbI₂(s) ⇌ Pb²⁺ + 2I⁻: Ksp = (s)(2s)² = 4s³, so s = (9.8 × 10⁻⁹ / 4)^(1/3) = (2.45 × 10⁻⁹)^(1/3) = 1.3 × 10⁻³ M. Choice B forgets the 4 (cube root of Ksp); choice C takes a square root as if PbI₂ were a 1 : 1 salt; choice D is [I⁻] = 2s, not the molar solubility." },
+    { s: "At 25 °C, Ksp for AgCl is 1.8 × 10⁻¹⁰ and Ksp for Ag₂CrO₄ is 1.1 × 10⁻¹². Which statement is correct?",
+      o: ["AgCl is more soluble in mol/L, because its Ksp is larger.", "The two salts have the same molar solubility, because both contain Ag⁺.", "Ag₂CrO₄ is less soluble, because its Ksp is smaller.", "Ag₂CrO₄ is more soluble in mol/L, because its Ksp = 4s³ gives s ≈ 6.5 × 10⁻⁵ M, while AgCl gives s ≈ 1.3 × 10⁻⁵ M."], c: 3,
+      w: "Ksp values can be compared directly only for salts with the same ion ratio. Here s(AgCl) = √(1.8 × 10⁻¹⁰) = 1.3 × 10⁻⁵ M and s(Ag₂CrO₄) = (1.1 × 10⁻¹²/4)^(1/3) = 6.5 × 10⁻⁵ M. Choices A and C are the trap: ranking by Ksp across different formula types." },
+    { s: "Which expression gives Ksp for calcium phosphate, Ca₃(PO₄)₂, in terms of its molar solubility s?",
+      o: ["Ksp = 6s⁵", "Ksp = 108s⁵", "Ksp = s⁵", "Ksp = 3s · 2s"], c: 1,
+      w: "Ca₃(PO₄)₂(s) ⇌ 3Ca²⁺ + 2PO₄³⁻, so [Ca²⁺] = 3s and [PO₄³⁻] = 2s. Ksp = (3s)³(2s)² = 27s³ · 4s² = 108s⁵. Choice A multiplies the coefficients instead of raising them to powers; choice D forgets the exponents entirely." },
+    { s: "In a saturated solution of Mg(OH)₂ at 25 °C, [OH⁻] = 2.2 × 10⁻⁴ M. What is Ksp for Mg(OH)₂?",
+      o: ["2.4 × 10⁻⁸", "4.3 × 10⁻¹¹", "1.3 × 10⁻¹²", "5.3 × 10⁻¹²"], c: 3,
+      w: "[OH⁻] = 2s, so s = [Mg²⁺] = 1.1 × 10⁻⁴ M. Ksp = [Mg²⁺][OH⁻]² = (1.1 × 10⁻⁴)(2.2 × 10⁻⁴)² = 5.3 × 10⁻¹². Choice B treats 2.2 × 10⁻⁴ as s and uses 4s³; choice A forgets to square [OH⁻]; choice C uses s³ without the factor of 4." },
+    { s: "Sodium nitrate dissolves readily in water; a saturated solution is more than 7 M. Which statement about Ksp for NaNO₃ is most consistent with this?",
+      o: ["Ksp is greater than 1.", "Ksp is less than 1 but greater than 10⁻⁵.", "Ksp is undefined, because NaNO₃ is a strong electrolyte.", "Ksp is about 10⁻¹⁰, like other salts."], c: 0,
+      w: "The solubility rules line up with Ksp: soluble salts such as sodium and nitrate salts have Ksp values greater than 1. With s above 7 M, Ksp = s² would be well over 1. A saturated solution of any salt has a Ksp, so choice C is wrong; choice D describes sparingly soluble salts such as AgCl." },
+    { s: "A particle diagram of the dissolved ions in a saturated CaF₂ solution is drawn (water molecules not shown). Which description of the diagram is correct?",
+      o: ["Equal numbers of Ca²⁺ and F⁻ ions", "Twice as many Ca²⁺ ions as F⁻ ions", "Twice as many F⁻ ions as Ca²⁺ ions", "Only CaF₂ units, because the salt is insoluble"], c: 2,
+      w: "Each formula unit of CaF₂ that dissolves releases one Ca²⁺ and two F⁻, so [F⁻] = 2[Ca²⁺] and the diagram shows twice as many F⁻ as Ca²⁺. Choice D misreads “insoluble”: some salt dissolves, and the dissolved part is present as separate ions." },
+    { s: "Equal volumes of 2.0 × 10⁻⁵ M AgNO₃ and 2.0 × 10⁻⁵ M NaCl are mixed. Ksp for AgCl is 1.8 × 10⁻¹⁰. Does a precipitate form?",
+      o: ["Yes, because Q = 4.0 × 10⁻¹⁰, which is greater than Ksp.", "No, because after mixing Q = (1.0 × 10⁻⁵)(1.0 × 10⁻⁵) = 1.0 × 10⁻¹⁰, which is less than Ksp.", "Yes, because any amount of Ag⁺ and Cl⁻ together forms AgCl(s).", "No, because Na⁺ and NO₃⁻ keep the ions in solution."], c: 1,
+      w: "Mixing equal volumes halves each concentration, so [Ag⁺] = [Cl⁻] = 1.0 × 10⁻⁵ M and Q = 1.0 × 10⁻¹⁰ &lt; 1.8 × 10⁻¹⁰: the solution is unsaturated. Choice A is the trap: it uses the concentrations before mixing. Choice C ignores that AgCl has a small but nonzero solubility; Na⁺ and NO₃⁻ are spectators (choice D)." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("7.11");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [7], topic: "7.11", compact: true, storageKey: "topic-7.11" });</script>
+</body>
+</html>

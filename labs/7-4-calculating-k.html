@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculating the Equilibrium Constant Study Lab</title>
+<meta name="description" content="Turn measured equilibrium data into K: convert moles to molarity, build an ICE table from one measured amount or a total pressure, substitute into Kc or Kp, and check your own answer.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.ctlcard { display: grid; gap: 16px; }
+.ctlcard .controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ctl.meas label { color: var(--c2); }
+.note { font-size: .82rem; color: var(--muted); }
+.graph-card { align-content: start; }
+.problem { font-size: .98rem; background: var(--paper); border-radius: 8px; padding: 10px 14px; }
+.ice table { min-width: 0; }
+.ice th { text-transform: none; letter-spacing: 0; }
+.answer[hidden] { display: none; }
+.ice th, .ice td { text-align: center; font-family: var(--mono); font-size: .86rem; padding: 8px 8px; }
+.ice th:first-child, .ice td:first-child { text-align: left; font-family: var(--body); font-weight: 600; }
+.ice td small { display: block; color: var(--muted); font-size: .76rem; }
+.ice td.meas { background: var(--good-soft); }
+.ice td.out { color: var(--muted); font-family: var(--body); font-size: .8rem; }
+.answer { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.answer input { font: inherit; font-size: .95rem; width: 9em; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.answer input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.fb { font-size: .92rem; }
+.fb.ok { color: var(--good); } .fb.no { color: var(--bad); }
+.hide-k .kval { filter: blur(6px); }
+.legend .l-i { color: var(--ghost); }
+@media (max-width: 860px) { .ctlcard .controls { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .ctlcard .controls { grid-template-columns: 1fr; } .ice th, .ice td { font-size: .76rem; padding: 6px 4px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 7 · Topic 7.4</span>
+  <h1>Calculating the Equilibrium Constant Study Lab</h1>
+  <p class="lede">An equilibrium constant is calculated from measurements: the concentrations or partial pressures of every species once the system has reached equilibrium. Often only one amount is measured, and the rest follow from the starting amounts and the balanced equation. Work through six classic setups, with the ICE table and every step generated live, then hide the answer and calculate K yourself.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The ICE table workbench</h2>
+    <p>Pick a setup. The sliders change the starting amounts and the measured equilibrium value (in green); the ICE table, the bar chart, and the calculation update together. Turn on <b>Hide K</b> to practice: work it out on paper, type your answer, and check it.</p>
+  </div>
+
+  <div class="problem" id="problem"></div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>ICE table <small id="ice-sub"></small></h3>
+      <div class="tbl-wrap ice"><table id="ice"></table></div>
+      <div class="eqn" id="kexpr"></div>
+    </div>
+    <div class="card graph-card">
+      <h3>Before and at equilibrium <small id="bar-sub"></small></h3>
+      <svg class="chart" id="bars" role="img" aria-label="Bar chart comparing initial and equilibrium amounts of each species"></svg>
+      <div class="legend"><span class="l-i">Initial</span><span style="color:var(--accent)">Equilibrium (reactant)</span><span class="l-c1">Equilibrium (product)</span></div>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <div class="tag">Setup</div>
+      <div class="scenarios" id="sc"></div>
+    </div>
+    <div class="controls" id="sliders"></div>
+    <div class="btnrow">
+      <button type="button" id="b-hide" aria-pressed="false">Hide K: off</button>
+      <button type="button" id="b-preset">Reset to the example values</button>
+    </div>
+    <div class="answer" id="ansrow" hidden>
+      <label for="ans">Your value of K:</label>
+      <input id="ans" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 0.020 or 1.8e-5">
+      <button type="button" id="b-check">Check</button>
+      <span class="fb" id="fb" aria-live="polite"></span>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">x (from the measurement)</div><div class="v" id="r-x"></div><div class="sub" id="r-x2"></div></div>
+    <div class="stat"><div class="k">Direction it went</div><div class="v" id="r-d"></div><div class="sub" id="r-d2"></div></div>
+    <div class="stat"><div class="k">Equilibrium amounts</div><div class="v" id="r-e" style="font-size:.95rem"></div><div class="sub" id="r-e2"></div></div>
+    <div class="stat kval"><div class="k" id="r-kn">K</div><div class="v" id="r-k"></div><div class="sub">no units</div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">The rule</span><h3>Only equilibrium values go into K</h3><p>K is calculated from concentrations or partial pressures measured <i>at equilibrium</i>. Initial amounts only help you find the equilibrium ones. Substituting initial values gives Q at time zero, not K.</p></div>
+    <div class="card"><span class="tag">Units first</span><h3>Moles are not molarity</h3><p>K<sub>c</sub> needs mol/L. If a problem gives moles and a flask volume, divide every amount by the volume before you use the ICE table or the expression. K<sub>p</sub> uses partial pressures, normally in atm.</p></div>
+    <div class="card"><span class="tag">ICE</span><h3>Initial, Change, Equilibrium</h3><p>Write the starting amounts, then the changes in terms of one unknown x, using the coefficients: reactants change by −(coefficient)x and products by +(coefficient)x. Each equilibrium entry is I + C.</p></div>
+    <div class="card"><span class="tag">One measurement</span><h3>One number unlocks the table</h3><p>Measuring a single equilibrium amount gives x, because I + C = E for that species. Then every other equilibrium amount follows. A measured total pressure works the same way for gases: add up the E row and set it equal to the total.</p></div>
+    <div class="card"><span class="tag">Direction</span><h3>x can come out negative</h3><p>If the measured product amount is smaller than its initial amount, x is negative: the reaction ran in reverse. The table still works. Q &gt; K at the start is the reason.</p></div>
+    <div class="card"><span class="tag">Reporting</span><h3>K is a plain number</h3><p>K is normally written without units, and AP questions give it that way. Keep the significant figures of the data, and remember that pure solids and liquids appear in the ICE table only as "excess" and never in K.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Setups you will see, and the move that cracks each one</h2>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>What the problem gives</th><th>First move</th><th>Then</th></tr></thead>
+    <tbody>
+      <tr><td>Every equilibrium concentration or pressure</td><td><b>Substitute directly</b> into the K expression</td><td>No ICE table needed</td></tr>
+      <tr><td>Initial amounts and one equilibrium amount</td><td>ICE table; <b>x = (E − I) ÷ coefficient</b> for the measured species</td><td>Fill in every E, then substitute</td></tr>
+      <tr><td>Moles of each substance and a volume</td><td><b>Divide by the volume</b> to get mol/L</td><td>ICE table in mol/L, then substitute</td></tr>
+      <tr><td>Initial pressure and the total pressure at equilibrium</td><td>Write the sum of the E row in terms of x and <b>set it equal to P<sub>total</sub></b></td><td>Solve for x, fill in each partial pressure, then substitute into K<sub>p</sub></td></tr>
+      <tr><td>A solid that decomposes into gases in an evacuated flask</td><td>Gases form in the <b>mole ratio</b> of the equation, so P<sub>total</sub> splits by that ratio</td><td>Leave the solid out of K<sub>p</sub></td></tr>
+      <tr><td>Percent of a reactant that reacted</td><td><b>x = percent × initial amount ÷ coefficient</b></td><td>Fill in the E row, then substitute</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Calculating K on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Write the K expression first, then substitute equilibrium values that match it term by term.</li>
+        <li>Show the moles-to-molarity conversion with units: "0.600 mol ÷ 2.00 L = 0.300 M."</li>
+        <li>Lay out the ICE table, or at least state x and how you got it from the measured value.</li>
+        <li>Use the coefficients in the change row: for 2SO<sub>2</sub> + O<sub>2</sub> ⇌ 2SO<sub>3</sub>, the changes are −2x, −x, +2x.</li>
+        <li>Report K as a number without units, with significant figures consistent with the data.</li>
+        <li>If asked whether a mixture is at equilibrium, calculate Q from the given values and compare with K.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Plugging moles straight into K<sub>c</sub> when the volume is not 1.00 L.</li>
+        <li>Using initial amounts in the K expression.</li>
+        <li>Forgetting the coefficients in the C row (writing −x for a species with coefficient 2).</li>
+        <li>Forgetting the exponents in the K expression after correctly finding the equilibrium amounts.</li>
+        <li>Including a solid in the ICE table's K calculation, or treating its "amount" as a concentration.</li>
+        <li>Assuming x is the equilibrium amount of a product. x is the change per unit coefficient; E = I + (coefficient)x.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 7.4. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-7.html">Unit 7 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Reactions: [html, unicode, signed coefficient, phase] ----------
+  var RX = {
+    hi: [["H<sub>2</sub>", "H₂", -1, "g"], ["I<sub>2</sub>", "I₂", -1, "g"], ["HI", "HI", 2, "g"]],
+    no2: [["N<sub>2</sub>O<sub>4</sub>", "N₂O₄", -1, "g"], ["NO<sub>2</sub>", "NO₂", 2, "g"]],
+    so3: [["SO<sub>2</sub>", "SO₂", -2, "g"], ["O<sub>2</sub>", "O₂", -1, "g"], ["SO<sub>3</sub>", "SO₃", 2, "g"]],
+    pcl5: [["PCl<sub>5</sub>", "PCl₅", -1, "g"], ["PCl<sub>3</sub>", "PCl₃", 1, "g"], ["Cl<sub>2</sub>", "Cl₂", 1, "g"]],
+    nh4hs: [["NH<sub>4</sub>HS", "NH₄HS", -1, "s"], ["NH<sub>3</sub>", "NH₃", 1, "g"], ["H<sub>2</sub>S", "H₂S", 1, "g"]]
+  };
+  // Setups. mode c: amounts in mol with volume V (L); mode p: partial pressures in atm.
+  // direct: every equilibrium value is given. meas: { i: species index, v } (mol or atm) or { tot: P_total }.
+  // init: initial amount per species (null for a solid in excess). K: hand-calculated answer for the example values.
+  var SC = {
+    direct: { name: "All equilibrium values given", rx: "hi", mode: "c", direct: true, V: 1.00, init: [0.020, 0.020, 0.14], K: 49,
+      text: "A 1.00 L flask of H₂, I₂, and HI at 450 °C has reached equilibrium. It contains 0.0200 mol H₂, 0.0200 mol I₂, and 0.140 mol HI. Calculate Kc." },
+    ice: { name: "One measured amount", rx: "no2", mode: "c", V: 1.00, init: [0.100, 0], meas: { i: 1, v: 0.0400 }, K: 0.020,
+      text: "0.100 mol of N₂O₄ is sealed in a 1.00 L flask. At equilibrium the flask contains 0.0400 mol NO₂. Calculate Kc." },
+    moles: { name: "Moles in a 2.00 L flask", rx: "so3", mode: "c", V: 2.00, init: [0.800, 0.400, 0], meas: { i: 2, v: 0.600 }, K: 180,
+      text: "0.800 mol SO₂ and 0.400 mol O₂ are placed in a 2.00 L vessel. At equilibrium the vessel contains 0.600 mol SO₃. Calculate Kc." },
+    total: { name: "Kp from total pressure", rx: "pcl5", mode: "p", init: [1.00, 0, 0], meas: { tot: 1.40 }, K: 0.4 * 0.4 / 0.6,
+      text: "PCl₅(g) is placed in an evacuated rigid flask at an initial pressure of 1.00 atm. At equilibrium the total pressure is 1.40 atm. Calculate Kp." },
+    solid: { name: "Solid in an evacuated flask", rx: "nh4hs", mode: "p", init: [null, 0, 0], meas: { tot: 0.660 }, K: 0.330 * 0.330,
+      text: "Excess NH₄HS(s) is placed in an evacuated flask. At equilibrium the total pressure is 0.660 atm. Calculate Kp." },
+    reverse: { name: "Starting from the product", rx: "hi", mode: "c", V: 2.00, init: [0, 0, 1.00], meas: { i: 0, v: 0.110 }, K: Math.pow(0.390, 2) / Math.pow(0.0550, 2),
+      text: "1.00 mol HI is placed in an empty 2.00 L flask. At equilibrium the flask contains 0.110 mol H₂. Calculate Kc." }
+  };
+  var ORDER = ["direct", "ice", "moles", "total", "solid", "reverse"];
+  var S = { key: "ice", init: [], V: 1, meas: null, hide: false };
+
+  function sc() { return SC[S.key]; }
+  function sp() { return RX[sc().rx]; }
+  function inc(s) { return sc().mode === "p" ? s[3] === "g" : (s[3] === "g" || s[3] === "aq"); }
+  function unit() { return sc().mode === "p" ? "atm" : "M"; }
+  function amtUnit() { return sc().mode === "p" ? "atm" : "mol"; }
+  function toC(v) { return sc().mode === "p" ? v : v / S.V; }       // amount -> concentration (or pressure)
+  function g3(v) { return Lab.sig(v, 3); }
+  function signed(v) { return (v < 0 ? "−" : "+") + g3(Math.abs(v)); }
+  function minus(s) { return String(s).replace(/^-/, "−"); }
+
+  // ---------- Model ----------
+  function solve() {
+    var x = sc(), list = sp(), I = list.map(function (s, j) { return s[3] === "s" ? null : toC(S.init[j] || 0); });
+    if (x.direct) return { I: I, E: I.slice(), x: null, ok: I.every(function (v, j) { return list[j][3] === "s" || v > 0; }) };
+    var xv;
+    if (S.meas.tot != null) {
+      var sumI = 0, sumN = 0;
+      list.forEach(function (s, j) { if (s[3] === "g") { sumI += I[j]; sumN += s[2]; } });
+      xv = (S.meas.tot - sumI) / sumN;
+    } else {
+      var m = S.meas.i; xv = (toC(S.meas.v) - I[m]) / list[m][2];
+    }
+    var E = list.map(function (s, j) { return s[3] === "s" ? null : I[j] + s[2] * xv; });
+    var ok = E.every(function (v, j) { return list[j][3] === "s" || v > 1e-9; });
+    return { I: I, E: E, x: xv, ok: ok };
+  }
+  function calcK(E) { var k = 1; sp().forEach(function (s, j) { if (inc(s)) k *= Math.pow(E[j], s[2]); }); return k; }
+  // Range of the measured value that keeps every equilibrium amount positive
+  function measRange() {
+    var list = sp(), I = list.map(function (s, j) { return s[3] === "s" ? null : toC(S.init[j] || 0); }), lo = -Infinity, hi = Infinity;
+    list.forEach(function (s, j) {
+      if (s[3] === "s") return;
+      if (s[2] > 0) lo = Math.max(lo, -I[j] / s[2]); else hi = Math.min(hi, I[j] / -s[2]);
+    });
+    if (hi === Infinity) hi = lo + 2;   // only products can be limited in reverse; cap the forward range for the slider
+    if (S.meas.tot != null) {
+      var sumI = 0, sumN = 0; list.forEach(function (s, j) { if (s[3] === "g") { sumI += I[j]; sumN += s[2]; } });
+      var a = sumI + sumN * lo, b = sumI + sumN * hi; return [Math.min(a, b), Math.max(a, b)];
+    }
+    var m = S.meas.i, f = sc().mode === "p" ? 1 : S.V, a2 = (I[m] + list[m][2] * lo) * f, b2 = (I[m] + list[m][2] * hi) * f;
+    return [Math.min(a2, b2), Math.max(a2, b2)];
+  }
+
+  // ---------- Expression strings ----------
+  function term(s, val) {
+    var e = Math.abs(s[2]), base = val != null ? "(" + g3(val) + ")" : (sc().mode === "p" ? "(P<sub>" + s[1] + "</sub>)" : "[" + s[0] + "]");
+    return base + (e > 1 ? "<sup>" + e + "</sup>" : "");
+  }
+  function expr(vals) {
+    var list = sp(), num = [], den = [];
+    list.forEach(function (s, j) { if (inc(s)) (s[2] > 0 ? num : den).push(term(s, vals ? vals[j] : null)); });
+    var n = num.join("") || "1";
+    return den.length ? n + " / " + (den.length > 1 ? "(" + den.join("") + ")" : den[0]) : n;
+  }
+  function Kn() { return sc().mode === "p" ? "K<sub>p</sub>" : "K<sub>c</sub>"; }
+  function eqnHTML() {
+    var L = [], R = [];
+    sp().forEach(function (s) { (s[2] < 0 ? L : R).push((Math.abs(s[2]) > 1 ? Math.abs(s[2]) : "") + s[0] + "(" + s[3] + ")"); });
+    return L.join(" + ") + " ⇌ " + R.join(" + ");
+  }
+
+  // ---------- Rendering ----------
+  function iceTable(m) {
+    var x = sc(), list = sp(), u = unit(), h = "<thead><tr><th>" + u + "</th>";
+    list.forEach(function (s) { h += "<th>" + (Math.abs(s[2]) > 1 ? Math.abs(s[2]) : "") + s[0] + "(" + s[3] + ")</th>"; });
+    h += "</tr></thead><tbody>";
+    function row(lbl, f) { h += "<tr><td>" + lbl + "</td>"; list.forEach(function (s, j) { h += f(s, j); }); h += "</tr>"; }
+    var mi = !x.direct && S.meas.i != null ? S.meas.i : -1;
+    if (x.direct) {
+      row("E", function (s, j) { return "<td class='meas'>" + g3(m.E[j]) + "</td>"; });
+    } else {
+      row("I", function (s, j) { return s[3] === "s" ? "<td class='out'>excess</td>" : "<td>" + g3(m.I[j]) + "</td>"; });
+      row("C", function (s, j) {
+        if (s[3] === "s") return "<td class='out'>(some used or formed)</td>";
+        var c = Math.abs(s[2]) === 1 ? "x" : Math.abs(s[2]) + "x";
+        return "<td>" + (s[2] < 0 ? "−" : "+") + c + "<small>" + signed(s[2] * m.x) + "</small></td>";
+      });
+      row("E", function (s, j) {
+        if (s[3] === "s") return "<td class='out'>not in K</td>";
+        var c = Math.abs(s[2]) === 1 ? "x" : Math.abs(s[2]) + "x";
+        return "<td" + (j === mi ? " class='meas'" : "") + ">" + (m.I[j] ? g3(m.I[j]) + " " : "") + (s[2] < 0 ? "−" : (m.I[j] ? "+" : "")) + " " + c + "<small>= " + g3(m.E[j]) + "</small></td>";
+      });
+    }
+    return h + "</tbody>";
+  }
+  function drawBars(m) {
+    var list = sp(), idx = [], top = 0;
+    list.forEach(function (s, j) { if (s[3] !== "s") { idx.push(j); top = Math.max(top, m.I[j], m.E[j]); } });
+    var st = top > 1.5 ? 0.5 : top > 0.6 ? 0.2 : top > 0.3 ? 0.1 : top > 0.12 ? 0.05 : 0.02, ym = Math.max(st, Math.ceil(top * 1.12 / st) * st), n = idx.length;
+    var yt = []; for (var v = 0; v <= ym + 1e-9; v += st) yt.push(+v.toFixed(3));
+    var F = Lab.frame(document.getElementById("bars"), { x: [0, n], y: [0, ym], xLabel: "", yLabel: sc().mode === "p" ? "Partial pressure (atm)" : "Concentration (M)", yTicks: yt, fmtY: function (v) { return st < 0.05 ? v.toFixed(2) : st < 0.5 ? v.toFixed(1) : v.toFixed(1); }, height: 300 });
+    idx.forEach(function (j, k) {
+      var s = list[j], c = s[2] < 0 ? "var(--accent)" : "var(--c1)";
+      if (m.I[j] > 0) Lab.rect(F, k + .14, 0, k + .46, m.I[j], "var(--ghost)", .9);
+      if (m.E[j] > 0) Lab.rect(F, k + .54, 0, k + .86, m.E[j], c, .95);
+      Lab.el("text", { x: F.sx(k + .5), y: F.H - F.M.b + 18, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, F.svg, s[1]);
+      Lab.el("text", { x: F.sx(k + .7), y: F.sy(m.E[j]) - 5, "text-anchor": "middle", style: "fill:var(--ink); font-weight:600" }, F.svg, g3(m.E[j]));
+      if (!sc().direct && m.I[j] > 0) Lab.el("text", { x: F.sx(k + .3), y: F.sy(m.I[j]) - 5, "text-anchor": "middle" }, F.svg, g3(m.I[j]));
+    });
+    if (sc().direct) Lab.el("text", { x: F.sx(n / 2), y: F.M.t + 14, "text-anchor": "middle" }, F.svg, "only equilibrium values are given");
+  }
+  function steps(m, K) {
+    var x = sc(), list = sp(), u = unit(), h = "<ol class='steps'>";
+    if (x.mode === "c" && S.V !== 1) {
+      h += "<li>Convert to molarity (divide by " + S.V.toFixed(2) + " L): " + list.filter(function (s) { return s[3] !== "s"; }).map(function (s) {
+        var j = list.indexOf(s); return (x.direct ? "" : "[") + s[0] + (x.direct ? "" : "]<sub>0</sub>") + (x.direct ? ": " : " = ") + g3(S.init[j]) + " mol ÷ " + S.V.toFixed(2) + " L = " + g3(m.I[j]) + " M";
+      }).join("; ") + (!x.direct && S.meas.i != null ? "; measured " + list[S.meas.i][0] + ": " + g3(S.meas.v) + " mol ÷ " + S.V.toFixed(2) + " L = " + g3(toC(S.meas.v)) + " M" : "") + ".</li>";
+    } else if (x.mode === "c") {
+      h += "<li>The volume is 1.00 L, so moles and molarity have the same value.</li>";
+    }
+    if (!x.direct) {
+      if (S.meas.tot != null) {
+        var parts = [], sumI = 0, sumN = 0;
+        list.forEach(function (s, j) { if (s[3] === "g") { sumI += m.I[j]; sumN += s[2]; parts.push("(" + (m.I[j] ? g3(m.I[j]) + " " : "") + (s[2] < 0 ? "− " : (m.I[j] ? "+ " : "")) + (Math.abs(s[2]) > 1 ? Math.abs(s[2]) : "") + "x)"); } });
+        h += "<li>Add the E row for every gas and set it equal to the measured total: " + parts.join(" + ") + " = " + (sumI ? g3(sumI) + " " : "") + (sumN < 0 ? "− " : (sumI ? "+ " : "")) + (Math.abs(sumN) > 1 ? Math.abs(sumN) : "") + "x = " + g3(S.meas.tot) + " atm, so x = " + minus(g3(m.x)) + " atm.</li>";
+      } else {
+        var mi = S.meas.i, s = list[mi];
+        h += "<li>Use the measured species to find x: E = I + (" + (s[2] < 0 ? "−" : "+") + Math.abs(s[2]) + ")x, so " + g3(m.E[mi]) + " = " + g3(m.I[mi]) + " " + (s[2] < 0 ? "−" : "+") + " " + (Math.abs(s[2]) > 1 ? Math.abs(s[2]) : "") + "x, giving x = " + minus(g3(m.x)) + " " + u + "." + (m.x < 0 ? " x is negative: the reaction went in reverse." : "") + "</li>";
+      }
+      h += "<li>Fill in the E row: " + list.filter(function (s) { return s[3] !== "s"; }).map(function (s) { var j = list.indexOf(s); return (x.mode === "p" ? "P<sub>" + s[1] + "</sub>" : "[" + s[0] + "]") + " = " + g3(m.E[j]) + " " + u; }).join(", ") + ".</li>";
+    }
+    h += "<li>Substitute equilibrium values: " + Kn() + " = " + expr() + " = " + expr(m.E) + " = <b class='kval'>" + Lab.sci(K, 3) + "</b>.</li>";
+    return h + "</ol>";
+  }
+  function story(m, K) {
+    var x = sc(), list = sp(), h = "";
+    if (!m.ok) {
+      return "<p>With these numbers at least one substance would be completely used up (or negative), which cannot be an equilibrium state for a reversible reaction. Move the sliders so every amount is positive.</p><p><b>AP answer:</b> every species in the K expression must be present at equilibrium; check that each equilibrium amount is positive before substituting.</p>";
+    }
+    h += "<p><b>" + Kn() + " = " + expr() + "</b>" + (list.some(function (s) { return s[3] === "s"; }) ? " (the solid is left out)" : "") + ". Only equilibrium values go in.</p>";
+    h += steps(m, K);
+    if (!x.direct && S.meas.tot != null && x.rx === "nh4hs") h += "<p>Because the solid produces NH<sub>3</sub> and H<sub>2</sub>S in a 1 : 1 ratio and nothing else, each gas has half the total pressure. How much solid is present does not matter, as long as some remains.</p>";
+    if (!x.direct && m.x < 0) h += "<p>The reaction started with only product, so Q was larger than K and the net reaction ran in reverse. The ICE table handles this automatically with a negative x.</p>";
+    if (x.mode === "c" && S.V !== 1) {
+      var dn = 0; list.forEach(function (s) { if (inc(s)) dn += s[2]; });
+      h += dn !== 0 ? "<p>Watch the trap: substituting moles instead of molarities would give " + Lab.sci(calcK(m.E.map(function (v) { return v == null ? v : v * S.V; })), 3) + ", which is wrong because K<sub>c</sub> is defined with mol/L.</p>" :
+        "<p>Here the total exponents on top and bottom are equal, so the volume happens to cancel and moles would give the same K. Convert anyway: in most reactions the volume does not cancel.</p>";
+    }
+    h += "<p><b>AP answer:</b> " + Kn() + " = " + expr(m.E) + " = <span class='kval'>" + Lab.sci(K, 3) + "</span> (no units), calculated from the equilibrium " + (x.mode === "p" ? "partial pressures" : "concentrations") + ".</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  var slBox = document.getElementById("sliders"), scBtns = {}, secEl = document.getElementById("lab-sec");
+  function buildSliders() {
+    var x = sc(), list = sp(); slBox.innerHTML = "";
+    function add(id, label, min, max, step, val, cls, hint, onInput) {
+      var d = document.createElement("div"); d.className = "ctl" + (cls ? " " + cls : "");
+      d.innerHTML = '<label for="' + id + '"><span>' + label + '</span> <output id="' + id + '-o"></output></label><input type="range" id="' + id + '" min="' + min + '" max="' + max + '" step="' + step + '">' + (hint ? '<span class="hint">' + hint + '</span>' : '');
+      slBox.appendChild(d);
+      var inp = d.querySelector("input"); inp.value = val;
+      inp.addEventListener("input", function () { onInput(parseFloat(inp.value)); });
+    }
+    if (x.mode === "c") add("s-v", "Flask volume", 0.5, 5, 0.25, S.V, null, "Divide moles by this to get mol/L", function (v) { S.V = v; clampMeas(); render(); });
+    list.forEach(function (s, j) {
+      if (s[3] === "s") return;
+      add("s-i" + j, (x.direct ? "Equilibrium " : "Initial ") + s[0] + (x.mode === "p" ? " pressure" : " amount"), 0, x.mode === "p" ? 2 : 1.2, x.mode === "p" ? 0.01 : 0.005, S.init[j], x.direct ? "meas" : null, null, function (v) { S.init[j] = v; if (!x.direct) clampMeas(); render(); });
+    });
+    if (!x.direct) {
+      var r = measRange();
+      var lab = S.meas.tot != null ? "Measured total pressure at equilibrium" : "Measured " + list[S.meas.i][0] + " at equilibrium";
+      add("s-m", lab, 0, 1, 0.001, 0, "meas", "This one number determines x", function (f) { var r2 = measRange(); S.meas[S.meas.tot != null ? "tot" : "v"] = roundTo(r2[0] + (r2[1] - r2[0]) * f); render(); });
+    }
+  }
+  function roundTo(v) { var st = sc().mode === "p" ? 0.005 : 0.0005; return Math.round(v / st) * st; }
+  function clampMeas() {
+    if (sc().direct) return;
+    var r = measRange(), k = S.meas.tot != null ? "tot" : "v", pad = (r[1] - r[0]) * 0.01;
+    S.meas[k] = Math.max(r[0] + pad, Math.min(r[1] - pad, S.meas[k]));
+  }
+  function setPreset() {
+    var x = sc(); S.init = x.init.slice(); S.V = x.V || 1; S.meas = x.meas ? JSON.parse(JSON.stringify(x.meas)) : null;
+  }
+  function render() {
+    var x = sc(), list = sp(), m = solve(), K = m.ok ? calcK(m.E) : NaN, u = unit();
+    document.getElementById("problem").innerHTML = "<b>" + eqnHTML() + "</b><br>" + (S.key && isPreset() ? x.text : "Your own numbers: " + describe());
+    document.getElementById("ice").innerHTML = m.ok || !x.direct ? iceTable(m) : "";
+    document.getElementById("ice-sub").textContent = x.direct ? "only the E row is needed" : "in " + (u === "M" ? "mol/L" : "atm");
+    document.getElementById("bar-sub").textContent = u === "M" ? "mol/L" : "atm";
+    document.getElementById("kexpr").innerHTML = Kn() + " = " + expr();
+    drawBars(m);
+    // slider outputs
+    var v = document.getElementById("s-v"); if (v) { v.value = S.V; document.getElementById("s-v-o").textContent = S.V.toFixed(2) + " L"; }
+    list.forEach(function (s, j) { var e = document.getElementById("s-i" + j); if (e) { e.value = S.init[j]; document.getElementById("s-i" + j + "-o").textContent = g3(S.init[j]) + " " + amtUnit(); } });
+    var sm = document.getElementById("s-m");
+    if (sm) { var r = measRange(), val = S.meas.tot != null ? S.meas.tot : S.meas.v; sm.value = (val - r[0]) / (r[1] - r[0]); document.getElementById("s-m-o").textContent = g3(val) + " " + (S.meas.tot != null ? "atm" : amtUnit()); }
+    Object.keys(scBtns).forEach(function (k) { scBtns[k].setAttribute("aria-pressed", S.key === k ? "true" : "false"); });
+    // readouts
+    document.getElementById("r-x").textContent = x.direct ? "not needed" : (m.ok ? minus(g3(m.x)) + " " + u : "—");
+    document.getElementById("r-x2").textContent = x.direct ? "all E values given" : "change per unit coefficient";
+    document.getElementById("r-d").textContent = x.direct ? "—" : m.x > 0 ? "→ forward" : m.x < 0 ? "← reverse" : "none";
+    document.getElementById("r-d2").textContent = x.direct ? "" : m.x > 0 ? "products formed" : m.x < 0 ? "reactants formed" : "";
+    document.getElementById("r-e").innerHTML = list.filter(function (s) { return s[3] !== "s"; }).map(function (s) { var j = list.indexOf(s); return m.ok ? g3(m.E[j]) : "—"; }).join(" / ");
+    document.getElementById("r-e2").textContent = list.filter(function (s) { return s[3] !== "s"; }).map(function (s) { return s[1]; }).join(" / ") + " in " + u;
+    document.getElementById("r-kn").innerHTML = Kn();
+    document.getElementById("r-k").innerHTML = m.ok ? Lab.sci(K, 3) : "—";
+    document.getElementById("story").innerHTML = story(m, K);
+    secEl.classList.toggle("hide-k", S.hide);
+    document.getElementById("ansrow").hidden = !S.hide;
+    var bh = document.getElementById("b-hide"); bh.setAttribute("aria-pressed", S.hide ? "true" : "false"); bh.textContent = "Hide K: " + (S.hide ? "on" : "off");
+  }
+  function isPreset() {
+    var x = sc(); if ((x.V || 1) !== S.V) return false;
+    for (var j = 0; j < x.init.length; j++) if (x.init[j] !== S.init[j] && !(x.init[j] == null && S.init[j] == null)) return false;
+    if (x.meas) { var k = x.meas.tot != null ? "tot" : "v"; if (Math.abs(x.meas[k] - S.meas[k]) > 1e-9) return false; }
+    return true;
+  }
+  function describe() {
+    var x = sc(), list = sp(), parts = [];
+    list.forEach(function (s, j) { if (s[3] !== "s") parts.push(g3(S.init[j]) + " " + amtUnit() + " " + s[1]); });
+    var t = (x.direct ? "at equilibrium, " : "initially ") + parts.join(", ") + (x.mode === "c" ? " in " + S.V.toFixed(2) + " L" : "") + ".";
+    if (!x.direct) t += S.meas.tot != null ? " Total pressure at equilibrium: " + g3(S.meas.tot) + " atm." : " At equilibrium: " + g3(S.meas.v) + " " + amtUnit() + " " + list[S.meas.i][1] + ".";
+    return t;
+  }
+  function pick(k) { S.key = k; setPreset(); buildSliders(); clearFb(); render(); }
+  function clearFb() { var fb = document.getElementById("fb"); fb.textContent = ""; fb.className = "fb"; document.getElementById("ans").value = ""; }
+  ORDER.forEach(function (k) {
+    SC[k].key = k;
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pick(k); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  document.getElementById("b-preset").addEventListener("click", function () { pick(S.key); });
+  document.getElementById("b-hide").addEventListener("click", function () { S.hide = !S.hide; clearFb(); render(); });
+  document.getElementById("b-check").addEventListener("click", function () {
+    var m = solve(), K = calcK(m.E), fb = document.getElementById("fb");
+    var raw = String(document.getElementById("ans").value).trim().replace(/[×x]\s*10\^?/i, "e").replace(/\s/g, "").replace("−", "-");
+    var val = parseFloat(raw);
+    if (!isFinite(val) || val <= 0) { fb.className = "fb no"; fb.textContent = "Type a positive number, such as 0.020 or 1.8e-5."; return; }
+    if (Math.abs(val / K - 1) <= 0.02) { fb.className = "fb ok"; fb.innerHTML = "Correct: K = " + Lab.sci(K, 3) + ". Turn off Hide K to compare your steps."; return; }
+    var hint = "";
+    var Kmol = calcK(m.E.map(function (v) { return v == null ? v : v * S.V; }));
+    if (sc().mode === "c" && S.V !== 1 && Math.abs(val / Kmol - 1) <= 0.02) hint = " It looks like moles were used instead of mol/L.";
+    else if (Math.abs(val * K - 1) <= 0.02) hint = " That is 1/K: check that products are on top.";
+    else if (!sc().direct && Math.abs(val / calcK(m.I.map(function (v) { return v == null ? v : Math.max(v, 1e-12); })) - 1) <= 0.02) hint = " That uses the initial amounts; use the equilibrium row.";
+    fb.className = "fb no"; fb.innerHTML = "Not quite." + hint + " Check the exponents and the E row, then try again.";
+  });
+  pick("ice");
+
+  // ---------- Self-check: every example against its hand-calculated K ----------
+  (function () {
+    function bad(m) { console.error("7.4 self-check: " + m); }
+    var save = S.key;
+    ORDER.forEach(function (k) {
+      S.key = k; setPreset();
+      var m = solve(); if (!m.ok) { bad(k + ": example values are not a valid equilibrium"); return; }
+      var K = calcK(m.E); if (Math.abs(K / SC[k].K - 1) > 1e-6) bad(k + ": K = " + K + ", hand value " + SC[k].K);
+      if (!SC[k].direct) { var r = measRange(), v = S.meas.tot != null ? S.meas.tot : S.meas.v; if (v <= r[0] || v >= r[1]) bad(k + ": example measurement outside the slider range"); }
+    });
+    // Specific intermediate values typed by hand
+    S.key = "moles"; setPreset(); var mm = solve();
+    if (Math.abs(mm.x - 0.150) > 1e-9 || Math.abs(mm.E[0] - 0.100) > 1e-9 || Math.abs(mm.E[1] - 0.050) > 1e-9) bad("moles: expected x = 0.150, [SO2] = 0.100, [O2] = 0.050");
+    S.key = "total"; setPreset(); if (Math.abs(solve().x - 0.40) > 1e-9) bad("total: expected x = 0.40 atm");
+    S.key = "reverse"; setPreset(); var mr = solve(); if (Math.abs(mr.x + 0.055) > 1e-9 || Math.abs(mr.E[2] - 0.390) > 1e-9) bad("reverse: expected x = -0.055, [HI] = 0.390");
+    S.key = save; setPreset();
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "For 2NO(g) + O₂(g) ⇌ 2NO₂(g), an equilibrium mixture contains [NO] = 0.050 M, [O₂] = 0.20 M, and [NO₂] = 0.50 M. What is Kc?",
+      o: ["5.0 × 10²", "50", "1.0 × 10³", "2.0 × 10⁻³"], c: 0,
+      w: "Kc = [NO₂]² / ([NO]²[O₂]) = (0.50)² / ((0.050)²(0.20)) = 0.25 / (0.0025 × 0.20) = 0.25 / 5.0 × 10⁻⁴ = 5.0 × 10². Choice B ignores both exponents (0.50 / (0.050 × 0.20)); choice D is the reciprocal of the right answer." },
+    { s: "0.200 mol of H₂ and 0.200 mol of I₂ are placed in a 2.00 L flask. At equilibrium the flask contains 0.300 mol of HI: H₂(g) + I₂(g) ⇌ 2HI(g). What is Kc?",
+      o: ["2.3", "36", "0.028", "240"], c: 1,
+      w: "Convert to molarity: [H₂]₀ = [I₂]₀ = 0.100 M; [HI]eq = 0.150 M. HI rises by 2x = 0.150, so x = 0.0750 and [H₂] = [I₂] = 0.025 M. Kc = (0.150)² / ((0.025)(0.025)) = 36. Choice A uses the initial [H₂] and [I₂] instead of the equilibrium values; choice C is 1/K; choice D leaves the exponent off [HI]." },
+    { s: "Excess NH₄HS(s) is placed in an evacuated flask. At equilibrium the total pressure is 0.80 atm: NH₄HS(s) ⇌ NH₃(g) + H₂S(g). What is Kp?",
+      o: ["0.80", "0.64", "0.40", "0.16"], c: 3,
+      w: "The gases form in a 1 : 1 ratio, so each has a partial pressure of 0.40 atm. Kp = (P_NH₃)(P_H₂S) = (0.40)(0.40) = 0.16. The solid is left out. Choice B squares the total pressure instead of each partial pressure; choice C gives a single partial pressure." },
+    { s: "N₂O₄(g) ⇌ 2NO₂(g). A flask initially contains N₂O₄ at 0.80 atm and no NO₂. At equilibrium the partial pressure of NO₂ is 0.40 atm. What is Kp?",
+      o: ["0.27", "0.20", "0.67", "0.40"], c: 0,
+      w: "NO₂ rises by 2x = 0.40 atm, so x = 0.20 atm and P_N₂O₄ = 0.80 − 0.20 = 0.60 atm. Kp = (0.40)² / 0.60 = 0.16 / 0.60 = 0.27. Choice B uses the initial N₂O₄ pressure (0.16 / 0.80); choice C forgets to square P_NO₂ (0.40 / 0.60); choice D subtracts 0.40 atm instead of x from the N₂O₄ (0.16 / 0.40)." },
+    { s: "PCl₅(g) is placed in an evacuated rigid flask at 1.20 atm. At equilibrium, PCl₅(g) ⇌ PCl₃(g) + Cl₂(g), and the total pressure is 1.50 atm. What is the equilibrium partial pressure of PCl₅?",
+      o: ["1.20 atm", "0.30 atm", "0.90 atm", "1.50 atm"], c: 2,
+      w: "Total pressure = (1.20 − x) + x + x = 1.20 + x = 1.50, so x = 0.30 atm. P_PCl₅ = 1.20 − 0.30 = 0.90 atm. Choice B is x itself, which equals the partial pressure of PCl₃ and of Cl₂, not of PCl₅." },
+    { s: "A student calculates Kc for 2SO₂(g) + O₂(g) ⇌ 2SO₃(g) by substituting the number of moles of each gas at equilibrium in a 4.00 L vessel, instead of the concentrations. How does the student's value compare with the true Kc?",
+      o: ["It is the same, because the volume cancels.", "It is 4.00 times too large.", "It cannot be predicted without the amounts.", "It is 4.00 times too small."], c: 3,
+      w: "Each concentration is n/4.00. Kc = (n_SO₃/4)² / ((n_SO₂/4)²(n_O₂/4)) = 4 × n_SO₃² / (n_SO₂² n_O₂). The moles-only value leaves out that factor of 4, so it is 4.00 times too small. The volume cancels only when the total exponent on top equals the total on the bottom (choice A)." },
+    { s: "Which data would NOT be enough, together with the balanced equation, to calculate K for A(g) + B(g) ⇌ C(g)?",
+      o: ["The equilibrium concentrations of A, B, and C", "The initial concentrations of A and B (no C), plus the equilibrium concentration of C", "The initial concentrations of A and B (no C) only", "The initial partial pressures of A and B (no C), plus the total pressure at equilibrium"], c: 2,
+      w: "K requires equilibrium values. Initial amounts alone (choice C) do not say how far the reaction went. One measured equilibrium amount (choice B) gives x through the ICE table. A total pressure (choice D) also works here: the gas moles drop from 2 to 1, so P_total = P_A,0 + P_B,0 − x, which gives x. (That trick fails only when the moles of gas do not change.)" },
+    { s: "For CO(g) + 2H₂(g) ⇌ CH₃OH(g), a 1.00 L vessel initially contains 0.40 mol CO and 0.60 mol H₂. At equilibrium it contains 0.10 mol CH₃OH. What are the equilibrium concentrations of CO and H₂?",
+      o: ["[CO] = 0.30 M, [H₂] = 0.50 M", "[CO] = 0.30 M, [H₂] = 0.40 M", "[CO] = 0.40 M, [H₂] = 0.60 M", "[CO] = 0.20 M, [H₂] = 0.40 M"], c: 1,
+      w: "x = 0.10 M (CH₃OH has coefficient 1). CO changes by −x: 0.40 − 0.10 = 0.30 M. H₂ changes by −2x: 0.60 − 0.20 = 0.40 M. Choice A forgets the coefficient 2 on H₂; choice C uses the initial values." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("7.4");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [7], topic: "7.4", compact: true, storageKey: "topic-7.4" });</script>
+</body>
+</html>

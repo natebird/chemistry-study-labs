@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Absolute Entropy and Entropy Change Study Lab</title>
+<meta name="description" content="Build ΔS° for a reaction from standard molar entropies on a stacked-bar entropy ledger, reverse or scale the equation, switch water between liquid and gas, and see the classic calculation mistakes side by side.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.side { display: grid; gap: 14px; align-content: start; }
+.graph-card { align-content: start; }
+.group { display: grid; gap: 8px; }
+.group[hidden] { display: none; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 18px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 14px; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.side .controls { grid-template-columns: 1fr; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.lab-bar > * { min-width: 0; max-width: 100%; }
+.calc .row span:last-child { font-family: var(--mono); font-size: .88rem; text-align: right; }
+.calc .row span:first-child { min-width: 0; }
+.calc .row.bad { color: var(--bad); font-weight: 400; }
+.calc .row.bad:last-child { font-weight: 400; }
+.note { font-size: .84rem; color: var(--muted); }
+.legend.sw span::before { width: 12px; height: 12px; border-radius: 3px; }
+@media (max-width: 520px) {
+  .lab-bar .eqn { white-space: normal; }
+  .calc .row { flex-direction: column; gap: 2px; }
+  .calc .row span:last-child { text-align: left; }
+  #led text { font-size: 13px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 9 · Topic 9.2</span>
+  <h1>Absolute Entropy and Entropy Change Study Lab</h1>
+  <p class="lede">Unlike enthalpy, entropy has a true zero: a perfect crystal at 0 K. That is why tables list an absolute standard molar entropy, S°, for every substance, elements included. The entropy change of a reaction is the total S° of the products minus the total S° of the reactants, each multiplied by its coefficient. Build that sum below and see how the sign matches the particle picture from topic 9.1.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The entropy ledger</h2>
+    <p>Each column stacks the coefficient × S° of every species. The gap between the two column heights is ΔS°. Reverse or scale the equation, change the phase of water, or turn on a common mistake to see how far off it puts you. Values are standard molar entropies at 25 °C in J/(mol·K).</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>ΣS°(reactants) vs. ΣS°(products) <small id="led-sub"></small></h3>
+      <svg class="chart" id="led" role="img" aria-label="Stacked bars of reactant and product entropies with the entropy change marked"></svg>
+    </div>
+    <div class="card side">
+      <div class="group">
+        <div class="tag">Reactions</div>
+        <div class="scenarios" id="sc"></div>
+      </div>
+      <div class="group">
+        <div class="tag">Change the equation</div>
+        <div class="seg" role="group" aria-label="Direction">
+          <button type="button" id="d-fwd" aria-pressed="true">As written</button>
+          <button type="button" id="d-rev" aria-pressed="false">Reversed</button>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label for="s-mult">Multiply every coefficient by <output id="o-mult"></output></label>
+            <input type="range" id="s-mult" min="0" max="3" step="1">
+          </div>
+        </div>
+      </div>
+      <div class="group" id="g-water">
+        <div class="tag">Water produced as</div>
+        <div class="seg" role="group" aria-label="Phase of water">
+          <button type="button" id="w-l" aria-pressed="true">H₂O(l)</button>
+          <button type="button" id="w-g" aria-pressed="false">H₂O(g)</button>
+        </div>
+      </div>
+      <div class="group">
+        <div class="tag">Compare with a common mistake</div>
+        <div class="seg" role="group" aria-label="Mistake">
+          <button type="button" id="m-none" aria-pressed="true">None</button>
+          <button type="button" id="m-zero" aria-pressed="false">Elements = 0</button>
+          <button type="button" id="m-coef" aria-pressed="false">No coefficients</button>
+          <button type="button" id="m-flip" aria-pressed="false">R − P</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend sw" id="legend"></div>
+    <div class="eqn" id="eqn"></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">ΣS°(products)</div><div class="v" id="r-p"></div><div class="sub">J/(mol·K)</div></div>
+    <div class="stat"><div class="k">ΣS°(reactants)</div><div class="v" id="r-r"></div><div class="sub">J/(mol·K)</div></div>
+    <div class="stat"><div class="k">ΔS°</div><div class="v" id="r-ds"></div><div class="sub" id="r-ds2"></div></div>
+    <div class="stat"><div class="k">Moles of gas</div><div class="v" id="r-gas"></div><div class="sub" id="r-gas2"></div></div>
+  </div>
+
+  <div class="card calc" id="calc" aria-live="polite"></div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Absolute scale</span><h3>Entropy has a true zero</h3><p>A perfect crystal at 0 K has only one possible arrangement, so its entropy is zero. Every real substance at 25 °C has S° &gt; 0, and tables give that absolute value. Enthalpy has no such zero, which is why ΔH°f is defined relative to elements.</p></div>
+    <div class="card"><span class="tag">Elements</span><h3>Elements are not zero</h3><p>ΔH°f and ΔG°f of an element in its standard state are zero by definition. S° is not: O₂(g) has S° = 205.2 J/(mol·K). Leaving elements out of a ΔS° sum is one of the most common errors.</p></div>
+    <div class="card"><span class="tag">The equation</span><h3>Products minus reactants</h3><p>ΔS° = ΣnS°(products) − ΣnS°(reactants), where n is each coefficient. This equation is on the AP equations sheet. Multiply each S° by its coefficient before adding.</p></div>
+    <div class="card"><span class="tag">Scaling</span><h3>ΔS° follows the equation</h3><p>Reversing a reaction changes the sign of ΔS°. Doubling every coefficient doubles ΔS°. The units J/(mol·K) mean "per mole of reaction as written," so ΔS° belongs to the equation exactly as it is balanced.</p></div>
+    <div class="card"><span class="tag">Trends in S°</span><h3>What makes S° large</h3><p>Gases have much larger S° than liquids, and liquids larger than solids. In the same phase, larger and more complex molecules have larger S° (more atoms that can vibrate and rotate): CH₄ 186.3, C₃H₈ 269.9 J/(mol·K).</p></div>
+    <div class="card"><span class="tag">Sanity check</span><h3>Does the sign make sense?</h3><p>After calculating, compare the sign with the moles of gas. Fewer moles of gas should give a negative ΔS°. If your arithmetic disagrees with the particle picture, look for a missing coefficient or an element left out.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Standard molar entropies used in this lab</h2>
+    <p>All values at 25 °C (298 K) and 1 atm or 1 M. AP questions give the S° values you need, so focus on the patterns rather than memorizing numbers. Notice the phase pattern and the effect of molecular size.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Phase</th><th>Substance and S°, J/(mol·K)</th><th>Pattern to notice</th></tr></thead>
+    <tbody id="s-table"></tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. ΔS° calculations on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points</h3>
+      <ul>
+        <li>Write ΔS° = ΣS°(products) − ΣS°(reactants), then substitute each value multiplied by its coefficient.</li>
+        <li>Include every species, including elements such as O₂(g), H₂(g), and N₂(g).</li>
+        <li>Use the S° value for the correct phase: H₂O(l) and H₂O(g) differ by about 119 J/(mol·K).</li>
+        <li>Report units of J/(mol<sub>rxn</sub>·K), or J/K for the reaction as written, with the correct sign.</li>
+        <li>If asked to justify the sign, connect it to the particle picture: the change in moles of gas or phase.</li>
+        <li>If you need ΔS° in ΔG° = ΔH° − TΔS°, convert it to kJ/(mol·K) by dividing by 1000.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Setting S° = 0 for elements, as you would for ΔH°f. Only ΔH°f and ΔG°f are zero for elements.</li>
+        <li>Forgetting to multiply by coefficients, especially the 2 in front of H₂O or NH₃.</li>
+        <li>Subtracting in the wrong order (reactants − products), which flips the sign.</li>
+        <li>Mixing up H₂O(l) and H₂O(g) values.</li>
+        <li>Reporting ΔS° in kJ when the table gives J, or mixing the two in one sum.</li>
+        <li>Forgetting that reversing or scaling the equation reverses or scales ΔS°.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 9.2. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-9.html">Unit 9 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Data: S° at 298 K, J/(mol·K) ----------
+  var S0 = {
+    "C(s)": 5.7, "C(diamond)": 2.4, "CaO(s)": 39.8, "CaCO3(s)": 92.9, "AgCl(s)": 96.2, "C6H12O6(s)": 212.1,
+    "H2O(l)": 69.9,
+    "Ag^+(aq)": 72.7, "Cl^-(aq)": 56.5,
+    "H2(g)": 130.7, "CH4(g)": 186.3, "HCl(g)": 186.9, "H2O(g)": 188.8, "N2(g)": 191.6, "NH3(g)": 192.5, "O2(g)": 205.2,
+    "CO2(g)": 213.8, "Cl2(g)": 223.1, "NO2(g)": 240.1, "SO2(g)": 248.2, "SO3(g)": 256.8, "C3H8(g)": 269.9, "N2O4(g)": 304.3
+  };
+  var ELEMENTS = ["C(s)", "H2(g)", "N2(g)", "O2(g)", "Cl2(g)"];
+  function split(k) {
+    var m = k.match(/^(.*?)(\^([0-9]*)([+\-]))?\((s|l|g|aq|diamond)\)$/);
+    return { f: m[1], st: m[5], q: m[2] ? (m[4] === "+" ? 1 : -1) * (m[3] ? +m[3] : 1) : 0 };
+  }
+  function show(k) {
+    var s = split(k);
+    var st = k === "C(s)" ? "s, graphite" : s.st === "diamond" ? "s, diamond" : s.st;
+    return Lab.fmla(s.f + (s.q ? "^" + (Math.abs(s.q) > 1 ? Math.abs(s.q) : "") + (s.q > 0 ? "+" : "-") : "")) + "(" + st + ")";
+  }
+  function plain(k) { return show(k).replace(/<sub>(\d+)<\/sub>/g, function (m, d) { return d.split("").map(function (c) { return "₀₁₂₃₄₅₆₇₈₉"[+c]; }).join(""); }).replace(/<sup>(.*?)<\/sup>/g, function (m, d) { return d.replace("+", "⁺").replace("−", "⁻").replace("2", "²"); }); }
+
+  var RX = [
+    { key: "haber", label: "N₂ + 3H₂ → 2NH₃", r: [[1, "N2(g)"], [3, "H2(g)"]], p: [[2, "NH3(g)"]] },
+    { key: "caco3", label: "CaCO₃ → CaO + CO₂", r: [[1, "CaCO3(s)"]], p: [[1, "CaO(s)"], [1, "CO2(g)"]] },
+    { key: "ch4", label: "CH₄ combustion", r: [[1, "CH4(g)"], [2, "O2(g)"]], p: [[1, "CO2(g)"], [2, "H2O(l)"]], water: true },
+    { key: "c3h8", label: "C₃H₈ combustion", r: [[1, "C3H8(g)"], [5, "O2(g)"]], p: [[3, "CO2(g)"], [4, "H2O(l)"]], water: true },
+    { key: "gluc", label: "Glucose + O₂", r: [[1, "C6H12O6(s)"], [6, "O2(g)"]], p: [[6, "CO2(g)"], [6, "H2O(l)"]], water: true },
+    { key: "no2", label: "2NO₂ → N₂O₄", r: [[2, "NO2(g)"]], p: [[1, "N2O4(g)"]] },
+    { key: "so3", label: "2SO₂ + O₂ → 2SO₃", r: [[2, "SO2(g)"], [1, "O2(g)"]], p: [[2, "SO3(g)"]] },
+    { key: "hcl", label: "H₂ + Cl₂ → 2HCl", r: [[1, "H2(g)"], [1, "Cl2(g)"]], p: [[2, "HCl(g)"]] },
+    { key: "vap", label: "H₂O(l) → H₂O(g)", r: [[1, "H2O(l)"]], p: [[1, "H2O(g)"]] },
+    { key: "dia", label: "Graphite → diamond", r: [[1, "C(s)"]], p: [[1, "C(diamond)"]] },
+    { key: "agcl", label: "Ag⁺ + Cl⁻ → AgCl", r: [[1, "Ag^+(aq)"], [1, "Cl^-(aq)"]], p: [[1, "AgCl(s)"]] }
+  ];
+  var MULTS = [0.5, 1, 2, 3];
+
+  var S = { key: "haber", rev: false, mi: 1, water: "l", mistake: "none" };
+  function rx() { return RX.filter(function (x) { return x.key === S.key; })[0]; }
+  // The equation actually shown: apply water phase, direction, and multiplier.
+  function eqn() {
+    var x = rx(), m = MULTS[S.mi];
+    function fix(list) { return list.map(function (t) { return [t[0] * m, x.water && t[1] === "H2O(l)" && S.water === "g" ? "H2O(g)" : t[1]]; }); }
+    var r = fix(x.r), p = fix(x.p);
+    return S.rev ? { r: p, p: r } : { r: r, p: p };
+  }
+  function sum(list, mode) {
+    return list.reduce(function (a, t) {
+      var s = S0[t[1]];
+      if (mode === "zero" && ELEMENTS.indexOf(t[1]) >= 0) s = 0;
+      return a + (mode === "coef" ? 1 : t[0]) * s;
+    }, 0);
+  }
+  function gas(list) { return list.reduce(function (a, t) { return a + (split(t[1]).st === "g" ? t[0] : 0); }, 0); }
+  function coefTxt(n) { return n === 1 ? "" : n === 0.5 ? "½" : n === 1.5 ? "3/2" : n === 2.5 ? "5/2" : String(n); }
+  function side(list) { return list.map(function (t) { return coefTxt(t[0]) + show(t[1]); }).join(" + "); }
+  function f1(v) { return (v < 0 ? "−" : "") + Math.abs(v).toFixed(1); }
+  function sgn(v) { return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1); }
+
+  // ---------- Ledger drawing ----------
+  var COLORS = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--c4)", "var(--accent)", "var(--ghost)"];
+  var svg = document.getElementById("led"), stopAnim = null;
+  function niceMax(v) { var steps = [10, 20, 50, 100, 200, 250, 500, 1000, 1500, 2000, 2500, 3000]; for (var i = 0; i < steps.length; i++) if (v * 1.12 <= steps[i]) return steps[i]; return Math.ceil(v * 1.12 / 1000) * 1000; }
+  function drawLedger(k) {
+    var e = eqn(), sp = sum(e.p), sr = sum(e.r), mx = niceMax(Math.max(sp, sr, S.mistake !== "none" ? Math.max(sum(e.p, S.mistake), sum(e.r, S.mistake)) : 0));
+    var tk = []; var stepT = mx <= 10 ? 2 : mx <= 20 ? 5 : mx <= 50 ? 10 : mx <= 100 ? 20 : mx <= 250 ? 50 : mx <= 500 ? 100 : mx <= 1000 ? 200 : 500; for (var v = 0; v <= mx + 1e-9; v += stepT) tk.push(v);
+    var F = Lab.frame(svg, { x: [0, 2.3], y: [0, mx], yTicks: tk, fmtY: function (v) { return v; }, yLabel: "Σ n·S°, J/K", xLabel: "", width: 440, height: 340 });
+    // colors by species, shared across both columns
+    var all = [], col = {};
+    e.r.concat(e.p).forEach(function (t) { if (!(t[1] in col)) { col[t[1]] = COLORS[all.length % COLORS.length]; all.push(t[1]); } });
+    function stack(list, x, mode, ghost) {
+      var y = 0;
+      list.forEach(function (t) {
+        var s = S0[t[1]]; if (mode === "zero" && ELEMENTS.indexOf(t[1]) >= 0) s = 0;
+        var h = (mode === "coef" ? 1 : t[0]) * s * k;
+        if (ghost) {
+          if (h > 0) Lab.el("rect", { x: F.sx(x - 0.36), y: F.sy(y + h), width: F.sx(x + 0.36) - F.sx(x - 0.36), height: F.sy(y) - F.sy(y + h), fill: "none", stroke: "var(--bad)", "stroke-width": 1.5, "stroke-dasharray": "5 3" }, F.g);
+        } else {
+          Lab.rect(F, x - 0.3, y, x + 0.3, y + h, col[t[1]], 0.85);
+          Lab.el("line", { x1: F.sx(x - 0.3), x2: F.sx(x + 0.3), y1: F.sy(y + h), y2: F.sy(y + h), stroke: "var(--surface)", "stroke-width": 1.5 }, F.g);
+          var px = F.sy(y) - F.sy(y + h);
+          if (px > 15 && k === 1) Lab.el("text", { x: F.sx(x), y: (F.sy(y) + F.sy(y + h)) / 2 + 4, "text-anchor": "middle", style: "fill:var(--surface); font-weight:600" }, F.svg, coefTxt(t[0]) + plain(t[1]).replace(/\(.*\)$/, ""));
+        }
+        y += h;
+      });
+      return y;
+    }
+    var xR = 0.55, xP = 1.55;
+    if (S.mistake !== "none" && S.mistake !== "flip") { stack(e.r, xR, S.mistake, true); stack(e.p, xP, S.mistake, true); }
+    var yr = stack(e.r, xR), yp = stack(e.p, xP);
+    Lab.el("text", { x: F.sx(xR), y: F.H - F.M.b + 18, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, F.svg, "Reactants");
+    Lab.el("text", { x: F.sx(xP), y: F.H - F.M.b + 18, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, F.svg, "Products");
+    Lab.tag(F, xR, yr + mx * 0.03, f1(sr * k), "var(--ink)", "middle");
+    Lab.tag(F, xP, yp + mx * 0.03, f1(sp * k), "var(--ink)", "middle");
+    if (k === 1) {
+      Lab.line(F, [[xR + 0.3, sr], [xP + 0.45, sr]], "var(--muted)", 1.2, "4 3");
+      var ds = sp - sr, c = ds >= 0 ? "var(--good)" : "var(--bad)";
+      if (Math.abs(ds) > mx * 0.02) Lab.arrow(F, xP + 0.42, sr, xP + 0.42, sp, c);
+      else Lab.line(F, [[xP + 0.32, sp], [xP + 0.52, sp]], c, 2);
+      var ty = (sr + sp) / 2;
+      Lab.el("text", { x: F.sx(xP + 0.47), y: F.sy(ty) + 4, "text-anchor": "start", "class": "lbl", style: "fill:" + c }, F.svg, "ΔS°");
+      Lab.el("text", { x: F.sx(xP + 0.47), y: F.sy(ty) + 19, "text-anchor": "start", "class": "lbl", style: "fill:" + c }, F.svg, sgn(ds));
+    }
+    document.getElementById("legend").innerHTML = all.map(function (s) { return '<span style="color:' + col[s] + '"><i style="color:var(--muted); font-style:normal">' + show(s) + ' ' + S0[s].toFixed(1) + '</i></span>'; }).join("") +
+      (S.mistake !== "none" && S.mistake !== "flip" ? '<span style="color:var(--bad)">Mistaken sum (dashed)</span>' : "");
+  }
+
+  // ---------- Render ----------
+  function render(animate) {
+    var x = rx(), e = eqn(), sp = sum(e.p), sr = sum(e.r), ds = sp - sr;
+    Object.keys(btns).forEach(function (k) { btns[k].setAttribute("aria-pressed", k === S.key ? "true" : "false"); });
+    document.getElementById("d-fwd").setAttribute("aria-pressed", S.rev ? "false" : "true");
+    document.getElementById("d-rev").setAttribute("aria-pressed", S.rev ? "true" : "false");
+    document.getElementById("w-l").setAttribute("aria-pressed", S.water === "l" ? "true" : "false");
+    document.getElementById("w-g").setAttribute("aria-pressed", S.water === "g" ? "true" : "false");
+    ["none", "zero", "coef", "flip"].forEach(function (m) { document.getElementById("m-" + m).setAttribute("aria-pressed", S.mistake === m ? "true" : "false"); });
+    document.getElementById("g-water").hidden = !x.water;
+    document.getElementById("s-mult").value = S.mi;
+    document.getElementById("o-mult").textContent = coefTxt(MULTS[S.mi]) || "1";
+    document.getElementById("eqn").innerHTML = side(e.r) + " → " + side(e.p);
+    document.getElementById("led-sub").textContent = (S.rev ? "reversed" : "as written") + (MULTS[S.mi] !== 1 ? ", × " + (coefTxt(MULTS[S.mi])) : "");
+    document.getElementById("r-p").textContent = sp.toFixed(1);
+    document.getElementById("r-r").textContent = sr.toFixed(1);
+    document.getElementById("r-ds").textContent = sgn(ds);
+    document.getElementById("r-ds2").textContent = "J/(mol·K), per mole of reaction";
+    var gr = gas(e.r), gp = gas(e.p);
+    document.getElementById("r-gas").textContent = num(gr) + " → " + num(gp);
+    document.getElementById("r-gas2").textContent = gp > gr ? "more gas: expect ΔS° > 0" : gp < gr ? "less gas: expect ΔS° < 0" : "equal: sign not predictable";
+    if (stopAnim) stopAnim();
+    if (animate) stopAnim = Lab.animate(500, function (t) { drawLedger(t < 1 ? t : 1); });
+    else drawLedger(1);
+    document.getElementById("calc").innerHTML = calc(e, sp, sr, ds);
+    document.getElementById("story").innerHTML = story(x, e, sp, sr, ds, gr, gp);
+  }
+  function num(v) { return v === Math.floor(v) ? String(v) : v === 0.5 ? "½" : v.toFixed(1); }
+  function terms(list) { return list.map(function (t) { return num(t[0]) + "(" + S0[t[1]].toFixed(1) + ")"; }).join(" + "); }
+  function calc(e, sp, sr, ds) {
+    var h = "<h3>Worked calculation</h3>";
+    h += '<div class="row"><span>ΣS°(products) = ' + e.p.map(function (t) { return num(t[0]) + " mol " + show(t[1]); }).join(" + ") + '</span><span>' + terms(e.p) + " = " + sp.toFixed(1) + '</span></div>';
+    h += '<div class="row"><span>ΣS°(reactants) = ' + e.r.map(function (t) { return num(t[0]) + " mol " + show(t[1]); }).join(" + ") + '</span><span>' + terms(e.r) + " = " + sr.toFixed(1) + '</span></div>';
+    if (S.mistake !== "none") {
+      var wrong, what;
+      if (S.mistake === "zero") { wrong = sum(e.p, "zero") - sum(e.r, "zero"); what = "Mistake, elements set to 0"; }
+      else if (S.mistake === "coef") { wrong = sum(e.p, "coef") - sum(e.r, "coef"); what = "Mistake, coefficients ignored"; }
+      else { wrong = sr - sp; what = "Mistake, reactants − products"; }
+      h += '<div class="row bad"><span>' + what + '</span><span>ΔS° = ' + sgn(wrong) + ' J/(mol·K), off by ' + Math.abs(wrong - ds).toFixed(1) + '</span></div>';
+    }
+    h += '<div class="row"><span>ΔS° = ΣS°(products) − ΣS°(reactants)</span><span>' + sp.toFixed(1) + " − " + sr.toFixed(1) + " = " + sgn(ds) + ' J/(mol·K)</span></div>';
+    return h;
+  }
+  function story(x, e, sp, sr, ds, gr, gp) {
+    var li = [], base = RX.filter(function (r) { return r.key === x.key; })[0];
+    if (gp !== gr) li.push("Moles of gas go from " + num(gr) + " to " + num(gp) + ", so the particle picture predicts ΔS° " + (gp > gr ? "&gt; 0" : "&lt; 0") + ". The calculation gives " + sgn(ds) + " J/(mol·K), " + ((gp > gr) === (ds > 0) ? "which agrees." : "which does not agree; check for another effect."));
+    else if (x.key === "gluc" && S.water === "l") li.push("Moles of gas are equal (" + num(gr) + " each side), yet ΔS° is large. The solid glucose becomes many small molecules, and that dispersal is what makes ΔS° positive.");
+    else if (x.key === "dia" || x.key === "agcl") li.push("No gas is involved, so ΔS° is small: " + sgn(ds) + " J/(mol·K). " + (x.key === "dia" ? "Diamond's rigid three-dimensional network allows less vibrational freedom than graphite's layers, so S° is lower." : "Ions that moved freely in solution become fixed in a solid lattice."));
+    else li.push("Moles of gas are equal (" + num(gr) + " each side), so the particle picture can't predict the sign. The table gives " + sgn(ds) + " J/(mol·K), small compared with reactions that change the moles of gas.");
+    if (x.water) li.push(S.water === "g" ? "Water is in the gas phase here. Each mole of H₂O(g) counts 188.8 instead of 69.9 J/(mol·K) for H₂O(l), so the phase of water shifts ΔS° by about 119 J/(mol·K) per mole of water." : "Water is a liquid here (its standard state at 25 °C). Switch to H₂O(g) to see how much the phase matters.");
+    if (S.rev || MULTS[S.mi] !== 1) {
+      var bs = sum(base.p.map(function (t) { return [t[0], x.water && t[1] === "H2O(l)" && S.water === "g" ? "H2O(g)" : t[1]]; })) - sum(base.r);
+      li.push("For the equation as first written, ΔS° = " + sgn(bs) + ". " + (S.rev ? "Reversing changes the sign" : "") + (S.rev && MULTS[S.mi] !== 1 ? " and " : "") + (MULTS[S.mi] !== 1 ? "multiplying by " + coefTxt(MULTS[S.mi]) + " multiplies the value" : "") + ": " + sgn(ds) + ".");
+    }
+    var elems = e.r.concat(e.p).filter(function (t) { return ELEMENTS.indexOf(t[1]) >= 0; });
+    if (S.mistake === "zero") li.push(elems.length ? "Setting S° = 0 for " + elems.map(function (t) { return show(t[1]); }).join(" and ") + " is the ΔH°f habit carried over. Elements have real, positive absolute entropies." : "This reaction has no elements, so that mistake does no harm here. Try N₂ + 3H₂ → 2NH₃.");
+    if (S.mistake === "coef") li.push(e.r.concat(e.p).some(function (t) { return t[0] !== 1; }) ? "Ignoring coefficients counts each species once. The entropy of 3 mol of H₂ is three times the entropy of 1 mol." : "Every coefficient is 1 here, so ignoring them happens to give the right answer.");
+    if (S.mistake === "flip") li.push("Subtracting reactants − products gives the same size with the wrong sign, which would also make the particle-level justification contradict the number.");
+    var h = "<ul>" + li.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+    h += "<p><b>AP answer:</b> ΔS° = ΣS°(products) − ΣS°(reactants) = " + sp.toFixed(1) + " − " + sr.toFixed(1) + " = " + sgn(ds) + " J/(mol<sub>rxn</sub>·K)" +
+      (gp !== gr ? ", consistent with " + (gp > gr ? "an increase" : "a decrease") + " in moles of gas." : ".") + "</p>";
+    return h;
+  }
+
+  // ---------- Controls ----------
+  var btns = {}, box = document.getElementById("sc");
+  RX.forEach(function (x) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = x.label;
+    b.addEventListener("click", function () { S.key = x.key; S.rev = false; S.mi = 1; S.water = "l"; render(true); });
+    box.appendChild(b); btns[x.key] = b;
+  });
+  document.getElementById("d-fwd").addEventListener("click", function () { S.rev = false; render(true); });
+  document.getElementById("d-rev").addEventListener("click", function () { S.rev = true; render(true); });
+  document.getElementById("w-l").addEventListener("click", function () { S.water = "l"; render(true); });
+  document.getElementById("w-g").addEventListener("click", function () { S.water = "g"; render(true); });
+  ["none", "zero", "coef", "flip"].forEach(function (m) { document.getElementById("m-" + m).addEventListener("click", function () { S.mistake = m; render(false); }); });
+  document.getElementById("s-mult").addEventListener("input", function (ev) { S.mi = +ev.target.value; render(false); });
+
+  // ---------- S° table (generated) ----------
+  (function () {
+    var rows = [["Solid", ["C(diamond)", "C(s)", "CaO(s)", "CaCO3(s)", "AgCl(s)", "C6H12O6(s)"], "Smallest values. Rigid network solids (diamond) are lowest; heavier, more complex formula units tend to have higher S°."],
+      ["Liquid", ["H2O(l)"], "Between solids and gases. Compare H₂O(l) 69.9 with H₂O(g) 188.8."],
+      ["Aqueous ion", ["Ag^+(aq)", "Cl^-(aq)"], "Measured relative to H⁺(aq) = 0, so ion values can be small or even negative."],
+      ["Gas", Object.keys(S0).filter(function (k) { return split(k).st === "g"; }), "All gases are high. Within gases, S° tends to grow with the number of atoms and the molar mass: H₂ is lowest, N₂O₄ and C₃H₈ highest."]];
+    document.getElementById("s-table").innerHTML = rows.map(function (r) {
+      var list = r[1].slice().sort(function (a, b) { return S0[a] - S0[b]; });
+      return "<tr><td>" + r[0] + "</td><td>" + list.map(function (k) { return '<span class="chem">' + show(k) + " <b>" + S0[k].toFixed(1) + "</b></span>"; }).join(", ") + "</td><td>" + r[2] + "</td></tr>";
+    }).join("");
+  })();
+
+  render(true);
+
+  // ---------- Self-check ----------
+  (function () {
+    function bad(m) { console.error("9.2 self-check: " + m); }
+    var expect = { haber: -198.7, caco3: 160.7, ch4: -243.1, c3h8: -374.9, gluc: 258.9, no2: -175.9, so3: -188.0, hcl: 20.0, vap: 118.9, dia: -3.3, agcl: -33.0 };
+    var expectG = { ch4: -5.3, c3h8: 100.7, gluc: 972.3 };
+    RX.forEach(function (x) {
+      var d = sum(x.p) - sum(x.r);
+      if (Math.abs(d - expect[x.key]) > 0.051) bad(x.key + " ΔS° = " + d);
+      if (x.water) { var pg = x.p.map(function (t) { return [t[0], t[1] === "H2O(l)" ? "H2O(g)" : t[1]]; }); var dg = sum(pg) - sum(x.r); if (Math.abs(dg - expectG[x.key]) > 0.051) bad(x.key + " (g) ΔS° = " + dg); }
+      var a = {}, b = {};
+      function tally(list, t) { list.forEach(function (y) { var p = split(y[1]), c = Lab.parseFormula(p.f); for (var e in c) t[e] = (t[e] || 0) + y[0] * c[e]; t.q = (t.q || 0) + y[0] * p.q; }); }
+      tally(x.r, a); tally(x.p, b);
+      Object.keys(a).concat(Object.keys(b)).forEach(function (e) { if ((a[e] || 0) !== (b[e] || 0)) bad(x.key + " unbalanced in " + e); });
+    });
+    // quiz numbers
+    var q1 = 2 * S0["NH3(g)"] - S0["N2(g)"] - 3 * S0["H2(g)"];
+    if (Math.abs(q1 + 198.7) > 0.05 || Math.abs(S0["NH3(g)"] - S0["N2(g)"] - S0["H2(g)"] + 129.8) > 0.05 || Math.abs(2 * S0["NH3(g)"] - 385.0) > 0.05) bad("quiz 1");
+    if (Math.abs(2 * S0["SO3(g)"] - 2 * S0["SO2(g)"] + 188.0 - 205.2) > 0.05 || Math.abs(S0["SO3(g)"] - S0["SO2(g)"] + 188.0 - 196.6) > 0.05) bad("quiz 2");
+    if (Math.abs(-2 * (2 * S0["NO2(g)"] - S0["N2O4(g)"]) + 351.8) > 0.05) bad("quiz 5");
+    var q6 = S0["CO2(g)"] + 2 * S0["H2O(l)"] - S0["CH4(g)"] - 2 * S0["O2(g)"];
+    if (Math.abs(q6 + 243.1) > 0.05 || Math.abs(S0["CO2(g)"] + 2 * S0["H2O(l)"] - S0["CH4(g)"] - S0["O2(g)"] + 37.9) > 0.05 || Math.abs(S0["CO2(g)"] + S0["H2O(l)"] - S0["CH4(g)"] - 2 * S0["O2(g)"] + 313.0) > 0.05) bad("quiz 6");
+  })();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Use the standard molar entropies N₂(g) 191.6, H₂(g) 130.7, and NH₃(g) 192.5 J/(mol·K) to calculate ΔS° for N₂(g) + 3H₂(g) → 2NH₃(g).",
+      o: ["+385.0 J/(mol·K)", "−129.8 J/(mol·K)", "−198.7 J/(mol·K)", "+198.7 J/(mol·K)"], c: 2,
+      w: "ΔS° = 2(192.5) − [191.6 + 3(130.7)] = 385.0 − 583.7 = −198.7 J/(mol·K). The negative sign fits 4 mol of gas becoming 2 mol. Choice A treats the elements as zero; choice B ignores the coefficients; choice D subtracts in the wrong order." },
+    { s: "For 2SO₂(g) + O₂(g) → 2SO₃(g), ΔS° = −188.0 J/(mol·K). Given S°(SO₂) = 248.2 and S°(SO₃) = 256.8 J/(mol·K), what is S°(O₂)?",
+      o: ["196.6 J/(mol·K)", "205.2 J/(mol·K)", "−205.2 J/(mol·K)", "−170.8 J/(mol·K)"], c: 1,
+      w: "−188.0 = 2(256.8) − [2(248.2) + S°(O₂)] = 17.2 − S°(O₂), so S°(O₂) = 205.2 J/(mol·K). Choice A drops the coefficients of 2. Choice C is a sign error, and an absolute entropy can never be negative for a pure substance anyway." },
+    { s: "Which of the following substances has the greatest standard molar entropy at 298 K?",
+      o: ["C(s, diamond)", "H₂O(l)", "CH₄(g)", "C₃H₈(g)"], c: 3,
+      w: "Gases have far larger S° than liquids or solids, which rules out A and B. Between the two gases, C₃H₈ has more atoms, so it has more ways to vibrate and rotate and a larger S° (269.9 vs. 186.3 J/(mol·K)). Choice C is the right phase but the simpler molecule." },
+    { s: "The standard enthalpy of formation of O₂(g) is zero, but its standard molar entropy is 205.2 J/(mol·K). Which statement explains the difference?",
+      o: ["Entropy is measured on an absolute scale, with zero for a perfect crystal at 0 K, so every substance at 298 K has S° > 0.", "O₂ is a gas, and only gases have nonzero entropy.", "The S° value includes the energy needed to break the O=O bond.", "ΔH°f values are measured at 0 K while S° values are measured at 298 K."], c: 0,
+      w: "Enthalpies of formation are relative values, defined as zero for elements in their standard states. Entropy has a true zero (a perfect crystal at 0 K), so S° is an absolute quantity that is positive for every substance at 298 K. Choice B is false: solids and liquids also have positive S°. Choice C mixes in a bond enthalpy, which has nothing to do with S°." },
+    { s: "For N₂O₄(g) → 2NO₂(g), ΔS° = +175.9 J/(mol·K). What is ΔS° for 4NO₂(g) → 2N₂O₄(g)?",
+      o: ["+351.8 J/(mol·K)", "−175.9 J/(mol·K)", "−87.95 J/(mol·K)", "−351.8 J/(mol·K)"], c: 3,
+      w: "Reversing the reaction changes the sign (−175.9), and doubling the coefficients doubles the value: 2(−175.9) = −351.8 J/(mol·K). Choice A doubles but forgets to reverse; choice B reverses but forgets to double." },
+    { s: "Calculate ΔS° for CH₄(g) + 2O₂(g) → CO₂(g) + 2H₂O(l). Standard molar entropies in J/(mol·K): CH₄(g) 186.3, O₂(g) 205.2, CO₂(g) 213.8, H₂O(l) 69.9.",
+      o: ["−37.9 J/(mol·K)", "+243.1 J/(mol·K)", "−243.1 J/(mol·K)", "−313.0 J/(mol·K)"], c: 2,
+      w: "Products: 213.8 + 2(69.9) = 353.6. Reactants: 186.3 + 2(205.2) = 596.7. ΔS° = 353.6 − 596.7 = −243.1 J/(mol·K), consistent with 3 mol of gas becoming 1 mol of gas. Choice A forgets the 2 on O₂, and choice D forgets the 2 on H₂O." },
+    { s: "A student calculates ΔS° = +160.7 J/(mol·K) for CaCO₃(s) → CaO(s) + CO₂(g). Which statement best explains the sign at the particle level?",
+      o: ["The reaction is endothermic, which always increases entropy.", "A gas is produced from a solid, so matter becomes much more dispersed.", "CaO has a larger standard molar entropy than CaCO₃.", "The number of atoms increases during the reaction."], c: 1,
+      w: "One mole of CO₂(g) forms from a solid reactant, and gas particles are free to move through the whole container, so S increases. Choice C is false (CaO is 39.8 vs. 92.9 J/(mol·K) for CaCO₃). Choice D is impossible: atoms are conserved. Choice A confuses ΔH with ΔS." },
+    { s: "Without calculating, which reaction is expected to have the ΔS° closest to zero?",
+      o: ["C(s, graphite) → C(s, diamond)", "2H₂(g) + O₂(g) → 2H₂O(l)", "N₂O₄(g) → 2NO₂(g)", "H₂O(l) → H₂O(g)"], c: 0,
+      w: "A solid turning into another solid involves no gas and no change in the number of particles, so the entropy change is tiny (−3.3 J/(mol·K)). The other three change the amount of gas: B removes 3 mol of gas (−326.8), C adds 1 mol (+175.9), and D vaporizes a liquid (+118.9)." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("9.2");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [9], topic: "9.2", compact: true, storageKey: "topic-9.2" });</script>
+</body>
+</html>

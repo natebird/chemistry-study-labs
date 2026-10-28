@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Representations of Equilibrium Study Lab</title>
+<meta name="description" content="Watch a box of particles react toward equilibrium, read the same story in a concentration–time and a rate–time graph, calculate Q from particle counts, and pick out which diagram shows equilibrium.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.ctlcard { display: grid; gap: 16px; }
+.graph-card { align-content: start; }
+.note { font-size: .82rem; color: var(--muted); }
+.plegend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted); }
+.plegend span { display: inline-flex; align-items: center; gap: 5px; }
+.plegend svg { width: 30px; height: 18px; }
+svg.box { width: 100%; height: auto; display: block; }
+.pick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.pick button { border-radius: 10px; padding: 6px; display: grid; gap: 4px; justify-items: center; font-size: .82rem; }
+.pick button svg { width: 100%; height: auto; display: block; }
+.pick button.right { border-color: var(--good); background: var(--good-soft); }
+.pick button.wrong { border-color: var(--bad); background: var(--bad-soft); }
+.fb { font-size: .92rem; }
+.fb.ok { color: var(--good); } .fb.no { color: var(--bad); }
+.legend .l-r { color: var(--c4); }
+.legend .l-f { color: var(--accent); }
+@media (max-width: 860px) { .pick { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 7 · Topic 7.8</span>
+  <h1>Representations of Equilibrium Study Lab</h1>
+  <p class="lede">The same equilibrium can be shown as a particle diagram, a graph of concentration against time, or a graph of forward and reverse rates. Each one tells you whether the system has reached equilibrium and, with counts, the value of K. Here you run a reaction in a sealed box and read all three pictures side by side, then pick out the diagram that is at equilibrium.</p>
+</header>
+
+<!-- LAB -->
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The particle box</h2>
+    <p>Pick a reaction, then press <b>Play</b> or drag the time slider. Each particle stands for 1 mol in a 1.0 L box, so a particle count is also a concentration in M and Q can be calculated straight from the counts. Rate constants and times are illustrative.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3>Inside the box <small id="box-sub"></small></h3>
+      <svg class="box particles" id="box" viewBox="0 0 360 300" role="img" aria-label="Particle diagram of the reaction mixture at the chosen time"></svg>
+      <div class="plegend" id="plegend"></div>
+    </div>
+    <div class="card graph-card">
+      <h3><span id="g-title">Amount against time</span> <small id="g-sub"></small></h3>
+      <svg class="chart" id="g" role="img" aria-label="Graph of particle amounts or reaction rates against time"></svg>
+      <div class="seg" role="group" aria-label="Graph type"><button type="button" id="v-amt" aria-pressed="true">Concentration–time</button><button type="button" id="v-rate" aria-pressed="false">Rate–time</button></div>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <div class="tag">Reactions</div>
+      <div class="scenarios" id="sc"></div>
+      <div class="eqn" id="eqn"></div>
+    </div>
+    <div class="controls" id="ctls"></div>
+    <div class="btnrow">
+      <button type="button" class="primary" id="b-play">Play</button>
+      <button type="button" id="b-start">Back to start</button>
+      <span class="note" id="play-note"></span>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">Time</div><div class="v" id="r-t"></div><div class="sub" id="r-t2"></div></div>
+    <div class="stat"><div class="k">Particle counts</div><div class="v" id="r-n"></div><div class="sub" id="r-n2"></div></div>
+    <div class="stat"><div class="k">Q from the counts</div><div class="v" id="r-q"></div><div class="sub" id="r-q2"></div></div>
+    <div class="stat"><div class="k">Status</div><div class="v" id="r-s"></div><div class="sub" id="r-s2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <div class="tag">Diagram check</div>
+      <p id="pick-q"></p>
+      <div class="pick" id="pick"></div>
+      <div class="btnrow"><button type="button" id="b-new">New set of boxes</button><span class="fb" id="pick-fb" aria-live="polite"></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONCEPTS -->
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Particle diagrams</span><h3>Counts become concentrations</h3><p>Divide each count by the volume (or use the stated amount per particle) to get concentrations, then substitute into the K expression with the coefficients as exponents. The diagram is at equilibrium only if that Q equals K.</p></div>
+    <div class="card"><span class="tag">Equilibrium is not equal amounts</span><h3>Constant, not equal</h3><p>At equilibrium the amounts stop changing. They are almost never equal to each other. Equal amounts of reactant and product would only match K for special cases such as A ⇌ B with K = 1.</p></div>
+    <div class="card"><span class="tag">Concentration–time</span><h3>Look for the plateau</h3><p>Reactant curves fall and product curves rise, steeply at first, then level off. The time at which every curve is flat is when equilibrium is reached. The changes are in the ratio of the coefficients: for 2NO<sub>2</sub> ⇌ N<sub>2</sub>O<sub>4</sub>, [NO<sub>2</sub>] falls twice as fast as [N<sub>2</sub>O<sub>4</sub>] rises.</p></div>
+    <div class="card"><span class="tag">Rate–time</span><h3>Two curves that meet</h3><p>Starting with only reactants, the forward rate starts high and falls while the reverse rate starts at zero and rises. Where they meet and stay equal, the system is at equilibrium. Neither rate falls to zero.</p></div>
+    <div class="card"><span class="tag">Dynamic</span><h3>Particles keep reacting</h3><p>A particle diagram at equilibrium is a snapshot. A moment later different particles may have reacted, but just as many form as are used up, so the counts are the same.</p></div>
+    <div class="card"><span class="tag">Either direction</span><h3>Same K from either side</h3><p>At a given temperature, a mixture made from reactants and one made from the equivalent amount of products reach the same equilibrium composition. One gets there with Q rising to K, the other with Q falling to K.</p></div>
+  </div>
+</section>
+
+<!-- TABLE -->
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Reading each representation</h2>
+    <p>The same three questions apply to every picture: is it at equilibrium, which way is it moving, and what does it say about K?</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Representation</th><th>Before equilibrium</th><th>At equilibrium</th><th>What it tells you about K</th></tr></thead>
+    <tbody>
+      <tr><td><b>Particle diagram</b></td><td>Q from the counts is not equal to K; counts differ from one snapshot to the next</td><td>Q from the counts equals K; successive snapshots have the same counts</td><td>K can be calculated directly from the counts and the volume</td></tr>
+      <tr><td><b>Concentration–time graph</b></td><td>Curves sloped: reactants falling and products rising (or the reverse)</td><td>All curves flat (a plateau), usually at different heights</td><td>Read the plateau values and substitute; a large product plateau relative to reactants suggests a large K</td></tr>
+      <tr><td><b>Rate–time graph</b></td><td>Forward and reverse rates differ; the larger one sets the direction</td><td>Forward rate = reverse rate, both nonzero and constant</td><td>Not directly; it shows when equilibrium is reached, not the composition</td></tr>
+      <tr><td><b>Two snapshots in a row</b></td><td>Counts changed between them</td><td>Counts the same, though particles may have swapped partners</td><td>If the counts did not change and Q = K, the system is at equilibrium</td></tr>
+      <tr><td><b>Starting diagram</b></td><td>Compare Q with K to find which way it will go</td><td>If Q = K already, nothing changes overall</td><td>Q &lt; K: products will form; Q &gt; K: reactants will form</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- FRQ + MISTAKES -->
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Representations on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>When you draw a particle diagram, conserve atoms: count every atom of each element in the starting box and make the equilibrium box match.</li>
+        <li>Make the counts in an equilibrium drawing satisfy K; show the Q calculation that proves it.</li>
+        <li>On a concentration–time sketch, make the changes match the coefficients and draw every curve flat after the same time.</li>
+        <li>On a rate–time sketch, start the reverse rate at zero (if no product is present) and have the two curves meet at a nonzero value.</li>
+        <li>Justify "at equilibrium" with a measurable reason: the concentrations are constant, or Q = K, or the forward and reverse rates are equal.</li>
+        <li>Include the legend: say what each kind of particle represents.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Calling the point where two concentration curves cross the equilibrium point. Crossing only means the two amounts are momentarily equal.</li>
+        <li>Drawing equal numbers of reactant and product particles "because it is at equilibrium."</li>
+        <li>Showing the forward rate dropping to zero, as if the reaction stopped.</li>
+        <li>Forgetting the exponent from the coefficient when calculating K from counts (for 2AB the count is squared).</li>
+        <li>Losing or gaining atoms between the starting and equilibrium diagrams.</li>
+        <li>Thinking a reaction started from products reaches a different equilibrium mixture than one started from the equivalent reactants.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 7.8. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-7.html">Unit 7 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Reactions and scenarios ----------
+  // sp: [name, signed coefficient, max starting count]. order: drawing order of species in the slot list,
+  // chosen so that one reaction event changes as few slots as possible.
+  var RX = {
+    iso:   { sp: [["A", -1, 16], ["B", 1, 16]], order: [0, 1], eq: "A(g) ⇌ B(g)" },
+    synth: { sp: [["A2", -1, 8], ["B2", -1, 8], ["AB", 2, 12]], order: [0, 2, 1], eq: "A<sub>2</sub>(g) + B<sub>2</sub>(g) ⇌ 2AB(g)" },
+    dimer: { sp: [["NO2", -2, 12], ["N2O4", 1, 6]], order: [0, 1], eq: "2NO<sub>2</sub>(g) ⇌ N<sub>2</sub>O<sub>4</sub>(g)" }
+  };
+  // expect: hand-typed equilibrium counts for the self-check.
+  var SC = {
+    fwd:   { name: "A ⇌ B from all A", rx: "iso", K: 3, n0: [12, 0], expect: [3, 9] },
+    rev:   { name: "Same K, from all B", rx: "iso", K: 3, n0: [0, 12], expect: [3, 9] },
+    small: { name: "K < 1", rx: "iso", K: 0.2, n0: [12, 0], expect: [10, 2] },
+    synth: { name: "A₂ + B₂ ⇌ 2AB", rx: "synth", K: 16, n0: [6, 6, 0], expect: [2, 2, 8] },
+    dimer: { name: "2NO₂ ⇌ N₂O₄", rx: "dimer", K: 0.25, n0: [12, 0], expect: [4, 4] },
+    at:    { name: "Start at equilibrium", rx: "iso", K: 3, n0: [3, 9], expect: [3, 9] }
+  };
+  var ORDER = ["fwd", "rev", "small", "synth", "dimer", "at"];
+  var KLIST = [0.1, 0.2, 0.25, 0.5, 1, 2, 3, 4, 5, 9, 11, 16, 25];
+  var NT = 300; // time samples
+  var S = { key: "fwd", n0: [], K: 3, i: 0, view: "amt" };
+  var model = null, stopAnim = null;
+
+  // ---------- Helpers ----------
+  var SUB = "₀₁₂₃₄₅₆₇₈₉";
+  function uni(f) { return f.replace(/(\D)(\d+)/g, function (m, a, d) { return a + d.split("").map(function (c) { return SUB[+c]; }).join(""); }); }
+  function rx() { return RX[SC[S.key].rx]; }
+  function fmtK(k) { return k < 1 ? Lab.sig(k, 2) : String(k); }
+  function counts(R, n0, xi) { return R.sp.map(function (s, i) { return n0[i] + s[1] * xi; }); }
+  function lnQ(R, n) { var s = 0; R.sp.forEach(function (sp, i) { s += sp[1] * Math.log(n[i]); }); return s; }
+  function qText(R, n) {
+    var top = [], bot = [];
+    R.sp.forEach(function (s, i) { var t = n[i] + (Math.abs(s[1]) > 1 ? "²" : ""); (s[1] < 0 ? bot : top).push(Math.abs(s[1]) > 1 ? "(" + n[i] + ")²" : String(n[i])); });
+    return top.join(" × ") + " / " + (bot.length > 1 ? "(" + bot.join(" × ") + ")" : bot.join(""));
+  }
+  function qVal(R, n) { var l = lnQ(R, n); return isNaN(l) ? NaN : Math.exp(l); }
+  function qShow(v) { return isNaN(v) ? "0/0" : v === Infinity ? "undefined" : v === 0 ? "0" : Lab.sig(v, 2); }
+
+  // ---------- Model: real mass-action kinetics, kr = 1, kf = K ----------
+  function build() {
+    var R = rx(), n0 = S.n0, K = S.K, lo = -Infinity, hi = Infinity;
+    R.sp.forEach(function (s, i) { if (s[1] > 0) lo = Math.max(lo, -n0[i] / s[1]); else hi = Math.min(hi, n0[i] / -s[1]); });
+    var m = { R: R, n0: n0.slice(), K: K, lo: lo, hi: hi };
+    function rates(xi) {
+      var n = counts(R, n0, xi), f = K, r = 1;
+      R.sp.forEach(function (s, i) { if (s[1] < 0) f *= Math.pow(n[i], -s[1]); else r *= Math.pow(n[i], s[1]); });
+      return [f, r];
+    }
+    m.rates = rates;
+    if (hi - lo < 1e-9) { m.none = true; m.xeq = 0; }
+    else {
+      var a = lo, b = hi, lk = Math.log(K);
+      for (var k = 0; k < 200; k++) { var mid = (a + b) / 2; if (lnQ(R, counts(R, n0, mid)) < lk) a = mid; else b = mid; }
+      m.xeq = (a + b) / 2;
+      if (Math.abs(m.xeq) < 1e-6) m.xeq = 0;
+    }
+    // integrate t(xi) from 0 toward xeq, distance shrinking geometrically
+    var D = m.xeq, ts = [0], xs = [0], M = 600, rr = Math.pow(0.001, 1 / M);
+    if (Math.abs(D) > 1e-9) {
+      for (var j = 1; j <= M; j++) {
+        var x1 = D - D * Math.pow(rr, j), x0 = xs[j - 1], rt = rates((x0 + x1) / 2), net = rt[0] - rt[1];
+        ts.push(ts[j - 1] + (x1 - x0) / net); xs.push(x1);
+      }
+    }
+    var tEnd = ts[ts.length - 1] || 1;
+    m.T = tEnd * 1.6;
+    m.xi = []; m.t = [];
+    for (var s = 0, p = 0; s <= NT; s++) {
+      var t = m.T * s / NT; m.t.push(t);
+      while (p < ts.length - 2 && ts[p + 1] < t) p++;
+      var xv;
+      if (t >= tEnd || ts.length < 2) xv = xs[xs.length - 1];
+      else { var f = (t - ts[p]) / ((ts[p + 1] - ts[p]) || 1); xv = xs[p] + f * (xs[p + 1] - xs[p]); }
+      m.xi.push(xv);
+    }
+    // integer (whole-particle) extents
+    m.k = m.xi.map(function (x) { return (x < 0 ? -1 : 1) * Math.floor(Math.abs(x) + 0.02) || 0; });
+    var kf = m.k[NT]; m.iEq = NT;
+    while (m.iEq > 0 && m.k[m.iEq - 1] === kf) m.iEq--;
+    m.nEq = counts(R, n0, kf);
+    return m;
+  }
+
+  // ---------- Particle box ----------
+  var rnd = (function () { var s = 12345; return function () { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; }; })();
+  var SLOTS = [];
+  for (var r = 0; r < 5; r++) for (var c = 0; c < 6; c++) SLOTS.push({ x: 30 + c * 60 + (rnd() - 0.5) * 22, y: 30 + r * 60 + (rnd() - 0.5) * 22, a: rnd() * Math.PI });
+  var perm = SLOTS.map(function (s, i) { return i; });
+  for (var i = perm.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)), tmp = perm[i]; perm[i] = perm[j]; perm[j] = tmp; }
+  var flash = [];
+  var STYLE = { A: ["var(--c1)"], B: ["var(--c2)"], A2: ["var(--c1)", "var(--c1)"], B2: ["var(--c2)", "var(--c2)"], AB: ["var(--c1)", "var(--c2)"], NO2: ["var(--c1)"], N2O4: ["var(--c1)", "var(--c1)"] };
+  function molecule(g, x, y, ang, name, ring) {
+    var cols = STYLE[name];
+    if (ring) Lab.el("circle", { cx: x, cy: y, r: 21, fill: "none", stroke: "var(--accent)", "stroke-width": 2, "stroke-dasharray": "3 3", style: "stroke: var(--accent)" }, g);
+    if (cols.length === 1) { Lab.el("circle", { cx: x, cy: y, r: 10, fill: cols[0] }, g); return; }
+    var dx = Math.cos(ang) * 7.5, dy = Math.sin(ang) * 7.5;
+    Lab.el("circle", { cx: x - dx, cy: y - dy, r: 9.5, fill: cols[0] }, g);
+    Lab.el("circle", { cx: x + dx, cy: y + dy, r: 9.5, fill: cols[1] }, g);
+  }
+  function slotList(R, n) { var L = []; R.order.forEach(function (i) { for (var k = 0; k < n[i]; k++) L.push(R.sp[i][0]); }); return L; }
+  function drawBox(svg, R, n, fl) {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    Lab.el("rect", { x: 1, y: 1, width: 358, height: 298, rx: 10, fill: "var(--paper)", stroke: "var(--rule)", "stroke-width": 2 }, svg);
+    var g = Lab.el("g", {}, svg), L = slotList(R, n);
+    L.forEach(function (name, k) { var s = SLOTS[perm[k]]; molecule(g, s.x, s.y, s.a, name, fl && fl.indexOf(k) >= 0); });
+  }
+  function legendBox() {
+    var R = rx(), h = "";
+    R.sp.forEach(function (s) {
+      var cols = STYLE[s[0]], m = cols.length === 1 ? '<circle cx="15" cy="9" r="7" fill="' + cols[0] + '"/>' : '<circle cx="10" cy="9" r="6.5" fill="' + cols[0] + '"/><circle cx="20" cy="9" r="6.5" fill="' + cols[1] + '"/>';
+      h += '<span><svg viewBox="0 0 30 18" aria-hidden="true">' + m + "</svg><span>" + Lab.fmla(s[0]) + "</span></span>";
+    });
+    document.getElementById("plegend").innerHTML = h + "<span>1 particle = 1 mol in 1.0 L</span>";
+  }
+
+  // ---------- Graph ----------
+  var SCOL = ["var(--c1)", "var(--c2)", "var(--c3)"];
+  function niceStep(max) { var raw = max / 4, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3 ? 2 : m < 7 ? 5 : 10) * p; }
+  function ticks(max) { var st = niceStep(max), o = []; for (var v = 0; v <= max + 1e-9; v += st) o.push(v); return o; }
+  function drawGraph() {
+    var svg = document.getElementById("g"), m = model, R = m.R;
+    var tt = ticks(m.T).slice(0, 6);
+    if (S.view === "amt") {
+      var series = R.sp.map(function (s, i) { return m.xi.map(function (x, k) { return [m.t[k], m.n0[i] + s[1] * x]; }); });
+      var ymax = 1; series.forEach(function (sr) { sr.forEach(function (p) { ymax = Math.max(ymax, p[1]); }); });
+      ymax = Math.ceil(ymax * 1.12);
+      var F = Lab.frame(svg, { x: [0, m.T], y: [0, ymax], xLabel: "Time (arbitrary units)", yLabel: "Concentration (M)", xTicks: tt, yTicks: ticks(ymax), fmtX: function (v) { return Lab.sig(v, 2); }, fmtY: function (v) { return String(Math.round(v * 10) / 10); } });
+      if (!m.none && m.iEq < NT) { Lab.rect(F, m.t[m.iEq], 0, m.T, ymax, "var(--good)", 0.1); Lab.tag(F, (m.t[m.iEq] + m.T) / 2, ymax * 0.93, "equilibrium", "var(--good)", "middle"); }
+      series.forEach(function (sr, i) { Lab.line(F, sr, SCOL[i], 3); Lab.tag(F, m.T * (0.99 - 0.13 * i), sr[NT][1] + ymax * 0.04, uni(R.sp[i][0]), SCOL[i], "end"); });
+      Lab.vline(F, m.t[S.i], "var(--muted)", 1.5, "4 4");
+    } else {
+      var fr = m.xi.map(function (x, k) { return [m.t[k], m.rates(x)[0]]; }), rv = m.xi.map(function (x, k) { return [m.t[k], m.rates(x)[1]]; });
+      var y2 = 1e-9; fr.concat(rv).forEach(function (p) { y2 = Math.max(y2, p[1]); });
+      y2 *= 1.12;
+      var F2 = Lab.frame(svg, { x: [0, m.T], y: [0, y2], xLabel: "Time (arbitrary units)", yLabel: "Rate (relative)", xTicks: tt, yTicks: ticks(y2), fmtX: function (v) { return Lab.sig(v, 2); }, fmtY: function () { return ""; } });
+      if (!m.none && m.iEq < NT) Lab.rect(F2, m.t[m.iEq], 0, m.T, y2, "var(--good)", 0.1);
+      Lab.line(F2, fr, "var(--accent)", 3); Lab.line(F2, rv, "var(--c4)", 3, "7 4");
+      Lab.tag(F2, m.T * 0.02, fr[0][1] - y2 * 0.06, "forward", "var(--accent)", "start");
+      Lab.tag(F2, m.T * 0.02, rv[0][1] + y2 * 0.04, "reverse", "var(--c4)", "start");
+      Lab.vline(F2, m.t[S.i], "var(--muted)", 1.5, "4 4");
+    }
+    document.getElementById("g-title").textContent = S.view === "amt" ? "Concentration against time" : "Forward and reverse rates";
+    document.getElementById("g-sub").textContent = S.view === "amt" ? "shaded: counts constant" : "shaded: rates equal";
+    document.getElementById("legend").innerHTML = S.view === "amt" ?
+      R.sp.map(function (s, i) { return '<span style="color:' + SCOL[i] + '">' + Lab.fmla(s[0]) + "</span>"; }).join("") + '<span class="l-ghost">Time shown in the box</span>' :
+      '<span class="l-f">Forward rate</span><span class="l-r">Reverse rate</span><span class="l-ghost">Time shown in the box</span>';
+  }
+
+  // ---------- Story ----------
+  function status(n) {
+    var q = qVal(model.R, n), K = S.K;
+    if (isNaN(q)) return "none";
+    if (Math.abs(q / K - 1) < 1e-9) return "eq";
+    return q < K ? "fwd" : "rev";
+  }
+  function story() {
+    var m = model, R = m.R, n = counts(R, m.n0, m.k[S.i]), q = qVal(R, n), st = status(n), h = "";
+    var names = R.sp.map(function (s, i) { return n[i] + " " + Lab.fmla(s[0]); }).join(", ");
+    var plateau = S.i >= m.iEq;
+    if (m.none) return "<p>With these starting counts nothing can react: a reactant and a product are both missing. Add particles with the sliders.</p><p><b>AP answer:</b> a reaction can only proceed in a direction if every species it consumes is present.</p>";
+    h += "<p><b>The box now:</b> " + names + ". Q = " + qText(R, n) + " = " + qShow(q) + ", compared with K = " + fmtK(S.K) + ".</p>";
+    if (st === "eq" || (plateau && !(Math.abs(m.xeq - Math.round(m.xeq)) < 1e-6))) {
+      if (st === "eq") h += "<p>Q equals K, so this snapshot is <b>at equilibrium</b>. The counts no longer change, but particles still react: in each interval as many " + Lab.fmla(R.sp[R.sp.length - 1][0]) + " form as break apart. The rate–time graph shows the two rates equal, not zero.</p>";
+      else h += "<p>The counts have stopped changing. The exact equilibrium would need a fraction of a particle (x = " + Lab.sig(Math.abs(m.xeq), 3) + (m.xeq < 0 ? " in the reverse direction" : "") + "), so the box stops at the last whole-particle count on the way there, with Q = " + qShow(q) + " instead of exactly " + fmtK(S.K) + ". With real numbers of molecules this rounding is far too small to notice.</p>";
+    } else if (st === "fwd") {
+      h += "<p>Q &lt; K, so the forward rate is larger than the reverse rate and the mixture is moving toward products. The concentration curves are still sloped here.</p>";
+    } else if (st === "rev") {
+      h += "<p>Q &gt; K" + (q === Infinity ? " (there is no reactant at all, so Q is undefined)" : "") + ", so the reverse rate is larger and the mixture is moving toward reactants. The concentration curves are still sloped here.</p>";
+    }
+    var ne = m.nEq;
+    h += "<p><b>Where it ends up:</b> " + R.sp.map(function (s, i) { return ne[i] + " " + Lab.fmla(s[0]); }).join(", ") + " (Q = " + qText(R, ne) + " = " + qShow(qVal(R, ne)) + ").";
+    if (S.key === "rev") h += " This is the same box the &ldquo;from all A&rdquo; run reaches, because 12 B contains the same atoms as 12 A.";
+    if (R === RX.iso) {
+      var fits = S.K > 1 ? ne[1] > ne[0] : S.K < 1 ? ne[0] > ne[1] : ne[0] === ne[1];
+      h += fits ? (S.K > 1 ? " With K &gt; 1 for A ⇌ B, products outnumber reactants at equilibrium." : S.K < 1 ? " With K &lt; 1 for A ⇌ B, reactants outnumber products at equilibrium." : " With K = 1 for A ⇌ B, the counts are equal.") :
+        " With K " + (S.K > 1 ? "&gt;" : S.K < 1 ? "&lt;" : "=") + " 1 for A ⇌ B, real equilibrium mixtures have " + (S.K > 1 ? "more B than A" : S.K < 1 ? "more A than B" : "equal amounts") + "; with this few particles, rounding to whole particles hides that.";
+    }
+    if (R === RX.dimer) h += " Each N<sub>2</sub>O<sub>4</sub> uses two NO<sub>2</sub>, so NO<sub>2</sub> falls twice as fast as N<sub>2</sub>O<sub>4</sub> rises, and its count is squared in Q.";
+    if (R === RX.synth) h += " Two AB form for each A<sub>2</sub> used, and [AB] is squared in Q.";
+    h += "</p>";
+    var eqName = R.sp.map(function (s, i) { return ne[i] + " " + Lab.fmla(s[0]); }).join(" and ");
+    var qe = qVal(R, ne), exact = Math.abs(qe / S.K - 1) < 1e-9, near = qe > 0 && isFinite(qe) && Math.abs(Math.log(qe / S.K)) < Math.log(1.25);
+    h += "<p><b>AP answer:</b> a particle diagram represents equilibrium when Q calculated from its counts equals K and the counts stay constant over time. Here the box with " + eqName + " gives Q = " + qShow(qe) +
+      (exact ? " = K" : near ? " ≈ K" : ", as close to K = " + fmtK(S.K) + " as whole particles allow on the way there") +
+      (m.xeq === 0 ? "; this starting box is already at equilibrium, so its counts never change even though particles keep reacting." : m.k[NT] === 0 ? "; no whole particle can react without overshooting, so the counts stay at their starting values." : "; any earlier box has Q " + (m.xeq > 0 ? "&lt;" : "&gt;") + " K and is not at equilibrium.") + "</p>";
+    return h;
+  }
+
+  // ---------- Render ----------
+  function renderFrame() {
+    var m = model, R = m.R, n = counts(R, m.n0, m.k[S.i]), q = qVal(R, n), st = status(n);
+    drawBox(document.getElementById("box"), R, n, flash);
+    drawGraph();
+    document.getElementById("s-t").value = S.i;
+    document.getElementById("o-t").textContent = Lab.sig(m.t[S.i], 2);
+    document.getElementById("r-t").textContent = Lab.sig(m.t[S.i], 2);
+    document.getElementById("r-t2").textContent = S.i >= m.iEq ? "counts now constant" : "counts still changing";
+    document.getElementById("r-n").textContent = n.join(" : ");
+    document.getElementById("r-n2").innerHTML = R.sp.map(function (s) { return Lab.fmla(s[0]); }).join(" : ");
+    document.getElementById("r-q").textContent = qShow(q);
+    document.getElementById("r-q2").textContent = "K = " + fmtK(S.K);
+    document.getElementById("r-s").textContent = st === "eq" ? "Q = K" : st === "fwd" ? "Q < K" : st === "rev" ? "Q > K" : (m.none ? "no reaction" : "—");
+    document.getElementById("r-s2").textContent = st === "eq" ? "at equilibrium" : st === "fwd" ? "net forward" : st === "rev" ? "net reverse" : (S.i >= m.iEq ? "whole-particle rounding" : "");
+    document.getElementById("box-sub").textContent = st === "eq" ? "at equilibrium (dynamic)" : "t = " + Lab.sig(m.t[S.i], 2);
+  }
+  function render() {
+    renderFrame();
+    document.getElementById("story").innerHTML = story();
+    document.getElementById("play-note").textContent = "";
+  }
+
+  // ---------- Controls ----------
+  var ctls = document.getElementById("ctls"), sl = [], kSl;
+  function buildControls() {
+    var R = rx(); ctls.innerHTML = ""; sl = [];
+    R.sp.forEach(function (s, i) {
+      var d = document.createElement("div"); d.className = "ctl";
+      d.innerHTML = '<label for="s-n' + i + '"><span>Start: ' + Lab.fmla(s[0]) + '</span> <output id="o-n' + i + '"></output></label><input type="range" id="s-n' + i + '" min="0" max="' + s[2] + '" step="1"><span class="hint">' + (s[1] < 0 ? "Reactant" : "Product") + " particles at t = 0</span>";
+      ctls.appendChild(d);
+      var inp = d.querySelector("input");
+      inp.addEventListener("input", function () { S.n0[i] = parseInt(inp.value, 10); restart(); });
+      sl.push(inp);
+    });
+    var d = document.createElement("div"); d.className = "ctl";
+    d.innerHTML = '<label for="s-k"><span>K</span> <output id="o-k"></output></label><input type="range" id="s-k" min="0" max="' + (KLIST.length - 1) + '" step="1"><span class="hint">Set by temperature</span>';
+    ctls.appendChild(d);
+    kSl = d.querySelector("input");
+    kSl.addEventListener("input", function () { S.K = KLIST[parseInt(kSl.value, 10)]; restart(); });
+    var d2 = document.createElement("div"); d2.className = "ctl";
+    d2.innerHTML = '<label for="s-t"><span>Time</span> <output id="o-t"></output></label><input type="range" id="s-t" min="0" max="' + NT + '" step="1"><span class="hint">Drag to scrub through the run</span>';
+    ctls.appendChild(d2);
+    d2.querySelector("input").addEventListener("input", function (e) { stop(); S.i = parseInt(e.target.value, 10); flash = []; render(); });
+  }
+  function syncControls() {
+    sl.forEach(function (inp, i) { inp.value = S.n0[i]; document.getElementById("o-n" + i).textContent = S.n0[i]; });
+    kSl.value = KLIST.indexOf(S.K); document.getElementById("o-k").textContent = fmtK(S.K);
+  }
+  function stop() { if (stopAnim) { stopAnim(); stopAnim = null; } document.getElementById("b-play").textContent = "Play"; }
+  function restart() { stop(); model = build(); S.i = 0; flash = []; syncControls(); render(); }
+  function swapAtEq() { // one forward and one reverse event at equilibrium: two particles trade places
+    var L = slotList(model.R, counts(model.R, model.n0, model.k[S.i]));
+    var a = Math.floor(Math.random() * L.length), tries = 0, b;
+    do { b = Math.floor(Math.random() * L.length); tries++; } while (L[b] === L[a] && tries < 50);
+    if (L[a] === L[b]) return;
+    var t = perm[a]; perm[a] = perm[b]; perm[b] = t; flash = [a, b];
+  }
+  function play() {
+    if (stopAnim) { stop(); render(); return; }
+    if (S.i >= NT) S.i = 0;
+    var i0 = S.i, last = 0, startT = null;
+    document.getElementById("b-play").textContent = "Pause";
+    document.getElementById("play-note").textContent = "Running...";
+    stopAnim = Lab.animate(7000, function (t) {
+      var now = performance.now(); if (startT === null) startT = now;
+      S.i = Math.round(i0 + (NT - i0) * t);
+      var n = counts(model.R, model.n0, model.k[S.i]);
+      if (status(n) === "eq" && now - last > 450) { swapAtEq(); last = now; } else if (now - last > 250) flash = [];
+      renderFrame();
+    }, function () { stopAnim = null; document.getElementById("b-play").textContent = "Play"; render(); });
+  }
+  var scBtns = {};
+  function pick(k) {
+    stop();
+    S.key = k; S.n0 = SC[k].n0.slice(); S.K = SC[k].K;
+    Object.keys(scBtns).forEach(function (q) { scBtns[q].setAttribute("aria-pressed", q === k ? "true" : "false"); });
+    document.getElementById("eqn").innerHTML = rx().eq + "&nbsp;&nbsp;&nbsp;K = " + qExprHTML();
+    buildControls(); legendBox(); restart(); newPick();
+  }
+  function qExprHTML() {
+    var R = rx(), top = [], bot = [];
+    R.sp.forEach(function (s) { var t = "[" + Lab.fmla(s[0]) + "]" + (Math.abs(s[1]) > 1 ? "<sup>" + Math.abs(s[1]) + "</sup>" : ""); (s[1] < 0 ? bot : top).push(t); });
+    return top.join("") + " / " + (bot.length > 1 ? "(" + bot.join("") + ")" : bot.join(""));
+  }
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SC[k].name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { pick(k); });
+    document.getElementById("sc").appendChild(b); scBtns[k] = b;
+  });
+  document.getElementById("b-play").addEventListener("click", play);
+  document.getElementById("b-start").addEventListener("click", function () { stop(); S.i = 0; flash = []; render(); });
+  function setView(v) { S.view = v; document.getElementById("v-amt").setAttribute("aria-pressed", v === "amt" ? "true" : "false"); document.getElementById("v-rate").setAttribute("aria-pressed", v === "rate" ? "true" : "false"); drawGraph(); document.getElementById("story").innerHTML = story(); }
+  document.getElementById("v-amt").addEventListener("click", function () { setView("amt"); });
+  document.getElementById("v-rate").addEventListener("click", function () { setView("rate"); });
+
+  // ---------- Diagram check ----------
+  function newPick() {
+    var x = SC[S.key], R = RX[x.rx], lo = -Infinity, hi = Infinity, n0 = x.n0;
+    R.sp.forEach(function (s, i) { if (s[1] > 0) lo = Math.max(lo, Math.ceil(-n0[i] / s[1])); else hi = Math.min(hi, Math.floor(n0[i] / -s[1])); });
+    var all = [], right = null;
+    for (var k = lo; k <= hi; k++) { var n = counts(R, n0, k); if (Math.abs(qVal(R, n) / x.K - 1) < 1e-9) right = n; else all.push(n); }
+    for (var i = all.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = all[i]; all[i] = all[j]; all[j] = t; }
+    var opts = all.slice(0, 3).concat([right]);
+    for (i = opts.length - 1; i > 0; i--) { j = Math.floor(Math.random() * (i + 1)); t = opts[i]; opts[i] = opts[j]; opts[j] = t; }
+    document.getElementById("pick-q").innerHTML = "For " + R.eq + " with K = " + fmtK(x.K) + ", which box is at equilibrium? All four contain the same atoms as the starting mixture.";
+    var box = document.getElementById("pick"); box.innerHTML = "";
+    var fb = document.getElementById("pick-fb"); fb.textContent = ""; fb.className = "fb";
+    opts.forEach(function (n, idx) {
+      var b = document.createElement("button"); b.type = "button";
+      var svg = Lab.el("svg", { viewBox: "0 0 360 300", "class": "particles", role: "img", "aria-label": R.sp.map(function (s, i) { return n[i] + " " + s[0]; }).join(", ") }, b);
+      drawBox(svg, R, n, null);
+      var lab = document.createElement("span"); lab.textContent = "Box " + "ABCD"[idx]; b.appendChild(lab);
+      b.addEventListener("click", function () {
+        box.querySelectorAll("button").forEach(function (o) { o.classList.remove("right", "wrong"); });
+        var q = qVal(R, n), ok = n === right;
+        b.classList.add(ok ? "right" : "wrong");
+        fb.className = "fb " + (ok ? "ok" : "no");
+        fb.textContent = (ok ? "Correct. " : "Not this one. ") + "Q = " + qText(R, n) + " = " + qShow(q) + (ok ? " = K." : (q < x.K ? " < K, so it would still shift toward products." : " > K, so it would still shift toward reactants."));
+      });
+      box.appendChild(b);
+    });
+  }
+  document.getElementById("b-new").addEventListener("click", newPick);
+  pick("fwd");
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [], keep = S.key;
+    ORDER.forEach(function (k) {
+      var x = SC[k], R = RX[x.rx];
+      S.key = k; S.n0 = x.n0.slice(); S.K = x.K;
+      var m = build(), ne = m.nEq;
+      if (ne.join() !== x.expect.join()) bad.push(k + ": equilibrium counts " + ne.join(":") + ", expected " + x.expect.join(":"));
+      if (Math.abs(qVal(R, x.expect) / x.K - 1) > 1e-9) bad.push(k + ": hand-typed counts do not give Q = K");
+      // atoms conserved: every box along the run has the same atoms as the start
+      var ATOMS = { A: { X: 1 }, B: { X: 1 }, A2: { A: 2 }, B2: { B: 2 }, AB: { A: 1, B: 1 }, NO2: { N: 1, O: 2 }, N2O4: { N: 2, O: 4 } };
+      var tally = function (n) { var t = {}; R.sp.forEach(function (s, i) { var a = ATOMS[s[0]]; for (var e in a) t[e] = (t[e] || 0) + a[e] * n[i]; }); return JSON.stringify(Object.keys(t).sort().map(function (e) { return [e, t[e]]; })); };
+      m.k.forEach(function (kk) { var n = counts(R, x.n0, kk); if (n.some(function (v) { return v < 0; })) bad.push(k + ": negative count"); if (tally(n) !== tally(x.n0)) bad.push(k + ": atoms not conserved"); });
+      // rates equal at the end
+      var rt = m.rates(m.xi[NT]); if (Math.abs(rt[0] - rt[1]) > 0.01 * Math.max(rt[0], 1e-9)) bad.push(k + ": rates not equal at the end");
+    });
+    S.key = keep;
+    if (bad.length) console.error("7.8 self-check failed: " + bad.slice(0, 6).join("; "));
+  })();
+  pick("fwd");
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "For X(g) ⇌ Y(g), K = 4.0 at a certain temperature. Each particle in a diagram represents 1 mol of gas in a 1.0 L container. Which particle diagram could represent the system at equilibrium?",
+      o: ["5 X and 5 Y", "2 X and 8 Y", "8 X and 2 Y", "6 X and 4 Y"], c: 1,
+      w: "K = [Y]/[X], so the equilibrium box needs [Y]/[X] = 4.0: 8/2 = 4.0. Choice A has Q = 1.0 (equal amounts is not the definition of equilibrium). Choice C has Q = 0.25, the value of K for the reverse reaction, a sign that the expression was written upside down." },
+    { s: "Snapshots of a sealed container for A₂(g) + B₂(g) ⇌ 2AB(g) show: t₁: 6 A₂, 6 B₂, 0 AB; t₂: 4 A₂, 4 B₂, 4 AB; t₃: 3 A₂, 3 B₂, 6 AB; t₄: 3 A₂, 3 B₂, 6 AB. Which statement is correct?",
+      o: ["Equilibrium is reached at t₂, when the amounts of A₂ and AB are equal.", "The reaction stopped at t₃ because the reactants ran out.", "Equilibrium is never reached, because A₂ and B₂ are still present at t₄.", "Equilibrium was reached by t₃; between t₃ and t₄ the forward and reverse reactions continue at equal rates."], c: 3,
+      w: "The counts stop changing between t₃ and t₄, which signals equilibrium; the reactions keep going in both directions at equal rates. Choice A treats equal amounts as equilibrium, but the counts still change after t₂. Choice B describes a reaction that has stopped, which is not what equilibrium is, and reactants have not run out. Reactants are always present at equilibrium (choice C)." },
+    { s: "At equilibrium, a 1.0 L container holds 3 A₂, 3 B₂ and 6 AB particles for A₂(g) + B₂(g) ⇌ 2AB(g), where each particle represents 1 mol. What is the value of K?",
+      o: ["4.0", "0.67", "1.3", "0.25"], c: 0,
+      w: "K = [AB]²/([A₂][B₂]) = (6)²/[(3)(3)] = 36/9 = 4.0. Choice B forgets the exponent 2 on [AB] (6/9). Choice C multiplies by 2 instead of squaring (12/9). Choice D inverts the expression." },
+    { s: "A 1.0 L flask initially holds 10 NO₂ particles (each 1 mol) and no N₂O₄. At equilibrium for 2NO₂(g) ⇌ N₂O₄(g), the diagram shows 4 N₂O₄ particles. How many NO₂ particles are shown, and what is K?",
+      o: ["6 NO₂; K = 0.11", "2 NO₂; K = 2.0", "2 NO₂; K = 1.0", "6 NO₂; K = 0.67"], c: 2,
+      w: "Each N₂O₄ uses 2 NO₂, so 4 N₂O₄ used 8 NO₂, leaving 10 − 8 = 2. K = [N₂O₄]/[NO₂]² = 4/(2)² = 1.0. Choices A and D subtract only 4 NO₂, ignoring the 2 : 1 ratio. Choice B has the right count but forgets to square [NO₂]." },
+    { s: "For A(g) ⇌ B(g), K = 1.0 × 10⁻⁴. A container initially holds 20 particles of A and no B. Which diagram best represents the mixture at equilibrium?",
+      o: ["20 A and 0 B, because so little B forms that none appears at this scale", "10 A and 10 B", "0 A and 20 B, because the reaction goes to completion", "2 A and 18 B"], c: 0,
+      w: "With K = [B]/[A] = 1.0 × 10⁻⁴, the equilibrium amount of B is about 20 × 10⁻⁴ = 0.002 particle, far less than one, so the diagram shows essentially all A. Choice B is the K = 1 picture; choices C and D show a large K." },
+    { s: "At the same temperature, box 1 starts with 12 A particles and box 2 starts with 12 B particles, for A(g) ⇌ B(g) in containers of equal volume. At equilibrium, box 1 contains 4 A and 8 B. What does box 2 contain at equilibrium?",
+      o: ["8 A and 4 B", "12 B, because B is already the product", "6 A and 6 B", "4 A and 8 B"], c: 3,
+      w: "K = 8/4 = 2.0 depends only on temperature, and box 2 holds the same total number of particles, so it reaches the same composition: 4 A and 8 B, approached from the product side (Q &gt; K at the start). Choice A mirrors the result, which would mean K = 0.5. Choice B assumes no reaction runs in reverse." },
+    { s: "A concentration–time graph for 2NO₂(g) ⇌ N₂O₄(g), started with only NO₂, shows both curves becoming horizontal after time tₑ. Which statement about times after tₑ is correct?",
+      o: ["[NO₂] = [N₂O₄], because the system is at equilibrium.", "Both reactions have stopped, so the concentrations no longer change.", "[NO₂] and [N₂O₄] are constant but not necessarily equal, because the forward and reverse rates are equal.", "[NO₂] must be exactly twice [N₂O₄], because of the coefficients."], c: 2,
+      w: "Flat curves mean constant concentrations, which happens because the forward and reverse rates are equal, not zero. The ratio of the two concentrations is set by K, not by the coefficients (choice D) and not by any rule of equality (choice A). Choice B describes a reaction that stopped, which is the classic misconception about equilibrium." },
+    { s: "A reaction mixture starts with only reactants. Which description of a graph of the forward and reverse reaction rates against time is correct?",
+      o: ["The forward rate decreases to zero while the reverse rate increases.", "The forward rate starts high and decreases, the reverse rate starts at zero and increases, and they become equal and constant.", "Both rates decrease until both are zero.", "The reverse rate increases until it is larger than the forward rate, and stays larger."], c: 1,
+      w: "As reactants are used up, the forward rate falls; as products build up, the reverse rate rises. When the two rates are equal, the amounts stop changing and both rates stay at that nonzero value. Choices A and C show reactions stopping. Choice D would mean the system overshoots and keeps moving backward, which does not happen for a system approaching equilibrium." }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("7.8");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [7], topic: "7.8", compact: true, storageKey: "topic-7.8" });</script>
+</body>
+</html>

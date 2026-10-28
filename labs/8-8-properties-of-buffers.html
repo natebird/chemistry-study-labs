@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Properties of Buffers Study Lab</title>
+<meta name="description" content="Drop H₃O⁺ and OH⁻ into a buffer one particle at a time, watch the conjugate pair absorb them, and compare the pH with an unbuffered solution that starts at the same pH.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/lab.css?v=1">
+<script src="../assets/prefs.js?v=2"></script>
+<style>
+.group { display: grid; gap: 8px; }
+.scenarios button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.ctlcard { display: grid; gap: 16px; }
+.ctlcard .controls { grid-template-columns: 1fr; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stat .sub { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.plegend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted); }
+.plegend span { display: inline-flex; align-items: center; gap: 5px; }
+.plegend em { font-style: normal; }
+.plegend i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+.note { font-size: .82rem; color: var(--muted); }
+svg .ptxt { font-family: var(--body); font-size: 11px; font-weight: 700; fill: var(--surface); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topnav" id="topnav"></div>
+
+<header>
+  <span class="kicker">AP Chemistry · Unit 8 · Topic 8.8</span>
+  <h1>Properties of Buffers Study Lab</h1>
+  <p class="lede">A buffer holds its pH steady because it contains large amounts of both members of a conjugate acid–base pair. The weak acid consumes added OH<sup>−</sup>; the conjugate base consumes added H<sub>3</sub>O<sup>+</sup>. Add strong acid and strong base one particle at a time, watch which particle reacts, and compare the pH with an unbuffered solution.</p>
+</header>
+
+<section aria-labelledby="lab-h" id="lab-sec">
+  <div class="sec-head">
+    <h2 id="lab-h">1. The buffer bench</h2>
+    <p>Each particle stands for 1.0 mmol in 100 mL of solution. Each click adds 1.0 mL of 1.0 M HCl (one H<sub>3</sub>O<sup>+</sup>) or 1.0 mL of 1.0 M NaOH (one OH<sup>−</sup>). Spectator ions (Na<sup>+</sup>, Cl<sup>−</sup>) and water are not drawn. The comparison is an unbuffered strong acid or base solution that starts at the same pH.</p>
+  </div>
+
+  <div class="lab">
+    <div class="card graph-card">
+      <h3><span>Particle view</span> <small id="part-sub"></small></h3>
+      <svg class="chart particles" id="part" role="img" aria-label="Beaker of particles showing the weak acid, its conjugate base, and any excess H3O+ or OH-"></svg>
+      <div class="plegend" id="plegend"></div>
+    </div>
+    <div class="card graph-card">
+      <h3><span>pH as strong acid or base is added</span> <small>dot = now</small></h3>
+      <svg class="chart" id="graph" role="img" aria-label="pH of the buffer and of the unbuffered solution versus millimoles of strong acid or base added"></svg>
+    </div>
+  </div>
+
+  <div class="card ctlcard">
+    <div class="group">
+      <div class="tag">Starting solution</div>
+      <div class="scenarios" id="sc"></div>
+      <div class="eqn" id="eqn"></div>
+    </div>
+    <div class="group">
+      <div class="tag">Add</div>
+      <div class="btnrow">
+        <button type="button" id="b-acid">+ H₃O⁺ (1.0 mmol HCl)</button>
+        <button type="button" id="b-base">+ OH⁻ (1.0 mmol NaOH)</button>
+        <button type="button" id="b-reset">Start over</button>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="ctl">
+        <label for="s-n">Net strong acid or base added <output id="o-n"></output></label>
+        <input type="range" id="s-n" min="-15" max="15" step="1">
+        <span class="hint">Left: HCl added. Right: NaOH added. Volume of added solution is included.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-bar">
+    <div class="legend"><span class="l-ad">Solution in the beaker</span><span class="l-ghost">Unbuffered solution, same starting pH</span></div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">pH of this solution</div><div class="v" id="r-ph"></div><div class="sub" id="r-ph2"></div></div>
+    <div class="stat"><div class="k">pH of the unbuffered comparison</div><div class="v" id="r-un"></div><div class="sub" id="r-un2"></div></div>
+    <div class="stat"><div class="k" id="r-mol-k">Moles</div><div class="v" id="r-mol"></div><div class="sub" id="r-mol2"></div></div>
+    <div class="stat"><div class="k">Still a buffer?</div><div class="v" id="r-buf"></div><div class="sub" id="r-buf2"></div></div>
+  </div>
+
+  <div class="story" id="story" aria-live="polite"></div>
+  <p class="note">pH values come from the full equilibrium (charge balance) with K<sub>a</sub>(CH<sub>3</sub>COOH) = 1.8 × 10<sup>−5</sup> and K<sub>b</sub>(NH<sub>3</sub>) = 1.8 × 10<sup>−5</sup> at 25 °C. They are shown so you can see the effect; computing the pH change after acid or base is added to a buffer is not assessed on the AP exam.</p>
+</section>
+
+<section aria-labelledby="con-h">
+  <div class="sec-head"><h2 id="con-h">2. Key ideas</h2></div>
+  <div class="concepts">
+    <div class="card"><span class="tag">Definition</span><h3>Both members of a conjugate pair</h3><p>A buffer contains large concentrations of a weak acid and its conjugate base (CH<sub>3</sub>COOH and CH<sub>3</sub>COO<sup>−</sup>), or of a weak base and its conjugate acid (NH<sub>3</sub> and NH<sub>4</sub><sup>+</sup>). One member alone is not a buffer.</p></div>
+    <div class="card"><span class="tag">Added acid</span><h3>The base member reacts</h3><p>Added H<sub>3</sub>O<sup>+</sup> is consumed by the conjugate base: CH<sub>3</sub>COO<sup>−</sup> + H<sub>3</sub>O<sup>+</sup> → CH<sub>3</sub>COOH + H<sub>2</sub>O. A strong acid is swapped for a weak one, so [H<sub>3</sub>O<sup>+</sup>] hardly rises.</p></div>
+    <div class="card"><span class="tag">Added base</span><h3>The acid member reacts</h3><p>Added OH<sup>−</sup> is consumed by the weak acid: CH<sub>3</sub>COOH + OH<sup>−</sup> → CH<sub>3</sub>COO<sup>−</sup> + H<sub>2</sub>O. These reactions go essentially to completion, which is why the buffer can absorb the addition.</p></div>
+    <div class="card"><span class="tag">Why the pH barely moves</span><h3>Only the ratio shifts a little</h3><p>The pH depends on the ratio [A<sup>−</sup>]/[HA]. When both are large, converting a small amount of one into the other changes that ratio only slightly, so the pH changes only slightly.</p></div>
+    <div class="card"><span class="tag">Making one</span><h3>Three recipes</h3><p>Mix a weak acid with a salt of its conjugate base; or partially neutralize a weak acid with strong base (for example 2 mol CH<sub>3</sub>COOH + 1 mol NaOH); or partially neutralize a weak base with strong acid. Strong acid plus its salt (HCl + NaCl) is never a buffer.</p></div>
+    <div class="card"><span class="tag">Limits</span><h3>A buffer can be used up</h3><p>Once the base member is gone, more H<sub>3</sub>O<sup>+</sup> has nothing to react with and the pH falls sharply (and likewise for OH<sup>−</sup>). How much a buffer can absorb is its capacity, topic 8.10. Diluting a buffer keeps the ratio and so keeps the pH, but lowers the capacity.</p></div>
+  </div>
+</section>
+
+<section aria-labelledby="tbl-h">
+  <div class="sec-head">
+    <h2 id="tbl-h">3. Buffer cheat sheet</h2>
+    <p>For any buffer, write two net ionic equations: one for added acid, one for added base. The spectator ions never appear.</p>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Mixture</th><th>Buffer?</th><th>Reacts with added H<sub>3</sub>O<sup>+</sup></th><th>Reacts with added OH<sup>−</sup></th></tr></thead>
+    <tbody>
+      <tr><td>CH<sub>3</sub>COOH + NaCH<sub>3</sub>COO</td><td><b>Yes</b></td><td>CH<sub>3</sub>COO<sup>−</sup> + H<sub>3</sub>O<sup>+</sup> → CH<sub>3</sub>COOH + H<sub>2</sub>O</td><td>CH<sub>3</sub>COOH + OH<sup>−</sup> → CH<sub>3</sub>COO<sup>−</sup> + H<sub>2</sub>O</td></tr>
+      <tr><td>NH<sub>3</sub> + NH<sub>4</sub>Cl</td><td><b>Yes</b></td><td>NH<sub>3</sub> + H<sub>3</sub>O<sup>+</sup> → NH<sub>4</sub><sup>+</sup> + H<sub>2</sub>O</td><td>NH<sub>4</sub><sup>+</sup> + OH<sup>−</sup> → NH<sub>3</sub> + H<sub>2</sub>O</td></tr>
+      <tr><td>2 mol HF + 1 mol NaOH</td><td><b>Yes</b> (1 mol HF + 1 mol F<sup>−</sup> after reaction)</td><td>F<sup>−</sup> + H<sub>3</sub>O<sup>+</sup> → HF + H<sub>2</sub>O</td><td>HF + OH<sup>−</sup> → F<sup>−</sup> + H<sub>2</sub>O</td></tr>
+      <tr><td>CH<sub>3</sub>COOH alone</td><td>No (no conjugate base)</td><td>nothing; H<sub>3</sub>O<sup>+</sup> builds up</td><td>CH<sub>3</sub>COOH (and this makes a buffer)</td></tr>
+      <tr><td>HCl + NaCl</td><td>No (strong acid)</td><td>nothing; Cl<sup>−</sup> is too weak a base</td><td>H<sub>3</sub>O<sup>+</sup>, but there is no weak acid pair to hold the pH</td></tr>
+      <tr><td>1 mol CH<sub>3</sub>COOH + 1 mol NaOH</td><td>No (all converted to CH<sub>3</sub>COO<sup>−</sup>)</td><td>CH<sub>3</sub>COO<sup>−</sup> (and this makes a buffer)</td><td>nothing; OH<sup>−</sup> builds up</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section aria-labelledby="frq-h">
+  <div class="sec-head"><h2 id="frq-h">4. Buffers on the FRQ</h2></div>
+  <div class="two">
+    <div class="card">
+      <h3>What earns points on the FRQ</h3>
+      <ul>
+        <li>Identify both members of the conjugate pair by formula and say both are present in significant amounts.</li>
+        <li>Write the net ionic equation for the added species: "CH<sub>3</sub>COO<sup>−</sup> + H<sub>3</sub>O<sup>+</sup> → CH<sub>3</sub>COOH + H<sub>2</sub>O." Use a single arrow; the reaction with a strong acid or base goes to completion.</li>
+        <li>Explain the result: the added H<sub>3</sub>O<sup>+</sup> is consumed, so its concentration does not build up, and [A<sup>−</sup>]/[HA] changes only slightly.</li>
+        <li>For a particle diagram, convert one particle per added H<sub>3</sub>O<sup>+</sup> or OH<sup>−</sup>, and keep the total of HA + A<sup>−</sup> constant.</li>
+        <li>To make a buffer from a weak acid and NaOH, show that the weak acid is in excess: some HA must remain.</li>
+        <li>When asked about a non-buffer, name the missing member of the pair.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Saying the pH "does not change at all." It changes slightly; the change is much smaller than without the buffer.</li>
+        <li>Having the weak acid react with added acid. Added H<sub>3</sub>O<sup>+</sup> reacts with the base member.</li>
+        <li>Calling HCl + NaCl a buffer. Cl<sup>−</sup> does not react with H<sub>3</sub>O<sup>+</sup>.</li>
+        <li>Thinking any weak acid plus NaOH is a buffer. If the moles of NaOH equal or exceed the moles of weak acid, no HA remains.</li>
+        <li>Including Na<sup>+</sup> or Cl<sup>−</sup> in the net ionic equation.</li>
+        <li>Thinking a buffer is always at pH 7. An acetate buffer sits near pH 4.7; an ammonia buffer near 9.3.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="quiz-h">
+  <div class="sec-head" style="display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:10px;">
+    <div style="display:grid; gap:6px;"><h2 id="quiz-h">5. Practice questions</h2><p>AP-style multiple choice. Pick an answer to see the explanation.</p></div>
+    <div style="display:flex; gap:10px; align-items:center;"><span class="score" id="score">0 / 0 correct</span><button id="quiz-reset" type="button">Start over</button></div>
+  </div>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section aria-labelledby="terms-h">
+  <div class="sec-head">
+    <h2 id="terms-h">6. Key terms</h2>
+    <p>The vocabulary for topic 8.8. Read the list, flip through flashcards, or quiz yourself. For every term in the unit, see the <a href="../terms/unit-8.html">Unit 8 terminology guide</a>.</p>
+  </div>
+  <div id="key-terms"></div>
+</section>
+
+<div class="pager" id="pager"></div>
+
+</div>
+
+<script src="../assets/glossary/unit-1.js"></script>
+<script src="../assets/glossary/unit-2.js"></script>
+<script src="../assets/glossary/unit-3.js"></script>
+<script src="../assets/glossary/unit-4.js"></script>
+<script src="../assets/glossary/unit-5.js"></script>
+<script src="../assets/glossary/unit-6.js"></script>
+<script src="../assets/glossary/unit-7.js"></script>
+<script src="../assets/glossary/unit-8.js"></script>
+<script src="../assets/glossary/unit-9.js"></script>
+<script src="../assets/glossary.js?v=1"></script>
+<script src="../assets/lab.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var Kw = Lab.CONST.Kw;
+
+  // ---------- Systems ----------
+  // pair: conjugate pair; cat: true when the acid member is a cation (NH4+/NH3).
+  // T: total mmol of the pair; na / cl: mmol of spectator Na+ / Cl- in the starting solution.
+  var PAIR = {
+    ac: { Ka: 1.8e-5, HA: "CH3COOH", A: "CH3COO^-", cat: false },
+    nh: { Ka: Kw / 1.8e-5, HA: "NH4^+", A: "NH3", cat: true }
+  };
+  var SYS = {
+    ac:   { name: "Acetate buffer", pair: "ac", T: 20, na: 10, cl: 0, desc: "100 mL of 0.10 M CH<sub>3</sub>COOH + 0.10 M NaCH<sub>3</sub>COO" },
+    nh:   { name: "Ammonia buffer", pair: "nh", T: 20, na: 0, cl: 10, desc: "100 mL of 0.10 M NH<sub>3</sub> + 0.10 M NH<sub>4</sub>Cl" },
+    dil:  { name: "Acetate buffer diluted tenfold", pair: "ac", T: 2, na: 1, cl: 0, desc: "100 mL of 0.010 M CH<sub>3</sub>COOH + 0.010 M NaCH<sub>3</sub>COO" },
+    wa:   { name: "Weak acid only (not a buffer)", pair: "ac", T: 10, na: 0, cl: 0, desc: "100 mL of 0.10 M CH<sub>3</sub>COOH, no conjugate base" },
+    salt: { name: "Conjugate base only (not a buffer)", pair: "ac", T: 10, na: 10, cl: 0, desc: "100 mL of 0.10 M NaCH<sub>3</sub>COO, no weak acid" }
+  };
+  var ORDER = ["ac", "nh", "dil", "wa", "salt"];
+  var V0 = 100, NMAX = 15;
+
+  // ---------- Chemistry ----------
+  // Stoichiometry (strong acid/base react completely): returns mmol of acid member, base member, excess H3O+, excess OH-.
+  function stoich(sys, net) {
+    var T = sys.T;
+    // base equivalents held by the pair = mmol of base member before any equilibrium shift
+    var nb = sys.pair === "nh" ? T - (sys.cl - sys.na) : sys.na - sys.cl;
+    nb += net;
+    var o = { ha: 0, a: 0, h: 0, oh: 0 };
+    if (nb < 0) { o.ha = T; o.h = -nb; }
+    else if (nb > T) { o.a = T; o.oh = nb - T; }
+    else { o.a = nb; o.ha = T - nb; }
+    return o;
+  }
+  // pH from the charge balance, including the volume of added 1.0 M solution (1.0 mL per mmol).
+  function pHof(sys, net) {
+    var p = PAIR[sys.pair], V = (V0 + Math.abs(net)) / 1000;
+    var Na = (sys.na + Math.max(net, 0)) / 1000 / V, Cl = (sys.cl + Math.max(-net, 0)) / 1000 / V, T = sys.T / 1000 / V;
+    function f(H) {
+      var al = p.Ka / (p.Ka + H);
+      return H + Na + (p.cat ? T * (1 - al) : 0) - Kw / H - Cl - (p.cat ? 0 : T * al);
+    }
+    var lo = -15, hi = 1;
+    for (var i = 0; i < 80; i++) { var m = (lo + hi) / 2; if (f(Math.pow(10, m)) > 0) hi = m; else lo = m; }
+    return -(lo + hi) / 2;
+  }
+  // Unbuffered comparison: 100 mL of HCl or NaOH solution with the same starting pH.
+  function unbufStart(sys) {
+    var pH0 = pHof(sys, 0), H = Math.pow(10, -pH0);
+    return (H - Kw / H) * V0; // mmol of net strong acid (negative = net strong base)
+  }
+  function pHun(sys, net) {
+    var a0 = unbufStart(sys), V = (V0 + Math.abs(net)) / 1000;
+    var c = (a0 - net) / 1000 / V; // net strong acid, mol/L
+    var H = c / 2 + Math.sqrt(c * c / 4 + Kw);
+    return -Math.log10(H);
+  }
+
+  // ---------- State ----------
+  var st = { sys: "ac", net: 0, last: null, prevNet: 0 };
+  function S() { return SYS[st.sys]; }
+  function P() { return PAIR[S().pair]; }
+  function F(x) { return Lab.fmla(x); }
+  function uni(f) {
+    var SUB = "₀₁₂₃₄₅₆₇₈₉", m = String(f).match(/\^([0-9]*)([+\-])$/), ch = "";
+    if (m) { ch = (m[2] === "+" ? "⁺" : "⁻"); f = f.slice(0, m.index); }
+    return f.replace(/([A-Za-z\)])(\d+)/g, function (a, b, d) { return b + d.split("").map(function (x) { return SUB[+x]; }).join(""); }) + ch;
+  }
+
+  // ---------- Particle view ----------
+  var svgP = document.getElementById("part");
+  var SLOTS = (function () {
+    var out = [], seed = 7;
+    function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+    for (var r = 0; r < 5; r++) for (var c = 0; c < 7; c++) out.push([118 + c * 34 + (rnd() - 0.5) * 10, 118 + r * 34 + (rnd() - 0.5) * 10]);
+    for (var i = out.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)); var t = out[i]; out[i] = out[j]; out[j] = t; }
+    return out;
+  })();
+  function particle(g, x, y, kind, pair, hl) {
+    var col = kind === "ha" ? "var(--c2)" : kind === "a" ? "var(--c4)" : kind === "h" ? "var(--c1)" : "var(--c3)";
+    if (hl) Lab.el("circle", { cx: x, cy: y, r: 16, fill: "none", stroke: "var(--accent)", "stroke-width": 2 }, g);
+    Lab.el("circle", { cx: x, cy: y, r: kind === "h" || kind === "oh" ? 9 : 12, fill: col }, g);
+    if (kind === "ha") Lab.el("circle", { cx: x + 10, cy: y - 9, r: 5, fill: "var(--c1)" }, g);
+    var t = kind === "h" ? "+" : kind === "oh" ? "−" : kind === "a" ? (pair.cat ? "" : "−") : (pair.cat ? "+" : "");
+    if (t) Lab.el("text", { x: x, y: y + 4, "text-anchor": "middle", "class": "ptxt" }, g, t);
+  }
+  function drawPart(hlSlot) {
+    var s = S(), p = P(), o = stoich(s, st.net);
+    svgP.setAttribute("viewBox", "0 0 440 300");
+    while (svgP.firstChild) svgP.removeChild(svgP.firstChild);
+    var g = Lab.el("g", {}, svgP);
+    Lab.el("rect", { x: 96, y: 96, width: 248, height: 186, fill: "var(--accent)", opacity: 0.05 }, g);
+    Lab.el("line", { x1: 96, y1: 96, x2: 344, y2: 96, stroke: "var(--ghost)", "stroke-width": 1.5 }, g);
+    Lab.el("path", { d: "M95 70 L95 270 Q95 284 109 284 L331 284 Q345 284 345 270 L345 70", fill: "none", stroke: "var(--ink)", "stroke-width": 2.5 }, g);
+    // pair particles fill slots 0..T-1: the first o.ha are the acid member
+    var T = s.T;
+    for (var i = 0; i < T; i++) particle(g, SLOTS[i][0], SLOTS[i][1], i < o.ha ? "ha" : "a", p, i === hlSlot);
+    var ex = o.h ? "h" : o.oh ? "oh" : null, nx = o.h || o.oh;
+    for (var j = 0; j < Math.min(nx, SLOTS.length - T); j++) particle(g, SLOTS[T + j][0], SLOTS[T + j][1], ex, p, T + j === hlSlot);
+    Lab.el("text", { x: 220, y: 40, "text-anchor": "middle", "class": "lbl", style: "fill:var(--ink)" }, g,
+      o.ha + " " + uni(p.HA) + ",  " + o.a + " " + uni(p.A) + (o.h ? ",  " + o.h + " H₃O⁺" : "") + (o.oh ? ",  " + o.oh + " OH⁻" : ""));
+    Lab.el("text", { x: 220, y: 60, "text-anchor": "middle" }, g, "1 particle = 1.0 mmol");
+    document.getElementById("part-sub").textContent = s.name;
+  }
+  function legendP() {
+    var p = P();
+    document.getElementById("plegend").innerHTML =
+      '<span><i style="background:var(--c2)"></i><em>' + F(p.HA) + ' (acid member; small dot = its H)</em></span>' +
+      '<span><i style="background:var(--c4)"></i><em>' + F(p.A) + ' (base member)</em></span>' +
+      '<span><i style="background:var(--c1)"></i><em>excess H<sub>3</sub>O<sup>+</sup></em></span>' +
+      '<span><i style="background:var(--c3)"></i><em>excess OH<sup>−</sup></em></span>';
+  }
+  // animate an incoming H3O+ or OH- toward the particle it changes
+  var stopAnim = null;
+  function dropIn(kind, slot, done) {
+    if (stopAnim) stopAnim();
+    var tx = SLOTS[slot][0], ty = SLOTS[slot][1];
+    stopAnim = Lab.animate(450, function (e) {
+      drawPart(-1);
+      var g = svgP.lastChild;
+      particle(g, 220 + (tx - 220) * e, 20 + (ty - 20) * e, kind, P(), false);
+    }, done);
+  }
+
+  // ---------- Graph ----------
+  var svgG = document.getElementById("graph");
+  function drawGraph() {
+    var s = S();
+    var Fr = Lab.frame(svgG, { x: [-NMAX, NMAX], y: [0, 14], width: 440, height: 300, xTicks: [-15, -10, -5, 0, 5, 10, 15], yTicks: [0, 2, 4, 6, 8, 10, 12, 14],
+      fmtX: function (v) { return v < 0 ? "−" + (-v) : v > 0 ? "+" + v : "0"; }, fmtY: function (v) { return v; },
+      xLabel: "mmol added  (← HCl | NaOH →)", yLabel: "pH" });
+    var pb = [], pu = [];
+    for (var n = -NMAX; n <= NMAX + 1e-9; n += 0.25) { pb.push([n, pHof(s, n)]); pu.push([n, pHun(s, n)]); }
+    Lab.line(Fr, pu, "var(--ghost)", 2.4, "6 4");
+    Lab.line(Fr, pb, "var(--accent)", 3);
+    // region where both members remain
+    var lo = null, hi = null;
+    for (var k = -NMAX; k <= NMAX; k++) { var o = stoich(s, k); if (o.ha > 0 && o.a > 0) { if (lo === null) lo = k; hi = k; } }
+    if (lo !== null) { Lab.rect(Fr, lo, 0, hi, 14, "var(--c2)", 0.08); Lab.tag(Fr, (lo + hi) / 2, 13.2, "both members present", "var(--c2)", "middle"); }
+    Lab.dot(Fr, st.net, pHun(s, st.net), "var(--ghost)");
+    Lab.dot(Fr, st.net, pHof(s, st.net), "var(--accent)", true);
+  }
+
+  // ---------- Readouts and story ----------
+  function f2(x) { return x.toFixed(2); }
+  function readouts() {
+    var s = S(), p = P(), o = stoich(s, st.net), ph = pHof(s, st.net), ph0 = pHof(s, 0), pu = pHun(s, st.net);
+    document.getElementById("r-ph").textContent = f2(ph);
+    document.getElementById("r-ph2").textContent = "started at " + f2(ph0) + " (change " + (ph - ph0 >= 0 ? "+" : "−") + Math.abs(ph - ph0).toFixed(2) + ")";
+    document.getElementById("r-un").textContent = f2(pu);
+    document.getElementById("r-un2").textContent = "started at " + f2(ph0) + " (change " + (pu - ph0 >= 0 ? "+" : "−") + Math.abs(pu - ph0).toFixed(2) + ")";
+    document.getElementById("r-mol-k").innerHTML = "mmol " + F(p.HA) + " / " + F(p.A);
+    document.getElementById("r-mol").textContent = o.ha + " / " + o.a;
+    document.getElementById("r-mol2").textContent = o.h ? o.h + " mmol excess H₃O⁺" : o.oh ? o.oh + " mmol excess OH⁻" : "total " + s.T + " mmol, unchanged";
+    var buf = o.ha > 0 && o.a > 0;
+    document.getElementById("r-buf").textContent = buf ? "yes" : "no";
+    document.getElementById("r-buf2").textContent = buf ? "both members present" : o.ha === 0 ? "no " + uni(p.HA) + " left" : "no " + uni(p.A) + " left";
+    document.getElementById("o-n").textContent = st.net === 0 ? "none" : st.net < 0 ? (-st.net) + " mmol HCl" : st.net + " mmol NaOH";
+    document.getElementById("s-n").value = st.net;
+    document.getElementById("eqn").innerHTML = s.desc + "&nbsp;&nbsp;·&nbsp;&nbsp;" + F(p.HA) + " + H<sub>2</sub>O ⇌ H<sub>3</sub>O<sup>+</sup> + " + F(p.A) + ", K<sub>a</sub> = " + Lab.sci(p.Ka, 2, true);
+    var bA = document.getElementById("b-acid"), bB = document.getElementById("b-base");
+    bA.disabled = st.net <= -NMAX; bB.disabled = st.net >= NMAX;
+  }
+  function story() {
+    var s = S(), p = P(), o = stoich(s, st.net), HA = F(p.HA), A = F(p.A), h = "";
+    var ph = pHof(s, st.net), ph0 = pHof(s, 0), pu = pHun(s, st.net);
+    var reAcid = A + " + H<sub>3</sub>O<sup>+</sup> → " + HA + " + H<sub>2</sub>O";
+    var reBase = HA + " + OH<sup>−</sup> → " + A + " + H<sub>2</sub>O";
+    var bufferSys = st.sys === "ac" || st.sys === "nh" || st.sys === "dil";
+    h += "<p><b>In the beaker:</b> " + o.ha + " mmol " + HA + " and " + o.a + " mmol " + A + (o.h ? ", plus " + o.h + " mmol H<sub>3</sub>O<sup>+</sup> left over" : "") + (o.oh ? ", plus " + o.oh + " mmol OH<sup>−</sup> left over" : "") + ".</p>";
+    if (st.last) {
+      var prev = stoich(s, st.prevNet), adding = st.last === "acid";
+      var reacted = adding ? prev.a > 0 : prev.ha > 0;
+      if (reacted) h += "<p><b>Last addition:</b> the added " + (adding ? "H<sub>3</sub>O<sup>+</sup>" : "OH<sup>−</sup>") + " reacted completely: <span class=\"chem\">" + (adding ? reAcid : reBase) + "</span>. One particle of " + (adding ? A : HA) + " became " + (adding ? HA : A) + ", so the added ion did not build up.</p>";
+      else if (adding ? prev.oh > 0 : prev.h > 0) h += "<p><b>Last addition:</b> the added " + (adding ? "H<sub>3</sub>O<sup>+</sup> neutralized excess OH<sup>−</sup>" : "OH<sup>−</sup> neutralized excess H<sub>3</sub>O<sup>+</sup>") + ".</p>";
+      else h += "<p><b>Last addition:</b> there was no " + (adding ? A : HA) + " left to react with the added " + (adding ? "H<sub>3</sub>O<sup>+</sup>" : "OH<sup>−</sup>") + ", so it piled up and the pH " + (adding ? "dropped" : "rose") + " sharply." + (bufferSys ? " The buffer capacity in this direction is used up." : "") + "</p>";
+    }
+    if (st.net !== 0) h += "<p><b>Compare:</b> after " + Math.abs(st.net) + " mmol of " + (st.net < 0 ? "HCl" : "NaOH") + ", this solution went from pH " + f2(ph0) + " to " + f2(ph) + "; the unbuffered solution went from " + f2(ph0) + " to " + f2(pu) + ".</p>";
+    var ans;
+    if (o.ha > 0 && o.a > 0) {
+      ans = "The solution contains both " + HA + " and " + A + ". " + A + " reacts with added acid (" + reAcid + ") and " + HA + " reacts with added base (" + reBase + "), so added H<sub>3</sub>O<sup>+</sup> or OH<sup>−</sup> is consumed and the pH changes much less than it would without the buffer.";
+      if (!bufferSys) ans = "Adding " + (st.sys === "wa" ? "OH<sup>−</sup> to the weak acid" : "H<sub>3</sub>O<sup>+</sup> to the conjugate base") + " converted part of it into the other member of the pair, so the solution is now a buffer. " + ans;
+      if (st.sys === "dil") ans += " Diluting kept the ratio (and the pH) but left only 1 mmol of each member, so it is used up after one addition.";
+    } else if (st.sys === "wa" && st.net <= 0) {
+      ans = "CH<sub>3</sub>COOH alone is not a buffer: with no CH<sub>3</sub>COO<sup>−</sup> present, nothing consumes added H<sub>3</sub>O<sup>+</sup>, so it accumulates and the pH falls.";
+    } else if (st.sys === "salt" && st.net >= 0) {
+      ans = "CH<sub>3</sub>COO<sup>−</sup> alone is not a buffer: with no CH<sub>3</sub>COOH present, nothing consumes added OH<sup>−</sup>, so it accumulates and the pH rises.";
+    } else {
+      ans = "One member of the pair has been used up (" + (o.ha === 0 ? HA : A) + " is gone), so the solution no longer buffers: " + (o.h || o.oh ? "the excess " + (o.h ? "H<sub>3</sub>O<sup>+</sup>" : "OH<sup>−</sup>") + " controls the pH." : "only " + (o.ha === 0 ? A : HA) + " remains, and the next addition of " + (o.ha === 0 ? "base" : "acid") + " will change the pH sharply.") + " A buffer needs significant amounts of both members.";
+    }
+    h += "<p><b>AP answer:</b> " + ans + "</p>";
+    document.getElementById("story").innerHTML = h;
+  }
+  function render(hl) {
+    Object.keys(scB).forEach(function (k) { scB[k].setAttribute("aria-pressed", k === st.sys ? "true" : "false"); });
+    drawPart(hl == null ? -1 : hl); legendP(); drawGraph(); readouts(); story();
+  }
+
+  // ---------- Controls ----------
+  var scB = {};
+  ORDER.forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = SYS[k].name;
+    b.addEventListener("click", function () { if (stopAnim) stopAnim(); st.sys = k; st.net = 0; st.last = null; st.prevNet = 0; render(); });
+    document.getElementById("sc").appendChild(b); scB[k] = b;
+  });
+  function add(dir) {
+    var s = S(), prev = stoich(s, st.net);
+    if (Math.abs(st.net + dir) > NMAX) return;
+    // which slot changes: acid adds -> particle at index prev.ha turns into acid member; base -> index prev.ha-1 turns into base member
+    var slot;
+    if (dir < 0) slot = prev.oh > 0 ? s.T + prev.oh - 1 : prev.a > 0 ? prev.ha : s.T + prev.h;
+    else slot = prev.h > 0 ? s.T + prev.h - 1 : prev.ha > 0 ? prev.ha - 1 : s.T + prev.oh;
+    slot = Math.min(slot, SLOTS.length - 1);
+    st.prevNet = st.net; st.last = dir < 0 ? "acid" : "base";
+    dropIn(dir < 0 ? "h" : "oh", slot, function () { st.net += dir; render(slot); });
+  }
+  document.getElementById("b-acid").addEventListener("click", function () { add(-1); });
+  document.getElementById("b-base").addEventListener("click", function () { add(1); });
+  document.getElementById("b-reset").addEventListener("click", function () { if (stopAnim) stopAnim(); st.net = 0; st.last = null; render(); });
+  document.getElementById("s-n").addEventListener("input", function (e) {
+    if (stopAnim) stopAnim();
+    var v = parseInt(e.target.value, 10);
+    st.prevNet = st.net; st.last = v === st.net ? st.last : (v < st.net ? "acid" : "base");
+    if (Math.abs(v - st.net) !== 1) st.last = null;
+    st.net = v; render();
+  });
+
+  // ---------- Self-check ----------
+  (function () {
+    var bad = [];
+    function near(a, b, tol, what) { if (!(Math.abs(a - b) <= tol)) bad.push(what + ": got " + a + ", expected " + b); }
+    near(pHof(SYS.ac, 0), 4.74, 0.01, "acetate buffer pH");
+    near(pHof(SYS.nh, 0), 9.26, 0.01, "ammonia buffer pH");
+    near(pHof(SYS.ac, -1), 4.66, 0.01, "buffer + 1 mmol HCl (quiz 8)");
+    near(pHof(SYS.ac, 1), 4.83, 0.01, "buffer + 1 mmol NaOH");
+    near(pHof(SYS.wa, 0), 2.88, 0.01, "0.10 M acetic acid");
+    near(pHof(SYS.salt, 0), 8.87, 0.01, "0.10 M sodium acetate");
+    near(pHof(SYS.dil, 0), 4.74, 0.03, "diluted buffer pH");
+    near(pHun(SYS.ac, 0), pHof(SYS.ac, 0), 1e-6, "unbuffered starts at same pH");
+    near(pHun(SYS.ac, -1), 2.00, 0.01, "unbuffered + 1 mmol HCl");
+    // stoichiometry conserves the pair and the charge bookkeeping
+    ORDER.forEach(function (k) {
+      for (var n = -NMAX; n <= NMAX; n++) {
+        var o = stoich(SYS[k], n);
+        if (o.ha + o.a !== SYS[k].T) bad.push(k + " pair not conserved at " + n);
+        if (o.h && o.oh) bad.push(k + " both excess at " + n);
+        if (o.ha < 0 || o.a < 0 || o.h < 0 || o.oh < 0) bad.push(k + " negative at " + n);
+        if (n > -NMAX && !(pHof(SYS[k], n) > pHof(SYS[k], n - 1))) bad.push(k + " pH not rising at " + n);
+      }
+    });
+    var o0 = stoich(SYS.ac, 0); if (o0.ha !== 10 || o0.a !== 10) bad.push("acetate start counts");
+    var o1 = stoich(SYS.nh, 0); if (o1.ha !== 10 || o1.a !== 10) bad.push("ammonia start counts");
+    if (bad.length) console.error("8.8 self-check failed: " + bad.slice(0, 6).join("; "));
+  })();
+
+  render();
+
+  // ---------- Quiz ----------
+  var Q = [
+    { s: "Which of the following mixtures, each in 1.0 L of solution, is a buffer?",
+      o: ["0.10 mol HCl and 0.10 mol NaCl", "0.10 mol HNO₂ and 0.10 mol NaNO₂", "0.10 mol NaOH and 0.10 mol NaCl", "0.10 mol HCl and 0.10 mol NaOH"], c: 1,
+      w: "A buffer needs large amounts of both members of a weak conjugate acid–base pair. HNO₂ is a weak acid and NO₂⁻ is its conjugate base. In choice A, Cl⁻ is the conjugate base of a strong acid and does not react with added H₃O⁺. Choice D neutralizes completely to NaCl and water, leaving no acid or base at all." },
+    { s: "A buffer contains NH₃ and NH₄Cl. Which equation represents the reaction that occurs when a small amount of HCl is added?",
+      o: ["NH₃ + H₃O⁺ → NH₄⁺ + H₂O", "NH₄⁺ + H₃O⁺ → NH₅²⁺ + H₂O", "Cl⁻ + H₃O⁺ → HCl + H₂O", "NH₄⁺ + OH⁻ → NH₃ + H₂O"], c: 0,
+      w: "Added acid reacts with the base member of the pair, NH₃, converting it to NH₄⁺. Choice D is the reaction for added base, not added acid. Choice C cannot happen to any significant extent: Cl⁻ is the conjugate base of a strong acid." },
+    { s: "A particle diagram of a buffer shows 6 HA and 6 A⁻ (water and spectator ions not shown). Two OH⁻ ions are added and react. Which of the following describes the diagram after the reaction?",
+      o: ["6 HA, 6 A⁻, and 2 OH⁻", "8 HA and 4 A⁻", "4 HA and 8 A⁻", "6 HA and 8 A⁻"], c: 2,
+      w: "Each OH⁻ removes a proton from one HA: HA + OH⁻ → A⁻ + H₂O. Two HA become two A⁻, giving 4 HA and 8 A⁻. The total of HA + A⁻ stays 12. Choice B has the reaction going the wrong way, and choice A forgets that the OH⁻ reacts." },
+    { s: "A student has 0.10 mol of CH₃COOH in 500 mL of water. Which addition would produce a buffer?",
+      o: ["0.10 mol NaOH", "0.20 mol HCl", "0.05 mol HCl", "0.05 mol NaOH"], c: 3,
+      w: "0.05 mol NaOH converts half the acid: 0.05 mol CH₃COOH and 0.05 mol CH₃COO⁻ remain, which is a buffer. With 0.10 mol NaOH (choice A) every CH₃COOH is converted, leaving no weak acid. Adding HCl (choices B and C) produces no CH₃COO⁻, so there is still only one member of the pair." },
+    { s: "Which of the following best explains why adding a small amount of NaOH to an acetate buffer changes the pH only slightly?",
+      o: ["Na⁺ ions react with the acetate ions and remove them from solution.", "OH⁻ ions are neutralized by the CH₃COO⁻ ions already present.", "The buffer's pH is fixed at 7, so it cannot change.", "OH⁻ reacts with CH₃COOH to form CH₃COO⁻ and H₂O, so [OH⁻] does not build up and [CH₃COO⁻]/[CH₃COOH] changes only slightly."], c: 3,
+      w: "The weak acid member consumes added OH⁻, and because both members are present in large amounts, converting a little CH₃COOH to CH₃COO⁻ changes the ratio only slightly. Choice B names the wrong member: a base does not neutralize OH⁻. Na⁺ is a spectator (choice A), and an acetate buffer is near pH 4.7, not 7." },
+    { s: "A buffer is made of 0.20 M HF and 0.20 M NaF. A student dilutes it with an equal volume of distilled water. How does the pH change?",
+      o: ["It increases by about 1 unit, because [HF] decreases.", "It stays about the same, because [F⁻]/[HF] is unchanged.", "It decreases, because the water adds H₃O⁺ ions.", "It becomes 7, because the buffer is destroyed."], c: 1,
+      w: "Dilution lowers both concentrations by the same factor, so the ratio [F⁻]/[HF], which sets the pH, stays the same. Choice A looks only at HF and forgets that F⁻ is diluted too. Dilution does reduce the buffer's capacity, a topic 8.10 idea, but not its pH." },
+    { s: "A student claims that a solution containing 0.10 M HCl and 0.10 M NaCl is a buffer because it contains an acid and its conjugate base. Which statement best explains why the claim is incorrect?",
+      o: ["HCl is not an acid in water.", "NaCl makes the solution neutral.", "Cl⁻ is a negligibly weak base, so it does not react with added H₃O⁺, and the strong acid is completely ionized.", "The concentrations of HCl and NaCl are not equal."], c: 2,
+      w: "A buffer needs a weak acid and a conjugate base strong enough to consume added H₃O⁺. Cl⁻ is the conjugate base of a strong acid and has essentially no tendency to accept protons, so added acid simply accumulates. Choice D is irrelevant: the concentrations are in fact equal, and equal amounts are not what makes a buffer." },
+    { s: "1.0 mL of 1.0 M HCl is added to 100 mL of pure water and, separately, to 100 mL of a buffer that is 0.10 M CH₃COOH and 0.10 M NaCH₃COO. Which best describes the pH changes?",
+      o: ["The water's pH falls by about 5 units (from 7 to about 2); the buffer's pH falls only slightly.", "Both pH values fall by the same amount, because the same amount of HCl was added.", "The buffer's pH falls more, because it was already acidic.", "Neither pH changes, because the HCl is neutralized by water."], c: 0,
+      w: "In water, 1.0 mmol of H₃O⁺ in 101 mL gives [H₃O⁺] ≈ 0.0099 M, pH ≈ 2.0. In the buffer, CH₃COO⁻ consumes the H₃O⁺; the CH₃COO⁻ : CH₃COOH mole ratio changes from 10 : 10 to 9 : 11 and the pH goes from 4.74 to about 4.66. Choice D is wrong because water does not neutralize a strong acid. (You only need the qualitative comparison; computing a buffer's pH change is not assessed on the AP exam.)" }
+  ];
+  Lab.quiz(Q, document.getElementById("quiz"), document.getElementById("score"), document.getElementById("quiz-reset"));
+  Lab.nav("8.8");
+})();
+</script>
+<script>Glossary.mount(document.getElementById("key-terms"), { units: [8], topic: "8.8", compact: true, storageKey: "topic-8.8" });</script>
+</body>
+</html>
